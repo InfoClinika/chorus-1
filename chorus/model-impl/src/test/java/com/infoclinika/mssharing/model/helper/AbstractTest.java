@@ -29,19 +29,7 @@ import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMeta
 import com.infoclinika.mssharing.model.internal.read.Transformers;
 import com.infoclinika.mssharing.model.internal.write.ExperimentLabelManagement;
 import com.infoclinika.mssharing.model.internal.write.ExperimentLabelManagement.ExperimentTypeInfo;
-import com.infoclinika.mssharing.model.read.AdministrationToolsReader;
-import com.infoclinika.mssharing.model.read.DashboardReader;
-import com.infoclinika.mssharing.model.read.DetailsReader;
-import com.infoclinika.mssharing.model.read.DownloadFileReader;
-import com.infoclinika.mssharing.model.read.ExtendedInfoReader;
-import com.infoclinika.mssharing.model.read.FileLine;
-import com.infoclinika.mssharing.model.read.InstrumentReader;
-import com.infoclinika.mssharing.model.read.PaymentHistoryReader;
-import com.infoclinika.mssharing.model.read.ProteinDatabaseReader;
-import com.infoclinika.mssharing.model.read.RequestsReader;
-import com.infoclinika.mssharing.model.read.TrashReader;
-import com.infoclinika.mssharing.model.read.UserPreferencesReader;
-import com.infoclinika.mssharing.model.read.UserReader;
+import com.infoclinika.mssharing.model.read.*;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.read.dto.details.FileItem;
 import com.infoclinika.mssharing.model.write.AnalysisBounds;
@@ -81,6 +69,7 @@ import com.infoclinika.mssharing.platform.model.read.GroupsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.LabReaderTemplate;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.Restriction;
+import com.infoclinika.mssharing.platform.model.write.ProjectManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.UserLabMembershipRequestRepositoryTemplate;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
@@ -687,7 +676,7 @@ public class AbstractTest extends AbstractTestNGSpringContextTests {
         secondAdminId = predefinedDataCreator.admin("Mark2", "Thomson2", Data.ADMIN_EMAIL_2, "1234");
         final long chargeableItem = billingManagement.createChargeableItem(ARCHIVE_PRICE, BillingFeature.ARCHIVE_STORAGE, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem1 = billingManagement.createChargeableItem(ANALYSE_PRICE, BillingFeature.ANALYSE_STORAGE, 1, BillingChargeType.PER_GB);
-        final long chargeableItem2 = billingManagement.createChargeableItem(TRANSLATION_PRICE, BillingFeature.TRANSLATION, 1, BillingChargeType.PER_GB);//cents
+//        final long chargeableItem2 = billingManagement.createChargeableItem(TRANSLATION_PRICE, BillingFeature.TRANSLATION, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem3 = billingManagement.createChargeableItem(DOWNLOAD_PRICE, BillingFeature.DOWNLOAD, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem4 = billingManagement.createChargeableItem(PROTEIN_SEARCH_PRICE, BillingFeature.PROTEIN_ID_SEARCH, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem5 = billingManagement.createChargeableItem(DOWNLOAD_PRICE, BillingFeature.PUBLIC_DOWNLOAD, 1, BillingChargeType.PER_GB);//cents
@@ -863,10 +852,6 @@ public class AbstractTest extends AbstractTestNGSpringContextTests {
     protected UserReader userReader;
     @Inject
     protected RequestsReader requestsReader;
-    @Inject
-    protected UploadHelper uploadHelper;
-    @Inject
-    protected AddingFilesHelper addingFilesHelper;
     @Inject
     protected ExtendedInfoReader extendedInfoReader;
     @Inject

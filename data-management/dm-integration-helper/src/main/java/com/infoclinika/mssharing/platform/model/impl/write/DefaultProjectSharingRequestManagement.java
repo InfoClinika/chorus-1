@@ -11,6 +11,7 @@ import com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.ProjectRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.ProjectSharingRequestRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.UserRepositoryTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

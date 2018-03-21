@@ -84,7 +84,6 @@ public class SearcherImplTest extends AbstractTestNGSpringContextTests {
     public void create(){
         billingManagement.createChargeableItem(450, BillingFeature.ARCHIVE_STORAGE, 1, PER_GB);
         billingManagement.createChargeableItem(450, BillingFeature.ANALYSE_STORAGE, 1, PER_GB);
-        billingManagement.createChargeableItem(450, BillingFeature.TRANSLATION, 1, PER_GB);
     }
 
     @Test

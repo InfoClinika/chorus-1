@@ -5,6 +5,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.infoclinika.analysis.storage.cloud.CloudStorageFactory;
+import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
+import com.infoclinika.analysis.storage.cloud.CloudStorageService;
 import com.infoclinika.mssharing.model.features.ApplicationFeature;
 import com.infoclinika.mssharing.model.read.DashboardReader;
 import com.infoclinika.mssharing.model.read.FileLine;
@@ -13,11 +16,17 @@ import com.infoclinika.mssharing.model.write.FileMetaDataInfo;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import junit.framework.Assert;
+import org.apache.log4j.Logger;
 import org.hamcrest.Description;
+import org.junit.Rule;
 import org.junit.internal.matchers.TypeSafeMatcher;
 import org.junit.matchers.JUnitMatchers;
+import org.junit.rules.TemporaryFolder;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.io.*;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -36,12 +45,44 @@ import static org.junit.Assert.assertThat;
  */
 public class ManagingFilesTest extends AbstractInstrumentTest {
 
+    private static final Logger LOGGER = Logger.getLogger(ManagingFilesTest.class);
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    private static final String BUCKET_NAME = "";
+
+    private static final String CONTENT_ID_FILE = "c15092005_000S3.txt";
+
+    private static final CloudStorageService CLOUD_STORAGE_SERVICE = CloudStorageFactory.service();
+
+    private CloudStorageItemReference cloudStorageItemReference = new CloudStorageItemReference(BUCKET_NAME, CONTENT_ID_FILE);
+
     private Function<FileLine, Long> fileLineIdTransformer = new Function<FileLine, Long>() {
         @Override
         public Long apply(FileLine input) {
             return input.id;
         }
     };
+
+    @BeforeClass
+    private void uploadFileToS3Bucket() throws IOException {
+        if(!CLOUD_STORAGE_SERVICE.existsAtCloud(cloudStorageItemReference)){
+            File file = getFileWithContents("test content");
+            CLOUD_STORAGE_SERVICE.uploadToCloud(file, cloudStorageItemReference.getBucket(), cloudStorageItemReference.getKey());
+            LOGGER.info("FILE WAS UPLOADED TO STORAGE");
+        }
+    }
+
+
+
+    @AfterClass
+    private void removeFileFromS3Bucket(){
+        if(CLOUD_STORAGE_SERVICE.existsAtCloud(cloudStorageItemReference)){
+            CLOUD_STORAGE_SERVICE.deleteFromCloud(cloudStorageItemReference);
+            LOGGER.info("FILE IS DELETED"+ CONTENT_ID_FILE);
+        }
+    }
 
     @Test
     void testUserCanSetSpeciesInBulk() {
@@ -151,10 +192,9 @@ public class ManagingFilesTest extends AbstractInstrumentTest {
         setFeaturePerLab(ApplicationFeature.TRANSLATION, Lists.newArrayList(uc.getLab3()));
         final Optional<Long> instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3());
 
-        final long fileSize = 1048576;
-        final long file = instrumentManagement.startUploadFile(bob, instrument.get(),
-                new FileMetaDataInfo(UUID.randomUUID().toString(), fileSize, "", null, unspecified(), false));
-        instrumentManagement.completeMultipartUpload(bob, file, "raw-files/2/1/c15092005_000.RAW");
+        final long fileSize = CLOUD_STORAGE_SERVICE.readContentLength(cloudStorageItemReference);
+        final long file = instrumentManagement.startUploadFile(bob, instrument.get(), new FileMetaDataInfo(UUID.randomUUID().toString(), fileSize, "", null, unspecified(), false));
+        instrumentManagement.completeMultipartUpload(bob, file, CONTENT_ID_FILE);
 
         final FileLine fileBeforeCheck = fileReader.readFiles(bob, Filter.ALL).iterator().next();
         Assert.assertTrue("Error. File size is not consistent.", fileBeforeCheck.sizeIsConsistent);
@@ -188,4 +228,18 @@ public class ManagingFilesTest extends AbstractInstrumentTest {
         }).get().id;
     }
 
+    private File getFileWithContents(String contents) throws IOException {
+        final File file = temporaryFolder.newFile("" + CONTENT_ID_FILE);
+        return fillFileContents(contents, file);
+    }
+
+    private File fillFileContents(String contents, File tempFile) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+        OutputStreamWriter outputStreamWriter =  new OutputStreamWriter(fileOutputStream);
+        Writer writer = new BufferedWriter(outputStreamWriter);
+        writer.write(contents);
+        writer.close();
+        fileOutputStream.close();
+        return tempFile;
+    }
 }

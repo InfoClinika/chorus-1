@@ -301,9 +301,10 @@ public class CreatingInstrumentTest extends AbstractInstrumentTest {
     @Test
     public void testAvailableIfOperator() {
         final long bob = uc.createLab3AndBob();
+        final long kate = uc.createKateAndLab2();
         final long poll = uc.createPaul();
         final long instrument = createInstrumentByModel(poll, uc.getLab3(), anyInstrumentModel());
-        instrumentManagement.addOperatorDirectly(poll, instrument, Data.BOBS_EMAIL);
+        instrumentManagement.addOperatorDirectly(poll, instrument, Data.BOBS_EMAIL); // TODO: delete usage
         uc.saveFile(bob, instrument);
         assertNumberOfAvailableInstrumentTypes(bob, 1);
     }

@@ -68,15 +68,6 @@ public class BillingEnabledDisabledTest extends AbstractTest {
 
     //Invalid case. Now can enable/disable features only through billing plan
     @Test(enabled = false)
-    public void testEnableBillingMakeTranslationDisable() {
-        long lab = uc.createLab3();
-        //featureManagement.disableFeature(lab, invoice.translationBill.chargeableId, null);
-        setBilling(true);
-        assertFalse(billingFeaturesHelper.isFeatureEnabled(lab, BillingFeature.TRANSLATION));
-    }
-
-    //Invalid case. Now can enable/disable features only through billing plan
-    @Test(enabled = false)
     public void testEnableBillingMakeInstrumentNotEnableForUpload() {
         long lab = uc.createLab3();
         long bob = uc.createLab3AndBob();

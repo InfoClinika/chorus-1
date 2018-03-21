@@ -31,7 +31,7 @@ import java.util.Random;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature.ANALYSE_STORAGE;
-import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature.TRANSLATION;
+//import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature.TRANSLATION;
 import static org.mockito.Mockito.reset;
 
 /**
@@ -116,11 +116,6 @@ public class AbstractBillingTest extends AbstractTest {
 
     protected ChargeableItemUsageReader.ChargeableItemBill analyzableStorageBill(ChargeableItemUsageReader.Invoice invoice) {
         return getBill(invoice, ANALYSE_STORAGE);
-    }
-
-
-    protected ChargeableItemUsageReader.ChargeableItemBill translationBill(ChargeableItemUsageReader.Invoice invoice) {
-        return getBill(invoice, TRANSLATION);
     }
 
 

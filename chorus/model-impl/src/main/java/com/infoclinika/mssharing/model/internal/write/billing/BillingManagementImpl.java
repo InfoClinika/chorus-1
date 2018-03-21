@@ -15,6 +15,7 @@ import com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeTy
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
 import com.infoclinika.mssharing.services.billing.rest.api.model.StorageUsage;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +42,8 @@ public class BillingManagementImpl implements BillingManagement {
     private LabPaymentAccountRepository labPaymentAccountRepository;
     @Inject
     private ChargeableItemRepository chargeableItemRepository;
-    @Resource(name = "billingRestService")
+    @Resource
+    @Qualifier("billingRestService")
     private BillingService billingService;
     @Inject
     private BillingPropertiesProvider propertiesProvider;

@@ -37,9 +37,6 @@ public class HistoryBillingTest extends AbstractBillingTest {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 1073741824);
         long file2 = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 1073741824);
-
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
-        paymentManagement.logTranslationUsage(bob, file2, uc.getLab3());
         simulateHours(getDaysInMonth() * 24);
         paymentManagement.depositStoreCredit(createPayment(2000, uc.getLab3()));
 
@@ -55,7 +52,6 @@ public class HistoryBillingTest extends AbstractBillingTest {
         usageReader.readLabsForUser(uc.createPaul());
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 1073741824);
         billingManagement.enableProcessingForLabAccount(uc.createPaul(), uc.getLab3(), false);
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
         final int deposit = 2000;
         paymentManagement.depositStoreCredit(createPayment(deposit, uc.getLab3()));
 
@@ -71,9 +67,6 @@ public class HistoryBillingTest extends AbstractBillingTest {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 1073741824);
         long file2 = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 1073741824);
-
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
-        paymentManagement.logTranslationUsage(bob, file2, uc.getLab3());
 
         ImmutableSet<PaymentHistoryReader.HistoryForMonth> lines = paymentHistoryReader.readDailyUsage(uc.createPaul(), uc.getLab3());
 
@@ -104,16 +97,13 @@ public class HistoryBillingTest extends AbstractBillingTest {
 
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void testReadUsagesByDay() {
 
         final long testTime = System.currentTimeMillis();
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), BillingTest.GB_IN_BYTES);
         long file2 = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), BillingTest.GB_IN_BYTES);
-
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
-        paymentManagement.logTranslationUsage(bob, file2, uc.getLab3());
 
         simulateHours(testTime, 24 * getDaysInMonth(), false);
 
@@ -136,9 +126,6 @@ public class HistoryBillingTest extends AbstractBillingTest {
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), BillingTest.GB_IN_BYTES);
         long file2 = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), BillingTest.GB_IN_BYTES);
 
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
-        paymentManagement.logTranslationUsage(bob, file2, uc.getLab3());
-
         final Date day = new Date();
         final boolean saved = dailySummaryUsageLogger.saveDay(day);
         assertTrue(saved);
@@ -159,7 +146,6 @@ public class HistoryBillingTest extends AbstractBillingTest {
 
         final long afterHours = simulateHours(testTime, 24 * getDaysInMonth(), false);
 
-        paymentManagement.logTranslationUsage(bob, file, labId);
         paymentManagement.logDownloadUsage(bob, file, labId);
         paymentManagement.logPublicDownload(bob, file2);
         depositStoreCredit(labId, 30000);

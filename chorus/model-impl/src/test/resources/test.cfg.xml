@@ -10,7 +10,8 @@
                                   location="classpath:test-application.properties, classpath:messaging.properties"/>
 
     <bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl"/>
-    <bean id="projectAccessChangedEventListener" class="com.infoclinika.mssharing.platform.model.impl.write.sharing.ProjectAccessChangedEventListener" />
+    <bean id="projectAccessChangedEventListener"
+          class="com.infoclinika.mssharing.platform.model.impl.write.sharing.ProjectAccessChangedEventListener"/>
     <!--<bean id="billingService" class="com.infoclinika.mssharing.services.billing.rest.BillingServiceImpl"/>-->
     <alias name="defaultProjectSharingRequestManagement" alias="projectSharingRequestManagement"/>
 

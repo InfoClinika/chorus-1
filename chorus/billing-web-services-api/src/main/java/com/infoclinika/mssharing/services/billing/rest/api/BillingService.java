@@ -18,12 +18,6 @@ public interface BillingService {
     String healthCheck();
 
     @POST
-    @Path("logTranslationUsage")
-    void logTranslationUsage(@FormParam("user") long user,
-                             @FormParam("file") long file,
-                             @FormParam("lab") long lab);
-
-    @POST
     @Path("logProteinIDSearchUsage")
     void logProteinIDSearchUsage(@FormParam("user") long user,
                                  @FormParam("experiment") long experiment);

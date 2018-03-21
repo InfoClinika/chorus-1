@@ -14,6 +14,7 @@ import com.infoclinika.mssharing.services.billing.rest.api.model.DailyUsageLine;
 import com.infoclinika.mssharing.services.billing.rest.api.model.HistoryForMonthReference;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
@@ -51,7 +52,8 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
     private LabPaymentAccountRepository labPaymentAccountRepository;
     @Inject
     private FeatureLogRepository featureLogRepository;
-    @Resource(name = "billingRestService")
+    @Resource
+    @Qualifier("billingRestService")
     private BillingService billingService;
     @Inject
     private Transformers transformers;

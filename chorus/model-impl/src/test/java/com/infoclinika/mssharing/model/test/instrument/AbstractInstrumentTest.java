@@ -9,6 +9,7 @@
 package com.infoclinika.mssharing.model.test.instrument;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.model.helper.AbstractTest;
@@ -16,6 +17,7 @@ import com.infoclinika.mssharing.model.read.DashboardReader;
 import com.infoclinika.mssharing.model.read.InstrumentLine;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.common.items.InstrumentItem;
+import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
 
 import java.util.Set;
 
@@ -37,12 +39,13 @@ abstract class AbstractInstrumentTest extends AbstractTest {
                 return input.id == instrumentId;
             }
         }));
-        //only operators can add more members
-        try {
-            instrumentManagement.addOperatorDirectly(user, instrumentId, "just.for.test.assertIsOperator@example.com");
-        } catch (AccessDenied e) {
-            fail();
-        }
+    }
+
+    protected void addOperatorDirectly(long user, long instrumentId, String operatorEmail) throws AccessDenied{
+        final long person = userManagement.createPersonAndApproveMembership(
+                new UserManagementTemplate.PersonInfo("User", "Name", operatorEmail),
+                "test_pwd", ImmutableSet.of(uc.getLab3()), "/");
+        instrumentManagement.addOperatorDirectly(user, instrumentId, person);
     }
 
     protected void assertIsNotOperator(final long user, final long instrument) {

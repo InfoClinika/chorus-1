@@ -274,20 +274,9 @@ public class ManagingOperatorsTest extends AbstractInstrumentTest {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
         final long poll = uc.createPaul();
-
-        instrumentManagement.addOperatorDirectly(bob, instrument, Data.PAUL_INFO.email);
-
+        instrumentManagement.addOperatorDirectly(bob, instrument, poll);
         assertIsOperator(poll, instrument);
     }
-
-//    @Test(dependsOnMethods = {"testUserCanSeeHisInstrumentsOnDashboard", "testAddOperatorFromSameLab"})
-//    @Deprecated
-//    public void testInstrumentDataRead() {
-//        final long bob = uc.createLab3AndBob();
-//        final Long instrumentId = instrumentManagement.newInstrument(bob, "M1", predefinedDataCreator.getMeModelId(), UUID.randomUUID().toString(), "hpLc", ImmutableList.<Long>of()).get();
-//        final AdministrationToolsReader.InstrumentLineItem instrument = administrationToolsReader.readAllInstruments(bob).iterator().next();
-//        assertEquals(instrument.access, AdministrationToolsReader.InstrumentAccess.OPERATOR);
-//    }
 
     @Test(expectedExceptions = AccessDenied.class, dependsOnMethods = "testOnlyOperatorsCanAddMore")
     public void testAddOperatorFromDifferentLab() {
@@ -296,7 +285,7 @@ public class ManagingOperatorsTest extends AbstractInstrumentTest {
         uc.createLab2();
         final long kate = uc.createKateAndLab2();
 
-        instrumentManagement.addOperatorDirectly(bob, instrument, Data.KATE_INFO.email);
+        instrumentManagement.addOperatorDirectly(bob, instrument, kate);
     }
 
     @Test(dependsOnMethods = "testAddOperatorFromSameLab")
@@ -304,8 +293,8 @@ public class ManagingOperatorsTest extends AbstractInstrumentTest {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
         final long poll = uc.createPaul();
-        instrumentManagement.addOperatorDirectly(bob, instrument, Data.PAUL_INFO.email);
-        instrumentManagement.addOperatorDirectly(poll, instrument, "some.unknown.guy@example.com");
+        instrumentManagement.addOperatorDirectly(bob, instrument, poll);
+        addOperatorDirectly(bob, instrument, "test_user_operator@example.com");
     }
 
 
@@ -314,26 +303,27 @@ public class ManagingOperatorsTest extends AbstractInstrumentTest {
         final long poll = uc.createPaul();
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(poll, uc.getLab3()).get();
-        instrumentManagement.addOperatorDirectly(bob, instrument, "some@g.com");
+        addOperatorDirectly(bob, instrument, "some@example.com");
     }
 
     //Users can add operators that are not system users //TODO: [stanislav.kurilin] implement it
-    @Test(dependsOnMethods = {"testAddOperatorFromDifferentLab", "testOnlyOperatorsCanAddMore"}, enabled = false)
+    @Test(dependsOnMethods = {"testAddOperatorFromDifferentLab", "testOnlyOperatorsCanAddMore"})
     public void testBecomingOperatorInOtherLab() {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        instrumentManagement.addOperatorDirectly(bob, instrument, Data.PAUL_INFO.email);
+        final long paul = uc.createPaul();
+        instrumentManagement.addOperatorDirectly(bob, instrument, paul);
         uc.createLab2();
         uc.createKateAndLab2();
     }
 
-    @Test(dependsOnMethods = {"testAddOperatorFromSameLab", "testOnlyOperatorsCanAddMore"}, enabled = false)
+    @Test(dependsOnMethods = {"testAddOperatorFromSameLab", "testOnlyOperatorsCanAddMore"})
     public void testBecomingOperatorInSameLab() {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        instrumentManagement.addOperatorDirectly(bob, instrument, Data.PAUL_INFO.email);
-        final long poll = uc.createPaul();
-        assertIsOperator(poll, instrument);
+        final long paul = uc.createPaul();
+        instrumentManagement.addOperatorDirectly(bob, instrument, paul);
+        assertIsOperator(paul, instrument);
     }
 
     @Test(dependsOnMethods = {"testAddOperatorFromSameLab", "testOnlyOperatorsCanAddMore"})
@@ -362,13 +352,13 @@ public class ManagingOperatorsTest extends AbstractInstrumentTest {
         }));
     }
 
-    @Test(dependsOnMethods = "testOnlyOperatorsCanAddMore", enabled = false)
+    @Test(dependsOnMethods = "testOnlyOperatorsCanAddMore")
     public void testPendingInSameLab() {
         uc.createLab3();
         final long poll = uc.createPaul();
-        final long instrument = uc.createInstrumentAndApproveIfNeeded(poll, uc.getLab3()).get();
-        instrumentManagement.addOperatorDirectly(poll, instrument, Data.BOBS_EMAIL);
         final long bob = uc.tryBobCreation();
+        final long instrument = uc.createInstrumentAndApproveIfNeeded(poll, uc.getLab3()).get();
+        instrumentManagement.addOperatorDirectly(poll, instrument, bob);
         assertIsOperator(bob, instrument);
     }
 
@@ -377,9 +367,9 @@ public class ManagingOperatorsTest extends AbstractInstrumentTest {
         uc.createLab3();
         final long poll = uc.createPaul();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(poll, uc.getLab3()).get();
-        instrumentManagement.addOperatorDirectly(poll, instrument, Data.KATE_INFO.email);
         uc.createLab2();
-        uc.createKateAndLab2();
+        final long kate = uc.createKateAndLab2();
+        instrumentManagement.addOperatorDirectly(poll, instrument, kate);
     }
 
     @Test

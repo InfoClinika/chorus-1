@@ -122,14 +122,13 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
 
     @Override
     public FileMetaDataTemplate copy(String copyName, UserTemplate owner){
-        ActiveFileMetaData copy = new ActiveFileMetaData((User) owner, copyName, this.getUploadDate(),
-                this.getInstrument(), this.getSizeInBytes(),
-                this.getLabels(), this.getSpecie(), this.isArchive());
+        ActiveFileMetaData copy = new ActiveFileMetaData((User) owner, copyName, this.getUploadDate(), this.getInstrument(), this.getSizeInBytes(), this.getLabels(), this.getSpecie(), this.isArchive());
         copy.setCopy(true);
         copy.setContentId(this.getContentId());
         copy.setArchiveId(this.getArchiveId());
         copy.setDestinationPath(this.getDestinationPath());
         copy.setStorageData(this.getStorageData());
+        copy.setSizeInBytes(this.getSizeInBytes());
         return copy;
     }
 

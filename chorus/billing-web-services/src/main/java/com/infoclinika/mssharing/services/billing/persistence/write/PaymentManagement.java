@@ -17,9 +17,6 @@ public interface PaymentManagement  {
     void depositStoreCredit(long admin, long lab, long amount);
 
     @Async
-    void logTranslationUsage(long user, long file, long lab);
-
-    @Async
     void logDownloadUsage(long actor, long file, long lab);
 
     @Async

@@ -137,7 +137,6 @@
             <artifactId>dm-integration-helper</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-
     </dependencies>
 
     <properties>

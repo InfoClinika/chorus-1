@@ -25,6 +25,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.Set;
 
+import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.model.internal.read.AdvancedFilterCreationHelper.*;
 import static com.infoclinika.mssharing.model.internal.read.Transformers.PagedItemsTransformer.toFilterQuery;
 import static com.infoclinika.mssharing.platform.model.helper.read.PagedResultBuilder.builder;

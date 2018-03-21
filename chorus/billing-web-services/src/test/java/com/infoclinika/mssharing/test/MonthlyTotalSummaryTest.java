@@ -34,8 +34,6 @@ public class MonthlyTotalSummaryTest extends AbstractBillingTest {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 4 * GB_IN_BYTES);
 
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
         // download is free
         paymentManagement.logDownloadUsage(bob, file, uc.getLab3());
 
@@ -58,12 +56,9 @@ public class MonthlyTotalSummaryTest extends AbstractBillingTest {
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 4 * GB_IN_BYTES);
         final long file2 = uc.saveFileWithSize(kate, uc.createInstrumentAndApproveIfNeeded(kate, uc.getLab2()).get(), GB_IN_BYTES);
 
-        paymentManagement.logTranslationUsage(bob, file, uc.getLab3());
         // download is free
         paymentManagement.logDownloadUsage(bob, file, uc.getLab3());
 
-
-        paymentManagement.logTranslationUsage(kate, file2, uc.getLab2());
         // download is free
         paymentManagement.logDownloadUsage(kate, file2, uc.getLab2());
 

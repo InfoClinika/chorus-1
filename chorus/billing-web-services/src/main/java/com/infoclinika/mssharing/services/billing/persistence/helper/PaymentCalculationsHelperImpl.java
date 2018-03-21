@@ -290,8 +290,6 @@ public class PaymentCalculationsHelperImpl implements PaymentCalculationsHelper 
                 return (FeatureUsageRepository) context.getBean("dailyArchiveStorageUsageRepository");
             case ANALYSE_STORAGE:
                 return (FeatureUsageRepository) context.getBean("dailyAnalyseStorageUsageRepository");
-            case TRANSLATION:
-                return (FeatureUsageRepository) context.getBean("translationUsageRepository");
             case DOWNLOAD:
                 return (FeatureUsageRepository) context.getBean("downloadUsageRepository");
             case PROTEIN_ID_SEARCH:

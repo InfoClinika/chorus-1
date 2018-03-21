@@ -420,26 +420,6 @@ public class PaymentManagementImpl implements PaymentManagement {
         return paymentCalculations.calculationDaySinceEpoch(timestamp);
     }
 
-    @Transactional
-    @Override
-    public void logTranslationUsage(long userId, long file, long lab) {
-
-        //TODO: Validation
-        final ActiveFileMetaData fileMetaData = fileMetaDataRepository.findOne(file);
-        final User user = userRepository.findOne(userId);
-        final BigDecimal amount = paymentCalculations.calculateScaledFeaturePrice(fileMetaData.getSizeInBytes(), BillingFeature.TRANSLATION);
-
-        final Date timestamp = current.get();
-        final TranslationUsage entry = new TranslationUsage(
-                lab, userId, file, fileMetaData.getSizeInBytes(),
-                timestamp, user.getFullName(), fileMetaData.getInstrument().getName(),
-                amount.longValue(), fileMetaData.getName()
-        );
-        entry.setDay(daysSinceEpoch(timestamp));
-        charge(lab, amount, entry);
-        translationUsageRepository.save(entry);
-    }
-
 
     private long toCents(String amount) {
         return (long) (Double.valueOf(amount) * 100);

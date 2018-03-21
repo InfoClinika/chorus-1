@@ -8,7 +8,6 @@ public enum BillingFeature {
 
     ARCHIVE_STORAGE("Daily archive storage"),
     ANALYSE_STORAGE("Daily active storage"),
-    TRANSLATION("Translation"),
     DOWNLOAD("Download"),
     PROTEIN_ID_SEARCH("Protein ID Search"),
     PUBLIC_DOWNLOAD("Public data download"),

@@ -45,12 +45,12 @@ public class BillingServiceImpl implements BillingService {
         return "health Check";
     }
 
-    @Override
-    public void logTranslationUsage(long user, long file, long lab) {
-        LOG.debug("Billing Service: log translation usage, user: " + user + ", file: " + file + ", lab: " + lab);
-        paymentManagement.logTranslationUsage(user, file, lab);
-        LOG.debug("Billing Service: completed action - log translation usage, user: " + user + ", file: " + file + ", lab: " + lab);
-    }
+//    @Override
+//    public void logTranslationUsage(long user, long file, long lab) {
+//        LOG.debug("Billing Service: log translation usage, user: " + user + ", file: " + file + ", lab: " + lab);
+//        paymentManagement.logTranslationUsage(user, file, lab);
+//        LOG.debug("Billing Service: completed action - log translation usage, user: " + user + ", file: " + file + ", lab: " + lab);
+//    }
 
     @Override
     public void logProteinIDSearchUsage(long user, long experiment) {

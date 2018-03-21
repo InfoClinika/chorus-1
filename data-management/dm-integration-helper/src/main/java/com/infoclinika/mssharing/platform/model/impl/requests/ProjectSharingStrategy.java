@@ -5,9 +5,11 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.infoclinika.mssharing.platform.model.RequestsTemplate.InboxItem;
 import com.infoclinika.mssharing.platform.model.read.RequestsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.write.ProjectSharingRequestManagement;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Collection;
 
 import static com.google.common.collect.Collections2.transform;

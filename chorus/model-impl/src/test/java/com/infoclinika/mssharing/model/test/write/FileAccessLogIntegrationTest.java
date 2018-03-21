@@ -63,7 +63,7 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void test_file_upload_complete_logging() throws InterruptedException {
         final long bob = uc.createLab3AndBob();
         setFeaturePerLab(ApplicationFeature.TRANSLATION, Lists.newArrayList(uc.getLab3()));

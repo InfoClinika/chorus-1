@@ -30,6 +30,5 @@ public class FeatureTest extends AbstractBillingTest {
         assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.ARCHIVE_STORAGE_VOLUMES));
         assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.STORAGE_VOLUMES));
         assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.PROCESSING));
-        assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.TRANSLATION));
     }
 }
