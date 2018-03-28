@@ -340,13 +340,27 @@ public class UploaderRestServiceImpl implements UploaderRestService {
 
         final long userId = userDetails.id;
         final long instrumentId = request.getInstrument();
+        final InstrumentItem instrumentItem = dashboardReader.readInstrument(instrumentId);
 
-        if (!restHelper.canUploadForInstrument(instrumentId)) {
-            return new UploadFilesDTOResponse(
-                    instrumentId,
-                    new ArrayList<>()
-            );
+        long uploadSize = request.getFiles().stream().mapToLong(UploadFilesDTORequest.UploadFile::getSize).sum();
+        instrumentManagement.checkCanUploadMore(instrumentId, uploadSize);
+
+        //if billing is enabled
+        if (dashboardReader.getFeatures(userId).get(ApplicationFeature.BILLING.getFeatureName())) {
+            final UploadLimitCheckResult checkResult = billingManagement.checkUploadLimit(userId, instrumentItem.lab);
+
+            if (checkResult != null && checkResult.isExceeded) {
+                throw new UploadLimitException(checkResult.message);
+            }
+
+            if (!restHelper.canUploadForInstrument(instrumentId)) {
+                return new UploadFilesDTOResponse(
+                        instrumentId,
+                        new ArrayList<>()
+                );
+            }
         }
+
 
         final List<UploadFilesDTOResponse.UploadFile> responseFiles = newArrayList();
         final List<InstrumentManagement.UploadFileItem> files =
@@ -354,20 +368,20 @@ public class UploaderRestServiceImpl implements UploaderRestService {
 
         for (InstrumentManagement.UploadFileItem file : files) {
             final String fileName = FileNameSpotter.replaceInvalidSymbols(file.name);
-            final Set<FileLine> unfinishedUploads = dashboardReader.readByNameForInstrument(userId, instrumentId, fileName);
+            final Set<FileLine> uploadedFileWithSameName = dashboardReader.readByNameForInstrument(userId, instrumentId, fileName);
 
-            final boolean started = !unfinishedUploads.isEmpty();
+            final boolean uploaded = !uploadedFileWithSameName.isEmpty();
             final String path = storedObjectPaths.rawFilePath(userId, instrumentId, fileName).getPath();
 
             final long finalFileId;
-            if (!started) {
+            if (!uploaded) {
                 finalFileId = instrumentManagement.createFile(
                         userId,
                         instrumentId,
                         new FileMetaDataInfo(fileName, file.size, file.labels, path, file.specie, file.archive)
                 );
             } else {
-                final FileLine fileLine = unfinishedUploads.iterator().next();
+                final FileLine fileLine = uploadedFileWithSameName.iterator().next();
                 finalFileId = fileLine.id;
 
                 if (fileLine.toReplace) {
@@ -389,60 +403,13 @@ public class UploaderRestServiceImpl implements UploaderRestService {
             final UploadFilesDTOResponse.UploadFile uploadFile
                     = new UploadFilesDTOResponse.UploadFile(fileName, finalFileId, path);
 
-            uploadFile.setStarted(started);
+            uploadFile.setStarted(uploaded);
 
             responseFiles.add(uploadFile);
 
         }
 
         return new UploadFilesDTOResponse(instrumentId, responseFiles);
-    }
-
-    @Override
-    public SimpleUploadFilesDTOResponse simpleUploadRequest(UploadFilesDTORequest request, String token) {
-
-        LOG.debug("Handling an simple upload request for a desktop app user. Target instrument: " + request.getInstrument() + DOT + token);
-
-        final RestHelper.UserDetails userDetails = getUserAndCheckToken(token);
-
-        if (!userDetails.hasLaboratories) {
-            throw new AccessDenied("permission denied");
-        }
-
-        final long userId = userDetails.id;
-        final long instrumentId = request.getInstrument();
-        final InstrumentItem instrumentItem = dashboardReader.readInstrument(instrumentId);
-
-        //if billing is enabled
-        if (dashboardReader.getFeatures(userId).get(ApplicationFeature.BILLING.getFeatureName())) {
-            final long uploadSize = request.getFiles().stream().mapToLong(UploadFilesDTORequest.UploadFile::getSize).sum();
-            final UploadLimitCheckResult checkResult = billingManagement.checkUploadLimit(userId, instrumentItem.lab);
-
-            if (checkResult != null && checkResult.isExceeded) {
-                throw new UploadLimitException(checkResult.message);
-            }
-
-            instrumentManagement.checkCanUploadMore(instrumentId, uploadSize);
-        }
-
-        if (!restHelper.canUploadForInstrument(instrumentId)) {
-            return new SimpleUploadFilesDTOResponse(instrumentId, new ArrayList<>());
-        }
-
-        final List<SimpleUploadFilesDTOResponse.UploadFilePath> responseFiles = newArrayList();
-        final List<InstrumentManagement.UploadFileItem> files =
-                fromListDto(request.getFiles(), FROM_FILES_REQUEST);
-
-        for (InstrumentManagement.UploadFileItem file : files) {
-            final String fileName = FileNameSpotter.replaceInvalidSymbols(file.name);
-            final String path = storedObjectPaths.rawFilePath(userId, instrumentId, fileName).getPath();
-            final SimpleUploadFilesDTOResponse.UploadFilePath uploadFilePath =
-                    new SimpleUploadFilesDTOResponse.UploadFilePath(path);
-
-            responseFiles.add(uploadFilePath);
-        }
-
-        return new SimpleUploadFilesDTOResponse(instrumentId, responseFiles);
     }
 
     @Override
@@ -459,10 +426,10 @@ public class UploaderRestServiceImpl implements UploaderRestService {
         final long userId = userDetails.id;
         final long instrumentId = request.getInstrument();
         final InstrumentItem instrumentItem = dashboardReader.readInstrument(instrumentId);
+        final long uploadSize = request.getFiles().stream().mapToLong(UploadFilesDTORequest.UploadFile::getSize).sum();
 
         //if billing is enabled
         if (dashboardReader.getFeatures(userId).get(ApplicationFeature.BILLING.getFeatureName())) {
-            final long uploadSize = request.getFiles().stream().mapToLong(UploadFilesDTORequest.UploadFile::getSize).sum();
             final UploadLimitCheckResult checkResult = billingManagement.checkUploadLimit(userId, instrumentItem.lab);
 
             if (checkResult != null && checkResult.isExceeded) {
@@ -470,10 +437,10 @@ public class UploaderRestServiceImpl implements UploaderRestService {
             }
 
             instrumentManagement.checkCanUploadMore(instrumentId, uploadSize);
-        }
 
-        if (!restHelper.canUploadForInstrument(instrumentId)) {
-            return new SSEUploadFilesDTOResponse(instrumentId, new ArrayList<>());
+            if (!restHelper.canUploadForInstrument(instrumentId)) {
+                return new SSEUploadFilesDTOResponse(instrumentId, new ArrayList<>());
+            }
         }
 
         final List<SSEUploadFilesDTOResponse.UploadFileItem> responseFiles = newArrayList();

@@ -135,13 +135,6 @@ public class WebServiceImpl implements WebService {
     }
 
     @Override
-    public boolean isArchivingRequired(InstrumentDTO instrument) {
-        final VendorDTO vendor = instrument.getVendor();
-
-        return vendor.folderArchiveUploadSupport || vendor.multipleFiles;
-    }
-
-    @Override
     public List<DictionaryDTO> getTechnologyTypes() {
         LOGGER.info("Getting Technology Types");
 
@@ -183,17 +176,6 @@ public class WebServiceImpl implements WebService {
 
         try {
             return new ArrayList<>(uploaderRestService.getInstrumentModels(getToken(), technologyType, vendor));
-        } catch (Exception ex) {
-            LOGGER.error("", ex);
-            throw getException(ex);
-        }
-    }
-
-    @Override
-    public List<InstrumentDTO> getInstruments(long instrumentModel) {
-        LOGGER.info(GETTING_INSTRUMENTS);
-        try {
-            return uploaderRestService.getInstruments(getToken(), instrumentModel);
         } catch (Exception ex) {
             LOGGER.error("", ex);
             throw getException(ex);
@@ -264,18 +246,6 @@ public class WebServiceImpl implements WebService {
     }
 
     @Override
-    public List<FileDTO> getInstrumentFiles(InstrumentDTO instrument) {
-        LOGGER.info("Getting instrument's files. Instrument: " + instrument.getName());
-        try {
-            final Set<FileDTO> instrumentFiles = uploaderRestService.getInstrumentFiles(instrument.getId(), getToken());
-            return newArrayList(instrumentFiles);
-        } catch (Exception ex) {
-            LOGGER.error("", ex);
-            throw getException(ex);
-        }
-    }
-
-    @Override
     public List<DictionaryDTO> getSpecies() {
         LOGGER.info("Getting species");
         try {
@@ -311,32 +281,6 @@ public class WebServiceImpl implements WebService {
         }
     }
 
-    @Override
-    public List<FileDTO> getUnfinishedUploads() {
-        LOGGER.info("Getting unfinished uploads");
-        try {
-
-            final List<FileDTO> unfinishedUploads = uploaderRestService.getUnfinishedUploads(getToken());
-            return newArrayList(unfinishedUploads);
-
-        } catch (Exception ex) {
-            LOGGER.error("", ex);
-            throw getException(ex);
-        }
-    }
-
-    @Override
-    public SimpleUploadFilesDTOResponse postStartUploadRequest(UploadFilesDTORequest request) {
-        LOGGER.info("Posting start upload request. " + request);
-        try {
-
-            return uploaderRestService.simpleUploadRequest(request, getToken());
-
-        } catch (Exception ex) {
-            LOGGER.error("", ex);
-            throw getException(ex);
-        }
-    }
 
     @Override
     public SSEUploadFilesDTOResponse postStartSSEUploadRequest(UploadFilesDTORequest request) {

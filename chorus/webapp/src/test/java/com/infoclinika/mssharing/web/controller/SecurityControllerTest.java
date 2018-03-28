@@ -2,53 +2,33 @@ package com.infoclinika.mssharing.web.controller;
 
 import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.model.internal.entity.User;
-import com.infoclinika.mssharing.model.internal.repository.UserRepository;
-import com.infoclinika.mssharing.model.write.UserManagement;
 import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
 import com.infoclinika.mssharing.web.controller.response.SuccessErrorResponse;
-import com.infoclinika.mssharing.web.demo.SpringSupportTest;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.theories.Theories;
-import org.junit.runner.RunWith;
+import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
 import org.springframework.mock.web.MockHttpSession;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 
-import javax.inject.Inject;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.*;
 
 /**
  * @author Pavel Kaplin
  */
-@RunWith(Theories.class)
-public class SecurityControllerTest extends SpringSupportTest {
+public class SecurityControllerTest extends AbstractDataBasedTest {
 
     public static final String PAVEL_EMAIL = "pavel@example.com";
     public static final String JOHN_EMAIL = "john@example.com";
-    @Inject
-    private SecurityController securityController;
-
-    @Inject
-    private EmailVerificationCrypto crypto;
-
-    @Inject
-    private UserManagement userManagement;
-    @Inject
-    private UserRepository userRepository;
-
-    @Inject
-    private SecurityHelper securityHelper;
 
     private SecurityHelper.UserDetails pavel;
     private SecurityHelper.UserDetails johnWithExpiredLink;
 
 
-    @Before
+    @BeforeMethod
     public void setUp() {
 
         // pavel is a normal user

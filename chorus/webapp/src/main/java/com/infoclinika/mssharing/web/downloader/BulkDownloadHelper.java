@@ -12,6 +12,7 @@ import com.infoclinika.mssharing.platform.fileserver.StorageService;
 import com.infoclinika.mssharing.platform.fileserver.model.NodePath;
 import com.infoclinika.mssharing.platform.web.downloader.BulkDownloadHelperTemplate;
 import com.infoclinika.mssharing.services.billing.rest.api.BillingService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -28,6 +29,7 @@ import static com.infoclinika.mssharing.model.helper.ExperimentDownloadHelper.Ex
 /**
  * @author Alexei Tymchenko
  */
+//TODO: need refactor methods and coverage tests
 @Service
 public class BulkDownloadHelper extends BulkDownloadHelperTemplate<ExperimentItemTemplate, ChorusExperimentDownloadData, ChorusFileData> {
 

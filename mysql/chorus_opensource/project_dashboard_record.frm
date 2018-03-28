@@ -7,7 +7,7 @@ definer_user=chorus
 definer_host=%
 suid=2
 with_check_option=0
-timestamp=2018-03-19 15:03:47
+timestamp=2018-03-23 08:09:41
 create-version=1
 source=select p.id, p.lab_id, p.name, p.creator_id, u.email, p.areaOfResearch, (select count(*) from ExperimentTemplate e where e.project_id = p.id) as experiments, p.lastModification, p.type, (select l.name from Lab l where p.lab_id = l.id) as labName, (p.deletionDate is not null) as deleted from ProjectTemplate p join USER u on u.id = p.creator_id
 client_cs_name=latin1

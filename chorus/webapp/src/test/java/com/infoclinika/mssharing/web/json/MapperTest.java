@@ -10,31 +10,26 @@ import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTempla
 import com.infoclinika.mssharing.web.controller.SecurityController;
 import com.infoclinika.mssharing.web.controller.request.CreateInstrumentRequest;
 import com.infoclinika.mssharing.web.controller.request.ExperimentDetails;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
+import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Set;
-
-import static com.google.common.collect.Sets.newHashSet;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.*;
+import static org.testng.Assert.*;
 
 /**
  * @author Pavel Kaplin
  */
-@RunWith(Theories.class)
-public class MapperTest {
+public class MapperTest extends AbstractDataBasedTest{
 
     private static final String EMAIL = "pavel@example.com";
     private static final String PASSWORD = "pwd";
@@ -42,20 +37,18 @@ public class MapperTest {
     private static final String LAST_NAME = "Kaplin";
     private MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
 
-    public MapperTest() {
-    }
 
-    @Before
+    @BeforeMethod
     public void setUpConverter() {
         converter.setObjectMapper(new Mapper());
     }
 
-    @DataPoints
-    public static Class[] getClassesToCheck() {
-        return new Class[]{ProjectInfo.class, SecurityController.AccountDetails.class, ExperimentInfo.class};
+    @DataProvider
+    public static Object[][] getClassesToCheck() {
+        return new Class[][]{{ProjectInfo.class}, {SecurityController.AccountDetails.class}, {ExperimentInfo.class}};
     }
 
-    @Theory
+    @Test(dataProvider = "getClassesToCheck")
     public void testCouldBeDeserialized(Class classToCheck) {
         assertThat("Can read " + classToCheck, converter.canRead(classToCheck, MediaType.APPLICATION_JSON), is(true));
     }

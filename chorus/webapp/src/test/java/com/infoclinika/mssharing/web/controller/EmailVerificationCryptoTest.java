@@ -1,7 +1,7 @@
 package com.infoclinika.mssharing.web.controller;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -13,7 +13,7 @@ public class EmailVerificationCryptoTest {
 
     private EmailVerificationCrypto crypto;
 
-    @Before
+    @BeforeMethod
     public void initCrypto() {
         crypto = new EmailVerificationCrypto();
         crypto.setKey("1,2,3");

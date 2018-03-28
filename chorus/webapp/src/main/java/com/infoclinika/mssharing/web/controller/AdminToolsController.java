@@ -9,6 +9,7 @@ import com.infoclinika.mssharing.web.controller.request.AdminBroadcastNotificati
 import com.infoclinika.mssharing.web.demo.RunDemoDataCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;

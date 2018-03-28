@@ -98,11 +98,6 @@ public interface UploaderRestService {
     @Consumes(MediaType.APPLICATION_JSON)
     UploadFilesDTOResponse uploadRequest(UploadFilesDTORequest request, @QueryParam("token") String token);
 
-    @Path("/simpleUploadRequest")
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    SimpleUploadFilesDTOResponse simpleUploadRequest(UploadFilesDTORequest request, @QueryParam("token") String token);
-
     @Path("/sseUploadRequest")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)

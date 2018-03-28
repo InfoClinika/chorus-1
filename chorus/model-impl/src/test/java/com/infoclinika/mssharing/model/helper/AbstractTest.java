@@ -78,6 +78,7 @@ import org.joda.time.DateTimeZone;
 import org.mockito.ArgumentMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
@@ -676,7 +677,6 @@ public class AbstractTest extends AbstractTestNGSpringContextTests {
         secondAdminId = predefinedDataCreator.admin("Mark2", "Thomson2", Data.ADMIN_EMAIL_2, "1234");
         final long chargeableItem = billingManagement.createChargeableItem(ARCHIVE_PRICE, BillingFeature.ARCHIVE_STORAGE, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem1 = billingManagement.createChargeableItem(ANALYSE_PRICE, BillingFeature.ANALYSE_STORAGE, 1, BillingChargeType.PER_GB);
-//        final long chargeableItem2 = billingManagement.createChargeableItem(TRANSLATION_PRICE, BillingFeature.TRANSLATION, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem3 = billingManagement.createChargeableItem(DOWNLOAD_PRICE, BillingFeature.DOWNLOAD, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem4 = billingManagement.createChargeableItem(PROTEIN_SEARCH_PRICE, BillingFeature.PROTEIN_ID_SEARCH, 1, BillingChargeType.PER_GB);//cents
         final long chargeableItem5 = billingManagement.createChargeableItem(DOWNLOAD_PRICE, BillingFeature.PUBLIC_DOWNLOAD, 1, BillingChargeType.PER_GB);//cents

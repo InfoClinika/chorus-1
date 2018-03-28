@@ -5,40 +5,26 @@ import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.model.internal.entity.FileAccessLog;
 import com.infoclinika.mssharing.model.read.FileAccessLogReader;
 import com.infoclinika.mssharing.model.read.FileLine;
-import com.infoclinika.mssharing.model.read.UserReader;
 import com.infoclinika.mssharing.platform.model.PagedItem;
 import com.infoclinika.mssharing.platform.model.PagedItemInfo;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
-import com.infoclinika.mssharing.web.demo.DemoDataBasedTest;
+import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
 import com.infoclinika.mssharing.web.downloader.ChorusDownloadData;
-import com.infoclinika.mssharing.web.downloader.ChorusSingleFileDownloadHelper;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Value;
-
-import javax.inject.Inject;
+import org.testng.annotations.Test;
 import java.util.Iterator;
 import java.util.Set;
 
 import static junit.framework.Assert.fail;
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.*;
 
 /**
  * @author vladislav.kovchug
  */
-public class FileAccessLogDownloadIntegrationTest extends DemoDataBasedTest {
+public class FileAccessLogDownloadIntegrationTest extends AbstractDataBasedTest {
 
-    @Inject
-    private FileAccessLogReader fileAccessLogReader;
 
-    @Inject
-    private UserReader userReader;
-
-    @Inject
-    private ChorusSingleFileDownloadHelper chorusSingleFileDownloadHelper;
-
-    @Inject
-    private SecurityHelper securityHelper;
 
     @Value("${database.data.admin.email}")
     private String adminEmail;

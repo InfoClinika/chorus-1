@@ -7,7 +7,7 @@ definer_user=chorus
 definer_host=%
 suid=2
 with_check_option=0
-timestamp=2018-03-19 15:03:47
+timestamp=2018-03-23 08:09:41
 create-version=1
 source=select fmd.id AS id, fmd.archiveId AS archiveId, fmd.contentId AS contentId, fmd.instrument_id AS instrument_id, fmd.bill_lab AS bill_lab, fmd.name as file_name, CONCAT(u.firstName ,\' \' ,u.lastName) as owner_name, u.id as owner_id, i.name as instrument_name, fmd.billing_last_charging_date as last_charging_date, i.lab_id AS instrument_lab from (FileMetaDataTemplate fmd join Instrument i on((fmd.instrument_id = i.id)) join USER u on u.id=fmd.owner_id)
 client_cs_name=latin1

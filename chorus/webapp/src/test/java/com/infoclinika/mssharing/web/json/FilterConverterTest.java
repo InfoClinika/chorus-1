@@ -2,9 +2,9 @@ package com.infoclinika.mssharing.web.json;
 
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.web.json.FilterConverter;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.*;
 
 /**
  * @author Pavel Kaplin

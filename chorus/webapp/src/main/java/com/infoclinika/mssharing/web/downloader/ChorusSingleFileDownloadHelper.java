@@ -8,6 +8,7 @@ import com.infoclinika.mssharing.model.helper.items.ChorusFileData;
 import com.infoclinika.mssharing.model.write.FileAccessLogService;
 import com.infoclinika.mssharing.platform.web.downloader.SingleFileDownloadHelperTemplate;
 import com.infoclinika.mssharing.services.billing.rest.api.BillingService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;

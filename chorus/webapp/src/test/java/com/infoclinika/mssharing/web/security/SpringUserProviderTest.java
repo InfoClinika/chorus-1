@@ -2,11 +2,9 @@ package com.infoclinika.mssharing.web.security;
 
 import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.platform.model.helper.SecurityHelperTemplate;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.unitils.UnitilsJUnit4TestClassRunner;
+import org.junit.Test;
 import org.unitils.inject.annotation.InjectIntoByType;
 import org.unitils.inject.annotation.TestedObject;
 
@@ -17,7 +15,6 @@ import static org.mockito.Mockito.when;
 /**
  * @author Pavel Kaplin
  */
-@RunWith(UnitilsJUnit4TestClassRunner.class)
 public class SpringUserProviderTest {
 
     @TestedObject

@@ -11,6 +11,7 @@ package com.infoclinika.mssharing.model.helper;
 import com.infoclinika.mssharing.model.AdminNotifier;
 import com.infoclinika.mssharing.model.Notifier;
 import com.infoclinika.mssharing.model.internal.RuleValidatorImpl;
+import com.infoclinika.mssharing.model.internal.read.PaymentHistoryReaderImpl;
 import com.infoclinika.mssharing.platform.fileserver.StorageService;
 import com.infoclinika.mssharing.platform.fileserver.StoredObject;
 import com.infoclinika.mssharing.platform.fileserver.impl.InMemoryStorageService;
@@ -116,7 +117,7 @@ public class SpringConfig {
     }
 
 
-    @Bean(name = "billingService")
+    @Bean(name = "billingRestService")
     public BillingService billingService() {
         BillingService billingService = mock(BillingService.class);
         return billingService;

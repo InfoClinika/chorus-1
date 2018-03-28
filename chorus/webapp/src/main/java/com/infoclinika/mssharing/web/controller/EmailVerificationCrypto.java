@@ -13,7 +13,7 @@ import java.security.GeneralSecurityException;
  * @author Pavel Kaplin
  */
 @Component
-class EmailVerificationCrypto {
+public class EmailVerificationCrypto {
 
     private Mac mac;
 

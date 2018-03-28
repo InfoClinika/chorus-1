@@ -2,36 +2,22 @@ package com.infoclinika.mssharing.web.security;
 
 import com.infoclinika.auth.ChorusAuthenticationService;
 import com.infoclinika.auth.ChorusAuthenticationService.*;
-import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.model.helper.SecurityHelper.UserDetails;
-import com.infoclinika.mssharing.model.write.UserManagement;
-import com.infoclinika.mssharing.web.demo.SpringSupportTest;
-import org.junit.Test;
-import org.junit.experimental.theories.Theories;
-import org.junit.runner.RunWith;
-
-import javax.inject.Inject;
-
+import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
+import org.testng.annotations.Test;
 import static com.infoclinika.mssharing.web.security.UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_ID;
 import static com.infoclinika.mssharing.web.security.UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_USERNAME;
-import static org.junit.Assert.*;
+import static org.testng.Assert.*;
 
 
 /**
  * @author Andrii Loboda
  */
-@SuppressWarnings("InstanceMethodNamingConvention")
-@RunWith(Theories.class)
-public class ChorusAuthenticationServiceShouldTest extends SpringSupportTest {
+public class ChorusAuthenticationServiceShouldTest extends AbstractDataBasedTest {
 
     private static final UserLogin USER_LOGIN = new UserLogin("pavel.kaplin@gmail.com");
     private static final UserPassword USER_PASSWORD = new UserPassword("pwd");
-    @Inject
-    private ChorusAuthenticationService chorusAuthenticationService;
-    @Inject
-    private SecurityHelper securityHelper;
-    @Inject
-    private UserManagement userManagement;
+
 
 
     @Test
@@ -115,6 +101,6 @@ public class ChorusAuthenticationServiceShouldTest extends SpringSupportTest {
 
 
         assertEquals(userDetails.id, attributes.attributes.get(ATTRIBUTE_CHORUS_ID));
-        assertTrue(userDetails.email, attributes.attributes.containsKey(ATTRIBUTE_CHORUS_USERNAME));
+        assertEquals(userDetails.email, attributes.attributes.get(ATTRIBUTE_CHORUS_USERNAME));
     }
 }

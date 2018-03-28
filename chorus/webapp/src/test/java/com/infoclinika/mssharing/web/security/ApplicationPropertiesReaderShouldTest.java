@@ -1,20 +1,17 @@
 package com.infoclinika.mssharing.web.security;
 
 import com.google.common.io.Resources;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 import java.io.File;
-
 import static com.infoclinika.mssharing.web.security.ApplicationPropertiesReader.SSO_ENABLED_PROPERTY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 /**
  * @author Andrii Loboda
  */
-@SuppressWarnings("InstanceMethodNamingConvention")
-public class ApplicationPropertiesReaderShouldTest {
+public class ApplicationPropertiesReaderShouldTest extends AbstractDataBasedTest {
 
     @SuppressWarnings("AccessOfSystemProperties")
     @BeforeClass

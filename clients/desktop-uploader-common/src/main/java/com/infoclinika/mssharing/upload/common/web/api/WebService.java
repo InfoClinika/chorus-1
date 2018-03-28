@@ -17,8 +17,6 @@ public interface WebService {
 
     AuthenticateDTO authenticate(String token);
 
-    boolean isArchivingRequired(InstrumentDTO instrument);
-
     List<DictionaryDTO> getTechnologyTypes();
 
     List<DictionaryDTO> getVendors();
@@ -26,8 +24,6 @@ public interface WebService {
     List<DictionaryDTO> getLabs();
 
     List<DictionaryDTO> getInstrumentModels(long technologyType, long vendor);
-
-    List<InstrumentDTO> getInstruments(long instrumentModel);
 
     InstrumentDTO getInstrument(long instrument);
 
@@ -39,17 +35,11 @@ public interface WebService {
 
     ComposeFilesResponse composeFiles(ComposeFilesRequest request);
 
-    List<FileDTO> getInstrumentFiles(InstrumentDTO instrument);
-
     List<DictionaryDTO> getSpecies();
 
     DictionaryDTO getDefaultSpecie();
 
-    List<FileDTO> getUnfinishedUploads();
-
     DeleteUploadDTO deleteUpload(long fileId);
-
-    SimpleUploadFilesDTOResponse postStartUploadRequest(UploadFilesDTORequest request);
 
     SSEUploadFilesDTOResponse postStartSSEUploadRequest(UploadFilesDTORequest request);
 

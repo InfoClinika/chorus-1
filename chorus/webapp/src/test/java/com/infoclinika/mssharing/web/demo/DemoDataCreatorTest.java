@@ -3,91 +3,60 @@ package com.infoclinika.mssharing.web.demo;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.infoclinika.mssharing.model.helper.ExperimentCreationHelper;
 import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
-import com.infoclinika.mssharing.model.internal.repository.ExperimentLabelRepository;
-import com.infoclinika.mssharing.model.internal.repository.ExperimentLabelTypeRepository;
-import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
-import com.infoclinika.mssharing.model.read.AdministrationToolsReader;
 import com.infoclinika.mssharing.model.read.InstrumentLine;
-import com.infoclinika.mssharing.model.read.RequestsReader;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.common.items.FileItem;
 import com.infoclinika.mssharing.platform.model.read.Filter;
-import org.junit.Test;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
+import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import javax.inject.Inject;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-
 import static com.google.common.collect.Iterables.find;
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.number.OrderingComparison.greaterThan;
-import static org.junit.Assert.*;
 import static org.junit.internal.matchers.IsCollectionContaining.hasItem;
+import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * @author Pavel Kaplin
  */
-@RunWith(Theories.class)
-public class DemoDataCreatorTest extends DemoDataBasedTest {
+//@RunWith(Theories.class)
+public class DemoDataCreatorTest extends AbstractDataBasedTest {
 
     private static final int EXPERIMENT_LABEL_TYPES_SIZE = 9;
     private static final int EXPERIMENT_LABELS_SIZE = 114;
     private static final String PASSWORD = "pwd";
-    @Inject
-    private AdministrationToolsReader administrationToolsReader;
 
-    @Inject
-    private ExperimentCreationHelper experimentCreationHelper;
-
-    @Inject
-    private RequestsReader requestsReader;
-
-    @Inject
-    private PasswordEncoder encoder;
-
-    @Inject
-    private SecurityHelper securityHelper;
-
-    @Inject
-    private FileMetaDataRepository fileMetaDataRepository;
-
-    @Inject
-    private ExperimentLabelTypeRepository experimentLabelTypeRepository;
-
-    @Inject
-    private ExperimentLabelRepository experimentLabelRepository;
 
     @Value("${database.data.admin.email}")
     private String adminEmail;
 
-    public DemoDataCreatorTest() {
+    @DataProvider
+    public static Object[][] getFilterValues() {
+
+        return  Arrays.stream(Filter.values())
+                .map(filter -> new Object[]{filter})
+                .toArray(Object[][]::new);
     }
 
-    @DataPoints
-    public static Filter[] getFilterValues() {
-        return Filter.values();
-    }
-
-    @Theory
+    @Test(dataProvider = "getFilterValues")
     public void theoryHaveProjectsForAnyFilter(Filter filter) {
         assertThat("Have projects for filter " + filter,
                 dashboardReader.readProjects(pavelKaplinAtGmail(), filter),
                 not(empty()));
     }
 
-    @Theory
+    @Test(dataProvider = "getFilterValues")
     public void theoryHaveExperimentsForAnyFilter(Filter filter) {
         assertThat("Have experiments for filter " + filter,
                 dashboardReader.readExperiments(pavelKaplinAtGmail(), filter),
@@ -141,7 +110,7 @@ public class DemoDataCreatorTest extends DemoDataBasedTest {
     public void testAllFilesAreOfThermoVendor() {
         Iterable<ActiveFileMetaData> all = fileMetaDataRepository.findAll();
         for (ActiveFileMetaData fileMetaData : all) {
-            assertEquals("File " + fileMetaData + " is of Thermo vendor", "Thermo Scientific", fileMetaData.getInstrument().getModel().getVendor().getName());
+            assertEquals("Thermo Scientific", fileMetaData.getInstrument().getModel().getVendor().getName());
         }
     }
 

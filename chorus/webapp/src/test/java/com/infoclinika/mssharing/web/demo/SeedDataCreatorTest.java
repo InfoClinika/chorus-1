@@ -3,17 +3,14 @@ package com.infoclinika.mssharing.web.demo;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
-import com.infoclinika.mssharing.model.helper.ExperimentCreationHelper;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.helper.ExperimentCreationHelperTemplate;
+import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Test;
-import org.junit.experimental.theories.Theories;
-import org.junit.runner.RunWith;
+import org.testng.annotations.Test;
 
-import javax.inject.Inject;
 import java.util.Collection;
 
 import static org.hamcrest.Matchers.allOf;
@@ -23,11 +20,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Pavel Kaplin
  */
-@RunWith(Theories.class)
-public class SeedDataCreatorTest extends SpringSupportTest {
-
-    @Inject
-    private ExperimentCreationHelper helper;
+public class SeedDataCreatorTest extends AbstractDataBasedTest {
 
     @Test
     public void testExperimentTypes() {

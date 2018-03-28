@@ -7,7 +7,7 @@ definer_user=chorus
 definer_host=%
 suid=2
 with_check_option=0
-timestamp=2018-03-19 15:03:47
+timestamp=2018-03-23 08:09:41
 create-version=1
 source=SELECT e.id as id, e.name, e.description, e.lab_id as lab_id, e.bill_laboratory as bill_lab_id, e.project_id, e.creator_id, count(rf.id) as numberOfFiles, 0 as analyzesCount, e.lastModification, e.downloadToken, e.experimentCategory, (select l.name from Lab l where l.id = e.lab_id) as labName, (e.deletionDate is not null) as deleted from ExperimentTemplate e LEFT join RawFile rf on rf.experiment_id=e.id left outer join ProjectTemplate p on e.project_id=p.id group by e.id
 client_cs_name=latin1

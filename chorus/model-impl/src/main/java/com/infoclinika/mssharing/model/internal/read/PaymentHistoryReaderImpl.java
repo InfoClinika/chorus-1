@@ -52,8 +52,7 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
     private LabPaymentAccountRepository labPaymentAccountRepository;
     @Inject
     private FeatureLogRepository featureLogRepository;
-    @Resource
-    @Qualifier("billingRestService")
+    @Resource(name = "billingRestService")
     private BillingService billingService;
     @Inject
     private Transformers transformers;

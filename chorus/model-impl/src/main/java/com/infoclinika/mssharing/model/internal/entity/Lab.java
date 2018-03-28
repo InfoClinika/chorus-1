@@ -23,7 +23,7 @@ public class Lab extends LabTemplate<User> {
     private boolean isFake;
 
     @Basic(optional = false)
-    private float uploadLimitInGb = 10000;
+    private float uploadLimitInGb = 20;
 
 
     public Lab() {
