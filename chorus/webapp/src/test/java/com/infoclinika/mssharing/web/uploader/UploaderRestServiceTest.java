@@ -32,8 +32,8 @@ public class UploaderRestServiceTest extends AbstractDataBasedTest {
     @Value("${database.data.admin.email}")
     private String adminEmail;
     @Value("${database.data.admin.password}")
-
     private String adminPassword;
+
     private RestHelper.Token restToken;
     private UploadFilesDTORequest.UploadFile uploadFile;
 
@@ -138,17 +138,6 @@ public class UploaderRestServiceTest extends AbstractDataBasedTest {
         assertNotNull(userDetails);
 
     }
-
-
-
-
-
-
-
-
-
-
-
 
     private long createAdmin() {
         return initiator.admin("Dima", "Dima", adminEmail, adminPassword);
