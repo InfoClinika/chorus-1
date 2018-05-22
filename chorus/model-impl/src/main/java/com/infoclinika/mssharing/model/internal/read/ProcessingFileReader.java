@@ -19,14 +19,14 @@ public interface ProcessingFileReader {
         public String name;
         public String content;
         public List<FileMetaDataTemplate> fileMetaDataTemplateList;
-        public ProcessingRun processingRun;
+        public List<ProcessingRun> processingRuns;
         public AbstractExperiment abstractExperiment;
 
-        public ProcessingFileInfo(String name, String content, List<FileMetaDataTemplate> fileMetaDataTemplateList, ProcessingRun processingRun, AbstractExperiment abstractExperiment) {
+        public ProcessingFileInfo(String name, String content, List<FileMetaDataTemplate> fileMetaDataTemplateList, List<ProcessingRun> processingRuns, AbstractExperiment abstractExperiment) {
             this.name = name;
             this.content = content;
             this.fileMetaDataTemplateList = fileMetaDataTemplateList;
-            this.processingRun = processingRun;
+            this.processingRuns = processingRuns;
             this.abstractExperiment = abstractExperiment;
         }
     }

@@ -23,7 +23,7 @@ public class ProcessingFileReaderImpl implements ProcessingFileReader{
         return new ProcessingFileInfo(processingFile1.getName(),
                                         processingFile1.getContentId(),
                                         processingFile1.getFileMetaDataTemplates(),
-                                        processingFile1.getProcessingRun(), processingFile1.getExperimentTemplate());
+                                        processingFile1.getProcessingRuns(), processingFile1.getExperimentTemplate());
     }
 
     @Override

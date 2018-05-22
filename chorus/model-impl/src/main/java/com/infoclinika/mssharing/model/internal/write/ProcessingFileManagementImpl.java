@@ -136,7 +136,7 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
                 processingRun.setExperimentTemplate(activeExperiment);
                 processingRun.getProcessingFiles().add(processingFile);
                 processingRunRepository.save(processingRun);
-                processingFile.setProcessingRun(processingRun);
+//                processingFile.setProcessingRun(processingRun);
                 processingFileRepository.save(processingFile);
 
                 LOGGER.info("#### Associating processes file successfully complete ####");
@@ -157,8 +157,8 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
     private boolean updateProcessingFiles(ProcessingFile processingFile, long experiment, String processingRunName){
         ProcessingRun processingRun = processingRunRepository.findByNameAndExperiment(processingRunName, experiment);
 
-        if(processingFile.getProcessingRun() == null){
-            processingFile.setProcessingRun(processingRun);
+        if(processingFile.getProcessingRuns() == null){
+//            processingFile.setProcessingRun(processingRun);
             processingFileRepository.save(processingFile);
 
             processingRun.getProcessingFiles().add(processingFile);

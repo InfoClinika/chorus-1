@@ -6,6 +6,7 @@ import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.security.access.method.P;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -28,8 +29,10 @@ public class ProcessingFile extends AbstractPersistable<Long> {
     @Column(name = "upload_date")
     private Date uploadDate = new Date();
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private ProcessingRun processingRun;
+    @ManyToMany(targetEntity = ProcessingRun.class)
+    @JoinTable(name = "processing_file_to_processing_runs", joinColumns = @JoinColumn(name = "processing_file_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "processing_run_id", referencedColumnName = "id"))
+    private List<ProcessingRun> processingRuns = new ArrayList();
 
     @ManyToOne(cascade = CascadeType.ALL)
     private AbstractExperiment experimentTemplate;
@@ -39,11 +42,11 @@ public class ProcessingFile extends AbstractPersistable<Long> {
     inverseJoinColumns = @JoinColumn(name = "id_file_meta_data", referencedColumnName = "id", nullable = false, updatable = false))
     private List<FileMetaDataTemplate> fileMetaDataTemplates = new ArrayList<>();
 
-    public ProcessingFile(String name, String contentId, Date uploadDate, ProcessingRun processingRun, AbstractExperiment experimentTemplate, List<FileMetaDataTemplate> fileMetaDataTemplates) {
+    public ProcessingFile(String name, String contentId, Date uploadDate, List<ProcessingRun> processingRuns, AbstractExperiment experimentTemplate, List<FileMetaDataTemplate> fileMetaDataTemplates) {
         this.name = name;
         this.contentId = contentId;
         this.uploadDate = uploadDate;
-        this.processingRun = processingRun;
+        this.processingRuns = processingRuns;
         this.experimentTemplate = experimentTemplate;
         this.fileMetaDataTemplates = fileMetaDataTemplates;
     }
@@ -85,16 +88,12 @@ public class ProcessingFile extends AbstractPersistable<Long> {
         return fileMetaDataTemplates;
     }
 
-    public void setFileMetaDataTemplates(List<FileMetaDataTemplate> fileMetaDataTemplates) {
-        this.fileMetaDataTemplates = fileMetaDataTemplates;
+    public List<ProcessingRun> getProcessingRuns() {
+        return processingRuns;
     }
 
-    public ProcessingRun getProcessingRun() {
-        return processingRun;
-    }
-
-    public void setProcessingRun(ProcessingRun processingRun) {
-        this.processingRun = processingRun;
+    public void setProcessingRuns(List<ProcessingRun> processingRuns) {
+        this.processingRuns = processingRuns;
     }
 
     public AbstractExperiment getExperimentTemplate() {
@@ -103,5 +102,13 @@ public class ProcessingFile extends AbstractPersistable<Long> {
 
     public void setExperimentTemplate(AbstractExperiment experimentTemplate) {
         this.experimentTemplate = experimentTemplate;
+    }
+
+    public void addProcessingRun(ProcessingRun processingRun){
+        if(processingRun != null){
+            if(!processingRuns.contains(processingRun)){
+                processingRuns.add(processingRun);
+            }
+        }
     }
 }
