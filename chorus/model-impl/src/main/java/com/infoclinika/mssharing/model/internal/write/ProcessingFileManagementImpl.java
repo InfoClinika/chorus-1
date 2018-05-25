@@ -7,12 +7,12 @@ import com.infoclinika.mssharing.model.internal.entity.ProcessingFile;
 import com.infoclinika.mssharing.model.internal.entity.ProcessingRun;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveExperiment;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
+import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.internal.repository.ExperimentRepository;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
 import com.infoclinika.mssharing.model.internal.repository.ProcessingFileRepository;
 import com.infoclinika.mssharing.model.internal.repository.ProcessingRunRepository;
 import com.infoclinika.mssharing.model.read.DetailsReader;
-import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.platform.entity.UserLabMembership;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
@@ -57,7 +57,7 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
         final ProcessingFile processingFile = new ProcessingFile();
         processingFile.setContentId(processingFileShortInfo.content);
         processingFile.setName(processingFileShortInfo.name);
-        processingFile.setExperimentTemplate(activeExperiment);
+        processingFile.setExperiment(activeExperiment);
 
         processingFileRepository.save(processingFile);
         return processingFile.getId();
@@ -134,9 +134,9 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
                 ProcessingRun processingRun = new ProcessingRun();
                 processingRun.setName(processingRunName);
                 processingRun.setExperimentTemplate(activeExperiment);
-                processingRun.getProcessingFiles().add(processingFile);
+                processingRun.addProcessingFile(processingFile);
                 processingRunRepository.save(processingRun);
-//                processingFile.setProcessingRun(processingRun);
+                processingFile.addProcessingRun(processingRun);
                 processingFileRepository.save(processingFile);
 
                 LOGGER.info("#### Associating processes file successfully complete ####");
@@ -156,20 +156,14 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
 
     private boolean updateProcessingFiles(ProcessingFile processingFile, long experiment, String processingRunName){
         ProcessingRun processingRun = processingRunRepository.findByNameAndExperiment(processingRunName, experiment);
+        processingFile.addProcessingRun(processingRun);
+        processingFileRepository.save(processingFile);
+        processingRun.addProcessingFile(processingFile);
+        processingRunRepository.save(processingRun);
 
-        if(processingFile.getProcessingRuns() == null){
-//            processingFile.setProcessingRun(processingRun);
-            processingFileRepository.save(processingFile);
+        LOGGER.info("#### Associating processes file successfully complete ####");
+        LOGGER.info("#### Processing run successfully updated ####");
 
-            processingRun.getProcessingFiles().add(processingFile);
-            processingRunRepository.save(processingRun);
-
-            LOGGER.info("#### Associating processes file successfully complete ####");
-            LOGGER.info("#### Processing run successfully updated ####");
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
 }

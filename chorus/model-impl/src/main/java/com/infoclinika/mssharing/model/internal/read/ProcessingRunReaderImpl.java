@@ -10,8 +10,8 @@ import javax.inject.Inject;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Service
-@Transactional
-public class ProcessingRunReaderImpl implements ProcessingRunReader{
+@Transactional(readOnly = true)
+public class ProcessingRunReaderImpl implements ProcessingRunReader {
 
     @Inject
     private ProcessingRunRepository processingRunRepository;
@@ -24,24 +24,32 @@ public class ProcessingRunReaderImpl implements ProcessingRunReader{
     }
 
     @Override
-    public ProcessingRunInfo readProcessingRun(long processingRunId) {
+    public ProcessingRunReader.ProcessingRunInfo readProcessingRun(long processingRunId) {
         final ProcessingRun processingRun = (ProcessingRun) find(processingRunId);
         checkNotNull(processingRun);
-        return new ProcessingRunInfo(processingRun.getId(), processingRun.getName(),
-                                    processingRun.getProcessedDate(), processingRun.getExperimentTemplate(), processingRun.getProcessingFiles());
+
+        return createProcessingRunInfo(processingRun);
     }
 
     @Override
     public ProcessingRunInfo readProcessingRunByNameAndExperiment(long experiment, String name) {
         final ProcessingRun processingRun = processingRunRepository.findByNameAndExperiment(name, experiment);
         checkNotNull(processingRun);
-        return new ProcessingRunInfo(processingRun.getId(), processingRun.getName(),
-                                    processingRun.getProcessedDate(), processingRun.getExperimentTemplate(), processingRun.getProcessingFiles());
+        return createProcessingRunInfo(processingRun);
     }
 
 
     private Object find(long id){
         return checkNotNull(processingRunRepository.findOne(id), "Couldn't find processing file with id %s", id);
     }
+
+
+    private ProcessingRunInfo createProcessingRunInfo(ProcessingRun processingRun){
+        return new ProcessingRunInfo(processingRun.getId(), processingRun.getName(),
+                                        processingRun.getProcessedDate(), processingRun.getExperimentTemplate(), processingRun.getProcessingFiles());
+
+    }
+
+
 
 }

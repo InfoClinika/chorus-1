@@ -29,3 +29,4 @@ autoscaling-statistics.log
 autoscaling.log
 chorus/single-signon/single-signon-webapp/overlays/
 mysql
+docker/webapp/ROOT.war

@@ -1,7 +1,6 @@
 package com.infoclinika.mssharing.model.test.processing;
 
 import com.google.common.collect.ImmutableSet;
-import com.infoclinika.mssharing.model.helper.AbstractTest;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;

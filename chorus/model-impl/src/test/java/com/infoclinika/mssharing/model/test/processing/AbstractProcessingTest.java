@@ -1,26 +1,22 @@
 package com.infoclinika.mssharing.model.test.processing;
 
 import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.infoclinika.mssharing.model.helper.AbstractTest;
-import com.infoclinika.mssharing.model.internal.read.ProcessingFileReader;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
+import com.infoclinika.mssharing.model.internal.read.ProcessingFileReader;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.read.dto.details.FileItem;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
 import com.infoclinika.mssharing.model.write.ProjectInfo;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
-import org.springframework.data.repository.CrudRepository;
-import org.testng.annotations.AfterMethod;
 
 import javax.inject.Inject;
 import java.util.*;
 
 import static com.infoclinika.mssharing.model.helper.Data.PROJECT_TITLE;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public class AbstractProcessingTest extends AbstractTest{
@@ -34,20 +30,6 @@ public class AbstractProcessingTest extends AbstractTest{
     protected ProcessingRunManagement processingRunManagement;
     @Inject
     protected ProcessingRunReader processingRunReader;
-
-
-
-
-    @AfterMethod
-    @SuppressWarnings("unchecked")
-    public void tearDown() {
-        super.tearDown();
-    }
-
-
-
-
-
 
 
 
@@ -80,11 +62,12 @@ public class AbstractProcessingTest extends AbstractTest{
                 return input.getId() == fileId;
             }
         }));
-        assertNotNull(processingFileInfo.processingRun);
+        assertTrue(processingFileInfo.processingRuns.size() > 0);
         assertTrue(processingFileInfo.fileMetaDataTemplateList.size() == 1);
     }
 
-    protected void assertMultipartProcessingFilesIsAssociateExperimentFile(long processingFileId, long fileId, ExperimentItem experimentItem){
+
+    protected void assertMultipartProcessingFilesIsAssociateExperimentFile(long processingFileId, long fileId, long experiment){
 
         ProcessingFileReader.ProcessingFileInfo processingFileInfo = processingFileReader.readProcessingFileInfo(processingFileId);
         assertTrue(Iterables.any(processingFileInfo.fileMetaDataTemplateList, new Predicate<FileMetaDataTemplate>() {
@@ -93,11 +76,9 @@ public class AbstractProcessingTest extends AbstractTest{
                 return input.getId() == fileId;
             }
         }));
-        long experimentTemplateId = processingFileInfo.processingRun.getExperimentTemplate().getId();
 
-        assertNotNull(processingFileInfo.processingRun);
-        assertEquals(experimentTemplateId, experimentItem.id);
-        assertTrue(processingFileInfo.processingRun.processingFiles.size() == 3);
+        assertTrue(processingFileInfo.processingRuns.size() > 0);
+        assertEquals(Optional.ofNullable(experiment).get(), processingFileInfo.abstractExperiment.getId());
     }
 
 

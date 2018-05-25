@@ -15,9 +15,6 @@ public interface ProcessingFileManagement {
     boolean isUserLabMembership(long user, long lab);
 
 
-
-
-
     class ProcessingFileShortInfo {
 
         public final String name;

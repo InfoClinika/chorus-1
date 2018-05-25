@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Transactional
 public interface ProcessingRunReader {
@@ -24,7 +25,7 @@ public interface ProcessingRunReader {
         public String name;
         public Date date;
         public AbstractExperiment abstractExperiment;
-        public List<ProcessingFile> processingFiles;
+        public Set<ProcessingFile> processingFiles;
 
         public ProcessingRunInfo(Long id, String name, Date date, AbstractExperiment abstractExperiment) {
             this.id = id;
@@ -33,7 +34,7 @@ public interface ProcessingRunReader {
             this.abstractExperiment = abstractExperiment;
         }
 
-        public ProcessingRunInfo(Long id, String name, Date date, AbstractExperiment abstractExperiment, List<ProcessingFile> processingFiles) {
+        public ProcessingRunInfo(Long id, String name, Date date, AbstractExperiment abstractExperiment, Set<ProcessingFile> processingFiles) {
             this.id = id;
             this.name = name;
             this.date = date;

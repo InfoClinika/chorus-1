@@ -1,13 +1,13 @@
 package com.infoclinika.mssharing.model.test.processing;
 
 import com.google.common.collect.ImmutableSet;
-import com.infoclinika.mssharing.model.helper.AbstractTest;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.internal.read.ProcessingFileReader;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.read.dto.details.FileItem;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,6 +17,8 @@ import static com.google.common.collect.ImmutableList.of;
 import static org.testng.Assert.assertEquals;
 
 public class ManagingProcessingFileTest extends AbstractProcessingTest{
+
+    public static final Logger LOGGER = Logger.getLogger(ManagingProcessingFileTest.class);
 
     @Test
     public void checkProcessingFileIsUpload(){
@@ -71,11 +73,9 @@ public class ManagingProcessingFileTest extends AbstractProcessingTest{
         processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "ProcessingRunTests");
 
         for(int i = 0; i < processingFilesList.size(); i++){
-            assertMultipartProcessingFilesIsAssociateExperimentFile(processingFilesList.get(i), experimentItem.files.get(i).id, experimentItem);
+            assertMultipartProcessingFilesIsAssociateExperimentFile(processingFilesList.get(i), experimentItem.files.get(i).id, experimentItem.id);
         }
     }
-
-
 
 
     private ExperimentManagementTemplate.MetaFactorTemplate factor(long experimentId) {

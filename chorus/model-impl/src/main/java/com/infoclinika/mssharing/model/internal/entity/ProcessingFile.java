@@ -2,17 +2,14 @@ package com.infoclinika.mssharing.model.internal.entity;
 
 
 import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractExperiment;
+import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractFileMetaData;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.springframework.data.jpa.domain.AbstractPersistable;
-import org.springframework.security.access.method.P;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import static com.google.common.collect.Sets.newHashSet;
 
@@ -29,20 +26,23 @@ public class ProcessingFile extends AbstractPersistable<Long> {
     @Column(name = "upload_date")
     private Date uploadDate = new Date();
 
-    @ManyToMany(targetEntity = ProcessingRun.class)
+    @ManyToMany(targetEntity = ProcessingRun.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "processing_file_to_processing_runs", joinColumns = @JoinColumn(name = "processing_file_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "processing_run_id", referencedColumnName = "id"))
     private List<ProcessingRun> processingRuns = new ArrayList();
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(targetEntity = AbstractExperiment.class, cascade = CascadeType.ALL)
+    @JoinColumns({@JoinColumn(name = "experiment_id")})
     private AbstractExperiment experimentTemplate;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(name = "processing_file_meta_data", joinColumns = @JoinColumn(name = "id_process_file", referencedColumnName = "id", nullable = false, updatable = false),
-    inverseJoinColumns = @JoinColumn(name = "id_file_meta_data", referencedColumnName = "id", nullable = false, updatable = false))
+    @JoinTable(name = "processing_file_meta_data", joinColumns = @JoinColumn(name = "id_process_file", referencedColumnName = "id"),
+    inverseJoinColumns = @JoinColumn(name = "id_file_meta_data", referencedColumnName = "id"))
     private List<FileMetaDataTemplate> fileMetaDataTemplates = new ArrayList<>();
 
-    public ProcessingFile(String name, String contentId, Date uploadDate, List<ProcessingRun> processingRuns, AbstractExperiment experimentTemplate, List<FileMetaDataTemplate> fileMetaDataTemplates) {
+    public ProcessingFile(String name, String contentId, Date uploadDate,
+                          List<ProcessingRun> processingRuns, AbstractExperiment experimentTemplate,
+                          List<FileMetaDataTemplate> fileMetaDataTemplates) {
         this.name = name;
         this.contentId = contentId;
         this.uploadDate = uploadDate;
@@ -51,10 +51,10 @@ public class ProcessingFile extends AbstractPersistable<Long> {
         this.fileMetaDataTemplates = fileMetaDataTemplates;
     }
 
-    public ProcessingFile(String name, String contentId, AbstractExperiment experimentTemplate) {
+    public ProcessingFile(String name, String contentId, AbstractExperiment experiment) {
         this.name = name;
         this.contentId = contentId;
-        this.experimentTemplate = experimentTemplate;
+        this.experimentTemplate = experiment;
     }
 
     public ProcessingFile() {
@@ -96,11 +96,11 @@ public class ProcessingFile extends AbstractPersistable<Long> {
         this.processingRuns = processingRuns;
     }
 
-    public AbstractExperiment getExperimentTemplate() {
+    public AbstractExperiment getExperiment() {
         return experimentTemplate;
     }
 
-    public void setExperimentTemplate(AbstractExperiment experimentTemplate) {
+    public void setExperiment(AbstractExperiment experimentTemplate) {
         this.experimentTemplate = experimentTemplate;
     }
 

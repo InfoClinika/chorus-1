@@ -77,8 +77,7 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
     @Embedded
     private NgsRelatedData ngsRelatedData;
 
-    @OneToMany(mappedBy = "experimentTemplate", cascade = CascadeType.ALL)
-    @PrimaryKeyJoinColumn
+    @OneToMany(mappedBy = "experimentTemplate", orphanRemoval = true)
     private Set<ProcessingFile> processingFile = newHashSet();
 
     public AbstractExperiment(User creator,
@@ -264,6 +263,9 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
         this.ngsRelatedData = ngsRelatedData;
     }
 
+    public Set<ProcessingFile> getProcessingFile() {
+        return processingFile;
+    }
 
     @Override
     public String toString() {

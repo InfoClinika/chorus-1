@@ -22,12 +22,11 @@ public class ProcessingRun extends AbstractPersistable<Long>{
     @Column(name = "processed_date")
     private Date processedDate = new Date();
 
-    @ManyToMany(mappedBy = "processingRuns", cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+    @ManyToMany(mappedBy = "processingRuns", cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, fetch = FetchType.EAGER)
     public Set<ProcessingFile> processingFiles = newHashSet();
 
-
     @ManyToOne(targetEntity = AbstractExperiment.class)
-    @JoinColumns({@JoinColumn(name = "experiment_id")})
+    @JoinColumn(name = "experiment_id")
     private AbstractExperiment experimentTemplate;
 
     public ProcessingRun() {
@@ -50,10 +49,6 @@ public class ProcessingRun extends AbstractPersistable<Long>{
 
     public Date getProcessedDate() {
         return processedDate;
-    }
-
-    public void setProcessedDate(Date processedDate) {
-        this.processedDate = processedDate;
     }
 
     public Set<ProcessingFile> getProcessingFiles() {

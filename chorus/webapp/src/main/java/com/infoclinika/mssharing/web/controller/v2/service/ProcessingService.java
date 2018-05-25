@@ -3,9 +3,9 @@ package com.infoclinika.mssharing.web.controller.v2.service;
 import com.infoclinika.analysis.storage.cloud.CloudStorageFactory;
 import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import com.infoclinika.analysis.storage.cloud.CloudStorageService;
+import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.internal.s3client.AwsS3ClientConfigurationService;
 import com.infoclinika.mssharing.model.read.DetailsReader;
-import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
 import com.infoclinika.mssharing.platform.fileserver.model.NodePath;
@@ -32,7 +32,6 @@ public class ProcessingService {
     private static final Logger LOGGER = Logger.getLogger(ProcessingService.class);
 
     private static final CloudStorageService CLOUD_STORAGE_SERVICE = CloudStorageFactory.service();
-
     public static final String UPLOAD_COMPLETE = "UPLOAD COMPLETE";
     public static final String ALREADY_EXISTS = "ALREADY EXISTS";
 

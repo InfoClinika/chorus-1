@@ -44,7 +44,7 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
     @Basic(optional = false)
     private boolean sizeIsConsistent = false;
 
-    @ManyToMany(mappedBy = "fileMetaDataTemplates", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "fileMetaDataTemplates", cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private Set<ProcessingFile> processingFile = newHashSet();
 
     public StorageData getStorageData() {

@@ -4,8 +4,6 @@ import com.google.common.base.Function;
 import com.infoclinika.mssharing.dto.FunctionTransformerAbstract;
 import com.infoclinika.mssharing.dto.request.UploadFilesDTORequest;
 import com.infoclinika.mssharing.dto.response.*;
-import com.infoclinika.mssharing.model.internal.entity.ProcessingFile;
-import com.infoclinika.mssharing.model.internal.read.ProcessingFileReader;
 import com.infoclinika.mssharing.model.read.DashboardReader;
 import com.infoclinika.mssharing.model.read.FileLine;
 import com.infoclinika.mssharing.model.read.InstrumentLine;
@@ -31,15 +29,6 @@ public class DtoTransformer extends FunctionTransformerAbstract {
         public InstrumentManagement.UploadFileItem apply(@Nullable UploadFilesDTORequest.UploadFile item) {
             return new InstrumentManagement.UploadFileItem(item.getName(),
                     item.getLabels(), item.getSize(), item.getSpecie(), item.isArchive());
-        }
-    };
-
-    public static final Function<ProcessingFile,
-            ProcessingFileReader.ProcessingFileInfo> TO_PROCESSING_FILE_DTO = new Function<ProcessingFile, ProcessingFileReader.ProcessingFileInfo>() {
-        @Nullable
-        @Override
-        public ProcessingFileReader.ProcessingFileInfo apply(@Nullable ProcessingFile input) {
-            return new ProcessingFileReader.ProcessingFileInfo(input.getName(), input.getContentId(), input.getFileMetaDataTemplates(), input.getProcessingRun(), input.getExperimentTemplate());
         }
     };
 

@@ -4,7 +4,7 @@ import com.infoclinika.mssharing.model.internal.entity.ProcessingFile;
 import com.infoclinika.mssharing.model.internal.entity.ProcessingRun;
 import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractExperiment;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
-import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 
