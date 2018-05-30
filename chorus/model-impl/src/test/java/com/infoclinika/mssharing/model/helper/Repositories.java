@@ -25,6 +25,9 @@ import java.util.List;
  * @author Stanislav Kurilin
  */
 class Repositories {
+
+    @Inject
+    protected ProcessingFileRepository processingFileRepository;
     @Inject
     private VendorRepository vendorRepository;
     @Inject
@@ -34,7 +37,7 @@ class Repositories {
     @Inject
     private GroupRepository groupRepository;
     @Inject
-    private ExperimentRepository experimentRepository;
+    protected ExperimentRepository experimentRepository;
     @Inject
     private DeletedExperimentRepository deletedExperimentRepository;
     @Inject

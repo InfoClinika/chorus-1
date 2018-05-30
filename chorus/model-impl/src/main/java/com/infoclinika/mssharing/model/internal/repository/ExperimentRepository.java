@@ -267,5 +267,8 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
     @Query("select distinct e from ActiveExperiment e left join e.lab lab left join e.creator own " +
             " where (e.name like :s or own.personData.firstName like :s or own.personData.lastName like :s or lab.name like :s) ")
     Page<ActiveExperiment> findAllWithFilter(@Param("s") String query, Pageable request);
+
+    @Query("select case when count(e.id)>0 then true else false end from ActiveExperiment e where e.id=:experiment")
+    boolean isExperimentExist(@Param("experiment") long experiment);
 }
 

@@ -68,7 +68,7 @@ class SpringConfig {
         return mock(AdminNotifier.class);
     }
 
-    @Bean(name = "billingService")
+    @Bean(name = "billingRestService")
     public BillingService billingService() {
         BillingService billingService = mock(BillingService.class);
         return billingService;

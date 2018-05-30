@@ -143,6 +143,7 @@
         <hibernate.hbm2ddl.auto>update</hibernate.hbm2ddl.auto>
         <test.groups/>
         <excluded.test.groups>integration</excluded.test.groups>
+
     </properties>
 
     <build>
@@ -175,22 +176,55 @@
                 </configuration>
             </plugin>
         </plugins>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </testResource>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <excludes>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+                <filtering>false</filtering>
+            </testResource>
+        </testResources>
         <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+                <filtering>false</filtering>
+            </resource>
 
             <resource>
                 <directory>src/main/resources</directory>
-                <filtering>true</filtering>
                 <includes>
+                    <include>**/*.properties</include>
                     <include>META-INF/persistence.xml</include>
                 </includes>
+                <filtering>true</filtering>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
-                <filtering>false</filtering>
                 <excludes>
+                    <exclude>**/*.properties</exclude>
                     <exclude>META-INF/persistence.xml</exclude>
                 </excludes>
+                <filtering>false</filtering>
             </resource>
+
         </resources>
     </build>
     <profiles>
@@ -198,6 +232,10 @@
             <id>create-drop-database</id>
             <properties>
                 <hibernate.hbm2ddl.auto>create-drop</hibernate.hbm2ddl.auto>
+
+                <amazon.active.bucket>amazon.active.bucket</amazon.active.bucket>
+                <amazon.secret>amazon.secret</amazon.secret>
+                <amazon.key>amazon.key</amazon.key>
             </properties>
         </profile>
         <profile>

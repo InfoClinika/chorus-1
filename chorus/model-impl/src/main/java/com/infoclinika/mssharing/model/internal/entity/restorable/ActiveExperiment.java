@@ -20,6 +20,7 @@ import com.infoclinika.mssharing.platform.entity.Species;
 import javax.persistence.Entity;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Stanislav Kurilin, Elena Kurilina
@@ -51,6 +52,7 @@ public class ActiveExperiment extends AbstractExperiment {
             double minReporterFraction,
             ExperimentCategory experimentCategory,
             NgsRelatedData ngsRelatedData
+//            Set<ProcessingRun> processingRuns
     ) {
         super(
                 creator,
@@ -75,6 +77,7 @@ public class ActiveExperiment extends AbstractExperiment {
                 minReporterFraction,
                 experimentCategory,
                 ngsRelatedData
+//                processingRuns
         );
     }
 

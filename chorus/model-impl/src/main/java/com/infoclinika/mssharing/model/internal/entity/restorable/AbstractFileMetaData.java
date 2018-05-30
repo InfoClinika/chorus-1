@@ -5,12 +5,15 @@ import com.infoclinika.mssharing.platform.entity.Species;
 import com.infoclinika.mssharing.platform.entity.UserTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import org.hibernate.annotations.Index;
+import org.hibernate.validator.ap.util.CollectionHelper;
 
 import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.google.common.collect.Sets.newHashSet;
 
 /**
  * @author Elena Kurilina
@@ -40,6 +43,9 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
 
     @Basic(optional = false)
     private boolean sizeIsConsistent = false;
+
+    @ManyToMany(mappedBy = "fileMetaDataTemplates", fetch = FetchType.LAZY)
+    private Set<ProcessingFile> processingFile = newHashSet();
 
     public StorageData getStorageData() {
         //Sometimes storageData field is null due to bug in hibernate
@@ -144,5 +150,22 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
     @PreUpdate
     void preUpdate() {
         setLastAccess(new Date());
+    }
+
+    /**
+     * Getter for property 'sizeIsConsistent'.
+     *
+     * @return Value for property 'sizeIsConsistent'.
+     */
+    public boolean isSizeIsConsistent() {
+        return sizeIsConsistent;
+    }
+
+    public Set<ProcessingFile> getProcessingFile() {
+        return processingFile;
+    }
+
+    public void setProcessingFile(Set<ProcessingFile> processingFile) {
+        this.processingFile = processingFile;
     }
 }

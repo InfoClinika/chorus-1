@@ -157,20 +157,7 @@ public class UploaderRestServiceTest extends AbstractDataBasedTest {
         return userId;
     }
 
-    private Optional<Long> createInstrumentAndApprove(long user, long lab, String instrumentName, String serialNumber, String hplc, String peripherals, long model) {
 
-        final boolean labHead = labManagement.isLabHead(user, lab);
-        final InstrumentDetails details = new InstrumentDetails(instrumentName, serialNumber, hplc, peripherals, Collections.<LockMzItem>emptyList());
-
-        if (labHead) {
-            return Optional.of(instrumentManagement.createInstrument(user, lab, model, details));
-        } else {
-            final Optional<Long> instrumentRequest = instrumentManagement.newInstrumentRequest(user, lab, model, details, new ArrayList<Long>());
-            final LabReaderTemplate.LabLineTemplate labLine = dashboardReader.readLab(lab);
-            return Optional.of(instrumentManagement.approveInstrumentCreation(labLine.labHead, instrumentRequest.get()));
-        }
-
-    }
 
     private void attachFilesToInstrument(long user, long instrument){
 

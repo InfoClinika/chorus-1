@@ -12,8 +12,10 @@ import com.infoclinika.mssharing.platform.entity.restorable.InstrumentRestrictio
 import javax.persistence.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Sets.newHashSet;
 
 /**
  * @author Elena Kurilina, Stanislav Kurilin
@@ -74,6 +76,10 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
 
     @Embedded
     private NgsRelatedData ngsRelatedData;
+
+    @OneToMany(mappedBy = "experimentTemplate", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private Set<ProcessingFile> processingFile = newHashSet();
 
     public AbstractExperiment(User creator,
                               AbstractProject project,
@@ -257,6 +263,7 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
     public void setNgsRelatedData(NgsRelatedData ngsRelatedData) {
         this.ngsRelatedData = ngsRelatedData;
     }
+
 
     @Override
     public String toString() {

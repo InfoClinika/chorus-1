@@ -22,6 +22,7 @@ import com.infoclinika.mssharing.platform.model.ObjectNotFoundException;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.read.LabReaderTemplate;
+import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -36,6 +37,8 @@ import static org.testng.Assert.*;
  * @author Stanislav Kurilin
  */
 public class CreatingInstrumentTest extends AbstractInstrumentTest {
+
+    private static final Logger LOGGER = Logger.getLogger(CreatingInstrumentTest.class);
 
     protected final List<LockMzItem> LOCK_MZ_ITEMS = newArrayList(
             new LockMzItem(22.2, 2),

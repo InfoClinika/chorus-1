@@ -40,6 +40,7 @@ public class DeletedExperiment extends AbstractExperiment {
                 e.getMinReporterFraction(),
                 e.getExperimentCategory(),
                 e.getNgsRelatedData()
+//                e.getProcessingRuns()
         );
         this.setDownloadToken(e.getDownloadToken());
         this.setRawFiles(e.getRawFiles());

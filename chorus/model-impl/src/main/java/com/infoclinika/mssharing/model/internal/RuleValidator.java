@@ -86,4 +86,6 @@ public interface RuleValidator extends com.infoclinika.mssharing.platform.model.
 
     boolean shouldSearchResultsBePersistedInBlibFile(long run);
 
+    boolean isExperimentExist(long experiment);
+
 }

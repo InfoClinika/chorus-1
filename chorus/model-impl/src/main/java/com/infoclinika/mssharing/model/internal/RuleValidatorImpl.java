@@ -119,6 +119,11 @@ public class RuleValidatorImpl extends DefaultRuleValidator<ActiveExperiment, Ac
 
 
     @Override
+    public boolean isExperimentExist(long experiment) {
+        return experimentRepository.isExperimentExist(experiment);
+    }
+
+    @Override
     public Predicate<ActiveFileMetaData> userHasReadPermissionsOnFilePredicate(long userId) {
         return validatorPredicates.userHasReadPermissionsOnFile(userId);
     }

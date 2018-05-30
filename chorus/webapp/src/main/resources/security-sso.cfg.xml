@@ -20,6 +20,7 @@
     <!--<http pattern="/common-js/**" security="none" />-->
 
     <http use-expressions="true" entry-point-ref="casEntryPoint" disable-url-rewriting="false">
+        <intercept-url pattern="/v2/auth/cookie" access="permitAll"/>
         <intercept-url pattern="/paypal/ipn" access="permitAll" />
         <intercept-url pattern="/rest/**" access="permitAll" />
         <intercept-url pattern="/skyline/api/**" access="permitAll" />

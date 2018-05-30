@@ -23,33 +23,22 @@ import com.infoclinika.mssharing.model.Notifier;
 import com.infoclinika.mssharing.model.PredefinedDataCreator;
 import com.infoclinika.mssharing.model.features.ApplicationFeature;
 import com.infoclinika.mssharing.model.internal.entity.Lab;
+import com.infoclinika.mssharing.model.internal.entity.ProcessingFile;
 import com.infoclinika.mssharing.model.internal.entity.User;
 import com.infoclinika.mssharing.model.internal.entity.mailing.FailedMailNotificationReceiver;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
+import com.infoclinika.mssharing.model.internal.read.ProcessingFileReader;
 import com.infoclinika.mssharing.model.internal.read.Transformers;
+import com.infoclinika.mssharing.model.internal.s3client.AwsS3ClientConfigurationService;
 import com.infoclinika.mssharing.model.internal.write.ExperimentLabelManagement;
 import com.infoclinika.mssharing.model.internal.write.ExperimentLabelManagement.ExperimentTypeInfo;
 import com.infoclinika.mssharing.model.read.*;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.read.dto.details.FileItem;
-import com.infoclinika.mssharing.model.write.AnalysisBounds;
-import com.infoclinika.mssharing.model.write.AttachmentManagement;
-import com.infoclinika.mssharing.model.write.ExperimentInfo;
-import com.infoclinika.mssharing.model.write.FeaturesManagement;
-import com.infoclinika.mssharing.model.write.FileMovingManager;
-import com.infoclinika.mssharing.model.write.FileOperationsManager;
-import com.infoclinika.mssharing.model.write.InstrumentDetails;
-import com.infoclinika.mssharing.model.write.InstrumentManagement;
-import com.infoclinika.mssharing.model.write.LabHeadManagement;
-import com.infoclinika.mssharing.model.write.LabManagement;
-import com.infoclinika.mssharing.model.write.ProjectInfo;
-import com.infoclinika.mssharing.model.write.ProteinDatabaseManagement;
-import com.infoclinika.mssharing.model.write.SharingManagement;
-import com.infoclinika.mssharing.model.write.StudyManagement;
-import com.infoclinika.mssharing.model.write.UserManagement;
-import com.infoclinika.mssharing.model.write.UserPreferencesManagement;
+import com.infoclinika.mssharing.model.write.*;
 import com.infoclinika.mssharing.model.write.billing.BillingManagement;
 import com.infoclinika.mssharing.platform.entity.UserLabMembershipRequestTemplate;
+import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import com.infoclinika.mssharing.platform.fileserver.StorageService;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.model.RequestsTemplate;
@@ -69,7 +58,6 @@ import com.infoclinika.mssharing.platform.model.read.GroupsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.LabReaderTemplate;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.Restriction;
-import com.infoclinika.mssharing.platform.model.write.ProjectManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.UserLabMembershipRequestRepositoryTemplate;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
@@ -78,7 +66,6 @@ import org.joda.time.DateTimeZone;
 import org.mockito.ArgumentMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
@@ -138,6 +125,10 @@ import static com.infoclinika.mssharing.model.write.ExperimentCategory.PROTEOMIC
 import static java.util.Collections.emptyList;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.reset;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 /**
  * Provides methods for some common scenarios.
@@ -804,6 +795,83 @@ public class AbstractTest extends AbstractTestNGSpringContextTests {
         repos.failedEmailsNotifierRepository.save(of(new FailedMailNotificationReceiver("example@email.com"), new FailedMailNotificationReceiver("example2@email.com")));
     }
 
+    protected long createProcessingFile(long experiment, FileItem fileItem){
+        ProcessingFileManagement.ProcessingFileShortInfo processingFileShortInfo = new ProcessingFileManagement.ProcessingFileShortInfo(fileItem.name, "processed-file/" + experiment + "/" + fileItem.name);
+        return processingFileManagement.createProcessingFile(experiment, processingFileShortInfo);
+    }
+
+    protected Map<String, Collection<String>> createFileToFileMap(FileItem fileItem, long processingFileId){
+        ProcessingFileReader.ProcessingFileInfo processingFileInfo = processingFileReader.readProcessingFileInfo(processingFileId);
+
+        Map<String, Collection<String>> map = new HashMap<>();
+        List<String> collection = new ArrayList<>();
+        collection.add(fileItem.name);
+        map.put(processingFileInfo.name, collection);
+
+        return map;
+    }
+
+    protected void assertProcessingFilesIsAssociateExperimentFile(long processingFileId, long fileId){
+
+        ProcessingFileReader.ProcessingFileInfo processingFileInfo = processingFileReader.readProcessingFileInfo(processingFileId);
+        assertTrue(Iterables.any(processingFileInfo.fileMetaDataTemplateList, new Predicate<FileMetaDataTemplate>() {
+            @Override
+            public boolean apply(FileMetaDataTemplate input) {
+                return input.getId() == fileId;
+            }
+        }));
+        assertNotNull(processingFileInfo.processingRun);
+        assertTrue(processingFileInfo.fileMetaDataTemplateList.size() == 1);
+    }
+
+    protected void assertMultipartProcessingFilesIsAssociateExperimentFile(long processingFileId, long fileId, ExperimentItem experimentItem){
+
+        ProcessingFileReader.ProcessingFileInfo processingFileInfo = processingFileReader.readProcessingFileInfo(processingFileId);
+        assertTrue(Iterables.any(processingFileInfo.fileMetaDataTemplateList, new Predicate<FileMetaDataTemplate>() {
+            @Override
+            public boolean apply(FileMetaDataTemplate input) {
+                return input.getId() == fileId;
+            }
+        }));
+        long experimentTemplateId = processingFileInfo.processingRun.getExperimentTemplate().getId();
+
+        assertNotNull(processingFileInfo.processingRun);
+        assertEquals(experimentTemplateId, experimentItem.id);
+        assertTrue(processingFileInfo.processingRun.processingFiles.size() == 3);
+    }
+
+
+    protected List<Long> createMultiProcessingFiles(ExperimentItem experimentItem){
+
+        List<Long> list = new ArrayList<>();
+        for(int i = 0; i < experimentItem.files.size(); i++){
+            ProcessingFileManagement.ProcessingFileShortInfo processingFileShortInfo = new ProcessingFileManagement.ProcessingFileShortInfo("file-test"+i+".RAW",
+                                                                                                                                            "processed-file" + experimentItem.id + "/file-test"+i+".RAW");
+            long id = processingFileManagement.createProcessingFile(experimentItem.id, processingFileShortInfo);
+            list.add(id);
+        }
+        return list;
+    }
+
+    protected Map<String, Collection<String>> createFileToFileMap(ExperimentItem experimentItem, List<Long> list){
+        Map<String, Collection<String>> map = new HashMap<>();
+        List<String> collection = new ArrayList<>();
+        for(int i = 0; i<list.size(); i++){
+            ProcessingFileReader.ProcessingFileInfo processingFileInfo = processingFileReader.readProcessingFileInfo(list.get(i));
+            collection.add(experimentItem.files.get(i).name);
+            map.put(processingFileInfo.name, collection);
+        }
+
+        return map;
+    }
+
+
+    @Inject
+    protected ProcessingFileReader processingFileReader;
+    @Inject
+    protected ProcessingFileManagement processingFileManagement;
+    @Inject
+    protected AwsS3ClientConfigurationService awsS3ClientConfigurationService;
     @Inject
     protected InstrumentReader instrumentReader;
     @Inject

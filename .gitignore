@@ -28,3 +28,4 @@ workers/messaging-sequest-processing-translated/logs/msprocessor.log
 autoscaling-statistics.log
 autoscaling.log
 chorus/single-signon/single-signon-webapp/overlays/
+mysql

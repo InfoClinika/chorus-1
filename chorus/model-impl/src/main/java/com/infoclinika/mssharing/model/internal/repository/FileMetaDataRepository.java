@@ -281,4 +281,8 @@ public interface FileMetaDataRepository extends FileRepositoryTemplate<ActiveFil
     @Query("select f from ActiveFileMetaData f left join f.instrument instrument left join instrument.lab lab left join f.owner own" +
             " where (f.name like :query or instrument.name like :query or lab.name like :query or own.personData.firstName like :query or own.personData.lastName like :query) ")
     Page<ActiveFileMetaData> findAllWithFilter(@Param("query") String s, Pageable pageable);
+
+    @Query("select case when count(f.id)>0 then true else false end from FileMetaDataTemplate f join f.instrument i where f.name=:name and i.id=:instrument")
+    boolean findNameByInstrument(@Param("instrument") Long instrumentId, @Param("name") String fileName);
+
 }
