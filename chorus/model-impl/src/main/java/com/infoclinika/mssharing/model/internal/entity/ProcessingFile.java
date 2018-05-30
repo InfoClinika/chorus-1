@@ -2,7 +2,6 @@ package com.infoclinika.mssharing.model.internal.entity;
 
 
 import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractExperiment;
-import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractFileMetaData;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
@@ -10,8 +9,6 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import static com.google.common.collect.Sets.newHashSet;
 
 @Entity
 @Table(name = "processed_file")
@@ -40,22 +37,12 @@ public class ProcessingFile extends AbstractPersistable<Long> {
     inverseJoinColumns = @JoinColumn(name = "id_file_meta_data", referencedColumnName = "id"))
     private List<FileMetaDataTemplate> fileMetaDataTemplates = new ArrayList<>();
 
-    public ProcessingFile(String name, String contentId, Date uploadDate,
-                          List<ProcessingRun> processingRuns, AbstractExperiment experimentTemplate,
-                          List<FileMetaDataTemplate> fileMetaDataTemplates) {
-        this.name = name;
-        this.contentId = contentId;
-        this.uploadDate = uploadDate;
-        this.processingRuns = processingRuns;
-        this.experimentTemplate = experimentTemplate;
-        this.fileMetaDataTemplates = fileMetaDataTemplates;
-    }
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "sample_to_processed_file", joinColumns = @JoinColumn(name = "processed_file_id", referencedColumnName = "id"),
+    inverseJoinColumns = @JoinColumn(name = "sample_id", referencedColumnName = "id"))
+    private List<ExperimentSample> experimentSamples = new ArrayList();
 
-    public ProcessingFile(String name, String contentId, AbstractExperiment experiment) {
-        this.name = name;
-        this.contentId = contentId;
-        this.experimentTemplate = experiment;
-    }
+
 
     public ProcessingFile() {
     }
@@ -102,6 +89,15 @@ public class ProcessingFile extends AbstractPersistable<Long> {
 
     public void setExperiment(AbstractExperiment experimentTemplate) {
         this.experimentTemplate = experimentTemplate;
+    }
+
+
+    public List<ExperimentSample> getExperimentSamples() {
+        return experimentSamples;
+    }
+
+    public void setExperimentSamples(List<ExperimentSample> experimentSamples) {
+        this.experimentSamples = experimentSamples;
     }
 
     public void addProcessingRun(ProcessingRun processingRun){

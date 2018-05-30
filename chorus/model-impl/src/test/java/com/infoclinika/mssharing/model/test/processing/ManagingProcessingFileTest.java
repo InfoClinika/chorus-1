@@ -45,7 +45,7 @@ public class ManagingProcessingFileTest extends AbstractProcessingTest{
         final long processingFileId = createProcessingFile(experiment, file);
 
         Map<String, Collection<String>> fileToFileMap = createFileToFileMap(file, processingFileId);
-        processingFileManagement.associateProcessingFileWithRawFile(fileToFileMap, experiment, userId, "ProcessingRunTest");
+//        processingFileManagement.associateProcessingFileWithRawFile(fileToFileMap, experiment, userId, "ProcessingRunTest");
 
         assertProcessingFilesIsAssociateExperimentFile(processingFileId, file.id);
     }
@@ -70,7 +70,7 @@ public class ManagingProcessingFileTest extends AbstractProcessingTest{
         List<Long> processingFilesList = createMultiProcessingFiles(experimentItem);
         Map<String, Collection<String>> map = createFileToFileMap(experimentItem, processingFilesList);
 
-        processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "ProcessingRunTests");
+//        processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "ProcessingRunTests");
 
         for(int i = 0; i < processingFilesList.size(); i++){
             assertMultipartProcessingFilesIsAssociateExperimentFile(processingFilesList.get(i), experimentItem.files.get(i).id, experimentItem.id);

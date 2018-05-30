@@ -12,5 +12,9 @@ public interface ProcessFileValidator {
 
     Map<String, Collection<String>> checkValidProcessingFilesToFileMap(ProcessingRunsDTO dto, long experiment, Map<String, Collection<String>> resultsMap);
 
-    Map<String, Collection<String>> checkValidProcessingFilesToFileMap(Map<String, Collection<String>> map, long experiment);
+    Map<String, Collection<String>> checkExistProcessingFiles(Map<String, Collection<String>> map, long experiment, ValidationType validationType);
+
+    Map<String, Collection<String>> checkExistsSampleInExperiment(Map<String, Collection<String>> sampleFileMap, long experiment, long user);
+
+
 }

@@ -51,7 +51,6 @@ public class ProcessedFilesController {
 
         }catch (IOException e){
             LOGGER.trace(e.getLocalizedMessage());
-            e.printStackTrace();
         }
 
         return new ResponseEntity("Please select the file to upload S3", HttpStatus.INTERNAL_SERVER_ERROR);

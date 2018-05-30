@@ -16,4 +16,7 @@ public class ProcessingRunsDTO{
 
     private String name;
     private Map<String, Collection<String>> fileToFileMap;
+    private Map<String, Collection<String>>  sampleFileMap;
+
+
 }

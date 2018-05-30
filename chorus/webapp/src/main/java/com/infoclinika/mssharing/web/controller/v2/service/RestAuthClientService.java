@@ -103,7 +103,7 @@ public class RestAuthClientService {
 
         if(isUserCanReadExperiment){
             final ExperimentItem experimentItem = detailsReader.readExperiment(user, experiment);
-            return processingFileManagement.isUserLabMembership(user, experimentItem.lab);
+            return ruleValidator.isUserLabMembership(user, experimentItem.lab);
         }
         return false;
     }

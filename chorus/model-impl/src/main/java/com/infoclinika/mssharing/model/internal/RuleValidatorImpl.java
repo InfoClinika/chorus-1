@@ -39,10 +39,7 @@ import com.infoclinika.mssharing.model.internal.repository.LabRepository;
 import com.infoclinika.mssharing.model.internal.repository.ProjectRepository;
 import com.infoclinika.mssharing.model.internal.repository.ProteinDatabaseRepository;
 import com.infoclinika.mssharing.model.internal.repository.UserRepository;
-import com.infoclinika.mssharing.platform.entity.EntityUtil;
-import com.infoclinika.mssharing.platform.entity.ExperimentFileTemplate;
-import com.infoclinika.mssharing.platform.entity.Sharing;
-import com.infoclinika.mssharing.platform.entity.UserTemplate;
+import com.infoclinika.mssharing.platform.entity.*;
 import com.infoclinika.mssharing.platform.model.impl.DefaultRuleValidator;
 import com.infoclinika.mssharing.platform.model.impl.ValidatorPredicates;
 import com.infoclinika.mssharing.platform.model.read.AccessLevel;
@@ -121,6 +118,12 @@ public class RuleValidatorImpl extends DefaultRuleValidator<ActiveExperiment, Ac
     @Override
     public boolean isExperimentExist(long experiment) {
         return experimentRepository.isExperimentExist(experiment);
+    }
+
+    @Override
+    public boolean isUserLabMembership(long user, long lab) {
+        UserLabMembership userLabMembership = userLabMembershipRepository.findByLabAndUser(lab, user);
+        return userLabMembership == null ? false: true;
     }
 
     @Override

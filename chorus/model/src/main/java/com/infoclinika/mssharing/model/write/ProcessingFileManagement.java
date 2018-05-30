@@ -10,9 +10,8 @@ public interface ProcessingFileManagement {
 
     boolean isProcessingFileAlreadyUploadedToExperiment(long experiment, String fileName);
 
-    boolean associateProcessingFileWithRawFile(Map<String, Collection<String>> map, long experimentId, long userId, String processingRunName);
+    boolean associateProcessingFileWithRawFile(Map<String, Collection<String>> fileToFileMap,Map<String, Collection<String>> sampleFileMap, long experimentId, long userId, String processingRunName);
 
-    boolean isUserLabMembership(long user, long lab);
 
 
     class ProcessingFileShortInfo {

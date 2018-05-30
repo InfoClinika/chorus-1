@@ -12,6 +12,7 @@ import com.infoclinika.mssharing.platform.fileserver.model.NodePath;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunsDTO;
 import com.infoclinika.mssharing.web.controller.v2.util.ProcessFileValidator;
+import com.infoclinika.mssharing.web.controller.v2.util.ValidationType;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,9 @@ public class ProcessingService {
     private static final CloudStorageService CLOUD_STORAGE_SERVICE = CloudStorageFactory.service();
     public static final String UPLOAD_COMPLETE = "UPLOAD COMPLETE";
     public static final String ALREADY_EXISTS = "ALREADY EXISTS";
+
+    public static final String PROCESSING_FILES = "Processing files";
+    public static final String EXPERIMENT_FILES = "Experiment files";
 
     @Value("${multipart.location}")
     private String tmpDir;
@@ -103,35 +107,33 @@ public class ProcessingService {
         boolean isUserHasAccessToExperiment = restAuthClientService.isUserHasAccessToExperiment(user, experiment);
         boolean isProcessingRunAlreadyExist  = processingRunReader.findProcessingRunByExperiment(dto.getName(), experiment);
 
-        if(dto.getFileToFileMap() == null || dto.getFileToFileMap().isEmpty()){
+        if(dto.getFileToFileMap() == null || dto.getFileToFileMap().isEmpty() && dto.getSampleFileMap() == null){
             return createProcessingRunWithoutAssociate(dto.getName(), user, experiment, isUserHasAccessToExperiment, isProcessingRunAlreadyExist);
-        }else {
-
-            Map<String, Collection<String>> map = processFileValidator.validateAssociateFiles(dto.getFileToFileMap(), experiment, user);
-
-            if(!map.isEmpty()){
-                return new ResponseEntity("Files in experiment does not exists !" + map.toString(), HttpStatus.BAD_REQUEST);
-            }
-
-            Map<String, Collection<String>> resultsMap = new HashMap();
-
-            return  !processFileValidator.checkValidProcessingFilesToFileMap(dto, experiment, resultsMap).isEmpty() ?
-                    new ResponseEntity("You can't create processing runs with not valid data, please check processing file name and experiment file name !  " + resultsMap.toString(), HttpStatus.BAD_REQUEST):
-                    createProcessingRunAndAssociateProcessingFiles(dto, user, experiment, isProcessingRunAlreadyExist, isUserHasAccessToExperiment);
-
-
         }
+
+        Map<String, Collection<String>> map = processFileValidator.validateAssociateFiles(dto.getFileToFileMap(), experiment, user);
+
+        if(!map.isEmpty()){
+            return new ResponseEntity("Files in experiment does not exists !" + map.toString(), HttpStatus.BAD_REQUEST);
+        }
+
+        Map<String, Collection<String>> resultsMap = new HashMap();
+
+        return  !processFileValidator.checkValidProcessingFilesToFileMap(dto, experiment, resultsMap).isEmpty() ?
+                new ResponseEntity("You can't create processing runs with not valid data, please check processing file name and experiment file name !  " + resultsMap.toString(), HttpStatus.BAD_REQUEST):
+                createProcessingRunAndAssociateProcessingFiles(dto, user, experiment, isProcessingRunAlreadyExist, isUserHasAccessToExperiment);
     }
 
 
     public ResponseEntity<Object> updateProcessingRun(ProcessingRunsDTO dto, long experiment, long user){
-        boolean isProcessingRunAlreadyExist  = processingRunReader.findProcessingRunByExperiment(dto.getName(), experiment);
-        if(isProcessingRunAlreadyExist){
-            Map<String, Map<String, Collection<String>>> validateResults = returnValidateResults(processFileValidator.checkValidProcessingFilesToFileMap(dto.getFileToFileMap(), experiment),
+
+        if(processingRunReader.findProcessingRunByExperiment(dto.getName(), experiment)){
+
+            Map<String, Map<String, Collection<String>>> validateResults = returnValidateResults(processFileValidator.checkExistProcessingFiles(dto.getFileToFileMap(), experiment, ValidationType.FILE_TO_FILE_MAP),
                                                                                                 processFileValidator.validateAssociateFiles(dto.getFileToFileMap(), experiment, user));
             if(validateResults.isEmpty()){
 
-                return processingFileManagement.associateProcessingFileWithRawFile(dto.getFileToFileMap(), experiment, user, dto.getName()) ?
+                return processingFileManagement.associateProcessingFileWithRawFile(dto.getFileToFileMap(), dto.getSampleFileMap(),experiment, user, dto.getName()) ?
                         new ResponseEntity("Processing Run with name: " + dto.getName() + " successfully updated", HttpStatus.OK) :
                         new ResponseEntity("Processing files already has processing run", HttpStatus.BAD_REQUEST);
 
@@ -163,12 +165,14 @@ public class ProcessingService {
 
             uploadDone.add(file.getName());
             map.put(UPLOAD_COMPLETE, uploadDone);
+
             LOGGER.info("Processing file  have been upload to storage: " + nodePath.getPath());
 
         }else {
 
             uploadExists.add(file.getName());
             map.put(ALREADY_EXISTS, uploadExists);
+
             LOGGER.info("Processing file with name key: " + nodePath.getPath() + " already exists");
         }
     }
@@ -179,7 +183,8 @@ public class ProcessingService {
     private ResponseEntity<Object> createProcessingRunAndAssociateProcessingFiles(ProcessingRunsDTO dto, long user, long experiment, boolean processingRunExist, boolean isUserLabMembership){
         if(!processingRunExist){
             if(isUserLabMembership){
-                return processingFileManagement.associateProcessingFileWithRawFile(dto.getFileToFileMap(), experiment, user, dto.getName()) ?
+
+                return processingFileManagement.associateProcessingFileWithRawFile(dto.getFileToFileMap(), dto.getSampleFileMap(), experiment, user, dto.getName()) ?
                         new ResponseEntity("Processing Run with name: " + dto.getName() + " successfully created", HttpStatus.OK) :
                         new ResponseEntity("Processing files already has processing run", HttpStatus.BAD_REQUEST);
 
@@ -212,10 +217,17 @@ public class ProcessingService {
 
     private Map<String, Map<String, Collection<String>>> returnValidateResults(Map<String, Collection<String>> processingFilesMap, Map<String, Collection<String>> experimentFilesMap){
         Map<String, Map<String, Collection<String>>> map = new HashMap();
+//
+//        if(!processingFilesMap.isEmpty() || !experimentFilesMap.isEmpty()){
+//
+//
+//        }
+//
 
-        if(!processingFilesMap.isEmpty() || !experimentFilesMap.isEmpty()){
-            map.put("Processing files", processingFilesMap);
-            map.put("Experiment files", experimentFilesMap);
+        if(!processingFilesMap.isEmpty()){
+            map.put(PROCESSING_FILES, processingFilesMap);
+        }else if(!experimentFilesMap.isEmpty()){
+            map.put(EXPERIMENT_FILES, experimentFilesMap);
         }
 
         return map;

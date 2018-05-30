@@ -37,7 +37,7 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
         List<Long> processingFilesList = createMultiProcessingFiles(experimentItem);
         Map<String, Collection<String>> map = createFileToFileMap(experimentItem, processingFilesList);
 
-        processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "UpdateProcessingRun");
+//        processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "UpdateProcessingRun");
         ProcessingRunReader.ProcessingRunInfo processingRunInfo = processingRunReader.readProcessingRunByNameAndExperiment(experiment, "UpdateProcessingRun");
 
         assertEquals(processingFilesList.size(), processingRunInfo.processingFiles.size());
@@ -49,7 +49,7 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
         List<Long> newProcessingFiles = createMultiProcessingFiles(experimentItems);
         Map<String, Collection<String>> newAssociationFilesMap = createFileToFileMap(experimentItems, newProcessingFiles);
 
-        processingFileManagement.associateProcessingFileWithRawFile(newAssociationFilesMap, experiment, user, "UpdateProcessingRun");
+//        processingFileManagement.associateProcessingFileWithRawFile(newAssociationFilesMap, experiment, user, "UpdateProcessingRun");
         ProcessingRunReader.ProcessingRunInfo processingRun = processingRunReader.readProcessingRunByNameAndExperiment(experiment,"UpdateProcessingRun");
 
         assertTrue(processingRun.processingFiles.size() == 8);
@@ -77,7 +77,7 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
         List<Long> processingFilesList = createMultiProcessingFiles(experimentItem);
         Map<String, Collection<String>> map = createFileToFileMap(experimentItem, processingFilesList);
 
-        processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "ProcessingRun");
+//        processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "ProcessingRun");
         ProcessingRunReader.ProcessingRunInfo processingRunInfo = processingRunReader.readProcessingRunByNameAndExperiment(experiment, "ProcessingRun");
 
         final long processingRunExperiment = processingRunInfo.abstractExperiment.getId();
