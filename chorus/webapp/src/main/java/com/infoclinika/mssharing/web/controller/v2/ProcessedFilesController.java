@@ -1,7 +1,7 @@
 package com.infoclinika.mssharing.web.controller.v2;
 
 import com.infoclinika.mssharing.platform.web.security.RichUser;
-import com.infoclinika.mssharing.web.controller.v2.service.ProcessingService;
+import com.infoclinika.mssharing.web.controller.v2.service.ProcessingFileService;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,8 +23,8 @@ public class ProcessedFilesController {
 
 
     @Inject
-    @Named(value = "processingService")
-    private ProcessingService processingService;
+    @Named(value = "processingFileService")
+    private ProcessingFileService processingFileService;
 
 
     @ExceptionHandler(RuntimeException.class)
@@ -47,7 +47,7 @@ public class ProcessedFilesController {
                 return new ResponseEntity("Please select the file to upload S3", HttpStatus.OK);
             }
 
-            return processingService.uploadFileToStorage(RichUser.get(principal).getId(), experimentId, multipartFile);
+            return processingFileService.uploadFileToStorage(RichUser.get(principal).getId(), experimentId, multipartFile);
 
         }catch (IOException e){
             LOGGER.trace(e.getLocalizedMessage());

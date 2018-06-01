@@ -3,7 +3,7 @@ package com.infoclinika.mssharing.web.controller.v2;
 
 import com.infoclinika.mssharing.platform.web.security.RichUser;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunsDTO;
-import com.infoclinika.mssharing.web.controller.v2.service.ProcessingService;
+import com.infoclinika.mssharing.web.controller.v2.service.ProcessingRunService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ public class ProcessingRunsController {
 
 
     @Inject
-    private ProcessingService processingService;
+    private ProcessingRunService processingRunService;
 
 
 
@@ -32,7 +32,7 @@ public class ProcessingRunsController {
     @RequestMapping(name = "", method = RequestMethod.POST)
     public ResponseEntity<?> create(Principal principal, @PathVariable("experimentId") long experimentId, @RequestBody ProcessingRunsDTO processingRunsDTO){
         if(processingRunsDTO.getName() != null && !processingRunsDTO.getName().isEmpty()) {
-            return processingService.createProcessingRun(processingRunsDTO, RichUser.get(principal).getId(), experimentId);
+            return processingRunService.createProcessingRun(processingRunsDTO, RichUser.get(principal).getId(), experimentId);
         }
         return new ResponseEntity("Processing Run name can't be empty !", HttpStatus.BAD_REQUEST);
     }
@@ -41,7 +41,7 @@ public class ProcessingRunsController {
     @RequestMapping(name = "", method = RequestMethod.PATCH)
     public ResponseEntity<?> update(Principal principal, @PathVariable("experimentId") long experimentId, @RequestBody ProcessingRunsDTO processingRunsDTO){
         if(processingRunsDTO.getName() != null && !processingRunsDTO.getName().isEmpty()) {
-            return processingService.updateProcessingRun(processingRunsDTO, experimentId, RichUser.get(principal).getId());
+            return processingRunService.updateProcessingRun(processingRunsDTO, experimentId, RichUser.get(principal).getId());
         }
         return new ResponseEntity("Processing Run name can't be empty !", HttpStatus.BAD_REQUEST);
     }
