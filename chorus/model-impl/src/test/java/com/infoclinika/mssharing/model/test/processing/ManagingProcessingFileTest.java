@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import org.testng.log4testng.Logger;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class ManagingProcessingFileTest extends AbstractProcessingTest{
         final long processingFileId = createProcessingFile(experiment, file);
 
         Map<String, Collection<String>> fileToFileMap = createFileToFileMap(file, processingFileId);
-//        processingFileManagement.associateProcessingFileWithRawFile(fileToFileMap, experiment, userId, "ProcessingRunTest");
+        processingFileManagement.associateProcessingFileWithRawFile(fileToFileMap, new HashMap<>(),experiment, userId, "ProcessingRunTest");
 
         assertProcessingFilesIsAssociateExperimentFile(processingFileId, file.id);
     }
@@ -70,7 +71,7 @@ public class ManagingProcessingFileTest extends AbstractProcessingTest{
         List<Long> processingFilesList = createMultiProcessingFiles(experimentItem);
         Map<String, Collection<String>> map = createFileToFileMap(experimentItem, processingFilesList);
 
-//        processingFileManagement.associateProcessingFileWithRawFile(map, experiment, user, "ProcessingRunTests");
+        processingFileManagement.associateProcessingFileWithRawFile(map, new HashMap<>(),experiment, user, "ProcessingRunTests");
 
         for(int i = 0; i < processingFilesList.size(); i++){
             assertMultipartProcessingFilesIsAssociateExperimentFile(processingFilesList.get(i), experimentItem.files.get(i).id, experimentItem.id);

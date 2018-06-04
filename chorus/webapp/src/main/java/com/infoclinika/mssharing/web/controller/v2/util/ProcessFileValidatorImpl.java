@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
+import java.text.CollationElementIterator;
 import java.util.*;
 
 @Component
@@ -24,8 +25,6 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
     private FileMetaDataRepository fileMetaDataRepository;
     @Inject
     private ProcessingFileManagement processingFileManagement;
-    @Inject
-    private ExperimentSampleRepository sampleRepository;
 
     public static final String NOT_EXISTS_PROCESSING_FILES = "NOT_EXISTS_PROCESSING_FILES";
 
@@ -38,9 +37,7 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
     @Override
     public Map<String, Collection<String>> validateAssociationFiles(Map<String, Collection<String>> fileToFileMap, long experimentId, long user, ValidationType type) {
 
-
-
-        Map<String, Collection<String>> map = new HashMap();
+        Map<String, Collection<String>> map = null;
         Collection<String> collection = new ArrayList();
 
         switch(type){
@@ -56,70 +53,34 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
                         boolean activeFileMetaData = fileMetaDataRepository.findNameByInstrument(experimentItem.instrument.get(), fileName);
 
                         if(!activeFileMetaData){
+                            if(map == null){
+                                map = new HashMap();
+                            }
+
                             collection.add(fileName);
                             map.put(NOT_EXISTS_EXPERIMENT_FILES, collection);
                         }
                     }
                 }
                 break;
-            case PROCESSING_FILES: checkNotValidProcessingFiles(map, collection, experimentId);
+            case PROCESSING_FILES: checkNotValidProcessingFiles(map, collection, experimentId, fileToFileMap);
                 break;
         }
+
 
         return map;
     }
 
-//
-//    @Override
-//    public Map<String, Collection<String>> validateAssociateExperimentFiles(Map<String, Collection<String>> map, long experimentId, long user) {
-//        Map<String, Collection<String>> collectionMap = new HashMap();
-//        Collection<String> collection = new ArrayList();
-//
-//
-////        ExperimentItem experimentItem = detailsReader.readExperiment(user, experimentId);
-////
-////        for(Map.Entry<String, Collection<String>> entry : map.entrySet()){
-////
-////            Collection<String> experimentFiles = entry.getValue();
-////
-////            for(String fileName : experimentFiles) {
-////                boolean activeFileMetaData = fileMetaDataRepository.findNameByInstrument(experimentItem.instrument.get(), fileName);
-////
-////                if(!activeFileMetaData){
-////                    collection.add(fileName);
-////                    collectionMap.put(NOT_EXISTS_EXPERIMENT_FILES, collection);
-////                }
-////            }
-////        }
-//
-//        return collectionMap;
-//    }
-
-//    @Override
-//    public Map<String, Collection<String>> checkValidProcessingFiles(ProcessingRunsDTO dto, long experiment, Map<String, Collection<String>> resultsMap) {
-//
-//        List<String> errorsData = new ArrayList();
-////
-////        for(Map.Entry<String, Collection<String>> entry : dto.getFileToFileMap().entrySet()){
-////            boolean isProcessingFileAlreadyUploadedToExperiment = processingFileManagement.isProcessingFileAlreadyUploadedToExperiment(experiment, entry.getKey());
-////
-////            if(!isProcessingFileAlreadyUploadedToExperiment){
-////                errorsData.add(entry.getKey());
-////                resultsMap.put(NOT_EXISTS_PROCESSING_FILES, errorsData);
-////            }
-////        }
-//        return resultsMap;
-//    }
 
     @Override
     public Map<String, Collection<String>> validateSampleFileMap(Map<String, Collection<String>> sampleFileMap, long experiment, long user,ValidationType validationType) {
 
-        Map<String, Collection<String>> resultsMap = new HashMap();
+        Map<String, Collection<String>> resultsMap = null;
         List<String> collection = new ArrayList();
 
         switch(validationType){
-            case PROCESSING_FILES:
-                checkNotValidProcessingFiles(resultsMap, collection, experiment);
+            case PROCESSING_FILE_SAMPLE:
+                checkNotValidProcessingFileInSampleMap(resultsMap, collection, experiment, sampleFileMap);
                 break;
             case EXPERIMENT_SAMPLE:
                 checkNotValidExperimentSample(user,experiment, sampleFileMap, resultsMap, collection);
@@ -129,46 +90,36 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
         return resultsMap;
     }
 
-//    @Override
-//    public Map<String, Collection<String>> checkExistsSampleInExperiment(Map<String, Collection<String>> sampleFileMap, long experiment, long user) {
-//
-////        Map<String, Long> sampleMap = new HashMap<>();
-////
-////        Map<String, Collection<String>> results = new HashMap();
-////        List<String> list = Lists.newArrayList();
-////
-//        final DetailsReaderTemplate.ExperimentShortInfo shortInfo = detailsReader.readExperimentShortInfo(user, experiment);
-//
-//        for (DetailsReaderTemplate.ShortExperimentFileItem file : shortInfo.files) {
-//
-//            ExtendedShortExperimentFileItem fileItems = (ExtendedShortExperimentFileItem) file;
-//
-//            ImmutableList<ExtendedShortExperimentFileItem.ExperimentShortSampleItem> immutableList = fileItems.samples;
-//
-//            for(ExtendedShortExperimentFileItem.ExperimentShortSampleItem experimentShortSampleItem: immutableList){
-//                if(!sampleMap.containsKey(experimentShortSampleItem.id)){
-//                    sampleMap.put(experimentShortSampleItem.name, experimentShortSampleItem.id);
-//                }
-//            }
-//        }
-////
-////
-////        for(Map.Entry<String, Collection<String>> entry : sampleFileMap.entrySet()){
-////
-////
-////
-////        }
-//
-//
-//        return null;
-//    }
 
-    private void checkNotValidProcessingFiles(Map<String, Collection<String>> map, Collection<String> collection, long experiment){
-        for(Map.Entry<String, Collection<String>> entry : map.entrySet()){
-            boolean uploaded = processingFileManagement.isProcessingFileAlreadyUploadedToExperiment(experiment, entry.getKey());
+    private void checkNotValidProcessingFiles(Map<String, Collection<String>> map, Collection<String> collection, long experiment, Map<String, Collection<String>> valueMap){
+
+        Set<String> set = valueMap.keySet();
+
+        for(String name: set){
+            boolean uploaded = processingFileManagement.isProcessingFileAlreadyUploadedToExperiment(experiment, name);
             if(!uploaded){
-                collection.add(entry.getKey());
+                if(map == null){
+                    map = new HashMap();
+                }
+                collection.add(name);
                 map.put(NOT_EXISTS_PROCESSING_FILES, collection);
+            }
+        }
+    }
+
+    private void checkNotValidProcessingFileInSampleMap(Map<String, Collection<String>> map, Collection<String> collection, long experiment, Map<String, Collection<String>> sampleFileMap){
+
+        for(Map.Entry<String, Collection<String>> entry: sampleFileMap.entrySet()){
+            Collection<String> processingFiles = entry.getValue();
+
+            for(String name : processingFiles){
+                if(!processingFileManagement.isProcessingFileAlreadyUploadedToExperiment(experiment, name)){
+                    if(map == null){
+                        map = new HashMap<>();
+                    }
+                    collection.add(name);
+                    map.put(NOT_EXISTS_PROCESSING_FILES, collection);
+                }
             }
         }
     }
@@ -177,8 +128,7 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
 
         final DetailsReaderTemplate.ExperimentShortInfo shortInfo = detailsReader.readExperimentShortInfo(user, experiment);
 
-        List<String> sampleList = new ArrayList();
-
+        List<String> experimentSamples = new ArrayList();
 
         for(DetailsReaderTemplate.ShortExperimentFileItem file : shortInfo.files){
             ExtendedShortExperimentFileItem fileItems = (ExtendedShortExperimentFileItem) file;
@@ -186,16 +136,20 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
 
             for(ExtendedShortExperimentFileItem.ExperimentShortSampleItem sampleItem: samples){
 
-                if(!sampleList.contains(sampleItem.name)){
-                    sampleList.add(sampleItem.name);
+                if(!experimentSamples.contains(sampleItem.name)){
+                    experimentSamples.add(sampleItem.name);
                 }
             }
         }
 
+        Set<String> set = sampleFileMap.keySet();
 
-        for(String sample : sampleList){
-            if(!sampleFileMap.containsKey(sample)){
-                collection.add(sample);
+        for(String s : set){
+            if(!experimentSamples.contains(s)){
+                if(map == null){
+                    map = new HashMap<>();
+                }
+                collection.add(s);
                 map.put(NOT_EXISTS_EXPERIMENT_SAMPLE, collection);
             }
         }

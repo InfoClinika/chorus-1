@@ -2,7 +2,6 @@ package com.infoclinika.mssharing.web.controller.v2.service;
 
 
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
-import com.infoclinika.mssharing.model.read.DetailsReader;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunsDTO;
@@ -25,16 +24,11 @@ public class ProcessingRunService {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessingRunService.class);
 
-    public static final String PROCESSING_FILES = "Processing files";
-    public static final String EXPERIMENT_FILES = "Experiment files";
-
 
     @Inject
     private ProcessingFileManagement processingFileManagement;
     @Inject
     private RestAuthClientService restAuthClientService;
-    @Inject
-    private DetailsReader detailsReader;
     @Inject
     private ProcessingRunReader processingRunReader;
     @Inject
@@ -52,28 +46,31 @@ public class ProcessingRunService {
         boolean isUserHasAccessToExperiment = restAuthClientService.isUserHasAccessToExperiment(user, experiment);
         boolean isProcessingRunAlreadyExist  = processingRunReader.findProcessingRunByExperiment(dto.getName(), experiment);
 
-//        Collection<Map> maps = new ArrayList();
-
         // if user does not input fileToFileMap and sampleToFile
 
-        if(dto.getFileToFileMap() == null || dto.getFileToFileMap().isEmpty() && dto.getSampleFileMap() == null || dto.getSampleFileMap().isEmpty()){
-            return createProcessingRunWithoutAssociate(dto.getName(), user, experiment, isUserHasAccessToExperiment, isProcessingRunAlreadyExist);
+        if((dto.getFileToFileMap() == null || dto.getFileToFileMap().size() == 0) && (dto.getSampleFileMap() == null || dto.getSampleFileMap().size() == 0)){
+            return createProcessingRunWithoutAssociateFiles(dto.getName(), user, experiment, isUserHasAccessToExperiment, isProcessingRunAlreadyExist);
         }
 
-        // else validate experiment files
+        if((dto.getFileToFileMap() == null || dto.getFileToFileMap().size() == 0) && (dto.getSampleFileMap() != null || dto.getSampleFileMap().size() != 0)){
+            return new ResponseEntity("You can`t create sample file map without association file map !", HttpStatus.BAD_REQUEST);
+        }
 
-//        maps.add(processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.EXPERIMENT_FILES));
-//        maps.add(processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.PROCESSING_FILES));
+        Collection<Map> notValidData = new ArrayList();
 
-        Collection<Map> maps = returnValidationResults(dto, experiment, user);
+        // else validate experiment files and samples
+
+        returnValidationFileToFileMapResults(dto, experiment, user, notValidData);
+
+        returnValidationSampleFileResults(dto, notValidData, experiment, user);
 
 
-        if(!maps.isEmpty()){
-            return new ResponseEntity("Association data does not exists !" + maps.toString(), HttpStatus.BAD_REQUEST);
+
+        if(notValidData.isEmpty()){
+            return new ResponseEntity("Association data does not exists !" + notValidData.toString(), HttpStatus.BAD_REQUEST);
         }
 
         return createProcessing(dto, user, experiment, isProcessingRunAlreadyExist, isUserHasAccessToExperiment);
-
     }
 
 
@@ -89,9 +86,9 @@ public class ProcessingRunService {
 
 
 
-    private ResponseEntity<Object> createProcessing(ProcessingRunsDTO dto, long user, long experiment, boolean processingRunExist, boolean isUserLabMembership){
+    private ResponseEntity<Object> createProcessing(ProcessingRunsDTO dto, long user, long experiment, boolean processingRunExist, boolean isUserHasAccessToExperiment){
         if(!processingRunExist){
-            if(isUserLabMembership){
+            if(isUserHasAccessToExperiment){
 
                 return processingFileManagement.associateProcessingFileWithRawFile(dto.getFileToFileMap(), dto.getSampleFileMap(), experiment, user, dto.getName()) ?
                         new ResponseEntity("Processing Run with name: " + dto.getName() + " successfully created", HttpStatus.OK) :
@@ -109,7 +106,7 @@ public class ProcessingRunService {
         }
     }
 
-    private ResponseEntity<Object> createProcessingRunWithoutAssociate(String name,long user, long experiment, boolean isUserHasAccessToExperiment, boolean isProcessingRunAlreadyExist){
+    private ResponseEntity<Object> createProcessingRunWithoutAssociateFiles(String name, long user, long experiment, boolean isUserHasAccessToExperiment, boolean isProcessingRunAlreadyExist){
 
         if(!isProcessingRunAlreadyExist){
             if(isUserHasAccessToExperiment){
@@ -124,43 +121,44 @@ public class ProcessingRunService {
     }
 
 
-//    private Map<String, Map<String, Collection<String>>> returnValidateResults(Map<String, Collection<String>> processingFilesMap, Map<String, Collection<String>> experimentFilesMap){
-//        Map<String, Map<String, Collection<String>>> map = new HashMap();
-//
-//        if(!processingFilesMap.isEmpty()){
-//            map.put(PROCESSING_FILES, processingFilesMap);
-//        }else if(!experimentFilesMap.isEmpty()){
-//            map.put(EXPERIMENT_FILES, experimentFilesMap);
-//        }
-//
-//        return map;
-//    }
 
     private ResponseEntity<Object> associateProcessingFile(ProcessingRunsDTO dto, long experiment, long user){
-//        Map<String, Map<String, Collection<String>>> validateResults = returnValidateResults(
-//                processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment,user, ValidationType.PROCESSING_FILES),
-//                processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user,ValidationType.EXPERIMENT_FILES));
 
-        Collection<Map> maps = returnValidationResults(dto, experiment, user);
+        if((dto.getFileToFileMap() == null || dto.getFileToFileMap().size() == 0) && (dto.getSampleFileMap() != null || dto.getSampleFileMap().size() != 0)) {
+            return new ResponseEntity("You can`t create sample file map without association file map !", HttpStatus.BAD_REQUEST);
+        }
 
-        if(maps.isEmpty()){
+        Collection<Map> notValidData = null;
 
+        returnValidationFileToFileMapResults(dto, experiment, user, notValidData);
+
+        returnValidationSampleFileResults(dto, notValidData, experiment, user);
+
+        if(!notValidData.isEmpty()){
             return processingFileManagement.associateProcessingFileWithRawFile(dto.getFileToFileMap(), dto.getSampleFileMap(),experiment, user, dto.getName()) ?
                     new ResponseEntity("Processing Run with name: " + dto.getName() + " successfully updated", HttpStatus.OK) :
                     new ResponseEntity("Processing files already has processing run", HttpStatus.BAD_REQUEST);
-
         }else {
-            return new ResponseEntity("Please check your associating data: " + maps.toString(),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity("Please check your input data: " + notValidData.toString(),HttpStatus.BAD_REQUEST);
         }
     }
 
-    private Collection<Map> returnValidationResults(ProcessingRunsDTO dto, long experiment, long user){
-
-        Collection<Map> maps = new ArrayList();
-
+    private void returnValidationFileToFileMapResults(ProcessingRunsDTO dto, long experiment, long user, Collection<Map> maps){
+        if(maps == null){
+            maps = new ArrayList<>();
+        }
         maps.add(processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.EXPERIMENT_FILES));
         maps.add(processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.PROCESSING_FILES));
-
-        return maps;
     }
+
+    private void returnValidationSampleFileResults(ProcessingRunsDTO dto, Collection<Map> maps, long experiment, long user){
+        if(dto.getSampleFileMap().size() > 0 || dto.getSampleFileMap() != null){
+            if(maps == null){
+                maps = new ArrayList<>();
+            }
+            maps.add(processFileValidator.validateSampleFileMap(dto.getSampleFileMap(), experiment, user, ValidationType.EXPERIMENT_SAMPLE));
+            maps.add(processFileValidator.validateSampleFileMap(dto.getSampleFileMap(), experiment, user, ValidationType.PROCESSING_FILE_SAMPLE));
+        }
+    }
+
 }

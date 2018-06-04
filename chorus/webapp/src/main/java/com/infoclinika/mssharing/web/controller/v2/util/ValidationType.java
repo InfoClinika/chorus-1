@@ -1,6 +1,6 @@
 package com.infoclinika.mssharing.web.controller.v2.util;
 
 public enum ValidationType {
-    FILE_TO_FILE_MAP, EXPERIMENT_SAMPLE, EXPERIMENT_FILES, PROCESSING_FILES
+    EXPERIMENT_SAMPLE, EXPERIMENT_FILES, PROCESSING_FILES, PROCESSING_FILE_SAMPLE
 
 }

@@ -101,24 +101,24 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
                     }
                 }
             }else{
-                LOGGER.warn("Processing file name: " + entry.getKey() + " does not exists!");
+                LOGGER.warn("Processing file name: " + entry.getKey() + " does not exists by experiment id: " + experimentId);
             }
 
             results = createOrUpdate(processingFile, experimentId, processingRunName);
         }
 
-        if(!sampleFileMap.isEmpty()){
-            sampleToFileMap(sampleFileMap, experimentId, userId);
+        if(sampleFileMap != null && sampleFileMap.size() > 0){
+            associateSampleToFile(sampleFileMap, experimentId, userId);
         }
 
         return results;
     }
 
-    public void sampleToFileMap(Map<String, Collection<String>> sampleFileMap, long experiment, long user) {
+    public void associateSampleToFile(Map<String, Collection<String>> sampleFileMap, long experiment, long user) {
 
         final ExperimentShortInfo  shortInfo = detailsReader.readExperimentShortInfo(user, experiment);
 
-        Map<String, Long> samples = getSampleByFiles(shortInfo);
+        Map<String, Long> samples = getSamples(shortInfo);
 
         for(Map.Entry<String, Collection<String>> entry : sampleFileMap.entrySet()){
 
@@ -134,13 +134,15 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
                }
             });
         }
+
+        LOGGER.info(" **** Associated samples with processing file");
     }
 
 
 
 
 
-    private Map<String, Long> getSampleByFiles(ExperimentShortInfo shortInfo){
+    private Map<String, Long> getSamples(ExperimentShortInfo shortInfo){
         Map<String, Long> sampleMap = new HashMap<>();
 
         for (DetailsReaderTemplate.ShortExperimentFileItem file : shortInfo.files) {
@@ -154,6 +156,8 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
                 }
             }
         }
+
+        LOGGER.info(" **** Getting samples from experiment");
 
         return sampleMap;
     }
