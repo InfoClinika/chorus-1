@@ -1,5 +1,6 @@
 package com.infoclinika.mssharing.model.test.processing;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
@@ -76,9 +77,9 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
 
         final ExperimentItem experimentItem = detailsReader.readExperiment(user, experiment);
         List<Long> processingFilesList = createMultiProcessingFiles(experimentItem);
-        Map<String, Collection<String>> map = createFileToFileMap(experimentItem, processingFilesList);
+        Map<String, Collection<String>> fileToFileMap = createFileToFileMap(experimentItem, processingFilesList);
 
-        processingFileManagement.associateProcessingFileWithRawFile(map, new HashMap<>(),experiment, user, "ProcessingRun");
+        processingFileManagement.associateProcessingFileWithRawFile(fileToFileMap, new HashMap<>(),experiment, user, "ProcessingRun");
         ProcessingRunReader.ProcessingRunInfo processingRunInfo = processingRunReader.readProcessingRunByNameAndExperiment(experiment, "ProcessingRun");
 
         final long processingRunExperiment = processingRunInfo.abstractExperiment.getId();
@@ -95,8 +96,8 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
         final long file3 = uc.saveFile(user, instrument);
         final long file4 = uc.saveFile(user, instrument);
 
-        final ExperimentSampleItem sample3 = sampleWithFactors(file3, of("3"));
-        final ExperimentSampleItem sample4 = sampleWithFactors(file4, of("4"));
+        final ExperimentSampleItem sample3 = sampleWithFactors(file3, of("sample_one"));
+        final ExperimentSampleItem sample4 = sampleWithFactors(file4, of("sample_two"));
 
         addFilesToExperiment(user, experiment, of(factor(experiment)), of(
                 new com.infoclinika.mssharing.model.write.FileItem(file3, false, 0, preparedSample(file3, ImmutableSet.of(sample3))),

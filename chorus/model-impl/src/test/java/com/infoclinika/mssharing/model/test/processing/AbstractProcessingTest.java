@@ -1,8 +1,11 @@
 package com.infoclinika.mssharing.model.test.processing;
 
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.infoclinika.mssharing.model.helper.AbstractTest;
+import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.internal.read.ProcessingFileReader;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
@@ -11,6 +14,7 @@ import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
 import com.infoclinika.mssharing.model.write.ProjectInfo;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
+import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -104,6 +108,17 @@ public class AbstractProcessingTest extends AbstractTest{
         }
 
         return map;
+    }
+
+    private void createSamplesToFileMap(ExperimentItem experimentItem, Map<String, Collection<String>> fileToFileMap){
+
+        Collection<String> collection = new ArrayList();
+        Map<String, Collection<String>> sampleFilesMap = new HashMap();
+
+        ImmutableList<DetailsReaderTemplate.FileItemTemplate> files = experimentItem.files;
+        for(DetailsReaderTemplate.FileItemTemplate fileItemTemplate : files){
+//            fileItemTemplate.
+        }
     }
 
 

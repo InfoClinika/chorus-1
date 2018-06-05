@@ -5,6 +5,7 @@ import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import com.infoclinika.analysis.storage.cloud.CloudStorageService;
 import com.infoclinika.mssharing.model.internal.s3client.AwsS3ClientConfigurationService;
 import com.infoclinika.mssharing.model.read.DetailsReader;
+import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.platform.fileserver.model.NodePath;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
@@ -47,41 +48,44 @@ public class ProcessingFileService {
 
     public ResponseEntity<Object> uploadFileToStorage(long user, long experimentId, MultipartFile[] multipartFiles) throws IOException {
 
-        LOGGER.info("#### Start upload file to storage ####");
-        long start  = System.currentTimeMillis();
+        if(detailsReader.readExperiment(user, experimentId) != null){
+            LOGGER.info("#### Start upload file to storage ####");
+            long start  = System.currentTimeMillis();
 
-        Map<String, Collection<String>> resultsProcessingFiles = new HashMap();
-        List<String> uploadComplete = new ArrayList();
-        List<String> uploadErrors = new ArrayList();
+            Map<String, Collection<String>> resultsProcessingFiles = new HashMap();
+            List<String> uploadComplete = new ArrayList();
+            List<String> uploadErrors = new ArrayList();
 
-        boolean isUserHasAccessToExperiment = restAuthClientService.isUserHasAccessToExperiment(user, experimentId);
-        final DetailsReaderTemplate.ExperimentShortInfo experimentShortInfo = detailsReader.readExperimentShortInfo(user, experimentId);
+            boolean isUserHasAccessToExperiment = restAuthClientService.isUserHasAccessToExperiment(user, experimentId);
+            final DetailsReaderTemplate.ExperimentShortInfo experimentShortInfo = detailsReader.readExperimentShortInfo(user, experimentId);
 
-        if(isUserHasAccessToExperiment && experimentShortInfo.files.size() > 0){
+            if(isUserHasAccessToExperiment && experimentShortInfo.files.size() > 0){
 
-            if(multipartFiles.length > 0){
-                for (MultipartFile multipartFile: multipartFiles) {
+                if(multipartFiles.length > 0){
+                    for (MultipartFile multipartFile: multipartFiles) {
 
-                    File file = convertMultipartToFile(multipartFile);
-                    startUploadProcessingFilesToStorage(experimentId, file, resultsProcessingFiles, uploadComplete, uploadErrors);
-                    file.delete();
+                        File file = convertMultipartToFile(multipartFile);
+                        startUploadProcessingFilesToStorage(experimentId, file, resultsProcessingFiles, uploadComplete, uploadErrors);
+                        file.delete();
+                    }
+
+                    long end  = System.currentTimeMillis();
+                    long value = end - start;
+                    long minutes = TimeUnit.MILLISECONDS.toMinutes(value);
+
+                    LOGGER.info(minutes + " minutes needed to upload file ####");
+                    LOGGER.info(resultsProcessingFiles.toString() + " #### Upload results processing files ####");
+
+                    return new ResponseEntity(resultsProcessingFiles.toString(), HttpStatus.OK);
                 }
-
-                long end  = System.currentTimeMillis();
-                long value = end - start;
-                long minutes = TimeUnit.MILLISECONDS.toMinutes(value);
-
-                LOGGER.info(minutes + " minutes need to upload file ####");
-                LOGGER.info(resultsProcessingFiles.toString() + " #### Upload results processing files ####");
-
-                return new ResponseEntity(resultsProcessingFiles.toString(), HttpStatus.OK);
             }
+            return new ResponseEntity("User with ID: " + user + " does not have access to lab", HttpStatus.UNAUTHORIZED);
+        }else {
+            return new ResponseEntity("Experiment by id: " + experimentId + " not found", HttpStatus.BAD_REQUEST);
         }
-        LOGGER.warn(HttpStatus.UNAUTHORIZED);
-        return new ResponseEntity("User with ID: " + user + " does not have access to lab", HttpStatus.UNAUTHORIZED);
+
+
     }
-
-
 
 
 
@@ -90,11 +94,6 @@ public class ProcessingFileService {
             multipartFile.transferTo(result);
             return result;
     }
-
-
-
-
-
 
 
     private void startUploadProcessingFilesToStorage(long experiment, File file, Map<String, Collection<String>> map,List<String> uploadDone, List<String> uploadExists){

@@ -37,38 +37,14 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
     @Override
     public Map<String, Collection<String>> validateAssociationFiles(Map<String, Collection<String>> fileToFileMap, long experimentId, long user, ValidationType type) {
 
-        Map<String, Collection<String>> map = null;
-        Collection<String> collection = new ArrayList();
-
         switch(type){
             case EXPERIMENT_FILES:
-
-                ExperimentItem experimentItem = detailsReader.readExperiment(user, experimentId);
-
-                for(Map.Entry<String, Collection<String>> entry : fileToFileMap.entrySet()){
-
-                    Collection<String> experimentFiles = entry.getValue();
-
-                    for(String fileName : experimentFiles) {
-                        boolean activeFileMetaData = fileMetaDataRepository.findNameByInstrument(experimentItem.instrument.get(), fileName);
-
-                        if(!activeFileMetaData){
-                            if(map == null){
-                                map = new HashMap();
-                            }
-
-                            collection.add(fileName);
-                            map.put(NOT_EXISTS_EXPERIMENT_FILES, collection);
-                        }
-                    }
-                }
-                break;
-            case PROCESSING_FILES: checkNotValidProcessingFiles(map, collection, experimentId, fileToFileMap);
-                break;
+                return checkNotValidExperimentFiles(fileToFileMap, experimentId, user);
+            case PROCESSING_FILES:
+                return checkNotValidProcessingFiles(experimentId, fileToFileMap);
         }
 
-
-        return map;
+        return null;
     }
 
 
@@ -91,20 +67,19 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
     }
 
 
-    private void checkNotValidProcessingFiles(Map<String, Collection<String>> map, Collection<String> collection, long experiment, Map<String, Collection<String>> valueMap){
-
-        Set<String> set = valueMap.keySet();
+    private Map<String, Collection<String>> checkNotValidProcessingFiles(long experiment, Map<String, Collection<String>> fileToFileMap){
+        Map<String, Collection<String>> map = new HashMap<>();
+        List<String> collection = new ArrayList();
+        Set<String> set = fileToFileMap.keySet();
 
         for(String name: set){
             boolean uploaded = processingFileManagement.isProcessingFileAlreadyUploadedToExperiment(experiment, name);
             if(!uploaded){
-                if(map == null){
-                    map = new HashMap();
-                }
                 collection.add(name);
                 map.put(NOT_EXISTS_PROCESSING_FILES, collection);
             }
         }
+        return map;
     }
 
     private void checkNotValidProcessingFileInSampleMap(Map<String, Collection<String>> map, Collection<String> collection, long experiment, Map<String, Collection<String>> sampleFileMap){
@@ -154,6 +129,29 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
             }
         }
 
+    }
+
+    private Map<String, Collection<String>> checkNotValidExperimentFiles(Map<String, Collection<String>> fileToFileMap, long experimentId, long user){
+
+        Map<String, Collection<String>> map = new HashMap<>();
+        List<String> collection = new ArrayList();
+
+        ExperimentItem experimentItem = detailsReader.readExperiment(user, experimentId);
+
+        for(Map.Entry<String, Collection<String>> entry : fileToFileMap.entrySet()){
+
+            Collection<String> experimentFiles = entry.getValue();
+
+            for(String fileName : experimentFiles) {
+                boolean activeFileMetaData = fileMetaDataRepository.findNameByInstrument(experimentItem.instrument.get(), fileName);
+
+                if(!activeFileMetaData){
+                    collection.add(fileName);
+                    map.put(NOT_EXISTS_EXPERIMENT_FILES, collection);
+                }
+            }
+        }
+        return map;
     }
 
 
