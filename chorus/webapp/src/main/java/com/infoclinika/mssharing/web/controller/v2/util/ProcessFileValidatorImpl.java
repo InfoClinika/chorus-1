@@ -36,7 +36,6 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
 
     @Override
     public Map<String, Collection<String>> validateAssociationFiles(Map<String, Collection<String>> fileToFileMap, long experimentId, long user, ValidationType type) {
-
         switch(type){
             case EXPERIMENT_FILES:
                 return checkNotValidExperimentFiles(fileToFileMap, experimentId, user);
@@ -153,7 +152,4 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
         }
         return map;
     }
-
-
-
 }

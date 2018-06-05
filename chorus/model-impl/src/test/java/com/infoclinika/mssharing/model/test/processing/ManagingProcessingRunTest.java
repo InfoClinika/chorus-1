@@ -80,6 +80,7 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
         Map<String, Collection<String>> fileToFileMap = createFileToFileMap(experimentItem, processingFilesList);
 
         processingFileManagement.associateProcessingFileWithRawFile(fileToFileMap, new HashMap<>(),experiment, user, "ProcessingRun");
+
         ProcessingRunReader.ProcessingRunInfo processingRunInfo = processingRunReader.readProcessingRunByNameAndExperiment(experiment, "ProcessingRun");
 
         final long processingRunExperiment = processingRunInfo.abstractExperiment.getId();

@@ -66,6 +66,7 @@ public class ProcessingRunService {
 
 
 
+
         if(!notValidData.isEmpty()){
             return new ResponseEntity("Association data does not exists !" + notValidData.toString(), HttpStatus.BAD_REQUEST);
         }
@@ -173,7 +174,6 @@ public class ProcessingRunService {
             if(!processingFileSample.isEmpty()){
                 maps.add(processingFileSample);
             }
-        }
     }
 
 }
