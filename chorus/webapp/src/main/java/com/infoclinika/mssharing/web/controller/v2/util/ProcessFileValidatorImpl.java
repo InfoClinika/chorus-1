@@ -119,9 +119,6 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
 
         for(String s : set){
             if(!experimentSamples.contains(s)){
-                if(map == null){
-                    map = new HashMap<>();
-                }
                 collection.add(s);
                 map.put(NOT_EXISTS_EXPERIMENT_SAMPLE, collection);
             }
