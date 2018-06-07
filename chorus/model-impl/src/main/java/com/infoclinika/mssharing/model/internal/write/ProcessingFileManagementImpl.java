@@ -117,32 +117,34 @@ public class ProcessingFileManagementImpl implements ProcessingFileManagement{
     public void associateSampleToFile(Map<String, Collection<String>> sampleFileMap, long experiment, long user) {
 
         final ExperimentShortInfo  shortInfo = detailsReader.readExperimentShortInfo(user, experiment);
+        Map<String, Long> experimentSamples = extractSamplesByExperimentShortInfo(shortInfo);
 
-        Map<String, Long> samples = getSamples(shortInfo);
+        for(Map.Entry<String, Collection<String>> entry : sampleFileMap.entrySet()){ // iterate sampleFileMap values
 
-        for(Map.Entry<String, Collection<String>> entry : sampleFileMap.entrySet()){
+            String sampleNameKey = entry.getKey(); // get sample name (experiment file name)
 
-            String key = entry.getKey();
+            if(experimentSamples.containsKey(sampleNameKey)){ // if contains samples key
+                ExperimentSample experimentSample = sampleRepository.findOne(experimentSamples.get(sampleNameKey));
 
-            entry.getValue().stream().forEach(file ->{
-               ProcessingFile processingFile = processingFileRepository.findByName(file, experiment);
+                for(String processingFileName : entry.getValue()){
 
-               if(processingFile != null && samples.containsKey(key)){
-                   ExperimentSample experimentSample = sampleRepository.findOne(samples.get(key));
-                   processingFile.getExperimentSamples().add(experimentSample);
-                   processingFileRepository.save(processingFile);
-               }
-            });
+                    ProcessingFile processingFile = processingFileRepository.findByName(processingFileName, experiment);
+                    if(processingFile != null){
+                        processingFile.getExperimentSamples().add(experimentSample);
+                        processingFileRepository.save(processingFile);
+                    }
+                }
+            }
         }
 
-        LOGGER.info(" **** Associated samples with processing file");
+        LOGGER.info(" **** Samples is associated witn processing files");
     }
 
 
 
 
 
-    private Map<String, Long> getSamples(ExperimentShortInfo shortInfo){
+    private static Map<String, Long> extractSamplesByExperimentShortInfo(ExperimentShortInfo shortInfo){
         Map<String, Long> sampleMap = new HashMap<>();
 
         for (DetailsReaderTemplate.ShortExperimentFileItem file : shortInfo.files) {

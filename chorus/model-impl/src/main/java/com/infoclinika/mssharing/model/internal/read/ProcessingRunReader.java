@@ -1,5 +1,6 @@
 package com.infoclinika.mssharing.model.internal.read;
 
+import com.infoclinika.mssharing.model.internal.entity.ExperimentSample;
 import com.infoclinika.mssharing.model.internal.entity.ProcessingFile;
 import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractExperiment;
 import org.springframework.transaction.annotation.Transactional;

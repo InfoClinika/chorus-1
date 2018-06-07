@@ -37,7 +37,7 @@ public class ProcessingFile extends AbstractPersistable<Long> {
     inverseJoinColumns = @JoinColumn(name = "id_file_meta_data", referencedColumnName = "id"))
     private List<FileMetaDataTemplate> fileMetaDataTemplates = new ArrayList<>();
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(targetEntity = ExperimentSample.class, cascade = {CascadeType.REFRESH,CascadeType.PERSIST}, fetch = FetchType.EAGER)
     @JoinTable(name = "sample_to_processed_file", joinColumns = @JoinColumn(name = "processed_file_id", referencedColumnName = "id"),
     inverseJoinColumns = @JoinColumn(name = "sample_id", referencedColumnName = "id"))
     private List<ExperimentSample> experimentSamples = new ArrayList();

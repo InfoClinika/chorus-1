@@ -1,23 +1,23 @@
 package com.infoclinika.mssharing.model.test.processing;
 
 import com.google.common.base.Predicate;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.infoclinika.mssharing.model.helper.AbstractTest;
-import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.internal.read.ProcessingFileReader;
+import com.infoclinika.mssharing.model.read.ExtendedShortExperimentFileItem;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.read.dto.details.FileItem;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
 import com.infoclinika.mssharing.model.write.ProjectInfo;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
-import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
+import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.*;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.infoclinika.mssharing.model.helper.Data.PROJECT_TITLE;
 import static org.testng.Assert.assertEquals;
@@ -110,15 +110,40 @@ public class AbstractProcessingTest extends AbstractTest{
         return map;
     }
 
-    private void createSamplesToFileMap(ExperimentItem experimentItem, Map<String, Collection<String>> fileToFileMap){
+    public Map<String, Collection<String>> createSamplesToFileMap(ExperimentShortInfo shortInfo, Map<String, Collection<String>> fileToFileMap){
+        int index = 0;
 
-        Collection<String> collection = new ArrayList();
         Map<String, Collection<String>> sampleFilesMap = new HashMap();
 
-        ImmutableList<DetailsReaderTemplate.FileItemTemplate> files = experimentItem.files;
-        for(DetailsReaderTemplate.FileItemTemplate fileItemTemplate : files){
-//            fileItemTemplate.
+        for(Map.Entry<String, Collection<String>> entry : fileToFileMap.entrySet()){
+            String key = entry.getKey();
+            Collection<String> values = entry.getValue();
+            Collection<String> collection = new ArrayList<>();
+
+            for(String experimentFiles: values){
+
+                ImmutableList<ExtendedShortExperimentFileItem> files = (ImmutableList<ExtendedShortExperimentFileItem>) shortInfo.files;
+                for(ExtendedShortExperimentFileItem fileItem : files){
+                    if(fileItem.name == experimentFiles){
+
+                        ImmutableList<ExtendedShortExperimentFileItem.ExperimentShortSampleItem> sampleItems = fileItem.samples;
+                        ExtendedShortExperimentFileItem.ExperimentShortSampleItem sampleItem = sampleItems.get(index);
+
+                        if(!sampleFilesMap.containsKey(sampleItem.name)){
+
+                            if(!collection.contains(key)){
+                                collection.add(key);
+                                sampleFilesMap.put(sampleItem.name, collection);
+                                index++;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
         }
+
+        return sampleFilesMap;
     }
 
 
@@ -126,6 +151,5 @@ public class AbstractProcessingTest extends AbstractTest{
         final long project = studyManagement.createProject(user, new ProjectInfo(PROJECT_TITLE, "DNA", "Some proj", lab));
         return createInstrumentAndExperimentWithOneFile(user, lab, project);
     }
-
 
 }

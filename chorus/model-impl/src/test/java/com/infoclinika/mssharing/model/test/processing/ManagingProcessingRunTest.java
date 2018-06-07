@@ -1,10 +1,17 @@
 package com.infoclinika.mssharing.model.test.processing;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.infoclinika.mssharing.model.helper.ExperimentLabelsInfo;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
+import com.infoclinika.mssharing.model.internal.entity.ExperimentSample;
+import com.infoclinika.mssharing.model.internal.entity.ProcessingFile;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
+import com.infoclinika.mssharing.model.write.AnalysisBounds;
+import com.infoclinika.mssharing.model.write.ExperimentInfo;
+import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import org.testng.annotations.Test;
 
@@ -14,6 +21,11 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableList.of;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
+import static com.infoclinika.mssharing.model.helper.ExperimentSampleTypeItem.HEAVY;
+import static com.infoclinika.mssharing.model.helper.ExperimentSampleTypeItem.LIGHT;
+import static com.infoclinika.mssharing.model.helper.ExperimentSampleTypeItem.MEDIUM;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -91,6 +103,53 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
     }
 
 
+    @Test
+    public void createNewSamplesFileMapInProcessingRun(){
+
+        final long bob = uc.createLab3AndBob();
+        final long project = uc.createProject(bob);
+        final long file1 = uc.saveFile(bob);
+        final long file2 = uc.saveFile(bob);
+
+        final long experiment = createExperimentWithAllSampleTypesAndFactors(bob, project, file1, file2);
+        final ExperimentItem experimentItem = detailsReader.readExperiment(bob, experiment);
+
+        DetailsReaderTemplate.ExperimentShortInfo shortInfo = detailsReader.readExperimentShortInfo(bob, experiment);
+        List<Long> processingFilesList = createMultiProcessingFiles(experimentItem);
+        Map<String, Collection<String>> fileToFileMap = createFileToFileMap(experimentItem, processingFilesList);
+
+        Map<String, Collection<String>> sampleFileMap = createSamplesToFileMap(shortInfo, fileToFileMap);
+
+        processingFileManagement.associateProcessingFileWithRawFile(fileToFileMap, sampleFileMap ,experiment, bob, "ProcessingRunWithSample");
+
+        ProcessingRunReader.ProcessingRunInfo processingRunInfo = processingRunReader.readProcessingRunByNameAndExperiment(experiment, "ProcessingRunWithSample");
+
+        validateSamplesToProcessedFiles(processingRunInfo, sampleFileMap);
+
+    }
+
+    private void validateSamplesToProcessedFiles(ProcessingRunReader.ProcessingRunInfo processingRunInfo, Map<String, Collection<String>> sampleToFile){
+        HashMultimap<String, String> sample = extractSampleToFile(processingRunInfo);
+
+        assertEquals(sample.get("sample_Medium_1").size(), 1);
+        assertEquals(sample.get("sample_Heavy_1").size(), 1);
+        assertTrue(sample.get("sample_Medium_1").contains(sampleToFile.get("sample_Medium_1").iterator().next()));
+        assertTrue(sample.get("sample_Heavy_1").contains(sampleToFile.get("sample_Heavy_1").iterator().next()));
+    }
+
+
+    private static HashMultimap<String, String> extractSampleToFile(ProcessingRunReader.ProcessingRunInfo processingRunInfo){
+
+        HashMultimap<String, String> sampleToFiles = HashMultimap.create();
+
+        for(ProcessingFile file : processingRunInfo.processingFiles){
+            for(ExperimentSample experimentSample : file.getExperimentSamples()){
+                sampleToFiles.put(experimentSample.getName(), file.getName());
+            }
+        }
+        return sampleToFiles;
+    }
+
 
     private void generateFilesToExperiment(long user, long instrument, long experiment){
 
@@ -108,5 +167,40 @@ public class ManagingProcessingRunTest extends AbstractProcessingTest{
 
     protected ExperimentManagementTemplate.MetaFactorTemplate factor(long experimentId) {
         return new ExperimentManagementTemplate.MetaFactorTemplate(generateString(), "", false, experimentId);
+    }
+
+
+
+
+    private long createExperimentWithAllSampleTypesAndFactors(long bob, long project, long file1, long file2) {
+        final ExperimentSampleItem sampleLight1 = new ExperimentSampleItem("sample_Light_1", LIGHT, ImmutableList.of("sick", "5"));
+        final ExperimentSampleItem sampleLight2 = new ExperimentSampleItem("sample_Light_2", LIGHT, ImmutableList.of("sick", "90"));
+
+        final ExperimentSampleItem sampleMedium1 = new ExperimentSampleItem("sample_Medium_1", MEDIUM, ImmutableList.of("healthy", "5"));
+        final ExperimentSampleItem sampleHeavy1 = new ExperimentSampleItem("sample_Heavy_1", HEAVY, ImmutableList.of("healthy", "10"));
+        final ExperimentSampleItem sampleHeavy2 = new ExperimentSampleItem("sample_Heavy_2", HEAVY, ImmutableList.of("healthy", "5"));
+        final ImmutableSet<ExperimentSampleItem> file1Samples = ImmutableSet.of(sampleLight1, sampleMedium1, sampleHeavy1);
+        final ImmutableSet<ExperimentSampleItem> file2Samples = ImmutableSet.of(sampleLight2, sampleMedium1, sampleHeavy2);
+
+        final List<ExperimentManagementTemplate.MetaFactorTemplate> factors = newArrayList(
+                new ExperimentManagementTemplate.MetaFactorTemplate("treatment group", null, false, 0),
+                new ExperimentManagementTemplate.MetaFactorTemplate("temperature", "C", true, 0));
+        final ImmutableList<com.infoclinika.mssharing.model.write.FileItem> files = of(
+                new com.infoclinika.mssharing.model.write.FileItem(file1, false, 0, preparedSample(file1, file1Samples)),
+                new com.infoclinika.mssharing.model.write.FileItem(file2, false, 0, preparedSample(file2, file2Samples))
+        );
+
+        final ExperimentInfo.Builder builder = experiment(bob, project).factors(factors)
+                .experimentType(experimentTypeLabeled())
+                .files(files)
+                .experimentLabels(new ExperimentLabelsInfo(ImmutableList.of(getExperimentLabelKAminoAcid()), ImmutableList.of(), ImmutableList.of(getExperimentLabelRAminoAcid())))
+                .sampleTypesCount(3);
+        return studyManagement.createExperiment(bob, builder.build());
+    }
+
+    private ExperimentInfo.Builder experiment(long bob, long project) {
+        return experimentInfo()
+                .project(project).lab(uc.getLab3()).billLab(uc.getLab3()).is2dLc(false)
+                .restriction(restriction(bob)).bounds(new AnalysisBounds()).lockMasses(NO_LOCK_MASSES);
     }
 }
