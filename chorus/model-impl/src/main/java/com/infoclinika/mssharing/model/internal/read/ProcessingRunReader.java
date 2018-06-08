@@ -18,6 +18,10 @@ public interface ProcessingRunReader {
 
     ProcessingRunInfo readProcessingRunByNameAndExperiment(long experiment, String name);
 
+    List<ProcessingRunInfo> readAllProcessingRunsByExperiment(long experiment);
+
+
+
 
 
 
@@ -28,11 +32,13 @@ public interface ProcessingRunReader {
         public AbstractExperiment abstractExperiment;
         public Set<ProcessingFile> processingFiles;
 
-        public ProcessingRunInfo(Long id, String name, Date date, AbstractExperiment abstractExperiment) {
+        public ProcessingRunInfo() {
+        }
+
+        public ProcessingRunInfo(Long id, String name, Date date) {
             this.id = id;
             this.name = name;
             this.date = date;
-            this.abstractExperiment = abstractExperiment;
         }
 
         public ProcessingRunInfo(Long id, String name, Date date, AbstractExperiment abstractExperiment, Set<ProcessingFile> processingFiles) {

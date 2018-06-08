@@ -7,6 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Service
@@ -36,6 +39,22 @@ public class ProcessingRunReaderImpl implements ProcessingRunReader {
         final ProcessingRun processingRun = processingRunRepository.findByNameAndExperiment(name, experiment);
         checkNotNull(processingRun);
         return createProcessingRunInfo(processingRun);
+    }
+
+    @Override
+    public List<ProcessingRunInfo> readAllProcessingRunsByExperiment(long experiment) {
+        List<ProcessingRun> processingRuns = processingRunRepository.findAll(experiment);
+        List<ProcessingRunInfo> processingRunInfos = new ArrayList<>();
+
+        for(ProcessingRun processingRun : processingRuns){
+            ProcessingRunInfo processingRunInfo = new ProcessingRunInfo();
+            processingRunInfo.id = processingRun.getId();
+            processingRunInfo.name = processingRun.getName();
+            processingRunInfo.date = processingRun.getProcessedDate();
+            processingRunInfos.add(processingRunInfo);
+        }
+
+        return processingRunInfos;
     }
 
 

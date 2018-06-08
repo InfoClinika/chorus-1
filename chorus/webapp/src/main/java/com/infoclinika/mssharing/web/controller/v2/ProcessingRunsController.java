@@ -46,4 +46,9 @@ public class ProcessingRunsController {
         return new ResponseEntity("Processing Run name can't be empty !", HttpStatus.BAD_REQUEST);
     }
 
+    @RequestMapping(name = "", method = RequestMethod.GET)
+    public ResponseEntity<?> getAllProcessingRunsByExperiment(Principal principal, @PathVariable("experimentId") long experimentId){
+        return processingRunService.getAllProcessingRuns(experimentId);
+    }
+
 }

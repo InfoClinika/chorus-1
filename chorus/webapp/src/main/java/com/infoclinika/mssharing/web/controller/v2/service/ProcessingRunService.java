@@ -9,6 +9,7 @@ import com.infoclinika.mssharing.web.controller.v2.util.ProcessFileValidator;
 import com.infoclinika.mssharing.web.controller.v2.util.ValidationType;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -78,6 +80,55 @@ public class ProcessingRunService {
             return new ResponseEntity("Processing Run with name: " + dto.getName() + " does not exists by experiment id: " + experiment, HttpStatus.BAD_REQUEST);
         }
     }
+
+
+    public ResponseEntity<List<ProcessingRunsDTO.ProcessingRunsShortDetails>> getAllProcessingRuns(long experiment, long user){
+
+        boolean isUserHasAccessToExperiment = restAuthClientService.isUserHasAccessToExperiment(user, experiment);
+
+        if(isUserHasAccessToExperiment){
+            return processingRunDetailsToDto(experiment);
+        }
+
+        LOGGER.warn("#### User with ID: " + user + "does not have access to lab ####");
+        return new ResponseEntity("User with ID: " + user + "does not have access to lab", HttpStatus.UNAUTHORIZED);
+    }
+
+
+    private ResponseEntity<List<ProcessingRunsDTO.ProcessingRunsShortDetails>> processingRunDetailsToDto(long experiment){
+        List<ProcessingRunReader.ProcessingRunInfo> processingRuns =  processingRunReader.readAllProcessingRunsByExperiment(experiment);
+
+        List<ProcessingRunsDTO.ProcessingRunsShortDetails> dtoList = new ArrayList<>();
+
+        for(ProcessingRunReader.ProcessingRunInfo processingRunInfo : processingRuns){
+
+            ProcessingRunsDTO.ProcessingRunsShortDetails shortDetails = new ProcessingRunsDTO.ProcessingRunsShortDetails();
+            shortDetails.setId(processingRunInfo.id);
+            shortDetails.setName(processingRunInfo.name);
+            shortDetails.setProcessedDate(processingRunInfo.date.toString());
+
+            dtoList.add(shortDetails);
+        }
+
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(dtoList);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private ResponseEntity<Object> createProcessing(ProcessingRunsDTO dto, long user, long experiment, boolean processingRunExist, boolean isUserHasAccessToExperiment) {
