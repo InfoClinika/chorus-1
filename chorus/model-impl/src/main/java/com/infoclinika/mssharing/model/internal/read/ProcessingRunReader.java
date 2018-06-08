@@ -3,6 +3,7 @@ package com.infoclinika.mssharing.model.internal.read;
 import com.infoclinika.mssharing.model.internal.entity.ExperimentSample;
 import com.infoclinika.mssharing.model.internal.entity.ProcessingFile;
 import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractExperiment;
+import com.infoclinika.mssharing.model.read.dto.details.ProcessingRunItem;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -14,7 +15,7 @@ public interface ProcessingRunReader {
 
     boolean findProcessingRunByExperiment(String name, long experiment);
 
-    ProcessingRunInfo readProcessingRun(long processingRunId);
+    ProcessingRunItem readProcessingRun(long processingRunId, long experiment);
 
     ProcessingRunInfo readProcessingRunByNameAndExperiment(long experiment, String name);
 
@@ -33,12 +34,6 @@ public interface ProcessingRunReader {
         public Set<ProcessingFile> processingFiles;
 
         public ProcessingRunInfo() {
-        }
-
-        public ProcessingRunInfo(Long id, String name, Date date) {
-            this.id = id;
-            this.name = name;
-            this.date = date;
         }
 
         public ProcessingRunInfo(Long id, String name, Date date, AbstractExperiment abstractExperiment, Set<ProcessingFile> processingFiles) {

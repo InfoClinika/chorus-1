@@ -19,4 +19,7 @@ public interface ProcessingRunRepository<P extends ProcessingRun> extends JpaRep
     @Query("select pr from #{#entityName} pr where pr.experimentTemplate.id =:experiment")
     List<P> findAll(@Param("experiment")long experiment);
 
+    @Query("select pr from #{#entityName} pr where pr.id =:id and pr.experimentTemplate.id =:experiment")
+    P findByIdAndExperimentId(@Param("experiment")long experiment, @Param("id")long id);
+
 }

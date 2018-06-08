@@ -12,7 +12,6 @@ public interface ProcessingFileReader {
 
     ProcessingFileInfo readProcessingFileInfo(long processingFile);
 
-    List<ProcessingFile> readProcessingFilesByExperiment(long experiment);
 
 
     class ProcessingFileInfo{

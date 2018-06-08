@@ -26,11 +26,6 @@ public class ProcessingFileReaderImpl implements ProcessingFileReader {
         return createProcessingFileInfo(processingFile);
     }
 
-    @Override
-    public List<ProcessingFile> readProcessingFilesByExperiment(long experiment) {
-        return null;
-    }
-
 
     private ProcessingFile find(long id){
         return checkNotNull(processingFileRepository.findOne(id), "Couldn't find processing file with id %s", id);

@@ -1,10 +1,16 @@
 package com.infoclinika.mssharing.web.controller.v2.service;
 
 
+import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
+import com.infoclinika.mssharing.model.helper.ProcessingFileItem;
 import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
+import com.infoclinika.mssharing.model.internal.s3client.AwsS3ClientConfigurationService;
+import com.infoclinika.mssharing.model.read.dto.details.ProcessingRunItem;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
+import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingFileDTO;
+import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunDetails;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunsDTO;
 import com.infoclinika.mssharing.web.controller.v2.util.ProcessFileValidator;
 import com.infoclinika.mssharing.web.controller.v2.util.ValidationType;
@@ -16,10 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Transactional
@@ -40,6 +43,9 @@ public class ProcessingRunService {
     private ProcessFileValidator processFileValidator;
     @Inject
     private RuleValidator ruleValidator;
+
+    @Inject
+    private AwsS3ClientConfigurationService awsConfigService;
 
 
     public ResponseEntity<Object> createProcessingRun(ProcessingRunsDTO dto, long user, long experiment) {
@@ -101,6 +107,47 @@ public class ProcessingRunService {
 
 
     }
+
+    public ResponseEntity<ProcessingRunDetails> showProcessingRunDetails(long processingRunId, long user, long experiment){
+
+        if(ruleValidator.canUserReadExperiment(user, experiment)){
+            if(restAuthClientService.isUserHasAccessToExperiment(user, experiment)){
+                return processingRunItemToDTO(processingRunId,experiment);
+            }
+
+            LOGGER.warn("#### User with ID: " + user + "does not have access to lab ####");
+            return new ResponseEntity("User with ID: " + user + "does not have access to lab", HttpStatus.UNAUTHORIZED);
+        }
+        return new ResponseEntity("Experiment by id: " + experiment + " not found", HttpStatus.BAD_REQUEST);
+
+    }
+
+
+
+    private ResponseEntity<ProcessingRunDetails> processingRunItemToDTO(long processingRunId,long experiment){
+
+        ProcessingRunItem processingRunItem = processingRunReader.readProcessingRun(processingRunId, experiment);
+        ProcessingRunDetails processingRunsDTO = new ProcessingRunDetails();
+        processingRunsDTO.setName(processingRunItem.getName());
+        processingRunsDTO.setId(processingRunItem.getId());
+        processingRunsDTO.setProcessedDate(processingRunItem.getDate().toString());
+
+        List<ProcessingFileDTO> processingFiles = new ArrayList<>();
+
+        for(ProcessingFileItem processingFileItem : processingRunItem.getProcessingFileItems()){
+
+            ProcessingFileDTO processedFile = new ProcessingFileDTO(processingFileItem.getId(), processingFileItem.getName(),
+                    awsConfigService.generateTemporaryLinkToS3(processingFileItem.getFilePath()), processingFileItem.getExperimentFiles(),
+                    processingFileItem.getExperimentSampleItems());
+            processingFiles.add(processedFile);
+        }
+        processingRunsDTO.setProcessedFiles(processingFiles);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(processingRunsDTO);
+    }
+
+
+
+
 
 
     private ResponseEntity<List<ProcessingRunsDTO.ProcessingRunsShortDetails>> processingRunDetailsToDto(long experiment){

@@ -2,6 +2,7 @@ package com.infoclinika.mssharing.web.controller.v2;
 
 
 import com.infoclinika.mssharing.platform.web.security.RichUser;
+import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunDetails;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunsDTO;
 import com.infoclinika.mssharing.web.controller.v2.service.ProcessingRunService;
 import org.springframework.http.HttpHeaders;
@@ -49,6 +50,11 @@ public class ProcessingRunsController {
     @RequestMapping(name = "", method = RequestMethod.GET)
     public ResponseEntity<?> getAllProcessingRunsByExperiment(Principal principal, @PathVariable("experimentId") long experimentId){
         return processingRunService.getAllProcessingRuns(experimentId, RichUser.get(principal).getId());
+    }
+
+    @RequestMapping(name = "/details", method = RequestMethod.GET)
+    public ResponseEntity<ProcessingRunDetails> getSpecificProcessingRunInformation(Principal principal, @RequestParam(value = "id")long processingRunId, @PathVariable("experimentId") long experimentId){
+        return processingRunService.showProcessingRunDetails(processingRunId, RichUser.get(principal).getId(), experimentId);
     }
 
 }
