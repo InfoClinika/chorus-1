@@ -39,6 +39,7 @@ import com.infoclinika.mssharing.model.internal.repository.LabRepository;
 import com.infoclinika.mssharing.model.internal.repository.ProjectRepository;
 import com.infoclinika.mssharing.model.internal.repository.ProteinDatabaseRepository;
 import com.infoclinika.mssharing.model.internal.repository.UserRepository;
+import com.infoclinika.mssharing.model.read.DetailsReader;
 import com.infoclinika.mssharing.platform.entity.*;
 import com.infoclinika.mssharing.platform.model.impl.DefaultRuleValidator;
 import com.infoclinika.mssharing.platform.model.impl.ValidatorPredicates;
@@ -114,6 +115,9 @@ public class RuleValidatorImpl extends DefaultRuleValidator<ActiveExperiment, Ac
     @Inject
     private FeaturesRepository featuresRepository;
 
+    @Inject
+    private DetailsReader detailsReader;
+
 
     @Override
     public boolean isExperimentExist(long experiment) {
@@ -124,6 +128,11 @@ public class RuleValidatorImpl extends DefaultRuleValidator<ActiveExperiment, Ac
     public boolean isUserLabMembership(long user, long lab) {
         UserLabMembership userLabMembership = userLabMembershipRepository.findByLabAndUser(lab, user);
         return userLabMembership == null ? false: true;
+    }
+
+    @Override
+    public boolean canUserReadExperiment(long user, long experiment) {
+        return detailsReader.readExperiment(user, experiment) == null ? false : true;
     }
 
     @Override

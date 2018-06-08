@@ -44,7 +44,7 @@ public class ProcessedFilesController {
         try{
 
             if(multipartFile.length == 0){
-                return new ResponseEntity("Please select the file to upload S3", HttpStatus.OK);
+                return new ResponseEntity("Please select the file to upload S3", HttpStatus.BAD_REQUEST);
             }
 
             return processingFileService.uploadFileToStorage(RichUser.get(principal).getId(), experimentId, multipartFile);

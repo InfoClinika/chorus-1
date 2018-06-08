@@ -90,4 +90,6 @@ public interface RuleValidator extends com.infoclinika.mssharing.platform.model.
 
     boolean isUserLabMembership(long user, long lab);
 
+    boolean canUserReadExperiment(long user, long experiment);
+
 }

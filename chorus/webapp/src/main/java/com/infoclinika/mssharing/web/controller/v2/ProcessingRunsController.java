@@ -48,7 +48,7 @@ public class ProcessingRunsController {
 
     @RequestMapping(name = "", method = RequestMethod.GET)
     public ResponseEntity<?> getAllProcessingRunsByExperiment(Principal principal, @PathVariable("experimentId") long experimentId){
-        return processingRunService.getAllProcessingRuns(experimentId);
+        return processingRunService.getAllProcessingRuns(experimentId, RichUser.get(principal).getId());
     }
 
 }

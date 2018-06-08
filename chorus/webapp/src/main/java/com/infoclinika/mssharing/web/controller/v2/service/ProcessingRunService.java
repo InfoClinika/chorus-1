@@ -1,6 +1,7 @@
 package com.infoclinika.mssharing.web.controller.v2.service;
 
 
+import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
 import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
@@ -37,6 +38,8 @@ public class ProcessingRunService {
     private ProcessingRunManagement processingRunManagement;
     @Inject
     private ProcessFileValidator processFileValidator;
+    @Inject
+    private RuleValidator ruleValidator;
 
 
     public ResponseEntity<Object> createProcessingRun(ProcessingRunsDTO dto, long user, long experiment) {
@@ -84,14 +87,19 @@ public class ProcessingRunService {
 
     public ResponseEntity<List<ProcessingRunsDTO.ProcessingRunsShortDetails>> getAllProcessingRuns(long experiment, long user){
 
-        boolean isUserHasAccessToExperiment = restAuthClientService.isUserHasAccessToExperiment(user, experiment);
+        if(ruleValidator.canUserReadExperiment(user, experiment)){
+            if(restAuthClientService.isUserHasAccessToExperiment(user, experiment)){
+                return processingRunDetailsToDto(experiment);
+            }
 
-        if(isUserHasAccessToExperiment){
-            return processingRunDetailsToDto(experiment);
+            LOGGER.warn("#### User with ID: " + user + "does not have access to lab ####");
+            return new ResponseEntity("User with ID: " + user + "does not have access to lab", HttpStatus.UNAUTHORIZED);
+
         }
 
-        LOGGER.warn("#### User with ID: " + user + "does not have access to lab ####");
-        return new ResponseEntity("User with ID: " + user + "does not have access to lab", HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity("Experiment by id: " + experiment + " not found", HttpStatus.BAD_REQUEST);
+
+
     }
 
 
@@ -112,21 +120,6 @@ public class ProcessingRunService {
 
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(dtoList);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -3,6 +3,7 @@ package com.infoclinika.mssharing.web.controller.v2.service;
 import com.infoclinika.analysis.storage.cloud.CloudStorageFactory;
 import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import com.infoclinika.analysis.storage.cloud.CloudStorageService;
+import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.s3client.AwsS3ClientConfigurationService;
 import com.infoclinika.mssharing.model.read.DetailsReader;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
@@ -44,11 +45,13 @@ public class ProcessingFileService {
     private RestAuthClientService restAuthClientService;
     @Inject
     private DetailsReader detailsReader;
+    @Inject
+    private RuleValidator ruleValidator;
 
 
     public ResponseEntity<Object> uploadFileToStorage(long user, long experimentId, MultipartFile[] multipartFiles) throws IOException {
 
-        if(detailsReader.readExperiment(user, experimentId) != null){
+        if(ruleValidator.canUserReadExperiment(user, experimentId)){
             LOGGER.info("#### Start upload file to storage ####");
             long start  = System.currentTimeMillis();
 
