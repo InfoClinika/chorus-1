@@ -1,23 +1,26 @@
 package com.infoclinika.mssharing.web.controller.v2.util;
 
 import com.google.common.collect.ImmutableList;
-import com.infoclinika.mssharing.model.internal.repository.ExperimentSampleRepository;
+import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
 import com.infoclinika.mssharing.model.read.DetailsReader;
 import com.infoclinika.mssharing.model.read.ExtendedShortExperimentFileItem;
 import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.write.ProcessingFileManagement;
+import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
-import java.text.CollationElementIterator;
 import java.util.*;
 
 @Component
 @Transactional
-public class ProcessFileValidatorImpl implements ProcessFileValidator {
+public class ProcessValidatorImpl implements ProcessValidator {
+
+    @Inject
+    private ProcessingRunReader processingRunReader;
 
     @Inject
     private DetailsReader detailsReader;
@@ -44,6 +47,11 @@ public class ProcessFileValidatorImpl implements ProcessFileValidator {
         }
 
         return null;
+    }
+
+    @Override
+    public boolean isProcessingRunExist(long processingRunId, long experiment) {
+        return processingRunReader.readProcessingRun(processingRunId, experiment) != null ? true : false;
     }
 
 

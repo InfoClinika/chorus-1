@@ -37,9 +37,11 @@ public class ProcessingRunReaderImpl implements ProcessingRunReader {
     @Override
     public ProcessingRunItem readProcessingRun(long processingRunId, long experiment) {
         final ProcessingRun processingRun = processingRunRepository.findByIdAndExperimentId(experiment, processingRunId);
-        checkNotNull(processingRun);
-
-        return processingRunItemTransform(processingRun);
+        if(processingRun != null){
+            return processingRunItemTransform(processingRun);
+        }else {
+            return null;
+        }
     }
 
     @Override

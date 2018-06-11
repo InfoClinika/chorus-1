@@ -1,7 +1,6 @@
 package com.infoclinika.mssharing.web.controller.v2.service;
 
 
-import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.helper.ProcessingFileItem;
 import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.read.ProcessingRunReader;
@@ -12,7 +11,7 @@ import com.infoclinika.mssharing.model.write.ProcessingRunManagement;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingFileDTO;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunDetails;
 import com.infoclinika.mssharing.web.controller.v2.dto.ProcessingRunsDTO;
-import com.infoclinika.mssharing.web.controller.v2.util.ProcessFileValidator;
+import com.infoclinika.mssharing.web.controller.v2.util.ProcessValidator;
 import com.infoclinika.mssharing.web.controller.v2.util.ValidationType;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -40,7 +39,7 @@ public class ProcessingRunService {
     @Inject
     private ProcessingRunManagement processingRunManagement;
     @Inject
-    private ProcessFileValidator processFileValidator;
+    private ProcessValidator processValidator;
     @Inject
     private RuleValidator ruleValidator;
 
@@ -53,8 +52,6 @@ public class ProcessingRunService {
         boolean isUserHasAccessToExperiment = restAuthClientService.isUserHasAccessToExperiment(user, experiment);
         boolean isProcessingRunAlreadyExist = processingRunReader.findProcessingRunByExperiment(dto.getName(), experiment);
 
-        // if user does not input fileToFileMap and sampleToFile
-
         if ((dto.getFileToFileMap() == null || dto.getFileToFileMap().size() == 0) && (dto.getSampleFileMap() == null || dto.getSampleFileMap().size() == 0)) {
             return createProcessingRunWithoutAssociateFiles(dto.getName(), user, experiment, isUserHasAccessToExperiment, isProcessingRunAlreadyExist);
         }
@@ -64,8 +61,6 @@ public class ProcessingRunService {
         }
 
         Collection<Map> notValidData = new ArrayList();
-
-        // else validate experiment files and samples
 
         returnValidationFileToFileMapResults(dto, experiment, user, notValidData);
 
@@ -110,16 +105,20 @@ public class ProcessingRunService {
 
     public ResponseEntity<ProcessingRunDetails> showProcessingRunDetails(long processingRunId, long user, long experiment){
 
-        if(ruleValidator.canUserReadExperiment(user, experiment)){
-            if(restAuthClientService.isUserHasAccessToExperiment(user, experiment)){
-                return processingRunItemToDTO(processingRunId,experiment);
+        if(processValidator.isProcessingRunExist(processingRunId, experiment)){
+            if(ruleValidator.canUserReadExperiment(user, experiment)){
+                if(restAuthClientService.isUserHasAccessToExperiment(user, experiment)){
+                    return processingRunItemToDTO(processingRunId,experiment);
+                }
+
+                LOGGER.warn("#### User with ID: " + user + "does not have access to lab ####");
+                return new ResponseEntity("User with ID: " + user + "does not have access to lab", HttpStatus.UNAUTHORIZED);
+            }else {
+                return new ResponseEntity("Experiment by id: " + experiment + " not found", HttpStatus.BAD_REQUEST);
             }
-
-            LOGGER.warn("#### User with ID: " + user + "does not have access to lab ####");
-            return new ResponseEntity("User with ID: " + user + "does not have access to lab", HttpStatus.UNAUTHORIZED);
+        }else {
+            return new ResponseEntity("Processing Run by id: " + processingRunId + " not found", HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity("Experiment by id: " + experiment + " not found", HttpStatus.BAD_REQUEST);
-
     }
 
 
@@ -229,8 +228,8 @@ public class ProcessingRunService {
 
     private void returnValidationFileToFileMapResults(ProcessingRunsDTO dto, long experiment, long user, Collection<Map> maps) {
 
-        Map experimentFilesMap = processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.EXPERIMENT_FILES);
-        Map processingFilesMap = processFileValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.PROCESSING_FILES);
+        Map experimentFilesMap = processValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.EXPERIMENT_FILES);
+        Map processingFilesMap = processValidator.validateAssociationFiles(dto.getFileToFileMap(), experiment, user, ValidationType.PROCESSING_FILES);
 
         if (!experimentFilesMap.isEmpty()) {
             maps.add(experimentFilesMap);
@@ -242,8 +241,8 @@ public class ProcessingRunService {
 
     private void returnValidationSampleFileResults(ProcessingRunsDTO dto, Collection<Map> maps, long experiment, long user) {
         if (dto.getSampleFileMap() != null) {
-            Map experimentFileSample = processFileValidator.validateSampleFileMap(dto.getSampleFileMap(), experiment, user, ValidationType.EXPERIMENT_SAMPLE);
-            Map processingFileSample = processFileValidator.validateSampleFileMap(dto.getSampleFileMap(), experiment, user, ValidationType.PROCESSING_FILE_SAMPLE);
+            Map experimentFileSample = processValidator.validateSampleFileMap(dto.getSampleFileMap(), experiment, user, ValidationType.EXPERIMENT_SAMPLE);
+            Map processingFileSample = processValidator.validateSampleFileMap(dto.getSampleFileMap(), experiment, user, ValidationType.PROCESSING_FILE_SAMPLE);
 
             if (!experimentFileSample.isEmpty()) {
                 maps.add(experimentFileSample);

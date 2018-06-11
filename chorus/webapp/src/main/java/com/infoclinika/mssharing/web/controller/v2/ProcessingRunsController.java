@@ -47,12 +47,12 @@ public class ProcessingRunsController {
         return new ResponseEntity("Processing Run name can't be empty !", HttpStatus.BAD_REQUEST);
     }
 
-    @RequestMapping(name = "", method = RequestMethod.GET)
+    @RequestMapping(value = "/all", method = RequestMethod.GET)
     public ResponseEntity<?> getAllProcessingRunsByExperiment(Principal principal, @PathVariable("experimentId") long experimentId){
         return processingRunService.getAllProcessingRuns(experimentId, RichUser.get(principal).getId());
     }
 
-    @RequestMapping(name = "/details", method = RequestMethod.GET)
+    @RequestMapping(value = "/details", method = RequestMethod.GET)
     public ResponseEntity<ProcessingRunDetails> getSpecificProcessingRunInformation(Principal principal, @RequestParam(value = "id")long processingRunId, @PathVariable("experimentId") long experimentId){
         return processingRunService.showProcessingRunDetails(processingRunId, RichUser.get(principal).getId(), experimentId);
     }
