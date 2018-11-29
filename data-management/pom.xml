@@ -29,7 +29,7 @@
         <jdk.version>1.8</jdk.version>
         <spring.version>4.1.5.RELEASE</spring.version>
         <spring.data.version>1.8.0.RELEASE</spring.data.version>
-        <spring.security.version>4.0.1.RELEASE</spring.security.version>
+        <spring.security.version>4.1.1.RELEASE</spring.security.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <hibernate.version>4.1.4.Final</hibernate.version>
         <jackson.version>2.3.2</jackson.version>
