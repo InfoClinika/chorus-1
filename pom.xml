@@ -18,7 +18,7 @@
     <properties>
         <infoclinika.analysis.version>1.0.26</infoclinika.analysis.version>
         <infoclinika.workflow.version>1.0-SNAPSHOT</infoclinika.workflow.version>
-        <spring.version>4.3.17.RELEASE</spring.version>
+        <spring.version>4.3.18.RELEASE</spring.version>
         <spring.data.version>1.8.0.RELEASE</spring.data.version>
         <spring.security.version>4.1.1.RELEASE</spring.security.version>
         <spring.amqp.version>1.4.5.RELEASE</spring.amqp.version>
