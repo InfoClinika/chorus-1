@@ -20,7 +20,7 @@
         <infoclinika.workflow.version>1.0-SNAPSHOT</infoclinika.workflow.version>
         <spring.version>4.3.18.RELEASE</spring.version>
         <spring.data.version>1.8.0.RELEASE</spring.data.version>
-        <spring.security.version>4.1.1.RELEASE</spring.security.version>
+        <spring.security.version>4.2.4.RELEASE</spring.security.version>
         <spring.amqp.version>1.4.5.RELEASE</spring.amqp.version>
         <!-- Using the 4.1.3 due to bugs in 4.1.8 https://community.jboss.org/message/778294?_sscc=t -->
         <hibernate.version>4.3.8.Final</hibernate.version>
