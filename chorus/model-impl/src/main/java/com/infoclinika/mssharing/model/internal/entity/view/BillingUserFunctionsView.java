@@ -1,6 +1,7 @@
 package com.infoclinika.mssharing.model.internal.entity.view;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * @author Herman Zamula
@@ -8,11 +9,11 @@ import javax.persistence.*;
 @Embeddable
 public class BillingUserFunctionsView {
 
-    @Column(name ="lab_id")
+    @Column(name = "lab_id")
     private Long lab;
-    @Column(name ="user_id")
+    @Column(name = "user_id")
     private Long userId;
-    @Column(name ="path")
+    @Column(name = "path")
     private String path;
     @Column(name = "user_name")
     private String userName;
@@ -45,15 +46,27 @@ public class BillingUserFunctionsView {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         BillingUserFunctionsView that = (BillingUserFunctionsView) o;
 
-        if (lab != null ? !lab.equals(that.lab) : that.lab != null) return false;
-        if (path != null ? !path.equals(that.path) : that.path != null) return false;
-        if (userId != null ? !userId.equals(that.userId) : that.userId != null) return false;
-        if (userName != null ? !userName.equals(that.userName) : that.userName != null) return false;
+        if (lab != null ? !lab.equals(that.lab) : that.lab != null) {
+            return false;
+        }
+        if (path != null ? !path.equals(that.path) : that.path != null) {
+            return false;
+        }
+        if (userId != null ? !userId.equals(that.userId) : that.userId != null) {
+            return false;
+        }
+        if (userName != null ? !userName.equals(that.userName) : that.userName != null) {
+            return false;
+        }
 
         return true;
     }

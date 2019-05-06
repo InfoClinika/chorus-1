@@ -18,12 +18,14 @@
     <http pattern="/analyze/images/**" security="none" />
     <http pattern="/analyze/scripts/**" security="none" />
     <http pattern="/favicon.ico" security="none" />
+    <http pattern="/pages/user-guide-images/**" security="none" />
     <!--<http pattern="/common-js/**" security="none" />-->
 
     <http use-expressions="true" entry-point-ref="authenticationEntryPoint" disable-url-rewriting="false">
+        <intercept-url pattern="/v2/auth/cookie" access="permitAll"/>
+        <intercept-url pattern="/mascot/proxy" access="permitAll" />
         <intercept-url pattern="/paypal/ipn" access="permitAll" />
         <intercept-url pattern="/rest/**" access="permitAll" />
-        <intercept-url pattern="/skyline/api/**" access="permitAll" />
         <intercept-url pattern="/security/labMembership/**" access="permitAll" />
         <intercept-url pattern="/security/**" access="permitAll" />
         <intercept-url pattern="/statistics/**" access="permitAll" />
@@ -31,7 +33,7 @@
         <intercept-url pattern="/features/**" access="permitAll" />
         <intercept-url pattern="/appearance/**" access="permitAll" />
         <intercept-url pattern="/pages/labMembershipMessage.html/**" access="permitAll" />
-        <intercept-url pattern="/pages/authentication.html" access="permitAll" />
+        <intercept-url pattern="/pages/authentication.html" access="isAnonymous()" />
         <intercept-url pattern="/pages/register.html" access="isAnonymous()" />
         <intercept-url pattern="/pages/user/form.html" access="permitAll" />
         <intercept-url pattern="/pages/user/login.html" access="permitAll" />
@@ -112,6 +114,6 @@
     </authentication-manager>
 
     <context:component-scan base-package="com.infoclinika.mssharing.web.security" />
-
+    <context:component-scan base-package="com.infoclinika.mssharing.propertiesprovider" />
 
 </beans:beans>   

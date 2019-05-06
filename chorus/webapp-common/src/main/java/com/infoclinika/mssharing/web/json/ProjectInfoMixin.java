@@ -5,8 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Pavel Kaplin
- *
- * Motivated by http://wiki.fasterxml.com/JacksonMixInAnnotations
+ *     <p>
+ *     Motivated by http://wiki.fasterxml.com/JacksonMixInAnnotations
+ *     </p>
  */
 abstract class ProjectInfoMixin {
     @JsonCreator

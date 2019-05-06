@@ -2,8 +2,8 @@ package com.infoclinika.mssharing.services.billing.persistence.read.strategy;
 
 import com.google.common.base.Function;
 import com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem;
-import com.infoclinika.mssharing.services.billing.persistence.enity.storage.AnalyzableStorageUsage;
 import com.infoclinika.mssharing.services.billing.persistence.enity.ChargeableItemUsage;
+import com.infoclinika.mssharing.services.billing.persistence.enity.storage.AnalyzableStorageUsage;
 import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader;
 import com.infoclinika.mssharing.services.billing.persistence.repository.DailyAnalyseStorageUsageRepository;
 import org.springframework.stereotype.Component;
@@ -29,13 +29,15 @@ public class AnalyzeDataLogUsageStrategy extends AbstractFeatureLogStrategy {
             final UsageParams params = new UsageParams();
             for (ChargeableItemUsage usage : perFileUsage) {
                 final AnalyzableStorageUsage analyzableUsage = (AnalyzableStorageUsage) usage;
-                params.totalPrice = params.totalPrice + analyzableUsage.getCharge() + analyzableUsage.getTranslatedCharge();
+                params.totalPrice = params.totalPrice + analyzableUsage.getCharge();
                 params.totalHours = params.totalHours + analyzableUsage.getHours();
             }
             final AnalyzableStorageUsage itemUsage = (AnalyzableStorageUsage) itemUsageOrdering.max(perFileUsage);
-            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(), (itemUsage.getBytes() + itemUsage.getTranslatedBytes()), itemUsage.getInstrument(),
-                    0, 0, itemUsage.getBalance(), (int) params.totalHours,
-                    itemUsage.getFileName(), itemUsage.getTimestampDate());
+            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(),
+                itemUsage.getBytes(), itemUsage.getInstrument(),
+                0, 0, itemUsage.getBalance(), (int) params.totalHours,
+                itemUsage.getFileName(), itemUsage.getTimestampDate()
+            );
         };
     }
 

@@ -15,8 +15,10 @@ public class ChorusFileData extends ExperimentDownloadHelperTemplate.FileDataTem
     public final Optional<Long> billLab;
     public final AccessLevel accessLevel;
 
-    public ChorusFileData(String contentId, String archiveId, String name, boolean invalid, List<ExperimentDownloadHelperTemplate.ConditionDataTemplate> conditions, long lab, long id, Optional<Long> billLab, AccessLevel accessLevel) {
-        super(id, contentId, name, invalid, conditions, lab);
+    public ChorusFileData(String bucket, String contentId, String archiveId, String name, boolean invalid,
+                          List<ExperimentDownloadHelperTemplate.ConditionDataTemplate> conditions, long lab, long id,
+                          Optional<Long> billLab, AccessLevel accessLevel, String instrumentName) {
+        super(id, bucket, contentId, name, invalid, conditions, lab, instrumentName);
         this.archiveId = archiveId;
         this.billLab = billLab;
         this.accessLevel = accessLevel;

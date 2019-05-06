@@ -11,7 +11,8 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "daily_usage_summary",
-        uniqueConstraints = {@UniqueConstraint(name = "lab_day", columnNames = {"lab_id", "server_day_formatted"})})
+    uniqueConstraints = {@UniqueConstraint(name = "lab_day", columnNames = {"lab_id", "server_day_formatted"})}
+)
 public class DailySummary extends AbstractPersistable<Long> {
 
     private Date date;

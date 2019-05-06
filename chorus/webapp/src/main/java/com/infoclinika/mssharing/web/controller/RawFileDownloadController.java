@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.web.controller;
 
@@ -13,9 +15,12 @@ import com.infoclinika.mssharing.model.write.FileOperationsManager;
 import com.infoclinika.mssharing.model.write.StudyManagement;
 import com.infoclinika.mssharing.platform.web.downloader.DownloadExperimentDeniedException;
 import com.infoclinika.mssharing.web.controller.response.ValueResponse;
-import com.infoclinika.mssharing.web.downloader.*;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.web.downloader.BulkDownloadHelper;
+import com.infoclinika.mssharing.web.downloader.ChorusDownloadData;
+import com.infoclinika.mssharing.web.downloader.ChorusSingleFileDownloadHelper;
+import com.infoclinika.mssharing.web.downloader.LabToSendBillingNotSpecifiedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -38,29 +43,30 @@ import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId
 @Controller
 @RequestMapping("/download")
 public class RawFileDownloadController extends ErrorHandler {
-
-    private static final Logger LOG = Logger.getLogger(RawFileDownloadController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RawFileDownloadController.class);
 
     @Inject
     private BulkDownloadHelper bulkDownloadHelper;
+
     @Inject
     private ChorusSingleFileDownloadHelper singleFileDownloadHelper;
+
     @Inject
     private FileMovingManager fileMovingManager;
+
     @Inject
     private FileOperationsManager fileOperationsManager;
+
     @Inject
     private StudyManagement studyManagement;
 
-
-    @Value("${base.url}")
-    private String baseUrl;
-
     @RequestMapping(value = "singleFileDownloadUrl", method = RequestMethod.GET)
     @ResponseBody
-    public ValueResponse getSingleFileDownloadUrl(@RequestParam(required = true) long file,
-                                                  @RequestParam(required = false) Long lab,
-                                                  Principal principal) {
+    public ValueResponse getSingleFileDownloadUrl(
+        @RequestParam(required = true) long file,
+        @RequestParam(required = false) Long lab,
+        Principal principal
+    ) {
 
         long userId = getUserId(principal);
         final URL downloadUrl = singleFileDownloadHelper.getDownloadUrl(userId, new ChorusDownloadData(file, lab));
@@ -70,9 +76,11 @@ public class RawFileDownloadController extends ErrorHandler {
     }
 
     @RequestMapping(value = "directDownload", method = RequestMethod.GET)
-    public String directDownload(@RequestParam(required = true) long file,
-                                        @RequestParam(required = false) Long lab,
-                                        Principal principal) {
+    public String directDownload(
+        @RequestParam(required = true) long file,
+        @RequestParam(required = false) Long lab,
+        Principal principal
+    ) {
 
         long userId = getUserId(principal);
         final URL downloadUrl = singleFileDownloadHelper.getDownloadUrl(userId, new ChorusDownloadData(file, lab));
@@ -82,15 +90,21 @@ public class RawFileDownloadController extends ErrorHandler {
 
     @RequestMapping(value = "/bulk")
     @ResponseBody
-    public void download(@RequestParam(required = false) Set<Long> files, Principal principal,
-                         @RequestParam(required = false) Long experiment,
-                         @RequestParam(required = false) Long lab,
-                         HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void download(
+        @RequestParam(required = false) Set<Long> files, Principal principal,
+        @RequestParam(required = false) Long experiment,
+        @RequestParam(required = false) Long lab,
+        HttpServletRequest request, HttpServletResponse response
+    ) throws IOException {
         long userId = getUserId(principal);
         try {
-            bulkDownloadHelper.download(new BulkDownloadHelper.ChorusRequest(userId, files, experiment, false, lab), response);
+            bulkDownloadHelper.download(
+                new BulkDownloadHelper.ChorusRequest(userId, files, experiment, false, lab),
+                response
+            );
         } catch (DownloadExperimentDeniedException e) {
-            response.sendRedirect("/pages/requestDownloadExperiment.html?downloadLink=" + getEncodedDownloadExperimentLink(request));
+            response.sendRedirect(
+                "/pages/requestDownloadExperiment.html?downloadLink=" + getEncodedDownloadExperimentLink(request));
         } catch (LabToSendBillingNotSpecifiedException e) {
             response.sendRedirect("/pages/dashboard.html#/experiments/all?downloadExperiment=" + experiment);
         }
@@ -103,7 +117,7 @@ public class RawFileDownloadController extends ErrorHandler {
         try {
             encodedDownloadExperimentLink = URLEncoder.encode(downloadExperimentUrl, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            LOG.error(e);
+            LOGGER.error("Can't encode downloaded experiment link", e);
         }
         return encodedDownloadExperimentLink;
     }

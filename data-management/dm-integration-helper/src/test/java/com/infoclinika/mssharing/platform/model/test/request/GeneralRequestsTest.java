@@ -8,10 +8,8 @@ import com.infoclinika.mssharing.platform.model.read.RequestsDetailsReaderTempla
 import com.infoclinika.mssharing.platform.model.test.helper.AbstractTest;
 import com.infoclinika.mssharing.platform.model.testing.helper.Data;
 import com.infoclinika.mssharing.platform.model.write.InstrumentManagementTemplate;
-import com.infoclinika.mssharing.platform.model.write.LabManagementTemplate;
+import com.infoclinika.mssharing.platform.model.write.LabManagementTemplate.LabInfoTemplate;
 import org.testng.annotations.Test;
-
-import java.util.ArrayList;
 
 import static com.infoclinika.mssharing.platform.model.RequestsTemplate.OutboxItem;
 import static org.testng.Assert.*;
@@ -53,9 +51,9 @@ public class GeneralRequestsTest extends AbstractTest {
         final long lab4Request = requestLab4Creation();
         final long bob = uc.createLab3AndBob();
         uc.addKateToLab3(); // +1 - approve membership
-        createInstrumentAndApproveOperator(bob, kate);
+        createInstrument(bob, kate);
         requests.refuse(admin(), getLabCreationRequest(lab4Request), "");
-        assertEquals(requests.getInboxItems(kate).size(), 3);
+        assertEquals(requests.getInboxItems(kate).size(), 2);
     }
 
     @Test
@@ -63,8 +61,8 @@ public class GeneralRequestsTest extends AbstractTest {
         final long kate = uc.createKateAndLab2();
         final long bob = uc.createLab3AndBob();
         uc.addKateToLab3(); // +1 - approve membership
-        createInstrumentAndApproveOperator(bob, kate);
-        assertEquals(requests.getOutboxItems(kate).size(), 2);
+        createInstrument(bob, kate);
+        assertEquals(requests.getOutboxItems(kate).size(), 1);
     }
 
 
@@ -102,9 +100,7 @@ public class GeneralRequestsTest extends AbstractTest {
         final long bob = uc.createLab3AndBob();
         final long kate = uc.createKateAndLab2();
         uc.addKateToLab3();
-        createInstrumentAndApproveOperator(bob, kate);
-        assertEquals(requests.getInboxItems(kate).size(), 2);
-        requests.removeInboxItem(kate, requests.getInboxItems(kate).first().id);
+        createInstrument(bob, kate);
         assertEquals(requests.getInboxItems(kate).size(), 1);
         requests.removeInboxItem(kate, requests.getInboxItems(kate).first().id);
         assertEquals(requests.getInboxItems(kate).size(), 0);
@@ -113,8 +109,14 @@ public class GeneralRequestsTest extends AbstractTest {
     @Test
     public void testLabCreationOutboxMessagesDisappearedAfterPressOk() {
         final long paul = uc.createPaul();
-        labManagement.requestLabCreation(new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab6"), Data.L_PAUL_INFO.email);
-        labManagement.requestLabCreation(new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab7"), Data.L_PAUL_INFO.email);
+        labManagement.requestLabCreation(
+            new LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab6"),
+            Data.L_PAUL_INFO.email
+        );
+        labManagement.requestLabCreation(
+            new LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab7"),
+            Data.L_PAUL_INFO.email
+        );
         assertEquals(requests.getOutboxItems(paul).size(), 2);
         requests.removeOutboxItem(paul, requests.getOutboxItems(paul).first().id);
         assertEquals(requests.getOutboxItems(paul).size(), 1);
@@ -126,8 +128,12 @@ public class GeneralRequestsTest extends AbstractTest {
     public void testAdminCanReadLabCreationDetails() {
 
         final long admin = admin();
-        final Long labCreationId = labManagement.requestLabCreation(new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab6"), Data.L_PAUL_INFO.email);
-        final DetailsReaderTemplate.LabItemTemplate requestDetails = requestsDetailsReader.readLabRequestDetails(admin, labCreationId);
+        final Long labCreationId = labManagement.requestLabCreation(
+            new LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab6"),
+            Data.L_PAUL_INFO.email
+        );
+        final DetailsReaderTemplate.LabItemTemplate requestDetails =
+            requestsDetailsReader.readLabRequestDetails(admin, labCreationId);
 
         assertNotNull(requestDetails);
         assertEquals(requestDetails.contactEmail, Data.L_PAUL_INFO.email);
@@ -150,11 +156,14 @@ public class GeneralRequestsTest extends AbstractTest {
         final String serialNumber = "12341234";
 
         final Optional<Long> instrumentRequest =
-                instrumentManagement.newInstrumentRequest(bob, uc.getLab3(), model, new InstrumentManagementTemplate.InstrumentDetailsTemplate(name, serialNumber, ""), new ArrayList<Long>());
+            instrumentManagement.newInstrumentRequest(bob, uc.getLab3(), model,
+                new InstrumentManagementTemplate.InstrumentDetailsTemplate(name, serialNumber, "")
+            );
 
         assertTrue(instrumentRequest.isPresent());
 
-        final InstrumentCreationItemTemplate creationItem = requestsDetailsReader.readInstrumentCreation(labHead, instrumentRequest.get());
+        final InstrumentCreationItemTemplate creationItem =
+            requestsDetailsReader.readInstrumentCreation(labHead, instrumentRequest.get());
 
         assertNotNull(creationItem);
         assertEquals(creationItem.name, name);
@@ -164,27 +173,9 @@ public class GeneralRequestsTest extends AbstractTest {
 
     }
 
-    @Test
-    public void testInstrumentRequestRemovedFromInboxAfterAccept() {
-        final long bob = uc.createLab3AndBob();
-        final long kate = uc.createKateAndLab2();
-        uc.addKateToLab3();
-        final long instrument1 = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final Long instrument2 = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        instrumentManagement.requestAccessToInstrument(kate, instrument1);
-        instrumentManagement.requestAccessToInstrument(kate, instrument2);
-        //1-lab membership, 2,3-approve instrument creation, 4,5-requested access to instrument from kate
-        assertEquals(requests.getInboxItems(bob).size(), 5); //approve membership in lab 3
-        requests.approve(bob, getInstrumentRequest(kate, instrument1));
-        requests.refuse(bob, getInstrumentRequest(kate, instrument2), "");
-        assertEquals(requests.getInboxItems(bob).size(), 3);
-    }
-
-
-    private void createInstrumentAndApproveOperator(long creator, long newOperator) {
+    private void createInstrument(long creator, long newOperator) {
         final long instrument = uc.createInstrumentAndApproveIfNeeded(creator, uc.getLab3()).get();
-        instrumentManagement.requestAccessToInstrument(newOperator, instrument);
-        requests.approve(creator, getInstrumentRequest(newOperator, instrument));
+        //        requests.approve(creator, getInstrumentRequest(newOperator, instrument));
     }
 
     private void requestLab4and5CreationByKate() {
@@ -192,24 +183,24 @@ public class GeneralRequestsTest extends AbstractTest {
         requestLab5Creation();
     }
 
-    private String getInstrumentRequest(long kate, long instrument) {
-        return "InstrumentStrategy" + String.valueOf(instrument) + "," + String.valueOf(kate);
-    }
-
-    private String getLabMembershipRequest(long request) {
-        return "LabMembershipStrategy" + String.valueOf(request);
-    }
-
     private String getLabCreationRequest(long request) {
         return "LabCreationStrategy" + String.valueOf(request);
     }
 
     private long requestLab5Creation() {
-        return labManagement.requestLabCreation(new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab5"), Data.L_KATE_INFO.email);
+        return labManagement
+            .requestLabCreation(
+                new LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab5"),
+                Data.L_KATE_INFO.email
+            );
     }
 
     private long requestLab4Creation() {
-        return labManagement.requestLabCreation(new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab4"), Data.L_KATE_INFO.email);
+        return labManagement
+            .requestLabCreation(
+                new LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab4"),
+                Data.L_KATE_INFO.email
+            );
     }
 
 }

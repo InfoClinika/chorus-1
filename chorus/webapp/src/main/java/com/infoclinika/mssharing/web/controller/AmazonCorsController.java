@@ -3,17 +3,20 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.web.controller;
 
 import com.infoclinika.mssharing.model.helper.CloudFileHelper;
-import com.infoclinika.mssharing.platform.model.helper.CorsRequestSignerTemplate;
 import com.infoclinika.mssharing.model.write.InstrumentManagement;
+import com.infoclinika.mssharing.platform.model.helper.CorsRequestSignerTemplate;
 import com.infoclinika.mssharing.web.controller.response.ChunkUrlResponse;
 import com.infoclinika.mssharing.web.services.upload.cors.*;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +32,9 @@ import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId
  */
 @Controller
 @RequestMapping("/cors")
-public class AmazonCorsController {
+public class AmazonCorsController extends ErrorHandler {
 
-    private static final Logger LOGGER = Logger.getLogger(AmazonCorsController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AmazonCorsController.class);
 
     @Inject
     private CorsRequestSignerTemplate requestSigner;
@@ -44,60 +47,128 @@ public class AmazonCorsController {
     @RequestMapping(value = "/sign/singlefile", method = RequestMethod.POST)
     @ResponseBody
     public ChunkUrlResponse signSingleFileUpload(@RequestBody SingleFileUploadRequest request, Principal principal) {
-        LOGGER.debug("Signing the upload request for single file: " + request.objectName);
+        LOGGER.debug("Signing the upload request for single file: {}", request.objectName);
         final long userId = getUserId(principal);
         final String signedUrl = requestSigner.signSingleFileUploadRequest(userId, request.objectName);
-        return new ChunkUrlResponse(signedUrl, requestSigner.useServerSideEncryption());
+        return new ChunkUrlResponse(
+            signedUrl,
+            requestSigner.useServerSideEncryption(),
+            requestSigner.useSessionToken(),
+            requestSigner.getAmazonToken()
+        );
     }
 
     //multipart upload methods
 
     @RequestMapping(value = "/sign/initial", method = RequestMethod.POST)
     @ResponseBody
-    public SignedCorsUploadSseResponse signInitialUploadRequest(@RequestBody InitialMultipartCorsUploadRequest request, Principal principal) {
+    public SignedCorsUploadSeeTokenResponse signInitialUploadRequest(
+        @RequestBody InitialMultipartCorsUploadRequest request,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final CorsRequestSignerTemplate.SignedRequest signed = requestSigner.signInitialUploadRequest(userId, request.objectName);
-        return new SignedCorsUploadSseResponse(signed.authorization, signed.host, signed.dateAsString, requestSigner.useServerSideEncryption());
+        final CorsRequestSignerTemplate.SignedRequest signed =
+            requestSigner.signInitialUploadRequest(userId, request.objectName);
+        return new SignedCorsUploadSeeTokenResponse(
+            signed.authorization,
+            signed.host,
+            signed.dateAsString,
+            requestSigner.useServerSideEncryption(),
+            requestSigner.useSessionToken(),
+            requestSigner.getAmazonToken()
+        );
     }
 
     @RequestMapping(value = "/sign/part", method = RequestMethod.POST)
     @ResponseBody
-    public SignedCorsUploadResponse signUploadPartRequest(@RequestBody UploadPartCorsRequest request, Principal principal) {
+    public SignedCorsUploadSeeTokenResponse signUploadPartRequest(
+        @RequestBody UploadPartCorsRequest request,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final CorsRequestSignerTemplate.SignedRequest signed = requestSigner.signUploadPartRequest(userId, request.objectName, request.partNumber, request.uploadId);
-        return new SignedCorsUploadResponse(signed.authorization, signed.host, signed.dateAsString);
+        final CorsRequestSignerTemplate.SignedRequest signed =
+            requestSigner.signUploadPartRequest(userId, request.objectName, request.partNumber, request.uploadId);
+        return new SignedCorsUploadSeeTokenResponse(
+            signed.authorization,
+            signed.host,
+            signed.dateAsString,
+            requestSigner.useServerSideEncryption(),
+            requestSigner.useSessionToken(),
+            requestSigner.getAmazonToken()
+        );
     }
 
     @RequestMapping(value = "/sign/list", method = RequestMethod.POST)
     @ResponseBody
-    public SignedCorsUploadResponse signListPartsRequest(@RequestBody ListPartsCorsRequest request, Principal principal) {
+    public SignedCorsUploadSeeTokenResponse signListPartsRequest(
+        @RequestBody ListPartsCorsRequest request,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final CorsRequestSignerTemplate.SignedRequest signed = requestSigner.signListPartsRequest(userId, request.objectName, request.uploadId);
-        return new SignedCorsUploadResponse(signed.authorization, signed.host, signed.dateAsString);
+        final CorsRequestSignerTemplate.SignedRequest signed =
+            requestSigner.signListPartsRequest(userId, request.objectName, request.uploadId);
+        return new SignedCorsUploadSeeTokenResponse(
+            signed.authorization,
+            signed.host,
+            signed.dateAsString,
+            requestSigner.useServerSideEncryption(),
+            requestSigner.useSessionToken(),
+            requestSigner.getAmazonToken()
+        );
     }
 
     @RequestMapping(value = "/sign/abort", method = RequestMethod.POST)
     @ResponseBody
-    public SignedCorsUploadResponse signAbortUploadRequest(@RequestBody AbortMultipartCorsUploadRequest request, Principal principal) {
+    public SignedCorsUploadSeeTokenResponse signAbortUploadRequest(
+        @RequestBody AbortMultipartCorsUploadRequest request,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final CorsRequestSignerTemplate.SignedRequest signed = requestSigner.signAbortUploadRequest(userId, request.objectName, request.uploadId);
-        return new SignedCorsUploadResponse(signed.authorization, signed.host, signed.dateAsString);
+        final CorsRequestSignerTemplate.SignedRequest signed =
+            requestSigner.signAbortUploadRequest(userId, request.objectName, request.uploadId);
+        return new SignedCorsUploadSeeTokenResponse(
+            signed.authorization,
+            signed.host,
+            signed.dateAsString,
+            requestSigner.useServerSideEncryption(),
+            requestSigner.useSessionToken(),
+            requestSigner.getAmazonToken()
+        );
     }
 
     @RequestMapping(value = "/sign/complete", method = RequestMethod.POST)
     @ResponseBody
-    public SignedCorsUploadResponse signCompleteUploadRequest(@RequestBody CompleteMultipartUploadCorsRequest request, Principal principal) {
+    public SignedCorsUploadSeeTokenResponse signCompleteUploadRequest(
+        @RequestBody CompleteMultipartUploadCorsRequest request,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final CorsRequestSignerTemplate.SignedRequest signed = requestSigner.signCompleteUploadRequest(userId, request.objectName, request.uploadId, request.addCharsetToContentType);
-        return new SignedCorsUploadResponse(signed.authorization, signed.host, signed.dateAsString);
+        final CorsRequestSignerTemplate.SignedRequest signed = requestSigner.signCompleteUploadRequest(
+            userId,
+            request.objectName,
+            request.uploadId,
+            request.addCharsetToContentType
+        );
+        return new SignedCorsUploadSeeTokenResponse(
+            signed.authorization,
+            signed.host,
+            signed.dateAsString,
+            requestSigner.useServerSideEncryption(),
+            requestSigner.useSessionToken(),
+            requestSigner.getAmazonToken()
+        );
     }
 
     @RequestMapping(value = "/confirm", method = RequestMethod.POST)
-    public void confirmFileUpload(@RequestBody ConfirmMultipartUploadRequest request, Principal principal, HttpServletResponse response) {
+    public void confirmFileUpload(
+        @RequestBody ConfirmMultipartUploadRequest request,
+        Principal principal,
+        HttpServletResponse response
+    ) {
 
         final long amazonFileSize = cloudFileHelper.getFileSize(request.remoteDestination);
 
-        if(amazonFileSize != request.fileSize) {
+        if (amazonFileSize != request.fileSize) {
             response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
         } else {
             final long userId = getUserId(principal);

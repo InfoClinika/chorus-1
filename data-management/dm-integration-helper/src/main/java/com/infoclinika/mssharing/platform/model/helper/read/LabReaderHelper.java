@@ -19,7 +19,7 @@ import static com.infoclinika.mssharing.platform.model.helper.read.SingleResultB
 @Component
 @Scope(value = "prototype")
 public class LabReaderHelper<LAB extends LabTemplate, LAB_LINE extends LabLineTemplate>
-        extends AbstractReaderHelper<LAB, LAB_LINE, LabLineTemplate> {
+    extends AbstractReaderHelper<LAB, LAB_LINE, LabLineTemplate> {
 
     @Inject
     private LabRepositoryTemplate<LAB> labRepository;

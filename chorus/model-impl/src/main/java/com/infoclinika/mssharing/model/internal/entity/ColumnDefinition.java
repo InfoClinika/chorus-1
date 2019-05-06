@@ -3,11 +3,12 @@ package com.infoclinika.mssharing.model.internal.entity;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
+
 /**
  * @author Herman Zamula
  */
 @Entity
-public class ColumnDefinition extends AbstractPersistable<Long>{
+public class ColumnDefinition extends AbstractPersistable<Long> {
     private String name;
 
     private ColumnsView.Type type;
@@ -20,9 +21,17 @@ public class ColumnDefinition extends AbstractPersistable<Long>{
 
     private int units;
 
-    public ColumnDefinition() {}
+    public ColumnDefinition() {
+    }
 
-    public ColumnDefinition(String name, ColumnsView.Type type, String dataType, boolean sortable, boolean hideable, int units) {
+    public ColumnDefinition(
+        String name,
+        ColumnsView.Type type,
+        String dataType,
+        boolean sortable,
+        boolean hideable,
+        int units
+    ) {
         this.name = name;
         this.type = type;
         this.dataType = dataType;

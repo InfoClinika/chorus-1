@@ -1,21 +1,16 @@
 package com.infoclinika.mssharing.helper;
 
-import com.beust.jcommander.internal.Maps;
-import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 import com.infoclinika.mssharing.model.Notifier;
 import com.infoclinika.mssharing.model.helper.AbstractTest;
 import com.infoclinika.mssharing.model.helper.BillingFeaturesHelper;
-import com.infoclinika.mssharing.model.internal.helper.billing.BillingPropertiesProvider;
-import com.infoclinika.mssharing.model.read.BillingInfoReader;
-import com.infoclinika.mssharing.model.write.billing.BillingManagement;
 import com.infoclinika.mssharing.services.billing.persistence.helper.PaymentCalculationsHelper;
 import com.infoclinika.mssharing.services.billing.persistence.helper.StorageAndProcessingFeaturesUsageAnalyser;
 import com.infoclinika.mssharing.services.billing.persistence.helper.StorageLogHelper;
 import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader;
 import com.infoclinika.mssharing.services.billing.persistence.write.PaymentManagement;
 import com.infoclinika.mssharing.services.billing.rest.api.BillingService;
-import com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -29,9 +24,7 @@ import java.util.Map;
 import java.util.Random;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature.ANALYSE_STORAGE;
-//import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature.TRANSLATION;
 import static org.mockito.Mockito.reset;
 
 /**
@@ -58,17 +51,10 @@ public class AbstractBillingTest extends AbstractTest {
     @Inject
     protected ChargeableItemUsageReader chargeableItemUsageReader;
     @Inject
-    protected BillingService billingService;
-    @Inject
-    protected BillingManagement billingManagement;
-    @Inject
     protected StorageAndProcessingFeaturesUsageAnalyser storageAndProcessingFeaturesUsageAnalyser;
-    @Inject
-    protected BillingPropertiesProvider billingPropertiesProvider;
-    @Inject
-    protected BillingInfoReader billingInfoReader;
 
     @BeforeMethod
+    @Override
     public void setUp() {
         super.setUp();
 
@@ -85,6 +71,7 @@ public class AbstractBillingTest extends AbstractTest {
 
     @AfterMethod
     @SuppressWarnings("unchecked")
+    @Override
     public void tearDown() {
         super.tearDown();
         for (CrudRepository repo : billingRepositories.get()) {
@@ -100,27 +87,23 @@ public class AbstractBillingTest extends AbstractTest {
         }
     }
 
-    protected ChargeableItemUsageReader.ChargeableItemBill getBill(ChargeableItemUsageReader.Invoice invoice, final BillingFeature feature) {
-        return from(invoice.featureItem.features)
-                .firstMatch(new Predicate<ChargeableItemUsageReader.ChargeableItemBill>() {
-                    @Override
-                    public boolean apply(ChargeableItemUsageReader.ChargeableItemBill input) {
-                        return input.type.equals(feature);
-                    }
-                }).get();
+    protected ChargeableItemUsageReader.ChargeableItemBill getBill(ChargeableItemUsageReader.Invoice invoice,
+                                                                   final BillingFeature feature) {
+        return invoice.featureItem.features.stream().filter(input -> input.type.equals(feature)).findFirst().get();
     }
 
     protected long toCents(Long dollars) {
         return (long) (Double.valueOf(dollars) * 100);
     }
 
-    protected ChargeableItemUsageReader.ChargeableItemBill analyzableStorageBill(ChargeableItemUsageReader.Invoice invoice) {
+    protected ChargeableItemUsageReader.ChargeableItemBill analyzableStorageBill(
+        ChargeableItemUsageReader.Invoice invoice) {
         return getBill(invoice, ANALYSE_STORAGE);
     }
 
-
     protected ChargeableItemUsageReader.Invoice getInvoice(long actor, long lab) {
-        return chargeableItemUsageReader.readInvoice(actor, lab, new Date(new Date().getTime() - 1000 * 60 * 10), new Date());
+        return chargeableItemUsageReader
+            .readInvoice(actor, lab, new Date(new Date().getTime() - 1000 * 60 * 10), new Date());
     }
 
     protected ChargeableItemUsageReader.Invoice getInvoice(long actor, long lab, long from, long to) {
@@ -136,14 +119,14 @@ public class AbstractBillingTest extends AbstractTest {
         long now = from;
         for (int i = 1; i <= hours; i++) {
             storageLogHelper.log(now);
-            if(simulateProcessingAndStorageVolumesUsageLogging) {
-                storageAndProcessingFeaturesUsageAnalyser.analyseProcessingUsage(now);
+            if (simulateProcessingAndStorageVolumesUsageLogging) {
                 storageAndProcessingFeaturesUsageAnalyser.analyseStorageVolumeUsage(now);
             }
 
             now += MILLIS_IN_HOUR;  // add 1 hour in millis
             try {
-                //TODO:2016-03-04:herman.zamula: Thread.sleep hack is used for the test usages logging on the slow machines. Fix storageLogHelper for the tests
+                //TODO:2016-03-04:herman.zamula: Thread.sleep hack is used for the test usages logging on the slow
+                // machines. Fix storageLogHelper for the tests
                 Thread.sleep(10);
                 if (j == 24) {
                     Thread.sleep(10);
@@ -181,9 +164,11 @@ public class AbstractBillingTest extends AbstractTest {
         final int filesCount = random.nextInt(maximumFilesCount - minimumFilesCount + 1) + minimumFilesCount;
 
         for (int file = 0; file < filesCount; file++) {
-            final long fileSize = GB_IN_BYTES * (random.nextInt(maximumFileSize - minimumFileSize + 1) + minimumFileSize);
+            final long fileSize =
+                GB_IN_BYTES * (random.nextInt(maximumFileSize - minimumFileSize + 1) + minimumFileSize);
             totalFilesSize += fileSize;
-            final long fileId = uc.saveFileWithSize(actor, uc.createInstrumentAndApproveIfNeeded(actor, lab).get(), fileSize);
+            final long fileId =
+                uc.saveFileWithSize(actor, uc.createInstrumentAndApproveIfNeeded(actor, lab).get(), fileSize);
             fileMovingManager.moveToArchiveStorage(fileId);
         }
 
@@ -202,7 +187,8 @@ public class AbstractBillingTest extends AbstractTest {
         final int filesCount = random.nextInt(maximumFilesCount - minimumFilesCount + 1) + minimumFilesCount;
 
         for (int file = 0; file < filesCount; file++) {
-            final long fileSize = GB_IN_BYTES * (random.nextInt(maximumFileSize - minimumFileSize + 1) + minimumFileSize);
+            final long fileSize =
+                GB_IN_BYTES * (random.nextInt(maximumFileSize - minimumFileSize + 1) + minimumFileSize);
             totalFilesSize += fileSize;
             uc.saveFileWithSize(actor, uc.createInstrumentAndApproveIfNeeded(actor, lab).get(), fileSize);
         }

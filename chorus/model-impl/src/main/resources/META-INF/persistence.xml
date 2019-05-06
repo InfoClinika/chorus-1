@@ -26,7 +26,6 @@
         <class>com.infoclinika.mssharing.platform.entity.LabCreationRequestTemplate</class>
         <class>com.infoclinika.mssharing.platform.entity.UserLabMembershipRequestTemplate</class>
         <class>com.infoclinika.mssharing.platform.entity.Condition</class>
-        <class>com.infoclinika.mssharing.platform.entity.WorkflowType</class>
         <class>com.infoclinika.mssharing.platform.entity.ExperimentType</class>
         <class>com.infoclinika.mssharing.platform.entity.ProjectSharingRequestTemplate</class>
         <class>com.infoclinika.mssharing.platform.entity.ChangeEmailRequest</class>
@@ -34,16 +33,22 @@
 
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
-            <property name="hibernate.show_sql" value="false"/>
+            <!--<property name="hibernate.show_sql" value="true"/>-->
+            <!--<property name="hibernate.format_sql" value="true"/>-->
+            <!--<property name="hibernate.use_sql_comments" value="true"/>-->
+            <!--<property name="hibernate.generate_statistics" value="true"/>-->
+
             <!--<property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.use_sql_comments" value="true"/>-->
             <property name="hibernate.hbm2ddl.auto" value="${hibernate.hbm2ddl.auto}"/>
             <property name="hibernate.search.default.directory_provider" value="ram"/>
-            <property name="hibernate.search.enable_dirty_check" value="false"/><!--
+            <property name="hibernate.search.enable_dirty_check" value="false"/>
+            <!--
             <property name="org.hibernate.envers.revision_on_collection_change" value="false"/>
             <property name="org.hibernate.envers.store_data_at_delete" value="true"/>
             <property name="hibernate.listeners.envers.autoRegister" value="false"/>-->
         </properties>
+
     </persistence-unit>
 </persistence>
 

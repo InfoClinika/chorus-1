@@ -8,7 +8,8 @@ public class ComposedFileDescription {
     public ComposedFileDescription() {
     }
 
-    public ComposedFileDescription(String fileName, boolean allRequiredFilesPresented, FileDescription[] fileDescriptions) {
+    public ComposedFileDescription(String fileName, boolean allRequiredFilesPresented,
+                                   FileDescription[] fileDescriptions) {
         this.fileName = fileName;
         this.allRequiredFilesPresented = allRequiredFilesPresented;
         this.fileDescriptions = fileDescriptions;

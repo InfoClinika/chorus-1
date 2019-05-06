@@ -10,5 +10,6 @@ import javax.persistence.Entity;
  * @author Herman Zamula
  */
 @Entity
-public class ExperimentFileDefault extends ExperimentFileTemplate<FileMetaDataDefault, ExperimentDefault, AnnotationDefault> {
+public class ExperimentFileDefault
+    extends ExperimentFileTemplate<FileMetaDataDefault, ExperimentDefault, AnnotationDefault> {
 }

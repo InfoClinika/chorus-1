@@ -11,8 +11,8 @@ public class CompleteExperimentAnnotationRequest {
     @Override
     public String toString() {
         return "CompleteExperimentAnnotationRequest{" +
-                "experimentId=" + experimentId +
-                ", annotationAttachmentId=" + annotationAttachmentId +
-                '}';
+            "experimentId=" + experimentId +
+            ", annotationAttachmentId=" + annotationAttachmentId +
+            '}';
     }
 }

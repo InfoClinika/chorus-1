@@ -13,8 +13,9 @@ import java.util.UUID;
  * @author Elena Kurilina
  */
 @Component
-public class GlacierDownloadListenersImpl implements GlacierDownloadListeners<ActiveFileMetaData>{
-    private static final Map<String, GlacierDownloadListener<ActiveFileMetaData>> listeners = new HashMap<String, GlacierDownloadListener<ActiveFileMetaData>>();
+public class GlacierDownloadListenersImpl implements GlacierDownloadListeners<ActiveFileMetaData> {
+    private static final Map<String, GlacierDownloadListener<ActiveFileMetaData>> listeners =
+        new HashMap<String, GlacierDownloadListener<ActiveFileMetaData>>();
 
     public String addListener(GlacierDownloadListener<ActiveFileMetaData> listener) {
         final String id = UUID.randomUUID().toString();
@@ -22,7 +23,7 @@ public class GlacierDownloadListenersImpl implements GlacierDownloadListeners<Ac
         return id;
     }
 
-    public GlacierDownloadListener<ActiveFileMetaData> getListener(String id){
+    public GlacierDownloadListener<ActiveFileMetaData> getListener(String id) {
         return listeners.get(id);
     }
 }

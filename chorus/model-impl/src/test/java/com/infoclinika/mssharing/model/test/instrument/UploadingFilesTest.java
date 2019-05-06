@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.test.instrument;
 
@@ -17,7 +19,6 @@ import com.infoclinika.mssharing.model.write.FileMetaDataInfo;
 import com.infoclinika.mssharing.platform.fileserver.StoredObject;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.model.read.Filter;
-import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -52,7 +53,11 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testCorrectFileStatusIfContentWasntSet() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false));
+        instrumentManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false)
+        );
 
         final InstrumentLine next = dashboardReader.readInstruments(bob).iterator().next();
         checkState(next.id == instrument);
@@ -76,51 +81,77 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testFilesWithNotSettedContentAvailableThrowUploadHelper() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false));
-        assertEquals(countIncompleteFilesByUser(bob, instrument), 1);
+        instrumentManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false)
+        );
+        assertEquals(Iterables.size(uploadHelper.incompleteFiles(bob, instrument)), 1);
     }
 
     @Test(dependsOnMethods = "testFilesWithNotSettedContentAvailableThrowUploadHelper")
     public void testDiscardedFilesAreNotSettedContentAvailableThrowUploadHelper() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final long file = instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false));
+        final long file = instrumentManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false)
+        );
         instrumentManagement.discard(bob, file);
-        assertEquals(countIncompleteFilesByUser(bob, instrument), 0);
+        assertEquals(Iterables.size(uploadHelper.incompleteFiles(bob, instrument)), 0);
     }
 
     @Test
-    public void testCancelFileUpload(){
+    public void testCancelFileUpload() {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final long file = instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(generateString(), 1024, "", null, anySpecies(), false));
+        final long file = instrumentManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 1024, "", null, anySpecies(), false)
+        );
         instrumentManagement.cancelUpload(bob, file);
-        assertEquals(countIncompleteFilesByUser(bob, instrument), 0);
+        assertEquals(Iterables.size(uploadHelper.incompleteFiles(bob, instrument)), 0);
     }
 
-    @Test(dependsOnMethods = "testFilesWithNotSettedContentAvailableThrowUploadHelper", enabled = false)
+    @Test(dependsOnMethods = "testFilesWithNotSettedContentAvailableThrowUploadHelper")
     public void testCompleteUploadFilesAreNotSettedContentAvailableThrowUploadHelper() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final long file = instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false));
+        final long file = instrumentManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false)
+        );
         instrumentManagement.setContent(bob, file, mock(StoredObject.class));
-        assertEquals(countIncompleteFilesByUser(bob, instrument), 0);
+        assertEquals(Iterables.size(uploadHelper.incompleteFiles(bob, instrument)), 0);
     }
 
     @Test
     public void testUserCanUploadArchivedDirWithCorrectInstrumentVendor() throws Exception {
         final long bob = uc.createLab3AndBob();
-        final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3(), uc.getInstrumentModelWhichSupportArchiveUpload()).get();
-        final long file = instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), true));
+        final long instrument =
+            uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3(), uc.getInstrumentModelWhichSupportArchiveUpload())
+                .get();
+        final long file = instrumentManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), true)
+        );
         instrumentManagement.setContent(bob, file, mock(StoredObject.class));
-        assertEquals(countIncompleteFilesByUser(bob, instrument), 0);
+        assertEquals(Iterables.size(uploadHelper.incompleteFiles(bob, instrument)), 0);
     }
 
     @Test(expectedExceptions = AccessDenied.class)
     public void testUserCannotUploadArchivedDirWithNotCorrectInstrumentVendor() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final long file = instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), true));
+        final long file = instrumentManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), true)
+        );
     }
 
     @Test
@@ -186,8 +217,6 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
         final Long lab3 = uc.getLab3();
         final long instrument = createInstrumentAndApproveIfNeeded(bob, lab3);
 
-        instrumentManagement.addOperatorDirectly(bob, instrument, poll);
-
         final long project = uc.createProject(bob, lab3);
 
         sharingManagement.makeProjectPublic(bob, project);
@@ -208,18 +237,35 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
 
         final List<String> invalidAbSciexFiles4 = Lists.newArrayList("file.wiff", "file.wiff.mtd", "valid_file.wiff");
 
-        final boolean abSciexFiles1Valid = instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles1);
+        final boolean abSciexFiles1Valid =
+            instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles1);
         assertEquals(abSciexFiles1Valid, true);
-        final boolean abSciexFiles2Valid = instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles2);
+        final boolean abSciexFiles2Valid =
+            instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles2);
         assertEquals(abSciexFiles2Valid, true);
-        final boolean abSciexFiles3Valid = instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles3);
+        final boolean abSciexFiles3Valid =
+            instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles3);
         assertEquals(abSciexFiles3Valid, true);
-        final boolean abSciexFiles4Valid = instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, invalidAbSciexFiles4);
+        final boolean abSciexFiles4Valid =
+            instrumentManagement.checkMultipleFilesValidForUpload(abSciexInstrument, invalidAbSciexFiles4);
         assertEquals(abSciexFiles4Valid, false);
+
     }
 
-    private int countIncompleteFilesByUser(long actor, long instrument){
-        return (int)dashboardReader.readUnfinishedFiles(actor).stream()
-                .filter(value -> value.instrumentId == instrument).count();
+    @Test
+    public void testFileCompounds() throws Exception {
+
+        final long bob = uc.createLab3AndBob();
+        final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
+        final long fileId = uc.saveFile(bob, instrument);
+
+        final Set<FileLine> fileLines = fileReader.readFilesByInstrument(bob, instrument);
+        assertNotEquals(fileLines.size(), 0);
+
+        fileLines.forEach(item -> {
+            assertNotNull(item.fileCompounds);
+            assertEquals(item.fileCompounds.size(), 0);
+        });
+
     }
 }

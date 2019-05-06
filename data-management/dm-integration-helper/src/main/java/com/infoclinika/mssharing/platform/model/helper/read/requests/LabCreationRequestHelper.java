@@ -19,8 +19,8 @@ import static com.infoclinika.mssharing.platform.model.read.RequestsReaderTempla
 @Component
 @Scope(value = "prototype")
 public class LabCreationRequestHelper
-        <ENTITY extends LabCreationRequestTemplate, LINE extends LabRequest>
-        extends AbstractReaderHelper<ENTITY, LINE, LabRequest> {
+    <ENTITY extends LabCreationRequestTemplate, LINE extends LabRequest>
+    extends AbstractReaderHelper<ENTITY, LINE, LabRequest> {
 
     @Inject
     private LabCreationRequestRepositoryTemplate<ENTITY> labCreationRequestRepository;
@@ -28,12 +28,9 @@ public class LabCreationRequestHelper
 
     @Override
     public Function<ENTITY, LabRequest> getDefaultTransformer() {
-        return new Function<ENTITY, LabRequest>() {
-            @Override
-            public LabRequest apply(ENTITY input) {
-                return new LabRequest(input.getContactEmail(), input.getLabName(), input.getRequestDate(), input.getId());
-            }
-        };
+        return input -> new LabRequest(
+            input.getContactEmail(), input.getLabName(), input.getRequestDate(), input.getId()
+        );
     }
 
     public ResultBuilder<ENTITY, LINE> readInbox() {

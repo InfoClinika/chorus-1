@@ -12,16 +12,27 @@ public class PagedExperimentsTest extends AbstractPagedItemTest {
 
 
     @Test
-    public void testReadAllAvailableExperiments() {
+    public void testReadAllAvailableExperimentsInSameLab() {
         final long kate = createKateInLab2and3();
         final long bob = uc.createLab3AndBob();
         final long poll = uc.createPaul();
         createData(kate, bob, poll);
 
-        //Max items in PagedItemInfo has been set to 25
-        assertSame(getPagedItemSize(poll, ALL), 25);
+        assertSame(getPagedItemSize(poll, ALL), DEFAULT_PAGE_SIZE);
+        assertSame(getPagedItemSize(kate, ALL), DEFAULT_PAGE_SIZE);
+        assertSame(getPagedItemSize(bob, ALL), DEFAULT_PAGE_SIZE);
+    }
+
+    @Test
+    public void testReadAllAvailableExperiments() {
+        final long kate = createKateInLab2();
+        final long bob = uc.createLab3AndBob();
+        final long poll = uc.createPaul();
+        createData(kate, bob, poll);
+
+        assertSame(getPagedItemSize(poll, ALL), DEFAULT_PAGE_SIZE);
         assertSame(getPagedItemSize(kate, ALL), 20);
-        assertSame(getPagedItemSize(bob, ALL), 10);
+        assertSame(getPagedItemSize(bob, ALL), DEFAULT_PAGE_SIZE);
     }
 
     private int getPagedItemSize(long poll, Filter filter) {
@@ -35,8 +46,7 @@ public class PagedExperimentsTest extends AbstractPagedItemTest {
         final long poll = uc.createPaul();
         createData(kate, bob, poll);
 
-        //Max items in PagedItemInfo has been set to 25
-        assertSame(getPagedItemSize(poll, MY), 25);
+        assertSame(getPagedItemSize(poll, MY), DEFAULT_PAGE_SIZE);
         assertSame(getPagedItemSize(kate, MY), 0);
         assertSame(getPagedItemSize(bob, MY), 0);
     }
@@ -48,23 +58,53 @@ public class PagedExperimentsTest extends AbstractPagedItemTest {
         final long poll = uc.createPaul();
         createData(kate, bob, poll);
 
-        //Max items in PagedItemInfo has been set to 25
         assertSame(dashboardReader.readExperiments(poll, Filter.PUBLIC, getPagedItemRequest("name")).items.size(), 10);
         assertSame(dashboardReader.readExperiments(kate, Filter.PUBLIC, getPagedItemRequest("name")).items.size(), 10);
         assertSame(dashboardReader.readExperiments(bob, Filter.PUBLIC, getPagedItemRequest("name")).items.size(), 10);
     }
 
     @Test
-    public void testSharedExperiments() {
+    public void testReadSharedExperimentsInSameLab() {
         final long kate = createKateInLab2and3();
         final long bob = uc.createLab3AndBob();
         final long poll = uc.createPaul();
         createData(kate, bob, poll);
 
-        //Max items in PagedItemInfo has been set to 25
-        assertSame(dashboardReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(), 0);
-        assertSame(dashboardReader.readExperiments(kate, Filter.SHARED_WITH_ME, getPagedItemRequest("name")).items.size(), 10);
-        assertSame(dashboardReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(), 0);
+        assertSame(
+            dashboardReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(),
+            25
+        );
+        assertSame(dashboardReader.readExperiments(
+            kate,
+            Filter.SHARED_WITH_ME,
+            getPagedItemRequest("name")
+        ).items.size(), 25);
+        assertSame(
+            dashboardReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(),
+            25
+        );
+    }
+
+    @Test
+    public void testReadSharedExperiments() {
+        final long kate = createKateInLab2();
+        final long bob = uc.createLab3AndBob();
+        final long poll = uc.createPaul();
+        createData(kate, bob, poll);
+
+        assertSame(
+            dashboardReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(),
+            DEFAULT_PAGE_SIZE
+        );
+        assertSame(dashboardReader.readExperiments(
+            kate,
+            Filter.SHARED_WITH_ME,
+            getPagedItemRequest("name")
+        ).items.size(), 10);
+        assertSame(
+            dashboardReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(),
+            DEFAULT_PAGE_SIZE
+        );
     }
 
     private void createData(long kate, long bob, long poll) {

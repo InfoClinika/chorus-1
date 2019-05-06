@@ -21,7 +21,8 @@ public class ExperimentLabelsInfo {
         this.heavyLabels.addAll(heavyLabels);
     }
 
-    public ExperimentLabelsInfo(List<Long> lightLabels, List<Long> mediumLabels, List<Long> heavyLabels, List<Long> specialLabels) {
+    public ExperimentLabelsInfo(List<Long> lightLabels, List<Long> mediumLabels, List<Long> heavyLabels,
+                                List<Long> specialLabels) {
         this.lightLabels.addAll(lightLabels);
         this.mediumLabels.addAll(mediumLabels);
         this.heavyLabels.addAll(heavyLabels);
@@ -35,10 +36,10 @@ public class ExperimentLabelsInfo {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("lightLabels", lightLabels)
-                .add("mediumLabels", mediumLabels)
-                .add("heavyLabels", heavyLabels)
-                .add("specialLabels", specialLabels)
-                .toString();
+            .add("lightLabels", lightLabels)
+            .add("mediumLabels", mediumLabels)
+            .add("heavyLabels", heavyLabels)
+            .add("specialLabels", specialLabels)
+            .toString();
     }
 }

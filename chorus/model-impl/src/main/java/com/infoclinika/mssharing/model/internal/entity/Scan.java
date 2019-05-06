@@ -38,18 +38,25 @@ public class Scan extends AbstractPersistable<Long> {
 
     @ManyToMany
     @JoinTable(name = "raw_file_scan",
-            joinColumns =
-            @JoinColumn(name = "scans_id", referencedColumnName = "id", nullable = false),
-            inverseJoinColumns =
-            @JoinColumn(name = "raw_file_id", referencedColumnName = "id", nullable = false)
+        joinColumns = @JoinColumn(name = "scans_id", referencedColumnName = "id", nullable = false),
+        inverseJoinColumns = @JoinColumn(name = "raw_file_id", referencedColumnName = "id", nullable = false)
     )
     private List<RawFile> rawFiles = newArrayList();
 
     Scan() {
     }
 
-    Scan(float rt, float tic, float bpiMass, float bpi, int filter, int number,
-         float parentMass, RawFile rawFile, List<RawFile> rawFiles) {
+    Scan(
+        float rt,
+        float tic,
+        float bpiMass,
+        float bpi,
+        int filter,
+        int number,
+        float parentMass,
+        RawFile rawFile,
+        List<RawFile> rawFiles
+    ) {
         this.rt = rt;
         this.tic = tic;
         this.bpi = bpi;

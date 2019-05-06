@@ -6,42 +6,50 @@
     <!-- FavIcon -->
     <link rel="icon" href="../img/favicon.ico" type="image/x-icon"/>
 
-    <script type="text/javascript" src="../script/util/logging.js"></script>
+    <script type="text/javascript" src="../script/util/logging.js?_version=${static.resources.version}"></script>
 
     <!-- JQuery + Plugins and JQuery UI -->
-    <script src="../lib/jquery/jquery-1.8.2.min.js"></script>
-    <script src="../lib/jquery-ui/jquery-ui.min.js"></script>
-    <script src="../lib/jquery/jquery.filedownload.js"></script>
-    <script src="../lib/jquery/jquery.dotdotdot-1.5.2.js"></script>
-    <script src="../lib/jquery/jquery.highlight-4.js"></script>
-    <script src="../lib/jquery/jquery.caret.1.02.min.js"></script>
+    <script src="../lib/jquery/jquery-1.8.2.min.js?_version=${static.resources.version}"></script>
+    <script src="../lib/jquery-ui/jquery-ui.min.js?_version=${static.resources.version}"></script>
+    <script src="../lib/jquery/jquery.filedownload.js?_version=${static.resources.version}"></script>
+    <script src="../lib/jquery/jquery.dotdotdot-1.5.2.js?_version=${static.resources.version}"></script>
+    <script src="../lib/jquery/jquery.highlight-4.js?_version=${static.resources.version}"></script>
+    <script src="../lib/jquery/jquery.caret.1.02.min.js?_version=${static.resources.version}"></script>
     <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-    <script type="text/javascript" src="../lib/jquery/jquery.browser.min.js"></script>
-    <script type="text/javascript" src="../lib/jquery/jquery.cookie.js"></script>
-    <script src="../lib/zip/zip.js"></script>
+            src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../lib/jquery/jquery.browser.min.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../lib/jquery/jquery.cookie.js?_version=${static.resources.version}"></script>
+    <script src="../lib/zip/zip.js?_version=${static.resources.version}"></script>
     <link rel="stylesheet" href="../lib/jquery-ui/jquery-ui.css"/>
 
-    <script type="text/javascript" src="../lib/detect-js/detect.js"></script>
+    <script type="text/javascript" src="../lib/detect-js/detect.js?_version=${static.resources.version}"></script>
 
     <!-- Twitter Bootstrap -->
-    <script src="../lib/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap/js/bootstrap.min.js?_version=${static.resources.version}"></script>
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.min.css">
+    <link rel='stylesheet' href='../lib/glyphicons/css/glyphicons.min.css'/>
 
-    <script src="../lib/moment-js/moment.min.js"></script>
+    <script src="../lib/moment-js/moment.min.js?_version=${static.resources.version}"></script>
 
     <!-- AngularJS and Angular UI -->
-    <script type="text/javascript" src="../lib/angularjs/angular.min.js"></script>
-    <script type="text/javascript" src="../lib/angularjs/angular-resource-patched.js"></script>
-    <script type="text/javascript" src="../lib/angularjs/watch-fighters.js"></script>
-    <script type="text/javascript" src="../lib/angular-ui/angular-ui.js"></script>
-    <script type="text/javascript" src="../lib/angular-ui/ui-bootstrap-tpls-0.5.0.min.js"></script>
+    <script type="text/javascript" src="../lib/angularjs/angular.min.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../lib/angularjs/angular-resource-patched.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../lib/angularjs/watch-fighters.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../lib/angular-ui/angular-ui.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../lib/angular-ui/ui-bootstrap-tpls-0.5.0.min.js?_version=${static.resources.version}"></script>
     <link rel="stylesheet" href="../lib/angular-ui/angular-ui.css">
 
-    <script type="text/javascript" src="../script/error-catcher.js"></script>
+    <script type="text/javascript" src="../script/error-catcher.js?_version=${static.resources.version}"></script>
     <!-- Select2 -->
     <link rel="stylesheet" href="../lib/select2-3.2.0/select2.css">
-    <script type="text/javascript" src="../lib/select2-3.2.0/select2.js"></script>
+    <script type="text/javascript" src="../lib/select2-3.2.0/select2.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript" src="../lib/ag-grid/ag-grid.js?_version=${static.resources.version}"></script>
+    <link rel="stylesheet" href="../lib/ag-grid/ag-grid.theme-chorus.css">
 
     <script type="text/javascript" src="../script/enums.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/util/url-util.js?_version=${static.resources.version}"></script>
@@ -68,6 +76,7 @@
     <script type="text/javascript" src="../script/service/experiments-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/mixins/modal/server-validation-error-support.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/experiments-front.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/controller/import-ngs-experiment.controller.js?_version=${static.resources.version}"></script>
 
 
     <script type="text/javascript" src="../script/processing-run-wizard/shared-plugin-configuration.js?_version=${static.resources.version}"></script>
@@ -86,14 +95,17 @@
     <script type="text/javascript"
             src="../script/service/billing-back.js?_version=${static.resources.version}"></script>
 
-    <script type="text/javascript" src="../script/service/ad-back.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/controller/ad-front.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/ad/dashboard-advert-back.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/ad/dashboard-advert-front.js?_version=${static.resources.version}"></script>
 
 
     <script type="text/javascript" src="../script/service/news-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/news-front.js?_version=${static.resources.version}"></script>
 
     <script type="text/javascript" src="../script/dashboard-common-directives.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript" src="../script/service/feature.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/user-details.service.js?_version=${static.resources.version}"></script>
 
     <script type="text/javascript" src="../script/controller/projects-front.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/security-front.js?_version=${static.resources.version}"></script>
@@ -113,12 +125,10 @@
 
     <script type="text/javascript" src="../script/service/search-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/breadcrumbs.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/lab-head-front.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/lab-head-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/general-requests-front.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/general-requests-back.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/protein-search-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/trash-front.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/trash-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/admin-tools-back.js?_version=${static.resources.version}"></script>
@@ -131,19 +141,112 @@
 
     <script type="text/javascript" src="../script/upload/file-hash.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/upload/background-upload.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/usupported-browser.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/unsupported-browser.js?_version=${static.resources.version}"></script>
 
-    <script type="text/javascript" src="../script/controller/client-token-front.js"></script>
-    <script type="text/javascript" src="../script/service/client-token-back.js"></script>
+    <script type="text/javascript"
+            src="../script/controller/preferences-front.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/service/preferences-back.js?_version=${static.resources.version}"></script>
 
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript"
+            src="../script/controller/client-token-front.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/service/client-token-back.js?_version=${static.resources.version}"></script>
 
-    <script type="text/javascript" src="../script/appearance/appearance.js"></script>
-    <script type="text/javascript" src="../script/appearance/appearance.service.js"></script>
-    <script type="text/javascript" src="../script/header/header.js"></script>
-    <script type="text/javascript" src="../script/header/header.controller.js"></script>
+    <script type="text/javascript"
+            src="../script/controller/aggregate-statistics-front.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/service/aggregate-statistics-back.js?_version=${static.resources.version}"></script>
 
+    <!-- Scripts -->
+    <script type="text/javascript" src="../script/scripts/scripts.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/scripts/scripts.services.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/scripts/scripts.components.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/scripts/scripts.controllers.js?_version=${static.resources.version}"></script>
 
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript"
+            src="../script/appearance/appearance.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/appearance/appearance.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/header/header.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/header/header.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/footer/footer.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/footer/footer.controller.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript"
+            src="../script/s3-upload/s3-upload.module.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/formatters.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/controller/unified-upload.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/controller/upload-transfer-process-dialog.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/component/upload-transfer-process.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/component/upload-transfer-method-s3.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/component/upload-select-instrument.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/component/upload-files-preview.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/component/upload-files-labels.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/service/upload.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/service/upload-background.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/s3-upload/service/upload-time.formatter.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/report-issue/module.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/report-issue/report-issue.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/report-issue/report-issue-dialog.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/report-issue/report-issue-dialog.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/report-issue/attachment-drag-and-drop.component.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/report-issue/issues-list.controller.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript"
+            src="../script/ngs/experiment.module.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/ngs/experiment-design.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/ngs/experiment-design-from-csv.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../lib/papaparse/papaparse.min.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript"
+            src="../script/data-views/data-views.module.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/data-views/sample-to-files-table.directive.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript"
+            src="../script/dialogs/dialogs.module.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/dialogs/file-content.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/dialogs/files-side-by-side.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/dialogs/filter-builder.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/dialogs/filter-builder.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/dialogs/filter-files.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/dialogs/wizard-dialog.directive.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/components/error-message-with-details.js?_version=${static.resources.version}"></script>
+
+    <script type="text/javascript"
+            src="../script/popups/popups.module.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/popups/popups.components.js?_version=${static.resources.version}"></script>
 
     <!-- Custom Fonts -->
     <link rel="stylesheet" href="../fonts/fonts.css?_version=${static.resources.version}">
@@ -160,22 +263,16 @@
     <link rel="stylesheet" href="../css/dialogs.css?_version=${static.resources.version}">
     <link rel="stylesheet" href="../css/media.css?_version=${static.resources.version}" media="screen">
 
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 
-    <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-        ga('create', 'UA-41329240-1', 'chorusproject.org');
-        ga('send', 'pageview');
-
-    </script>
 </head>
 <body>
 <div class="hor-scroll">
 <div class="fixed-area">
-    <div ng-init="activePage = 'dashboard'; isDashboard = true;" class="ng-include: 'header.html'"></div>
+    <div ng-init="activePage = 'dashboard'; isDashboard = true; showConsent = true"
+         class="ng-include: 'header.html'"></div>
 
     <div class="main-toolbar-holder clearfix">
         <div class="center-frame relative">
@@ -188,10 +285,22 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a ng-click='open("/projects/new")'>Project</a></li>
-                        <li><a ng-click='open("/experiments/my/new")'>Experiment</a></li>
+                        <li>
+                            <div class="onhover-dropdown">
+                                <a class="onhover-dropdown-btn">
+                                    Experiment
+                                </a>
+                                <ul class="dropdown-menu onhover-dropdown-content">
+                                    <li><a ng-click='open("/experiments/my/new")'>New Experiment</a></li>
+                                    <li><a ng-click='open("/experiments/my/ngs/new")'>Import NGS Experiment</a></li>
+                                </ul>
+                            </div>
+                        </li>
+
                         <li ng-hide="loggedInUser.labs.length == 0"><a ng-click='open("/instruments/new")'>Instrument</a></li>
                         <li ng-show="isAdmin()"><a ng-click='open("/instrument-models/new")'>Instrument Model</a></li>
                         <li><a ng-click="open('/groups/new')">Sharing Group</a></li>
+                        <li><a ng-click="open('/scripts/new')">Script</a></li>
                         <li ng-show="isFeatureAvailable(LabFeatures.PROTEIN_ID_SEARCH)"><a ng-click="open('/fastadb/new')">Search Database</a></li>
                         <li ng-show="isAdmin()"><a ng-click="open('/laboratories/new')">Laboratory</a></li>
                         <li ng-show="isAdmin()"><a ng-click="open('/news/new')">News</a></li>
@@ -206,14 +315,17 @@
                             <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a ng-click="isUploadAvailable() && open('/upload/new')">Direct Upload</a></li>
+                            <li><a ng-click="openUploadIfAvailable('/upload/new')">Direct Upload</a></li>
+                            <li><a ng-click="openUploadIfAvailable('/upload/ftp/new')">From FTP Server</a></li>
+                            <li><a ng-click="openUploadIfAvailable('/upload/s3')">From S3 Bucket</a></li>
                         </ul>
                     </div>
                     <div ng-switch-when="true">
-                        <button class="btn upload main-action in-progress" ng-click="open(getUploadDialogUrl())">
+                        <button class="btn upload main-action in-progress" ng-click="onClickUploadProgress()">
                             <span class="icon upload-icon"></span>
                             <span class="text">&nbsp;In Progress</span>
-                            <span class="percent" ng-bind="stats.uploadProgressFormatted() && (stats.uploadProgressFormatted()+'%') || '0%'"></span>
+                            <span class="percent"
+                                  ng-bind="uploadProgressFormatted() && (uploadProgressFormatted()+'%') || '0%'"></span>
                         </button>
                     </div>
                 </div>
@@ -365,20 +477,11 @@
                                 </li>
                             </ul>
                         </li>
-                        <li ng-show="isFeatureAvailable(LabFeatures.PROTEIN_ID_SEARCH)" ng-class="getClass('/protein-search/databases/all')">
-                            <a href="#/protein-search/databases/all" class="bold">All Search Databases</a>
-                            <ul class="nav nav-list">
-                                <li ng-class="getClassOnlyThis('/protein-search/databases/my')">
-                                    <a href="#/protein-search/databases/my"><i class="bullet"></i>My Search Databases</a>
-                                </li>
-                                <li ng-class="getClass('/protein-search/databases/public')">
-                                    <a href="#/protein-search/databases/public"><i class="bullet"></i>Public Search Databases</a>
-                                </li>
-                            </ul>
+                        <li ng-class="getClass('/issues/my')">
+                            <a href="#/issues/my" class="semibold">Reported Issues</a>
                         </li>
                         <li ng-class="getClass('/trash')">
                             <a href="#/trash" class="semibold">Trash</a>
-
                         </li>
                     </ul>
                 </div>
@@ -451,6 +554,9 @@
                         <li ng-controller="sidebar" ng-class="getClassOnlyThis('/file-access-log')">
                             <a href="#/file-access-log" class="semibold">File Access Log</a>
                         </li>
+                        <li ng-controller="sidebar" ng-class="getClassOnlyThis('/issues/all')">
+                            <a href="#/issues/all" class="semibold">Reported Issues</a>
+                        </li>
                     </ul>
                 </div>
                 <div class="sidebar-menu" ng-controller="generalRequestCounter" data-ng-class="{'sidebar-expanded': !requestsClosed, 'sidebar-collapsed': requestsClosed}">
@@ -490,7 +596,8 @@
         <div id="fileDownloadConfirm" title="" class="hidden"> </div>
         <div id="backgroundUploadReload" title class="hidden">Some files are uploading in background. Do you really want to reload the page?</div>
         <div id="upload-limit-error-message" class="server-message-popup">
-            <p>The file upload quota has been exceed. Please contact the Chorus support at support@chorusproject.org.</p>
+            <p>The file upload quota has been exceeded. Please contact the Chorus support at
+                support@infoclinika.com</p>
         </div>
         <div id="instrument-creation-request-message">
             <p>You will be notified upon request approval or rejection.</p>
@@ -541,7 +648,8 @@
                 <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">
                     Cancel
                 </button>
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true" ng-click="open('/upload/new')">
+                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
+                        ng-click="proceedUploadAnyway();">
                     Proceed Anyway
                 </button>
                 <a target="blank" href="https://www.google.com/intl/en/chrome/browser/" class="btn btn-primary main-action">
@@ -630,80 +738,14 @@
                 <h3><i class="icon warning-dialog-header"></i> Chorus News: Fee-Based Services</h3>
             </div>
             <div class="modal-body" style="max-height: 400px;">
-                <p>
-                    <b>The transition to a freemium-based model establishes CHORUS as a sustainable data analysis solution for mass spectrometry community.</b>
-                </p>
-                <p>At Stratus Biosciences, advancing the mass spectrometry field means everything to us. That's why we
-                    launched CHORUS, a non-profit cloud-based data analysis solution developed by scientists for scientists.
-                    The beta version of CHORUS was launched on June 6th 2013 at the 65th ASMS Conference in
-                    Minneapolis.  This free release enabled new users to experience cloud based mass spectrometry data
-                    analysis at no cost so they could decide if the tools and services met their needs.  New tools and services
-                    continue to be added and usage has grown rapidly to include 860 members uploading data from over
-                    150 mass spectrometry laboratories around the world.</p>
-                <p>
-                    <b>What’s changing?</b>
-                    To ensure the long-term sustainability of CHORUS, our next release will include
-                    new features that enable Stratus Biosciences to bill users for premium services that they use.  While
-                    users will be able to monitor the costs of the services they are using, no fees will be charged until March
-                    1st 2015. In this way, each user and laboratory can be become familiar with the user fees that would be
-                    charged.  Each lab will receive a onetime credit of $100 to be used towards the storage and processing
-                    of their data.  After March 1st, each lab’s account balance will be reset to zero and labs will be required
-                    to provide a method of payment to cover charges once they have exceeded the $100 credit.  Even with
-                    the increasing volume of data stored within CHORUS, most labs will take a while to exceed their $100
-                    credit. Labs and users are welcome to retrieve their data and/or cancel their account at any time at no
-                    cost.
-                </p>
 
                 <p>
-                    <b>Why is it necessary to bill users for services?</b>
-                    Preserving scientific data is fundamental to Stratus
-                    Biosciences and we believe it is a critical need to advance our field.  Establishing a sustainable operating
-                    model for CHORUS is essential for achieving data permanence and the development of new data
-                    analysis tools.  Implementing a method that lets users pay for the services they used also provides the
-                    incentive for software engineers to develop and maintain professional quality software tools.  To
-                    achieve these goals, CHORUS is now transitioning from the free service to a freemium solution that
-                    charges user fees to cover the operational and support costs for those labs that are heavy users.
+                    <b>Chorus Billing process</b>
                 </p>
 
-                <p>
-                    <b>What new tools and service are being added?</b>
-                    The next release also includes a number of new
-                    tools and services.  We will offer two different storage environments.  Both Active and Archive
-                    storage environments have been implemented that enable users to efficiently move older data
-                    from high speed storage to low cost long term storage.  In addition, account management tools
-                    have been added that allow laboratory heads to track CHORUS usage.
-                </p>
 
                 <p>
-                    <b>What to expect in the future?</b>
-                    An application programming interface has been implemented
-                    that allows software developers to connect professionally developed tools to CHORUS.
-                    Examples application include three protein database search tools; COMET (an open-source
-                    version of SEQUEST), Mascot (by Matrix Science), and Byonic (by Protein Metrics).  In addition,
-                    an interface between CHORUS and Skyline (by University of Washington) has been developed
-                    to support data analysis of data stored in CHORUS using Skyline without having to download
-                    data.  Support for label free quantitation is new with the addition of the Differential Mass
-                    Spectrometry tools (by Infoclinika and the University of Pittsburgh).   All of these tools will be
-                    coming soon and provide users with a variety of professionally developed tools that can be
-                    accessed without the need to purchase software licenses or computer hardware and infrastructure.
-                </p>
-
-                <p>
-                    <b>About CHORUS:</b>
-                    The CHORUS software makes it easy for researchers to securely organize,
-                    share, and analyze large volumes of mass spectrometry data on the cloud so that it can be
-                    shared with others and made available for re-analysis as technology changes and advances.
-                    And we continue to make improvements. New services, including scalable data analysis tools
-                    for database searching, targeted quantification, and label free high resolution differential mass
-                    spectrometry are being implemented by the groups you know at Matrix Science, Protein
-                    Metrics, InfoClinika, the MacCoss Lab at the University of Washington, and the Yates lab at the
-                    University of Pittsburgh.  By bringing data storage and analysis together on the cloud, we
-                    envision CHORUS becoming a critical resource for mass spectrometry labs that provides access
-                    to high value services.
-                </p>
-
-                <p>
-                    Our business model is very straightforward: We sell great services that enable scientists to
+                    Our business model is very straightforward: We provide services that enable scientists to
                     manage mass spectrometry data and access high quality data analysis tools.   You own your
                     data and you control the decision to keep it private, share it with collaborators, or make it
                     available to the public.  We don't mine your data without your permission to do so.  We also do
@@ -714,35 +756,24 @@
                 </p>
 
                 <p>
-                    Our commitment to protecting your data comes from a deep respect for our customers and the
-                    importance of preserving scientific data. We know that your trust doesn't come easy. That's
-                    why we have and always will work as hard as we can to earn and keep it.
-                </p>
-
-                <p>
                     <b>What are the fees for using CHORUS?</b>
                     Users are charged only for the services they use beyond the $100
                     per month lab credit.  Initially, two fee-based services will be offered, Active Storage and Archive
                     Storage.  Active Storage provides high-speed access to data that is needed for viewers and other tools
                     that perform real time data analysis or visualization.  Active Storage is designed for data that is being
-                    used or analyzed and needs to be available on-demand.  The cost for Active Storage is $90/TB/month.
+                    used or analyzed and needs to be available on-demand. The cost for Active Storage is $200/TB/month.
                     Archive Storage provides a low cost option for storing data that does not require fast on-demand access.
                     Data stored with the Archive Storage service can take several hours to access compared to Active
-                    Storage that is near instantaneous. Archive Storage is charged at $30/TB/month.
-                </p>
-
-                <p>
-                    It is important to note that we offer an extremely cost effective cloud storage solution. Most
-                    laboratories currently using CHORUS will take a long time to use up their $100 credit. If 100% of a lab’s
-                    data is stored in the Archive Storage, they can maintain up to 200 GB of data in CHORUS for >16 months
-                    using their onetime $100 credit.
+                    Storage that is near instantaneous. Archive Storage is charged at $50/TB/month.
+                    Processing pipelines that user creates are billed separatelly and the cost depends on it's time
+                    and type of compute resources used.
                 </p>
 
                 <p>
                     <b>How will my account be billed?</b>
                     The head of each CHORUS account will be required to establish a form
-                    of payment for their laboratory.  Initially we will use the PayPal Internet payment service that is linked
-                    to a Credit Card or Purchase Order.  Stratus Biosciences will invoice CHORUS lab head accounts on a
+                    of payment for their laboratory. PayPal Internet payment service is used and linked
+                    to a Credit Card or Purchase Order. Infoclinika will invoice CHORUS lab head accounts on a
                     monthly basis for the services provided to CHORUS lab.
                 </p>
 
@@ -751,45 +782,6 @@
                     Each laboratory head can view real-time billing
                     updates using the accounting tools in CHORUS.  The cost of services is broken down by day, type of
                     services, and the user that uploaded the data.
-                </p>
-
-                <div>
-                    <div>
-                        <span class="center-text bold">Lab Account List</span>
-                        <a href="../img/billing/labs-list.png" target="_blank">
-                            <img src="../img/billing/labs-list.png"/>
-                        </a>
-                    </div>
-                    <div>
-                        <span class="center-text bold">History List</span>
-                        <a href="../img/billing/history-list.png" target="_blank">
-                            <img src="../img/billing/history-list.png"/>
-                        </a>
-                    </div>
-                    <div>
-                        <span class="center-text bold">Daily History Details</span>
-                        <a href="../img/billing/history-details.png" target="_blank">
-                            <img src="../img/billing/history-details.png"/>
-                        </a>
-                    </div>
-                </div>
-                <br/>
-
-                <p>
-                    <b>Is there a free, no cost trial period?</b>
-                    Yes!  We want to make sure that users have time to test the fee-
-                    based services before they charges are accessed.  We will upgrade the system starting December 1st but
-                    no fees will be charged until after March 1st 2015.  However, users can monitor their CHORUS use to see
-                    what the actual charges would be for their lab.  At the end of the three month trial period, a credit will
-                    be issued to cover all user fees incurred.
-                </p>
-
-                <p>
-                    <b>What if I want to cancel my CHORUS account?</b>
-                    You can cancel your CHORUS account at any time
-                    without charge or restrictions.  The process is simple, simply contact support@chorusproject.org and
-                    indicate that you would like to cancel your account.  If you need time to restore data from CHORUS will
-                    be glad to provide time to do that at no cost to you.
                 </p>
 
             </div>
@@ -851,6 +843,29 @@
             <div class="modal-footer">
                 <button class="btn main-action" data-dismiss="modal" aria-hidden="true"
                         ng-click="confirmation.hidePopup()">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="microarrays-import-started-popup" class="modal hide" role="dialog">
+    <div class="modal-holder">
+        <div class="modal-frame">
+            <div class="modal-header">
+                <a class='close' data-dismiss='modal'>&nbsp;</a>
+                <h3>MicroArrays Import Has Started</h3>
+            </div>
+            <div class="modal-body">
+                <div class="control-group clearfix">
+                    <div class="dialog-container">
+                        <p>MicroArrays import has started working. You will receive a notification when the import is done.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary-action" data-dismiss="modal">
                     OK
                 </button>
             </div>

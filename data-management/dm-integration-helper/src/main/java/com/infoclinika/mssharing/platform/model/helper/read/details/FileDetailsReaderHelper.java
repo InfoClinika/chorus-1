@@ -26,7 +26,7 @@ import static com.google.common.collect.FluentIterable.from;
 @Component
 @Scope(value = "prototype")
 public class FileDetailsReaderHelper<FILE extends FileMetaDataTemplate, FILE_ITEM extends FileItemTemplate>
-        extends AbstractReaderHelper<FILE, FILE_ITEM, FileItemTemplate> {
+    extends AbstractReaderHelper<FILE, FILE_ITEM, FileItemTemplate> {
 
     @Inject
     private FileRepositoryTemplate<FILE> fileMetaDataRepository;
@@ -39,50 +39,50 @@ public class FileDetailsReaderHelper<FILE extends FileMetaDataTemplate, FILE_ITE
 
     @Override
     public Function<FILE, FileItemTemplate> getDefaultTransformer() {
-        return new Function<FILE, FileItemTemplate>() {
-            @Override
-            public FileItemTemplate apply(FILE fileMetaData) {
+        return fileMetaData -> {
 
-                final List<ExperimentFileTemplate> rawFiles = experimentFileRepositoryTemplate.findByMetaData(fileMetaData.getId());
+            final List<ExperimentFileTemplate> rawFiles =
+                experimentFileRepositoryTemplate.findByMetaData(fileMetaData.getId());
 
 
-                final List<ConditionItem> conditions = new ArrayList<>();
-                final List<AnnotationItem> annotations = new ArrayList<>();
+            final List<ConditionItem> conditions = new ArrayList<>();
+            final List<AnnotationItem> annotations = new ArrayList<>();
 
-                if (!rawFiles.isEmpty()) {
-                    final ExperimentFileTemplate experimentFileTemplate = rawFiles.get(0);
+            if (!rawFiles.isEmpty()) {
+                final ExperimentFileTemplate experimentFileTemplate = rawFiles.get(0);
 
-                    //noinspection unchecked
-                    conditions.addAll(from(experimentFileTemplate.getConditions())
-                                              .transform(detailsTransformers.conditionsTransformer())
-                                              .toList());
+                //noinspection unchecked
+                conditions.addAll(from(experimentFileTemplate.getConditions())
+                    .transform(detailsTransformers.conditionsTransformer())
+                    .toList());
 
-                    //noinspection unchecked
-                    annotations.addAll(from(experimentFileTemplate.getAnnotationList())
-                                               .transform(detailsTransformers.annotationsTransformer())
-                                               .toList());
-
-                }
-
-                final InstrumentTemplate instrument = fileMetaData.getInstrument();
-                return new FileItemTemplate(
-                        fileMetaData.getId(),
-                        fileMetaData.getSizeInBytes(),
-                        fileMetaData.getUploadDate(),
-                        fileMetaData.getLabels(),
-                        fileMetaData.getContentId(),
-                        fileMetaData.getOwner().getFullName(),
-                        fileMetaData.getOwner().getEmail(),
-                        fileMetaData.isCopy(),
-                        fileMetaData.getName(),
-                        fileMetaData.getSpecie() == null ? null : fileMetaData.getSpecie().getName(),
-                        instrument.getName(),
-                        instrument.getLab().getName(),
-                        instrument.getId(),
-                        conditions,
-                        annotations);
+                //noinspection unchecked
+                annotations.addAll(from(experimentFileTemplate.getAnnotationList())
+                    .transform(detailsTransformers.annotationsTransformer())
+                    .toList());
 
             }
+
+            final InstrumentTemplate instrument = fileMetaData.getInstrument();
+            return new FileItemTemplate(
+                fileMetaData.getId(),
+                fileMetaData.getSizeInBytes(),
+                fileMetaData.getUploadDate(),
+                fileMetaData.getLabels(),
+                fileMetaData.getBucket(),
+                fileMetaData.getContentId(),
+                fileMetaData.getOwner().getFullName(),
+                fileMetaData.getOwner().getEmail(),
+                fileMetaData.isCopy(),
+                fileMetaData.getName(),
+                fileMetaData.getSpecie() == null ? null : fileMetaData.getSpecie().getName(),
+                instrument.getName(),
+                instrument.getLab().getName(),
+                instrument.getId(),
+                conditions,
+                annotations
+            );
+
         };
     }
 

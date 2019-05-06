@@ -39,7 +39,13 @@ public class AccountChargeableItemData extends AbstractPersistable<Long> {
         this.account = account;
     }
 
-    public AccountChargeableItemData(ChargeableItem chargeableItem, LabPaymentAccount account, int quantity, boolean isActive, boolean autoProlongate) {
+    public AccountChargeableItemData(
+        ChargeableItem chargeableItem,
+        LabPaymentAccount account,
+        int quantity,
+        boolean isActive,
+        boolean autoProlongate
+    ) {
         this.chargeableItem = chargeableItem;
         this.account = account;
         this.quantity = quantity;
@@ -105,19 +111,36 @@ public class AccountChargeableItemData extends AbstractPersistable<Long> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AccountChargeableItemData)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof AccountChargeableItemData)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         AccountChargeableItemData that = (AccountChargeableItemData) o;
 
-        if (autoProlongate != that.autoProlongate) return false;
-        if (isActive != that.isActive) return false;
-        if (quantity != that.quantity) return false;
-        if (account != null ? !account.equals(that.account) : that.account != null) return false;
-        if (changeDate != null ? !changeDate.equals(that.changeDate) : that.changeDate != null) return false;
-        if (chargeableItem != null ? !chargeableItem.equals(that.chargeableItem) : that.chargeableItem != null)
+        if (autoProlongate != that.autoProlongate) {
             return false;
+        }
+        if (isActive != that.isActive) {
+            return false;
+        }
+        if (quantity != that.quantity) {
+            return false;
+        }
+        if (account != null ? !account.equals(that.account) : that.account != null) {
+            return false;
+        }
+        if (changeDate != null ? !changeDate.equals(that.changeDate) : that.changeDate != null) {
+            return false;
+        }
+        if (chargeableItem != null ? !chargeableItem.equals(that.chargeableItem) : that.chargeableItem != null) {
+            return false;
+        }
 
         return true;
     }

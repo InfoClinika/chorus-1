@@ -1,5 +1,7 @@
 package com.infoclinika.mssharing.platform.model.helper;
 
+import java.util.List;
+
 /**
  * @author Herman Zamula
  */
@@ -15,6 +17,8 @@ public interface MailSendingHelperTemplate {
 
     String experimentName(long experiment);
 
+    List<String> labMembersEmails(long labId);
+
     class UserDetails {
         public final String name;
         public final String email;
@@ -24,5 +28,6 @@ public interface MailSendingHelperTemplate {
             this.email = email;
         }
     }
+
 
 }

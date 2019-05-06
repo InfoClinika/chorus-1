@@ -35,7 +35,8 @@ public class ProjectSharingRequestManager<T extends ProjectSharingRequestTemplat
     public T findOrCreate(final long requesterId, long experimentId, final String downloadExperimentLink) {
 
 
-        final Optional<T> existingRequest = Optional.fromNullable(projectSharingRequestRepository.findByRequesterAndExperimentLink(requesterId, downloadExperimentLink));
+        final Optional<T> existingRequest = Optional.fromNullable(
+            projectSharingRequestRepository.findByRequesterAndExperimentLink(requesterId, downloadExperimentLink));
 
         if (existingRequest.isPresent()) {
             return existingRequest.get();
@@ -44,7 +45,8 @@ public class ProjectSharingRequestManager<T extends ProjectSharingRequestTemplat
         final ExperimentTemplate experiment = experimentRepository.findOne(experimentId);
         final ProjectTemplate project = experiment.getProject();
 
-        Optional<T> projectSharingRequest = Optional.fromNullable(projectSharingRequestRepository.findByRequesterAndProject(requesterId, project.getId()));
+        Optional<T> projectSharingRequest = Optional
+            .fromNullable(projectSharingRequestRepository.findByRequesterAndProject(requesterId, project.getId()));
         //noinspection unchecked
         final T requestTemplate = projectSharingRequest.or((Supplier<T>) factories.projectSharingRequest);
 
@@ -56,13 +58,20 @@ public class ProjectSharingRequestManager<T extends ProjectSharingRequestTemplat
 
         projectSharingRequestRepository.save(requestTemplate);
 
-        requests.addOutboxItem(requesterId, experiment.getProject().getCreator().getFullName(),
-                "You attempted to download an experiment " +
-                        "and requested an access to the parent project \"" + experiment.getProject().getName() + "\"", new Date()
+        requests.addOutboxItem(
+            requesterId,
+            experiment.getProject().getCreator().getFullName(),
+            "You attempted to download an experiment and requested an access to the parent project \"" +
+                experiment.getProject().getName() + "\"",
+            new Date()
         );
 
         if (!projectSharingRequest.isPresent()) {
-            notifier.sendProjectSharingRequestNotification(experiment.getProject().getCreator().getId(), requesterId, experiment.getProject().getId(), experimentId);
+            notifier.sendProjectSharingRequestNotification(
+                experiment.getProject().getCreator().getId(),
+                requesterId,
+                experiment.getProject().getId(), experimentId
+            );
         }
 
         return requestTemplate;

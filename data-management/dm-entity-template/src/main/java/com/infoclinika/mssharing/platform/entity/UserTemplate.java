@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.Set;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static javax.persistence.CascadeType.*;
+import static javax.persistence.FetchType.*;
 import static javax.persistence.InheritanceType.TABLE_PER_CLASS;
 
 /**
@@ -20,18 +22,26 @@ import static javax.persistence.InheritanceType.TABLE_PER_CLASS;
 public abstract class UserTemplate<L extends LabTemplate<?>> extends AbstractAggregate {
     @Embedded
     private PersonData personData;
+
     @Basic(optional = false)
     private String passwordHash;
-    @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY, targetEntity = UserLabMembership.class)
+
+    @OneToMany(orphanRemoval = true, cascade = ALL, fetch = LAZY, targetEntity = UserLabMembership.class)
     @JoinColumn(name = "user_id")
     private Set<UserLabMembership<? extends UserTemplate<?>, L>> labMemberships = newHashSet();
+
     private boolean admin;
+
     @Basic(optional = false)
     private boolean emailVerified;
-    @OneToOne(optional = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+
+    @OneToOne(optional = true, cascade = ALL, fetch = EAGER)
     @JoinColumn(name = "id")
     @Fetch(FetchMode.JOIN)
     private ChangeEmailRequest changeEmailRequest;
+
+    @Column(name = "deleted", columnDefinition = "tinyint(1) not null default false")
+    private boolean deleted;
 
     public PersonData getPersonData() {
         return personData;
@@ -77,13 +87,21 @@ public abstract class UserTemplate<L extends LabTemplate<?>> extends AbstractAgg
         this.changeEmailRequest = changeEmailRequest;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
     @Transient
     public void addLab(L savedLab) {
         addLabMembership(new UserLabMembership<>(this, savedLab, false));
     }
 
     @Transient
-    /*package*/ void addLabMembership(UserLabMembership labMembership) {
+        /*package*/ void addLabMembership(UserLabMembership labMembership) {
         if (!labMembership.getUser().getEmail().equals(this.getEmail())) {
             return;
         }
@@ -127,12 +145,7 @@ public abstract class UserTemplate<L extends LabTemplate<?>> extends AbstractAgg
 
     @Transient
     public Set<L> getLabs() {
-        return FluentIterable.from(labMemberships).transform(new Function<UserLabMembership<? extends UserTemplate, L>, L>() {
-            @Override
-            public L apply(UserLabMembership<? extends UserTemplate, L> input) {
-                return input.getLab();
-            }
-        }).toSet();
+        return FluentIterable.from(labMemberships).transform(input -> input.getLab()).toSet();
     }
 
     @Transient

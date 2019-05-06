@@ -15,7 +15,6 @@ import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-
 import java.util.SortedSet;
 
 import static org.testng.Assert.*;
@@ -63,7 +62,7 @@ public class BillingEnabledDisabledTest extends AbstractTest {
         //featureManagement.disableFeature(lab, invoice.analyzableStorageBill.chargeableId, null);
         setBilling(true);
         assertFalse(billingFeaturesHelper.isFeatureEnabled(lab, BillingFeature.ARCHIVE_STORAGE) ||
-                billingFeaturesHelper.isFeatureEnabled(lab, BillingFeature.ANALYSE_STORAGE));
+            billingFeaturesHelper.isFeatureEnabled(lab, BillingFeature.ANALYSE_STORAGE));
     }
 
     //Invalid case. Now can enable/disable features only through billing plan

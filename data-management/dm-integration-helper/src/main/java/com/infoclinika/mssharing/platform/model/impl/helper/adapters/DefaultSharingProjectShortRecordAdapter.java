@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
  * @author Herman Zamula
  */
 @Component
-public class DefaultSharingProjectShortRecordAdapter extends DefaultSharingProjectShortRecordHelper<UserShortRecord, UserTemplate, GroupTemplate> {
+public class DefaultSharingProjectShortRecordAdapter
+    extends DefaultSharingProjectShortRecordHelper<UserShortRecord, UserTemplate, GroupTemplate> {
 
     @Override
     protected UserDetails transformUserDetails(UserShortRecord user) {

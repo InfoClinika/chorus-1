@@ -1,0 +1,8 @@
+Chorus: HDF5 DataCube ready for download
+Hello, ${user}!
+
+DataCube ${dataCubeName} has been successfully exported to HDF5 format.
+Use this url to download: ${downloadUrl}
+Please note, that it is temporary link - it will work only for 7 days.
+
+Thank you!

@@ -2,7 +2,6 @@ package com.infoclinika.mssharing.services.billing.persistence.helper;
 
 import com.infoclinika.mssharing.services.billing.persistence.repository.MonthlySummaryRepository;
 import com.infoclinika.mssharing.services.billing.persistence.repository.StorageFeatureUsageRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;

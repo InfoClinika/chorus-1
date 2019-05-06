@@ -20,14 +20,8 @@ import javax.inject.Inject;
 @SuppressWarnings("unchecked")
 public class InstrumentModelManagementTest extends AbstractTest {
 
-    private static final InstrumentModelDetails INSTRUMENT_MODEL_DETAILS = new InstrumentModelDetails(
-            "My Instrument Model",
-            "My Technology Type",
-            "My Vendor",
-            "My Instrument Type",
-            Sets.newHashSet(".my", ".own")
-    );
     private static final long NOT_EXISTING_MODEL_ID = -1L;
+    private static final String UPDATED_MODEL_NAME = "Updated model name";
     @Inject
     private InstrumentModelManagementTemplate modelManagement;
     @Inject
@@ -39,28 +33,28 @@ public class InstrumentModelManagementTest extends AbstractTest {
     public void testCreate() {
 
         final long admin = admin();
-        final long modelId = modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        final long modelId = modelManagement.create(admin, getInstrumentModelDetails());
         final InstrumentModelLineTemplate createdModel = modelReader.readById(admin, modelId);
 
-        Assert.assertEquals(createdModel.name, INSTRUMENT_MODEL_DETAILS.name);
-        Assert.assertEquals(createdModel.technologyType.name, INSTRUMENT_MODEL_DETAILS.technologyType);
-        Assert.assertEquals(createdModel.vendor.name, INSTRUMENT_MODEL_DETAILS.vendor);
-        Assert.assertEquals(createdModel.instrumentType.name, INSTRUMENT_MODEL_DETAILS.instrumentType);
-        Assert.assertEquals(createdModel.extensions, INSTRUMENT_MODEL_DETAILS.extensions);
+        Assert.assertEquals(createdModel.name, getInstrumentModelDetails().name);
+        Assert.assertEquals(createdModel.technologyType.name, getInstrumentModelDetails().technologyType);
+        Assert.assertEquals(createdModel.vendor.name, getInstrumentModelDetails().vendor);
+        Assert.assertEquals(createdModel.instrumentType.name, getInstrumentModelDetails().instrumentType);
+        Assert.assertEquals(createdModel.extensions, getInstrumentModelDetails().extensions);
     }
 
     @Test(expectedExceptions = AccessDenied.class)
     public void testNotAdminCantCreate() {
         final long bob = uc.createLab3AndBob();
-        modelManagement.create(bob, INSTRUMENT_MODEL_DETAILS);
+        modelManagement.create(bob, getInstrumentModelDetails());
         Assert.fail();
     }
 
     @Test(expectedExceptions = IllegalStateException.class)
     public void testCreateWithNameDuplicate() {
         final long admin = admin();
-        modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
-        modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        modelManagement.create(admin, getInstrumentModelDetails());
+        modelManagement.create(admin, getInstrumentModelDetails());
         Assert.fail();
     }
 
@@ -68,18 +62,10 @@ public class InstrumentModelManagementTest extends AbstractTest {
     public void testUpdate() {
 
         final long admin = admin();
-        final long modelId = modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        final long modelId = modelManagement.create(admin, getInstrumentModelDetails());
         final InstrumentModelLineTemplate createdModel = modelReader.readById(admin, modelId);
 
-        final InstrumentModelDetails changedModelDetails = new InstrumentModelDetails(
-                "Updated model name",
-                createdModel.technologyType.name,
-                createdModel.vendor.name,
-                createdModel.instrumentType.name,
-                createdModel.extensions,
-                createdModel.additionalFiles,
-                createdModel.folderArchiveSupport
-        );
+        final InstrumentModelDetails changedModelDetails = createModelWithNewName(createdModel, UPDATED_MODEL_NAME);
 
         modelManagement.update(admin, createdModel.id, changedModelDetails);
         final InstrumentModelLineTemplate updateModel = modelReader.readById(admin, modelId);
@@ -87,22 +73,27 @@ public class InstrumentModelManagementTest extends AbstractTest {
         Assert.assertEquals(updateModel.name, changedModelDetails.name);
     }
 
+    private InstrumentModelDetails createModelWithNewName(InstrumentModelLineTemplate sourceModel,
+                                                          String newModelName) {
+        return new InstrumentModelDetails(
+            newModelName,
+            sourceModel.technologyType.name,
+            sourceModel.vendor.name,
+            sourceModel.instrumentType.name,
+            sourceModel.extensions,
+            sourceModel.additionalFiles,
+            sourceModel.folderArchiveSupport
+        );
+    }
+
     @Test(expectedExceptions = AccessDenied.class)
     public void testNotAdminCantUpdate() {
 
         final long admin = admin();
-        final long modelId = modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        final long modelId = modelManagement.create(admin, getInstrumentModelDetails());
         final InstrumentModelLineTemplate createdModel = modelReader.readById(admin, modelId);
 
-        final InstrumentModelDetails changedModelDetails = new InstrumentModelDetails(
-                "Updated model name",
-                createdModel.technologyType.name,
-                createdModel.vendor.name,
-                createdModel.instrumentType.name,
-                createdModel.extensions,
-                createdModel.additionalFiles,
-                createdModel.folderArchiveSupport
-        );
+        final InstrumentModelDetails changedModelDetails = createModelWithNewName(createdModel, UPDATED_MODEL_NAME);
         final long bob = uc.createLab3AndBob();
         modelManagement.update(bob, createdModel.id, changedModelDetails);
 
@@ -111,7 +102,7 @@ public class InstrumentModelManagementTest extends AbstractTest {
 
     @Test(expectedExceptions = IllegalStateException.class)
     public void testUpdateNotExisting() {
-        modelManagement.update(admin(), NOT_EXISTING_MODEL_ID, INSTRUMENT_MODEL_DETAILS);
+        modelManagement.update(admin(), NOT_EXISTING_MODEL_ID, getInstrumentModelDetails());
         Assert.fail();
     }
 
@@ -119,19 +110,11 @@ public class InstrumentModelManagementTest extends AbstractTest {
     public void testUpdateWithNameDuplicate() {
 
         final long admin = admin();
-        final long modelId = modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        final long modelId = modelManagement.create(admin, getInstrumentModelDetails());
         final InstrumentModelLineTemplate createdModel = modelReader.readById(admin, modelId);
-        final InstrumentModelDetails anotherModelDetails = new InstrumentModelDetails(
-                "Another Model Name",
-                createdModel.technologyType.name,
-                createdModel.vendor.name,
-                createdModel.instrumentType.name,
-                createdModel.extensions,
-                createdModel.additionalFiles,
-                createdModel.folderArchiveSupport
-        );
+        final InstrumentModelDetails anotherModelDetails = createModelWithNewName(createdModel, "Another model name");
         final long anotherModelId = modelManagement.create(admin, anotherModelDetails);
-        modelManagement.update(admin, anotherModelId, INSTRUMENT_MODEL_DETAILS);
+        modelManagement.update(admin, anotherModelId, getInstrumentModelDetails());
 
         Assert.fail();
     }
@@ -140,7 +123,7 @@ public class InstrumentModelManagementTest extends AbstractTest {
     public void testDelete() {
 
         final long admin = admin();
-        final long modelId = modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        final long modelId = modelManagement.create(admin, getInstrumentModelDetails());
         final InstrumentModelLineTemplate createdModel = modelReader.readById(admin, modelId);
 
         Assert.assertNotNull(createdModel);
@@ -151,7 +134,7 @@ public class InstrumentModelManagementTest extends AbstractTest {
     @Test(expectedExceptions = AccessDenied.class)
     public void testNotAdminCantDelete() {
         final long admin = admin();
-        final long modelId = modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        final long modelId = modelManagement.create(admin, getInstrumentModelDetails());
         final long bob = uc.createLab3AndBob();
         modelManagement.delete(bob, modelId);
         Assert.fail();
@@ -166,7 +149,7 @@ public class InstrumentModelManagementTest extends AbstractTest {
     @Test(expectedExceptions = IllegalStateException.class)
     public void testCantDeleteWithInstruments() {
         final long admin = admin();
-        final long modelId = modelManagement.create(admin, INSTRUMENT_MODEL_DETAILS);
+        final long modelId = modelManagement.create(admin, getInstrumentModelDetails());
         final long bob = uc.createLab3AndBob();
         final Long labId = uc.getLab3();
         createInstrumentAndApproveIfNeeded(bob, labId, modelId, instrumentDetails());
@@ -174,4 +157,14 @@ public class InstrumentModelManagementTest extends AbstractTest {
         Assert.fail();
     }
 
+
+    private InstrumentModelDetails getInstrumentModelDetails() {
+        return new InstrumentModelDetails(
+            "My Instrument Model",
+            "My Technology Type",
+            "My Vendor",
+            "My Instrument Type",
+            Sets.newHashSet(".my", ".own")
+        );
+    }
 }

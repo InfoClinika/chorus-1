@@ -20,6 +20,7 @@
     <script type="text/javascript" src="../lib/angular-ui/angular-ui.min.js"></script>
     <link rel="stylesheet" href="../lib/angular-ui/angular-ui.min.css">
 
+
     <script type="text/javascript" src="../script/enums.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/error-catcher.js"></script>
 
@@ -30,16 +31,23 @@
 
     <script type="text/javascript" src="../script/service/news-back.js"></script>
     <script type="text/javascript" src="../script/homepage.js"></script>
+    <script type="text/javascript" src="../script/service/feature.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/user-details.service.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/security-front.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/statistics-back.js"></script>
     <script type="text/javascript" src="../script/formatters.js"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
 
     <script type="text/javascript" src="../script/appearance/appearance.js"></script>
     <script type="text/javascript" src="../script/appearance/appearance.service.js"></script>
     <script type="text/javascript" src="../script/header/header.js"></script>
     <script type="text/javascript" src="../script/header/header.controller.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.controller.js"></script>
+
+    <script type="text/javascript"
+            src="../script/components/usage-statistics/usage-statistics.component.js?_version=${static.resources.version}"></script>
 
     <!-- Custom Fonts -->
     <link rel="stylesheet" href="../fonts/fonts.css">
@@ -52,24 +60,20 @@
         }
       </style>
     <![endif]-->
+    <link rel="stylesheet" href="../lib/owlcarousel/assets/owl.carousel.min.css">
+    <link rel="stylesheet" href="../lib/jquery-ui/jquery-ui.css"/>
     <link rel="stylesheet" href="../css/dialogs.css">
     <link rel="stylesheet" href="../css/style.css">
 
-    <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 
-        ga('create', 'UA-41329240-1', 'chorusproject.org');
-        ga('send', 'pageview');
-
-    </script>
 </head>
 <body class="static-page homepage" ng-controller="home-controller">
     <div class="fixed-area">
         <div class="fixed-header-holder">
-            <div ng-init="activePage = 'index'" class="ng-include: 'header.html'"></div>
+            <div ng-init="activePage = 'index'; showConsent = true" class="ng-include: 'header.html'"></div>
         </div>
     </div>
     <div class="main-content">
@@ -128,7 +132,7 @@
                 </ol>
             </div>
         </div>
-        <div class="why-box clearfix">
+        <div hide-if-private-installation class="why-box clearfix">
             <div class="center-frame">
                 <h2>Why Chorus?</h2>
                 <div class="items">
@@ -187,57 +191,14 @@
                         </div>
                     </div>
                     <div class="aside">
-                        <h2>Usage Statistics</h2>
-                        <div class="statistics">
-                            <div class="section wide">
-                                <div class="frame">
-                                    <i class="icon users"></i>
-                                </div>
-                                <strong class="info" ng-bind="usage.usersCount | number"></strong>
-                                <p>Users</p>
-                            </div>
-                            <div class="section">
-                                <div class="frame">
-                                    <i class="icon volume"></i>
-                                </div>
-                                <strong class="info" ng-bind="usage.filesSize | sizeInTB"></strong>
-                                <p>Data<br />volume (TB)</p>
-                            </div>
-                            <div class="section">
-                                <div class="frame">
-                                    <i class="icon files"></i>
-                                </div>
-                                <strong class="info" ng-bind="usage.filesCount | number"></strong>
-                                <p>Data<br />files</p>
-                            </div>
-                            <div class="section">
-                                <div class="frame">
-                                    <i class="icon projects"></i>
-                                </div>
-                                <strong class="info" ng-bind="usage.projectsCount | number"></strong>
-                                <p>Public<br />projects</p>
-                            </div>
-                            <div class="section">
-                                <div class="frame">
-                                    <i class="icon experiments"></i>
-                                </div>
-                                <strong class="info" ng-bind="usage.experimentsCount | number"></strong>
-                                <p>Public<br />Experiments</p>
-                            </div>
-                        </div>
-                        <span ng-switch="ssoProperties.enabled">
-                            <span ng-switch-when="false">
-                                <a ng-show="!isUserLoggedIn()" href="register.html" class="btn-get-started"><em class="arrow"></em><span>Get Started <strong>Now</strong></span></a>
-                                <a ng-show="isUserLoggedIn()" href="dashboard.html" class="btn-get-started"><em class="arrow"></em><span>Get Started <strong>Now</strong></span></a>
-                            </span>
-                        </span>
+                        <usage-statistics></usage-statistics>
                     </div>
                 </div>
             </div>
         </div>
         <div class="content-box clearfix">
             <div class="center-frame">
-                <div class="twocolumns clearfix">
+                <div hide-if-private-installation class="twocolumns clearfix">
                     <div class="content">
                         <div class="news-box clearfix">
                             <h2>Latest News</h2>
@@ -319,7 +280,7 @@
                             <ul class="partner-list">
                                 <li><a href="http://www.infoclinika.com/" class="logo-infoclinika">Infoclinika</a></li>
                                 <li><a href="http://aws.amazon.com/" class="logo-amazon-services">Amazon web services</a></li>
-                                 <li><a href="http://www.pitt.edu/" class="logo-university-of-pittsburgh">University of Pittsburgh</a></li>
+                                <li><a href="http://www.pitt.edu/" class="logo-university-of-pittsburgh">University of Pittsburgh</a></li>
                                 <li><a href="http://www.washington.edu/" class="logo-university-of-washington">University of Washington</a></li>
                                 <li><a href="http://www.proteinmetrics.com/" class="logo-protein-metrics">Protein Metrics</a></li>
                                 <li><a href="http://www.agilent.com/" class="logo-agilent-technologies">Agilent Technologies</a></li>
@@ -327,10 +288,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="how-box clearfix">
+                <div set-class-if-private-installation="private-install" class="how-box clearfix">
                     <h2>How To</h2>
                     <div class="text">
-                        <div class="item" ng-repeat="item in items| limitTo: 4">
+                        <div class="item" ng-repeat="item in items| limitTo: videosLimit">
                             <a href="#" title="{{item.snippet.title}}" ng-click="showVideo($index)">
                                 <img ng-src="{{item.snippet.thumbnails.high.url}}" alt="item.snippet.title" />
                                 <span class="btn-play">Play it</span>
@@ -343,8 +304,23 @@
                         <a href="support.html#/videos">View more videos</a>
                     </div>
                 </div>
+                <div show-if-private-installation class="private-install-statistics">
+                    <usage-statistics></usage-statistics>
+                </div>
+                <div show-if-private-installation class="private-install-partner-box">
+                    <h2>Our Partners</h2>
+                    <div ng-cloak apply-owl-carousel class="partner-list owl-carousel">
+                        <div class="partner-item"><a href="http://www.infoclinika.com/" class="logo-infoclinika">Infoclinika</a></div>
+                        <div class="partner-item"><a href="http://aws.amazon.com/" class="logo-amazon-services">Amazon web services</a></div>
+                        <div class="partner-item"><a href="http://www.pitt.edu/" class="logo-university-of-pittsburgh">University of Pittsburgh</a></div>
+                        <div class="partner-item"><a href="http://www.washington.edu/" class="logo-university-of-washington">University of Washington</a></div>
+                        <div class="partner-item"><a href="http://www.proteinmetrics.com/" class="logo-protein-metrics">Protein Metrics</a></div>
+                        <div class="partner-item"><a href="http://www.agilent.com/" class="logo-agilent-technologies">Agilent Technologies</a></div>
+                    </div>
+                </div>
+
                 <div class="about-box clearfix">
-                    <h2>About Us</h2>
+                    <h2>About Us</h2>statistics
                     <p>Recognizing that the sharing, public dissemination, and analysis of mass spectrometry data has become a major challenge for many laboratories, Stratus Biosciences was founded with the ambitious goal to solve these problems. Stratus Biosciences is a not-for-profit company based in Seattle, WA with the goal of building and providing professionally developed software solutions for the mass spectrometry community. The Chorus Project is our cloud based platform for providing these services.</p>
                     <div class="more">
                         <a href="about.html">Read more about us</a>
@@ -373,5 +349,7 @@
             </div>
         </div>
     </div>
+
+    <script src="../lib/owlcarousel/owl.carousel.min.js"></script>
 </body>
 </html>

@@ -1,13 +1,55 @@
-/*global angular isNumber TableModel:true*/
+"use strict";
 
 (function () {
-
-    "use strict";
 
     var bodyMouseUpListeners = [];
 
     angular.module("experiments-front")
-        .directive("experimentWizardFileToPrepAssignmentStep", experimentWizardFileToPrepAssignmentStep);
+        .directive("experimentWizardFileToPrepAssignmentStep", experimentWizardFileToPrepAssignmentStep)
+        .filter("localeOrderBy", [function () {
+            return function (array, sortPredicate, reverseOrder) {
+                if (!Array.isArray(array)) {
+                    return array;
+                }
+                if (!sortPredicate) {
+                    return array;
+                }
+
+                function isString(value) {
+                    return typeof value === "string";
+                }
+
+                function isNumber(value) {
+                    return typeof value === "number";
+                }
+
+                function isBoolean(value) {
+                    return typeof value === "boolean";
+                }
+
+                var arrayCopy = [];
+                angular.forEach(array, function (item) {
+                    arrayCopy.push(item);
+                });
+
+                arrayCopy.sort(function (a, b) {
+                    var valueA = a[sortPredicate];
+                    var valueB = b[sortPredicate];
+
+                    if (isString(valueA)) {
+                        return !reverseOrder ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+                    }
+
+                    if (isNumber(valueA) || isBoolean(valueA)) {
+                        return !reverseOrder ? valueA - valueB : valueB - valueA;
+                    }
+
+                    return 0;
+                });
+
+                return arrayCopy;
+            };
+        }]);
 
     function experimentWizardFileToPrepAssignmentStep() {
         return {
@@ -17,7 +59,7 @@
             scope: {
                 configuration: "="
             },
-            controller: function ($scope, $timeout) {
+            controller: function ($scope) {
 
                 $scope.settings = {initialized: false};
                 $scope.$watch("configuration", setupAPIandActivate); // initialization after first binding
@@ -35,20 +77,23 @@
                         $scope.$on($scope.configuration.api.events.setSelected, onSetSelection);
                         activate();
                     }
+
                     function activate() {
                         $scope.vm = {
                             autoFill: {
                                 mouseUpHandler: autoFillSamplesAndFractions,
                                 removeSamplesAndFractions: removeSamplesAndFractions,
-                                selected: {fractionNumber: null, sampleName: null}
+                                selected: {fractionNumber: null, sampleName: null, pairedEnd: null}
                             },
                             getValidationErrorMessage: getValidationErrorMessage,
                             is2dLc: true,
+                            pairedEnd: true,
+                            multiplexing: false,
                             files: [],
                             keyPressedInTable: enableArrowsUpDownSupport()
                         };
                         var bodyEl = $("body");
-                        $(bodyMouseUpListeners).each(function(i, listener){ // clean listeners which have been binded earlier
+                        $(bodyMouseUpListeners).each(function (i, listener) { // clean listeners which have been binded earlier
                             bodyEl.unbind("mouseup", listener);
                         });
                         bodyEl.bind("mouseup", outerMouseUpHandler);
@@ -56,7 +101,8 @@
                         enableCopyPasteForCells();
 
                         function outerMouseUpHandler() {
-                            if ($("#fileNameForAutoFill:visible").length === 1 && $("#fileNameForAutoFill").is(":focus")) {
+                            if ($("#fileNameForAutoFill:visible").length === 1 &&
+                                $("#fileNameForAutoFill").is(":focus")) {
                                 autoFillSamplesAndFractions();
                             }
 
@@ -70,7 +116,8 @@
                                 return;
                             }
                             if ($scope.vm.autoFill.selected.sampleName) {
-                                if ($scope.vm.is2dLc && (isNumber(selection.selectedText) || selection.selectedText.length === 1)) {
+                                if (($scope.vm.is2dLc || $scope.vm.pairedEnd) &&
+                                    (isNumber(selection.selectedText) || selection.selectedText.length === 1)) {
                                     $scope.vm.autoFill.selected.fractionNumber = selection.selectedText;
                                     $scope.vm.autoFill.selected.fractionNumberRange = {
                                         start: selection.start,
@@ -85,17 +132,25 @@
                                 };
                             }
 
-                            if ($scope.vm.autoFill.selected.sampleName && ($scope.vm.autoFill.selected.fractionNumber || !$scope.vm.is2dLc)) {
+                            if ($scope.vm.autoFill.selected.sampleName &&
+                                ($scope.vm.autoFill.selected.fractionNumber || !$scope.vm.is2dLc &&
+                                    !$scope.vm.pairedEnd)) {
                                 // do autofilling
-                                var autoFillFn = composeAutoFillFunction(selection.fileNameToProcess, $scope.vm.autoFill.selected);
+                                var autoFillFn = composeAutoFillFunction(
+                                    selection.fileNameToProcess,
+                                    $scope.vm.autoFill.selected
+                                );
                                 $($scope.vm.files).each(function (i, file) {
                                     var parseResult = autoFillFn(file.name);
                                     file.preparedSampleName = parseResult.preparedSampleName;
                                     if (parseResult.fractionNumber) {
                                         file.fractionNumber = parseResult.fractionNumber;
                                     }
+                                    if (parseResult.pairedEnd) {
+                                        file.pairedEnd = parseResult.pairedEnd;
+                                    }
                                 });
-                                $scope.vm.autoFill.selected = {fractionNumber: null, sampleName: null}; //null everything to let user retry
+                                $scope.vm.autoFill.selected = {fractionNumber: null, sampleName: null, pairedEnd: null}; //null everything to let user retry
 
                             }
 
@@ -103,32 +158,55 @@
 
                             function composeAutoFillFunction(wholeFileName, autoFillSelection) {
                                 //F20140305_TS_Ebert_Jan_Rep1_KGG_Light_DMSO_Medium_Lenalidomide1uM_Heavy_Len10uM_bRP_fxn1.raw
-                                var sampleSettings = extractSettingsOfOccurrence(wholeFileName, autoFillSelection.sampleNameRange);
+                                var sampleSettings = extractSettingsOfOccurrence(
+                                    wholeFileName,
+                                    autoFillSelection.sampleNameRange
+                                );
                                 var fractionSettings = null;
                                 if ($scope.vm.is2dLc) {
-                                    fractionSettings = extractSettingsOfOccurrence(wholeFileName, autoFillSelection.fractionNumberRange, true);
+                                    fractionSettings = extractSettingsOfOccurrence(
+                                        wholeFileName,
+                                        autoFillSelection.fractionNumberRange,
+                                        true
+                                    );
+                                }
+                                var pairedEndSettings = null;
+                                if ($scope.vm.pairedEnd) {
+                                    pairedEndSettings = extractSettingsOfOccurrence(
+                                        wholeFileName,
+                                        autoFillSelection.fractionNumberRange,
+                                        true
+                                    );
                                 }
                                 return autoFillFunction;
 
                                 function autoFillFunction(fileName) {
                                     return {
                                         preparedSampleName: extractValueBasedOnSettings(fileName, sampleSettings),
-                                        fractionNumber: extractValueBasedOnSettings(fileName, fractionSettings, true)
+                                        fractionNumber: extractValueBasedOnSettings(fileName, fractionSettings, true),
+                                        pairedEnd: extractValueBasedOnSettings(fileName, pairedEndSettings, true)
                                     };
                                 }
 
 
                                 function extractSettingsOfOccurrence(fullText, ranges, keepOrderFromRight) {
-                                    var separatorBefore = (ranges.start === 0) ? null : fullText[ranges.start - 1];//_
-                                    var separatorAfter = (ranges.end === fullText.length) ? null : fullText[ranges.end];//_
+                                    var separatorBefore = ranges.start === 0 ? null : fullText[ranges.start - 1];//_
+                                    var separatorAfter = ranges.end === fullText.length ? null : fullText[ranges.end];//_
                                     var orderOfSeparatorBefore = null;
                                     //TCGA-AA-A00R-01A-22_W_VU_20121103_A0218_5G_R_FR01.raw, selected 01
                                     if (keepOrderFromRight) { // for fraction number look from end
-                                        orderOfSeparatorBefore = (separatorBefore) ? fullText.substr(ranges.start).split(separatorBefore).length - 1 : 0;//[01.raw]
+                                        orderOfSeparatorBefore = separatorBefore ?
+                                            fullText.substr(ranges.start).split(separatorBefore).length - 1 :
+                                            0;//[01.raw]
                                     } else {
-                                        orderOfSeparatorBefore = (separatorBefore) ? fullText.substr(0, ranges.start).split(separatorBefore).length - 1 : 0;
+                                        orderOfSeparatorBefore = separatorBefore ?
+                                            fullText.substr(0, ranges.start).split(separatorBefore).length - 1 :
+                                            0;
                                     }
-                                    var orderOfSeparatorAfter = (separatorAfter) ? fullText.substr(ranges.start, ranges.end - ranges.start).split(separatorAfter).length - 1 : 0;
+                                    var orderOfSeparatorAfter = separatorAfter ?
+                                        fullText.substr(ranges.start, ranges.end - ranges.start)
+                                            .split(separatorAfter).length - 1 :
+                                        0;
 
                                     return {
                                         separatorBefore: separatorBefore,
@@ -143,10 +221,13 @@
                                     if (settings === null) {
                                         return null;
                                     }
-                                    var beforeSeparators = (settings.separatorBefore === null) ? [fileName] : fileName.split(settings.separatorBefore);
+                                    var beforeSeparators = settings.separatorBefore === null ?
+                                        [fileName] :
+                                        fileName.split(settings.separatorBefore);
                                     var orderOfSeparatorBefore = null;
                                     if (settings.keepOrderFromRight) {
-                                        orderOfSeparatorBefore = beforeSeparators.length - settings.orderOfSeparatorBefore - 1;
+                                        orderOfSeparatorBefore = beforeSeparators.length -
+                                            settings.orderOfSeparatorBefore - 1;
                                     } else {
                                         orderOfSeparatorBefore = settings.orderOfSeparatorBefore;
                                     }
@@ -155,7 +236,8 @@
                                         var valueAsArrayWithCorrectStart = [];
                                         var resultedValue;
                                         if (orderOfSeparatorBefore !== 0) {
-                                            for (var beforeSepIndex = orderOfSeparatorBefore; beforeSepIndex < beforeSeparators.length; beforeSepIndex++) {
+                                            for (var beforeSepIndex = orderOfSeparatorBefore;
+                                                 beforeSepIndex < beforeSeparators.length; beforeSepIndex++) {
                                                 valueAsArrayWithCorrectStart.push(beforeSeparators[beforeSepIndex]);
                                             }
                                             resultedValue = valueAsArrayWithCorrectStart.join(settings.separatorBefore);
@@ -164,14 +246,18 @@
                                         }
 
 
-                                        var afterSeparators = (settings.separatorAfter === null) ? [resultedValue] : resultedValue.split(settings.separatorAfter);
+                                        var afterSeparators = settings.separatorAfter === null ?
+                                            [resultedValue] :
+                                            resultedValue.split(settings.separatorAfter);
                                         if (afterSeparators[settings.orderOfSeparatorAfter]) {
                                             var valueAsArrayWithCorrectEnd = [];
                                             if (settings.orderOfSeparatorAfter !== 0) {
-                                                for (var afterSepIndex = 0; afterSepIndex <= settings.orderOfSeparatorAfter; afterSepIndex++) {
+                                                for (var afterSepIndex = 0;
+                                                     afterSepIndex <= settings.orderOfSeparatorAfter; afterSepIndex++) {
                                                     valueAsArrayWithCorrectEnd.push(afterSeparators[afterSepIndex]);
                                                 }
-                                                resultedValue = valueAsArrayWithCorrectEnd.join(settings.separatorAfter);
+                                                resultedValue
+                                                    = valueAsArrayWithCorrectEnd.join(settings.separatorAfter);
                                             } else {
                                                 resultedValue = afterSeparators[0];
                                             }
@@ -198,7 +284,10 @@
                                     return null;
                                 }
                                 var fileNameToProcess = autoFillJInputEl.val();
-                                var selectedText = fileNameToProcess.substr(selectionStart, selectionEnd - selectionStart);
+                                var selectedText = fileNameToProcess.substr(
+                                    selectionStart,
+                                    selectionEnd - selectionStart
+                                );
                                 autoFillJInputEl.blur();
                                 autoFillInputEl.selectionStart = -1;
                                 autoFillInputEl.selectionEnd = -1;
@@ -212,11 +301,14 @@
                         }
 
                         function removeSamplesAndFractions() {
-                            $scope.vm.autoFill.selected = {fractionNumber: null, sampleName: null};
+                            $scope.vm.autoFill.selected = {fractionNumber: null, sampleName: null, pairedEnd: null};
                             $($scope.vm.files).each(function (i, file) {
                                 file.preparedSampleName = "";
-                                if ($scope.vm.is2dLc) {
+                                if ($scope.vm.is2dLc || $scope.vm.pairedEnd) {
                                     file.fractionNumber = "";
+                                }
+                                if ($scope.vm.pairedEnd) {
+                                    file.pairedEnd = "";
                                 }
                             });
                         }
@@ -237,21 +329,27 @@
                                         return; //TODO:2015-12-28:andrii.loboda: remove duplicated code
                                     } else if (event.keyCode === 39) {//right
                                         return;
-                                    } else {
-                                        var td = $(target).parent();
-                                        var horizontalIndex = td.prevAll(tdSelector).length;
-                                        if (event.keyCode === 38) {//up
-                                            var upTR = td.parent().prev();
-                                            if (upTR.length  !==  0) {
-                                                upTR.find(tdSelector).eq(horizontalIndex).find(DOM_ELEMENT.CONTENTEDITABLE).focus();
-                                            }
-                                        } else if (event.keyCode === 40) {//down
-                                            var downTR = td.parent().next();
-                                            if (downTR.length  !==  0) {
-                                                downTR.find(tdSelector).eq(horizontalIndex).find(DOM_ELEMENT.CONTENTEDITABLE).focus();
-                                            }
+                                    }
+                                    var td = $(target).parent();
+                                    var horizontalIndex = td.prevAll(tdSelector).length;
+                                    if (event.keyCode === 38) {//up
+                                        var upTR = td.parent().prev();
+                                        if (upTR.length !== 0) {
+                                            upTR.find(tdSelector)
+                                                .eq(horizontalIndex)
+                                                .find(DOM_ELEMENT.CONTENTEDITABLE)
+                                                .focus();
+                                        }
+                                    } else if (event.keyCode === 40) {//down
+                                        var downTR = td.parent().next();
+                                        if (downTR.length !== 0) {
+                                            downTR.find(tdSelector)
+                                                .eq(horizontalIndex)
+                                                .find(DOM_ELEMENT.CONTENTEDITABLE)
+                                                .focus();
                                         }
                                     }
+
                                 };
                             }
                         }
@@ -260,30 +358,41 @@
                             var result = validate();
                             if (!result) {
                                 return "Files are not specified.";
-                            } else {
-                                if (!result.allFilesValid) {
-                                    return "Absent value(s) for: " + result.invalidFileName;
-                                } else if (!result.allFractionsUniqueInPrep) {
-                                    return "Fractions should be unique per prep sample. Invalid for: " + result.invalidFileName;
-                                } else if (!result.allPrepHaveSameFractions) {
-                                    return "Each Prep sample should have the same number of fractions. Invalid for: " + result.invalidFileName;
-                                }
                             }
+                            if (!result.allFilesValid) {
+                                return "Absent value(s) for: " + result.invalidFileName;
+                            } else if (!result.allFractionsUniqueInPrep) {
+                                return "Fractions should be unique per prep sample. Invalid for: " +
+                                    result.invalidFileName;
+                            } else if (!result.allPrepHaveSameFractions) {
+                                return "Each Prep sample should have the same number of fractions. Invalid for: " +
+                                    result.invalidFileName;
+                            }
+
                             return "  ";
                         }
 
                         function enableCopyPasteForCells() {
                             /*** Copy-paste Support ***/
 
-                            var experimentDesignCells = new TableModel(getColumnsCount, getRowsCount, copyValue, pasteValue);
+                            var experimentDesignCells = new TableModel(
+                                getColumnsCount,
+                                getRowsCount,
+                                copyValue,
+                                pasteValue,
+                                getOrder
+                            );
                             experimentDesignCells.startWatchingModifications($scope);
 
                             function getColumnsCount() {
-                                var width = 0;
+                                var width = 1;
                                 if ($scope.vm.is2dLc) {
                                     width += 1;
                                 }
-                                return width + 1;
+                                if ($scope.vm.pairedEnd) {
+                                    width += 2;
+                                }
+                                return width;
                             }
 
                             function getRowsCount() {
@@ -294,9 +403,13 @@
                                 var fileItem = $scope.vm.files[y];
                                 if (x === 0) {
                                     return fileItem.preparedSampleName || "";
-                                } else {
+                                } else if ($scope.vm.is2dLc) {
                                     return fileItem.fractionNumber || "";
                                 }
+                                return x === 1
+                                    ? fileItem.pairedEnd
+                                    : fileItem.fractionNumber;
+
                             }
 
                             function pasteValue(x, y, value) {
@@ -304,9 +417,17 @@
                                 var fileItem = $scope.vm.files[y];
                                 if (x === 0) {
                                     fileItem.preparedSampleName = value;
+                                } else if ($scope.vm.is2dLc) {
+                                    fileItem.fractionNumber = value;
+                                } else /*if ($scope.vm.pairedEnd)*/ if (x === 1) {
+                                    fileItem.pairedEnd = value;
                                 } else {
                                     fileItem.fractionNumber = value;
                                 }
+                            }
+
+                            function getOrder() {
+                                return $scope.sorting.reverse ? -1 : 1;
                             }
 
                             /*** End of Copy-Paste Support ***/
@@ -321,7 +442,8 @@
                     function isStateValid() {
                         var result = validate();
                         if (result) {
-                            return result.allFilesValid && result.allFractionsUniqueInPrep && result.allPrepHaveSameFractions;
+                            return result.allFilesValid && result.allFractionsUniqueInPrep &&
+                                result.allPrepHaveSameFractions;
                         }
                         return false;
                     }
@@ -350,11 +472,18 @@
                                             prepToFractionMap[file.preparedSampleName.toString()] = {};
                                         }
                                         if (!prepToFractionMap[file.preparedSampleName.toString()][+file.fractionNumber]) {
-                                            prepToFractionMap[file.preparedSampleName.toString()][+file.fractionNumber] = file.name;
+                                            prepToFractionMap[file.preparedSampleName.toString()][+file.fractionNumber]
+                                                = file.name;
                                         } else {
                                             allFractionsUniqueInPrep = false;
                                             invalidFileName = file.name;
                                         }
+                                    }
+                                }
+                                if ($scope.vm.pairedEnd) {
+                                    if (file.pairedEnd !== "1" && file.pairedEnd !== "2") {
+                                        allFilesValid = false;
+                                        invalidFileName = file.name;
                                     }
                                 }
                             }
@@ -374,11 +503,9 @@
                                 });
                                 if (fractionsCountPerPrep === null) {
                                     fractionsCountPerPrep = fractionsCount;
-                                } else {
-                                    if (fractionsCountPerPrep  !==  fractionsCount) {
-                                        allPrepHaveSameFractions = false;
-                                        invalidFileName = firstFileName;
-                                    }
+                                } else if (fractionsCountPerPrep !== fractionsCount) {
+                                    allPrepHaveSameFractions = false;
+                                    invalidFileName = firstFileName;
                                 }
                             }
                         });
@@ -393,26 +520,33 @@
 
                     function onSetSelection(e, dataToSpecify) {
                         $scope.vm.is2dLc = dataToSpecify.is2dLc;
+                        $scope.vm.pairedEnd = dataToSpecify.pairedEnd == 2;
+                        $scope.vm.multiplexing = dataToSpecify.multiplexing;
                         $scope.vm.mixedSamplesCount = dataToSpecify.mixedSamplesCount;
                         $scope.vm.files = dataToSpecify.files;
-                        if(!$scope.vm.is2dLc) {
+                        $scope.vm.files.sort(function (f1, f2) {
+                            return f1.name.localeCompare(f2.name);
+                        });
+
+                        if (!$scope.vm.is2dLc) {
                             autoFillPrepNamesIfEmptyWithFileNames($scope.vm.files);
                         }
                     }
 
                     function autoFillPrepNamesIfEmptyWithFileNames(files) {
-                        files.forEach(function(file) {
-                            if(!file.preparedSampleName || file.preparedSampleName.trim().length === 0) {
+                        files.forEach(function (file) {
+                            if (!file.preparedSampleName || file.preparedSampleName.trim().length === 0) {
                                 file.preparedSampleName = trimFileExtension(file.name);
                             }
                         });
                     }
 
                     function trimFileExtension(filename) {
-                        return filename.replace(/\.[^.]+$/, "");
+                        var indexPoint = filename.indexOf(".");
+                        return indexPoint !== -1 ? filename.substring(0, indexPoint) : filename;
                     }
                 }
             }
-        }
+        };
     }
 })();

@@ -1,5 +1,11 @@
+html, body {
+    height: 100%;
+    width: 100%;
+}
+
 body{
     overflow: auto;
+    min-width: 1024px;
 }
 
 .all-space{
@@ -101,6 +107,7 @@ body{
 #spectogramChartsContainer{
     position: relative;
     width: 100%;
+    min-height: 340px;
     /*height: 400px;*/
 }
 
@@ -335,6 +342,8 @@ h3 {
 }
 .protein-id-search-results{
     padding-bottom: 0;
+    height: 100%;
+    width: 100%;
 }
 
 .protein-id-search-results .breadcrumbs.centered{
@@ -397,6 +406,12 @@ h3 {
     -moz-border-radius: 0;
      border-radius: 0;
 }
+
+.data-pipeline-holder {
+    height: calc(100% - 83px);
+    width: 100%;
+}
+
 .data-pipeline-holder .breadcrumbs .breadcrumb:hover {
     color: #222;
     cursor: pointer;
@@ -408,6 +423,11 @@ h3 {
 .data-pipeline-holder .breadcrumbs .breadcrumb.current:hover{
     text-decoration:none;
     cursor: default;
+}
+
+.data-pipeline-holder .results-view {
+    height: calc(100% - 71px);
+    width: 100%;
 }
 
 #dataCubeVisualizer #data-section{
@@ -1085,6 +1105,8 @@ div.lorikeet td{
     background-position: -313px -417px;
 }
 .protein-id-search-results .icon.edit{
+    cursor: pointer;
+    z-index: 2;
     background-position: -337px -58px;
     width: 18px;
     height: 18px;
@@ -1092,17 +1114,17 @@ div.lorikeet td{
     top: 13px;
     left: 17px;
 }
-.protein-id-search-results .btn-filter-type .icon.edit:hover{
+.protein-id-search-results .get-data-button-container .icon.edit:hover{
     background-position: -72px -415px;
 }
-.protein-id-search-results .btn-filter-type .icon.edit:active{
+.protein-id-search-results .get-data-button-container .icon.edit:active{
     background-position: -53px -415px;
 }
 .protein-id-search-results .disabled .icon.edit,
-.protein-id-search-results .disabled .btn-filter-type .icon.edit:hover{
+.protein-id-search-results .disabled .get-data-button-container .icon.edit:hover{
     background-position: -337px -79px;
 }
-.protein-id-search-results .active .btn-filter-type .icon.edit{
+.protein-id-search-results .active .get-data-button-container .icon.edit{
     right: 50px;
 }
 .protein-id-search-results .btn-filter-type-holder .disabled  .icon.edit{
@@ -1121,7 +1143,8 @@ div.lorikeet td{
     top: 5px;
     right: 5px;
 }
-.protein-id-search-results .hideChart-icon{
+.protein-id-search-results .hideChart-icon {
+    cursor: pointer;
     background-position: -333px -101px;
     width: 8px;
     height: 8px;
@@ -1130,6 +1153,17 @@ div.lorikeet td{
     top: 0;
     left: 5px;
 
+}
+.protein-id-search-results .hideZoomedDataCubes-icon {
+    cursor: pointer;
+    background-position: -333px -101px;
+    width: 8px;
+    height: 8px;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    left: 5px;
+    z-index: 1;
 }
 .protein-id-search-results .btn-filter-type-holder .btn-filter-type .icon.delete-filter:hover{
     background-position: -333px -110px;
@@ -1270,6 +1304,11 @@ div.lorikeet td{
 .protein-id-search-results .legend-holder .switcher-holder{
     float: left;
     overflow-x: hidden;
+    position: relative;
+}
+.protein-id-search-results .legend-holder .switcher-holder .adduct-group-toggle {
+    position: absolute;
+    right: 1px;
 }
 .protein-id-search-results .legend-holder .switcher-holder .settings-container{
     width: 400px;
@@ -1510,6 +1549,24 @@ div.lorikeet td{
     top: 5px;
     right: 2px;
 }
+
+.protein-id-search-results .icon.i-ok {
+    background-position: -63px -376px;
+    width: 17px;
+    height: 15px;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.protein-id-search-results .icon.i-cancel {
+    background-position: -79px -376px;
+    width: 17px;
+    height: 15px;
+    position: absolute;
+    top: 5px;
+    right: 4px;
+}
 .protein-id-search-results .settings-holder button:hover .icon.accession{
     background-position: -309px -370px;
 }
@@ -1555,10 +1612,6 @@ div.lorikeet td{
     background-position: -321px -338px;
 }
 /*Modal windows*/
-#export-to-csv-dialog .checkbox{
-    float: left;
-    margin: 3px 6px 0 0;
-}
 #new-filter-dialog.modal{
     background: rgba(255, 255, 255, 0.65);
 }
@@ -1600,8 +1653,8 @@ div.lorikeet td{
 #get-data-appearance-settings .modal-body .create-project .dialog-select.color-ranges ~ span {
     margin-left: 10px;
 }
-#get-protein-results-data .modal-body{
-    height: 200px;
+#get-data-settings-modal .modal-body {
+    height: 250px;
 }
 #appearanceTabsContent .sp-replacer {
     margin: 0;
@@ -1747,6 +1800,8 @@ div.lorikeet td{
 }
 .main-view{
     margin-bottom: 0;
+    height: 100%;
+    width: 100%;
 }
 
 
@@ -2052,4 +2107,434 @@ div.lorikeet td{
     /** 1 more that dc splitter z-index. */
     z-index: 1001;
     min-width: 100px;
+}
+
+.ui-layout-pane {
+    border: none !important;
+}
+
+.zoomed-in-datacubes-container {
+    height: 100%;
+    width: 100%;
+}
+
+.zoomed-in-datacube-container {
+    font: normal 11px/13px "Open Sans", Arial, sans-serif;
+}
+
+.zoomed-in-datacube-container .context-menu a {
+    font: normal 11px/13px "Open Sans", Arial, sans-serif;
+}
+
+.zoomed-in-datacube .icon.icon-chevron-up,
+.zoomed-in-datacube .icon.icon-chevron-down {
+    top: 3px;
+    right: 5px;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .table-container {
+    overflow: auto;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .rows-table-container::-webkit-scrollbar:vertical{
+    display: none;
+}
+.zoomed-in-datacube-container .zoomed-in-datacube .rows-table-container::-webkit-scrollbar,
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table-container::-webkit-scrollbar
+{
+    -webkit-appearance: none;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .rows-table-container::-webkit-scrollbar:vertical,
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table-container::-webkit-scrollbar:vertical{
+    width: 11px;
+}
+.zoomed-in-datacube-container .zoomed-in-datacube .rows-table-container::-webkit-scrollbar:horizontal,
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table-container::-webkit-scrollbar:horizontal{
+    height: 11px;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .rows-table-container::-webkit-scrollbar-thumb,
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table-container::-webkit-scrollbar-thumb
+{
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+
+.zoomed-in-datacube-container .zoomed-in-datacube .splitter {
+    top: 34px;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .table-container {
+    display: inline-block;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .table-container {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .table-container .legend-component {
+    float: none;
+    margin-left: 0;
+    position: absolute;
+    top: 0;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table .zoomed-matrix-row,
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table .zoomed-matrix-row td {
+    max-height: 16px;
+    height: 16px;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table thead .zoomed-matrix-row {
+    background-color: #fff;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table .zoomed-matrix-row td .cell-content {
+    height: 16px;
+    max-width: 100px;
+    background-color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube .matrix-table .zoomed-matrix-row td .matrix-cell-content {
+    max-width: 100px;
+    text-align: center;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table thead tr {
+    height: 28px;
+    background: #fafafa;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered td {
+    border-left: 1px solid #b5b5b5;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered thead td {
+    text-align: center;
+    border-top: 1px solid #b5b5b5;
+    border-bottom: 1px solid #b5b5b5;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody {
+    font: normal 10px/13px "Open Sans", Arial, sans-serif;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr {
+    height: 13px;
+    cursor: pointer;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr:nth-child(even) {
+    background-color: #e8e8e8;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr:nth-child(odd) {
+    background: #f5f5f5;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr:hover {
+    background-color: #edf9fe;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr.active,
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr.active td.row-index-column {
+    background-color: #aa8484;
+    color: white;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr td.row-index-column {
+    width: 30px;
+    min-width: 30px;
+    background: #e8e8e8;
+    text-align: center;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr td span {
+    width: calc(100% - 1px);
+    height: 13px;
+    white-space: nowrap;
+    display: inline-block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.zoomed-in-datacube-container .zoomed-in-datacube table.table-bordered tbody tr td span.annotation-number {
+    text-align: right;
+    margin-left: 0;
+    padding-left: 0;
+    padding-right: 2px;
+}
+
+.zoomed-in-datacube-container .loader .row-annotations-loader {
+    background: rgba(250, 250, 250, 0.9);
+}
+
+.zoomed-in-datacubes-container .ui-layout-pane::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.zoomed-in-datacubes-container .ui-layout-pane::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+
+.zoomed-in-datacubes-container .ui-layout-pane::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+.zoomed-in-datacubes-container .ui-layout-pane::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.zoomed-in-datacube-container .breadcrumbs .icon.breadcrumbs-sep {
+    margin-top: 3px;
+}
+
+.zoomed-in-datacube-container .breadcrumbs .breadcrumb:hover {
+    cursor: default;
+    text-decoration: none;
+}
+
+.data-pipeline-holder.datacube-visualizer {
+    height: 100%;
+}
+
+.data-pipeline-holder.datacube-visualizer .results-view {
+    height: 100%;
+}
+
+.global-search-dialog .modal-frame {
+    height: 80%
+}
+
+.global-search-dialog .tooltip-label {
+    white-space: normal;
+}
+
+.global-search-dialog .modal-body {
+    height: calc(100% - 168px);
+    min-height: 150px;
+    width: 100%;
+    display: table;
+    max-height: none;
+}
+
+.global-search-dialog .bootstrap-tagsinput {
+    width: calc(100% - 14px);
+}
+
+.global-search-dialog .bootstrap-tagsinput .tag.search-tag {
+    background-color: #0d93db;
+    padding: 0 5px 9px;
+    margin-bottom: 3px;
+    border-radius: 3px;
+    display: inline-block;
+    height: 16px;
+}
+
+.global-search-dialog .bootstrap-tagsinput .tag.search-tag span {
+    font-size: 15px;
+}
+
+.global-search-btn {
+    cursor: pointer;
+}
+
+.global-search-btn i.icon.search-icon {
+    left: 3px;
+    top: 2px;
+    cursor: pointer;
+}
+
+.global-search-dialog .control-group {
+    padding: 0 10px;
+}
+
+.global-search-dialog .control-group.error {
+    background: #fff8f8;
+    border: 1px solid #efc9c9;
+    border-width: 1px 0;
+    padding-top: 5px;
+    padding-bottom: 11px;
+}
+
+.global-search-dialog input.calendar-picker {
+    width: calc(100% - 42px);
+}
+
+tr.sheet-name-column .column-annotation-cell-content {
+    padding-top: 6px;
+    height: 20px;
+}
+
+#heatmap-chart .ig-statistics {
+    background: #fff;
+    position: absolute;
+    border: 1px solid #000;
+    width: 170px;
+    padding: 5px;
+}
+
+.global-search-dialog .tab-content {
+    padding: 0;
+}
+
+.global-search-dialog .collapse-btn {
+    display: none;
+}
+
+.global-search-dialog .group-label label {
+    margin-bottom: 0;
+    font-size: 12pt;
+}
+
+.global-search-dialog .group-label hr {
+    margin-top: 10px;
+}
+
+.global-search-dialog .tabs-body {
+    height: calc(100% - 65px);
+    overflow-x: hidden;
+    padding: 0;
+}
+
+.global-search-dialog .inline-group {
+    display: inline-block;
+}
+
+.global-search-dialog .half-size {
+    display: inline-block;
+    width: 48%;
+    vertical-align: top;
+}
+
+.global-search-dialog .control-group .half-size+.half-size {
+    margin-left: 10px;
+}
+
+.global-search-dialog .modal-body .table .radio-label {
+    margin-left: 18px;
+}
+
+.global-search-dialog .text-input[disabled] {
+    background: #eee;
+}
+
+.global-search-dialog .text-input {
+    height: 30px !important;
+    display: block !important;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 6px !important;
+    font: normal 14px/26px "Open Sans", Arial, sans-serif !important;
+    color: #222 !important;
+    outline: 0 !important;
+    background: #fff;
+    -moz-transition: none !important;
+    border: 1px solid #ccc;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.155) inset !important;
+    border-radius: 3px;
+}
+
+.global-search-dialog .tolerance-tooltip {
+    margin-left: 3px;
+}
+
+.charts-across-all-files {
+    display: flex;
+    flex-flow: column;
+}
+
+.charts-across-all-files #spectogramCharts {
+    width: 100%;
+    height: 100%;
+    /*position: inherit !important;*/
+}
+
+.charts-across-all-files .adduct-group-statistics {
+    padding: 7px;
+    display: none;
+    border: 1px solid;
+    height: 150px;
+    margin-bottom: 10px;
+    overflow: auto;
+}
+
+.charts-across-all-files .adduct-group-statistics .ag-column {
+    vertical-align: top;
+    display: inline-block;
+    font-size: 13pt;
+    width: 100px;
+}
+
+.charts-across-all-files .adduct-group-statistics .peaks-column {
+    display: inline-block;
+    font-size: 13pt;
+}
+
+.charts-across-all-files .adduct-group-statistics .peaks-column + .peaks-column {
+    margin-left: 21px;
+}
+
+/*Override z-index for UI layout containers*/
+.protein-id-search-results .ui-layout-container .ui-layout-center {
+    z-index: unset !important;
+}
+
+.protein-id-search-results .ui-layout-container .ui-layout-south {
+    z-index: unset !important;
+}
+
+.protein-id-search-results .ui-layout-container .ui-layout-east {
+    z-index: unset !important;
+}
+
+#column-annotations-section table {
+    max-width: none;
+}
+
+#row-annotations-headers-section table {
+    max-width: none;
+}
+
+.ui-datepicker {
+    display: none;
+}
+
+.settings-holder .btn-group button.heatmap-toggle {
+    width: 61px;
+}
+
+.export-to-csv-dialog input[type="radio"] {
+    margin-left: -5px;
+}
+
+.export-to-csv-dialog .checkbox{
+    float: left;
+    margin: 3px 6px 0 0;
+}
+
+.grayed-out-text {
+    color: #888;
+    vertical-align: top;
+    display: inline-block;
+}
+
+.refresh-now.ui-button:disabled {
+    display: inline-block;
+    background: linear-gradient(to bottom, rgba(249, 249, 249, 1) 0%, rgba(249, 249, 249, 1) 100%);
+    box-sizing: border-box;
+    color: #ababab;
+    border: 1px solid #c8c8c8;
+    cursor: not-allowed;
 }

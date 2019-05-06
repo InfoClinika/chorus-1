@@ -41,7 +41,15 @@ public class BillingFileView {
     @CollectionTable(name = "billing_user_function_item_view", joinColumns = @JoinColumn(name = "file_id"))
     private Set<BillingUserFunctionsView> userFunctionsViews = newHashSet();
 
-    public BillingFileView(Long id, String archiveId, String contentId, Long instrument, Long billLab, Long instrumentLab, Long owner) {
+    public BillingFileView(
+        Long id,
+        String archiveId,
+        String contentId,
+        Long instrument,
+        Long billLab,
+        Long instrumentLab,
+        Long owner
+    ) {
         this.id = id;
         this.archiveId = archiveId;
         this.contentId = contentId;
@@ -101,14 +109,21 @@ public class BillingFileView {
     public String getInstrumentName() {
         return instrumentName;
     }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         BillingFileView that = (BillingFileView) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
 
         return true;
     }

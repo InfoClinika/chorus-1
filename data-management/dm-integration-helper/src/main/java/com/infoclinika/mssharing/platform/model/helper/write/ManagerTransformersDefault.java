@@ -22,7 +22,8 @@ public class ManagerTransformersDefault implements ManagerTransformersTemplate {
     @Inject
     protected AnnotationRepositoryTemplate annotationRepository;
 
-    public Function<ExperimentManagementTemplate.AnnotationTemplate, AnnotationTemplate> annotationTransformer(final boolean persist) {
+    public Function<ExperimentManagementTemplate.AnnotationTemplate, AnnotationTemplate> annotationTransformer(
+        final boolean persist) {
 
         return new Function<ExperimentManagementTemplate.AnnotationTemplate, AnnotationTemplate>() {
             @Override

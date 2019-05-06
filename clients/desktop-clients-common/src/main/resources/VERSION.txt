@@ -1,0 +1,4 @@
+Branch: ${build.branch}
+Commit hash: ${build.commit.hash}
+Commit message: ${build.commit.message}
+Date: ${build.date}

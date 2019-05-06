@@ -1,0 +1,10 @@
+<div class="user-guide-container">
+    <ul class="faq-list">
+        <li ng-repeat="topic in topics">
+            <h3 class="user-guide-topic-title"><span ng-click="toggleOpened($event)" class="title" ng-bind="topic.title"></span><em class="arrow"></em></h3>
+            <div class="hide user-guide-topic-content">
+                <p ng-bind-html-unsafe="topic.content"></p>
+            </div>
+        </li>
+    </ul>
+</div>

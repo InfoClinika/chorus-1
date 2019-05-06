@@ -9,5 +9,12 @@ import javax.persistence.Entity;
  * @author Herman Zamula
  */
 @Entity
-public class ExperimentDefault extends ExperimentTemplate<UserDefault, LabDefault, ProjectDefault, InstrumentDefault, FactorDefault, ExperimentFileDefault> {
+public class ExperimentDefault
+    extends ExperimentTemplate<
+    UserDefault,
+    LabDefault,
+    ProjectDefault,
+    InstrumentDefault,
+    FactorDefault,
+    ExperimentFileDefault> {
 }

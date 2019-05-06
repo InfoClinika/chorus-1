@@ -1,8 +1,8 @@
 package com.infoclinika.mssharing.platform.model.impl.read;
 
-import com.google.common.base.Function;
 import com.infoclinika.mssharing.platform.entity.InstrumentCreationRequestTemplate;
 import com.infoclinika.mssharing.platform.entity.LabCreationRequestTemplate;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.read.SingleResultBuilder;
 import com.infoclinika.mssharing.platform.model.helper.read.details.InstrumentRequestDetailsReaderHelper;
@@ -21,13 +21,15 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
  */
 @Transactional(readOnly = true)
 public abstract class DefaultRequestsDetailsReader<
-        INSTRUMENT_CREATION_ENTITY extends InstrumentCreationRequestTemplate,
-        LAB_CREATION_ENTITY extends LabCreationRequestTemplate,
-        INSTRUMENT_CREATION extends RequestsDetailsReaderTemplate.InstrumentCreationItemTemplate,
-        LAB_CREATION extends DetailsReaderTemplate.LabItemTemplate> implements RequestsDetailsReaderTemplate<INSTRUMENT_CREATION, LAB_CREATION> {
+    INSTRUMENT_CREATION_ENTITY extends InstrumentCreationRequestTemplate,
+    LAB_CREATION_ENTITY extends LabCreationRequestTemplate,
+    INSTRUMENT_CREATION extends RequestsDetailsReaderTemplate.InstrumentCreationItemTemplate,
+    LAB_CREATION extends DetailsReaderTemplate.LabItemTemplate>
+    implements RequestsDetailsReaderTemplate<INSTRUMENT_CREATION, LAB_CREATION> {
 
     @Inject
-    protected InstrumentRequestDetailsReaderHelper<INSTRUMENT_CREATION_ENTITY, INSTRUMENT_CREATION> instrumentRequestDetailsHelper;
+    protected InstrumentRequestDetailsReaderHelper<INSTRUMENT_CREATION_ENTITY, INSTRUMENT_CREATION>
+        instrumentRequestDetailsHelper;
     @Inject
     protected RuleValidator ruleValidator;
     @Inject
@@ -35,37 +37,34 @@ public abstract class DefaultRequestsDetailsReader<
 
     @PostConstruct
     public void setup() {
-        instrumentRequestDetailsHelper.setTransformer(new Function<INSTRUMENT_CREATION_ENTITY, INSTRUMENT_CREATION>() {
-            @Override
-            public INSTRUMENT_CREATION apply(INSTRUMENT_CREATION_ENTITY input) {
-                return transformInstrumentCreationRequest(input);
-            }
-        });
-        labRequestDetailsHelper.setTransformer(new Function<LAB_CREATION_ENTITY, LAB_CREATION>() {
-            @Override
-            public LAB_CREATION apply(LAB_CREATION_ENTITY input) {
-                return transformLabCreationRequest(input);
-            }
-        });
+        instrumentRequestDetailsHelper.setTransformer(input -> transformInstrumentCreationRequest(input));
+        labRequestDetailsHelper.setTransformer(input -> transformLabCreationRequest(input));
     }
 
     @Override
     public INSTRUMENT_CREATION readInstrumentCreation(long actor, long request) {
 
         beforeReadInstrumentCreationRequest(actor, request);
-        final SingleResultBuilder<INSTRUMENT_CREATION_ENTITY, INSTRUMENT_CREATION> resultBuilder = instrumentRequestDetailsHelper.readRequest(request);
+        final SingleResultBuilder<INSTRUMENT_CREATION_ENTITY, INSTRUMENT_CREATION> resultBuilder =
+            instrumentRequestDetailsHelper.readRequest(request);
         return afterReadInstrumentCreationRequest(actor, resultBuilder);
 
     }
 
     protected void beforeReadInstrumentCreationRequest(long actor, long request) {
-
-        checkAccess(ruleValidator.canReadInstrumentRequestDetails(actor, request),
-                "User has no access on read instrument creation request. User=" + actor + ", Request=" + request);
-
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        checkAccess(
+            ruleValidator.canReadInstrumentRequestDetails(actor, request),
+            "User has no access on read instrument creation request. User=" + actor + ", Request=" + request
+        );
     }
 
-    private INSTRUMENT_CREATION afterReadInstrumentCreationRequest(long actor, SingleResultBuilder<INSTRUMENT_CREATION_ENTITY, INSTRUMENT_CREATION> resultBuilder) {
+    private INSTRUMENT_CREATION afterReadInstrumentCreationRequest(
+        long actor,
+        SingleResultBuilder<INSTRUMENT_CREATION_ENTITY, INSTRUMENT_CREATION> resultBuilder) {
+
         return resultBuilder.transform();
     }
 
@@ -73,22 +72,28 @@ public abstract class DefaultRequestsDetailsReader<
     public LAB_CREATION readLabRequestDetails(long actor, long request) {
 
         beforeReadLabCreationRequest(actor);
-        final SingleResultBuilder<LAB_CREATION_ENTITY, LAB_CREATION> resultBuilder = labRequestDetailsHelper.readRequest(request);
+        final SingleResultBuilder<LAB_CREATION_ENTITY, LAB_CREATION> resultBuilder =
+            labRequestDetailsHelper.readRequest(request);
         return afterREadLabCreationRequest(actor, resultBuilder);
 
     }
 
     protected void beforeReadLabCreationRequest(long actor) {
-
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         checkAccess(ruleValidator.canReadLabs(actor), "User should be admin to read lab request details");
-
     }
 
-    private LAB_CREATION afterREadLabCreationRequest(long actor, SingleResultBuilder<LAB_CREATION_ENTITY, LAB_CREATION> resultBuilder) {
+    private LAB_CREATION afterREadLabCreationRequest(
+        long actor,
+        SingleResultBuilder<LAB_CREATION_ENTITY, LAB_CREATION> resultBuilder) {
+
         return resultBuilder.transform();
     }
 
-    protected abstract INSTRUMENT_CREATION transformInstrumentCreationRequest(INSTRUMENT_CREATION_ENTITY instrumentCreationRequest);
+    protected abstract INSTRUMENT_CREATION transformInstrumentCreationRequest(
+        INSTRUMENT_CREATION_ENTITY instrumentCreationRequest);
 
     protected abstract LAB_CREATION transformLabCreationRequest(LAB_CREATION_ENTITY labCreationRequest);
 

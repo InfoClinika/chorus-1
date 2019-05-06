@@ -3,20 +3,20 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.helper;
 
-import com.google.common.collect.ImmutableSet;
-import com.infoclinika.mssharing.platform.model.PagedItem;
-import com.infoclinika.mssharing.platform.model.PagedItemInfo;
-import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
-import com.infoclinika.mssharing.platform.model.common.items.FileItem;
+import com.infoclinika.mssharing.platform.model.common.items.DictItem;
 import com.infoclinika.mssharing.platform.model.helper.ExperimentCreationHelperTemplate;
-import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.Restriction;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Class contains useful methods to get data needed on instrument creation.
@@ -26,21 +26,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public interface ExperimentCreationHelper extends ExperimentCreationHelperTemplate {
 
-    ImmutableSet<ExperimentLabelTypeItem> experimentLabelTypes();
+    Set<ExperimentLabelTypeItem> experimentLabelTypes();
 
-    ImmutableSet<ExperimentLabelItem> experimentLabels();
+    Set<ExperimentLabelItem> experimentLabels();
 
-    ImmutableSet<ExperimentLabelItem> experimentLabels(long experimentLabelType);
+    Set<ExperimentLabelItem> experimentLabels(long experimentLabelType);
 
-    boolean hasFilesByModel(final long actor, final long specie, final long model, final Long lab);
-
-    PagedItem<FileItem> availableFilesByInstrumentModel(long actor, long specie, long model, Long lab, PagedItemInfo pagedItemInfo);
-
-    boolean hasFilesByInstrument(final long actor, final long specie, final long instrument);
-
-    PagedItem<FileItem> availableFilesByInstrument(long actor, long specie, long instrument, PagedItemInfo pagedItemInfo);
+    boolean hasFilesByParams(long actor, Long speciesId, Long instrumentId, Long instrumentModelId, Long labId);
 
     Restriction getRestrictionForInstrument(long instrumentId);
+
+    List<DictItem<String, String>> getNgsLibraryPrepTypes();
+
+    List<DictItem<Integer, String>> getNgsExperimentPrepMethodsByExperimentType(int ngsExperimentTypeId);
+
+    List<DictItem<Long, String>> getNtExtractionMethods();
+
+    List<DictItem<Integer, String>> getNgsExperimentTypes();
 
     class ExperimentLabelTypeItem {
         public final long id;

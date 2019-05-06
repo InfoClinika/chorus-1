@@ -13,7 +13,8 @@ public class UploadFilesDTOResponse {
     private long instrument;
     private List<UploadFile> files;
 
-    public UploadFilesDTOResponse(){}
+    public UploadFilesDTOResponse() {
+    }
 
     public UploadFilesDTOResponse(long instrument, List<UploadFile> files) {
         this.instrument = instrument;
@@ -39,9 +40,9 @@ public class UploadFilesDTOResponse {
     @Override
     public String toString() {
         return "UploadFilesDTOResponse{" +
-                "instrument=" + instrument +
-                ", files=" + files +
-                '}';
+            "instrument=" + instrument +
+            ", files=" + files +
+            '}';
     }
 
     public static class UploadFile {
@@ -50,7 +51,8 @@ public class UploadFilesDTOResponse {
         private String contentId;
         private boolean started;
 
-        public UploadFile(){}
+        public UploadFile() {
+        }
 
         public UploadFile(String name,
                           long fileId,
@@ -95,10 +97,10 @@ public class UploadFilesDTOResponse {
         @Override
         public String toString() {
             return "UploadFile{" +
-                    "name='" + name + '\'' +
-                    ", fileId=" + fileId +
-                    ", contentId='" + contentId + '\'' +
-                    '}';
+                "name='" + name + '\'' +
+                ", fileId=" + fileId +
+                ", contentId='" + contentId + '\'' +
+                '}';
         }
     }
 }

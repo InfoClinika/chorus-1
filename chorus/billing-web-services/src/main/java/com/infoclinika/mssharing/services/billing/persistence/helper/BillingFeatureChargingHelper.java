@@ -1,10 +1,13 @@
 package com.infoclinika.mssharing.services.billing.persistence.helper;
 
-import com.infoclinika.mssharing.model.internal.entity.payment.*;
+import com.infoclinika.mssharing.model.internal.entity.payment.AccountBillingData;
+import com.infoclinika.mssharing.model.internal.entity.payment.AccountChargeableItemData;
+import com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount;
 import com.infoclinika.mssharing.model.internal.repository.ChargeableItemRepository;
 import com.infoclinika.mssharing.model.internal.repository.LabPaymentAccountRepository;
 import com.infoclinika.mssharing.model.internal.repository.LabRepository;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -18,7 +21,7 @@ import static java.lang.Math.abs;
  */
 @Component
 public class BillingFeatureChargingHelper {
-    private static final Logger LOG = Logger.getLogger(BillingFeatureChargingHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BillingFeatureChargingHelper.class);
 
     @Inject
     private LabPaymentAccountRepository labPaymentAccountRepository;
@@ -34,9 +37,9 @@ public class BillingFeatureChargingHelper {
         if (resultAccount == null) {
             final LabPaymentAccount account = new LabPaymentAccount(labRepository.findOne(lab));
             account.setBillingData(
-                    new AccountBillingData(from(chargeableItemRepository.findEnabledByDefault())
-                            .transform(input -> new AccountChargeableItemData(true, input, account))
-                            .toSet()));
+                new AccountBillingData(from(chargeableItemRepository.findEnabledByDefault())
+                    .transform(input -> new AccountChargeableItemData(true, input, account))
+                    .toSet()));
             account.setAccountCreationDate(new Date());
             account.setCreditLimit(LabPaymentAccount.DEFAULT_CREDIT_LIMIT);
             resultAccount = labPaymentAccountRepository.save(account);
@@ -66,7 +69,7 @@ public class BillingFeatureChargingHelper {
             setChargeValues(unscaled, account);
             account.setScaledToPayValue(account.getScaledToPayValue() - paymentCalculations.scalePrice(unscaled));
         }
-        LOG.debug("*** Account of lab {" + lab + "} charged. Balance: {" + account.getStoreBalance() + "}");
+        LOG.debug("*** Account of lab { {} } charged. Balance: { {} }", lab, account.getStoreBalance());
 
         labPaymentAccountRepository.save(account);
 

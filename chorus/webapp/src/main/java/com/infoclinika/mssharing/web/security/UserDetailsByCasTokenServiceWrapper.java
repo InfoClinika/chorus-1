@@ -17,11 +17,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author andrii.loboda
  */
-public class UserDetailsByCasTokenServiceWrapper extends UserDetailsByNameServiceWrapper<CasAssertionAuthenticationToken> {
+public class UserDetailsByCasTokenServiceWrapper
+    extends UserDetailsByNameServiceWrapper<CasAssertionAuthenticationToken> {
     public static final String ATTRIBUTE_CHORUS_USERNAME = "chorus-username";
     public static final String ATTRIBUTE_CHORUS_ID = "chorus-id";
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserDetailsByCasTokenServiceWrapper.class);
     private UserDetailsService userDetailsService;
-    private static final Logger LOG = LoggerFactory.getLogger(UserDetailsByCasTokenServiceWrapper.class);
 
     /**
      * Constructs an empty wrapper for compatibility with Spring Security 2.0.x's method
@@ -57,11 +58,15 @@ public class UserDetailsByCasTokenServiceWrapper extends UserDetailsByNameServic
         final AttributePrincipal principal = token.getAssertion().getPrincipal();
         final Map<String, Object> attributes = principal.getAttributes();
         for (Map.Entry<String, Object> attributeEntry : attributes.entrySet()) {
-            LOG.info("Got attribute with key: " + attributeEntry.getKey() + ", value: " + attributeEntry.getValue());
+            LOGGER.info("Got attribute with key: " + attributeEntry.getKey() + ", value: " + attributeEntry.getValue());
         }
-        LOG.info("Principal:" + principal.getName());
+        LOGGER.info("Principal:" + principal.getName());
         final String username = (String) attributes.get(ATTRIBUTE_CHORUS_USERNAME);
-        checkNotNull(username, "Chorus authorization cannot be done because of %s attribute absence.", ATTRIBUTE_CHORUS_USERNAME);
+        checkNotNull(
+            username,
+            "Chorus authorization cannot be done because of %s attribute absence.",
+            ATTRIBUTE_CHORUS_USERNAME
+        );
         return userDetailsService.loadUserByUsername(username);
     }
 

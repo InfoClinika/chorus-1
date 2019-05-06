@@ -12,7 +12,8 @@ import java.util.List;
  */
 public interface GroupRepositoryTemplate<G extends GroupTemplate> extends JpaRepository<G, Long> {
 
-    @Query("select g from #{#entityName} g where owner.id = :owner or (:includeAllUsers = true and includesAllUsers = true)")
+    @Query("select g from #{#entityName} g " +
+        "where owner.id = :owner or (:includeAllUsers = true and includesAllUsers = true)")
     List<G> findByOwner(@Param("owner") long owner, @Param("includeAllUsers") boolean includeAllUsers);
 
     @Query("select g from #{#entityName} g where g.name = :name")

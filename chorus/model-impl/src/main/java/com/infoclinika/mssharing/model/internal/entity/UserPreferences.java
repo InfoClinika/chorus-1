@@ -1,22 +1,18 @@
 package com.infoclinika.mssharing.model.internal.entity;
 
-import javax.persistence.Basic;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 /**
  * @author Alexander Orlov
  */
 @Entity
-public class UserPreferences extends AbstractAggregate{
+public class UserPreferences extends AbstractAggregate {
 
     @OneToOne
     @JoinColumn(name = "userId")
     private User user;
 
-    @Basic (optional = false)
+    @Basic(optional = false)
     private boolean showBillingNotification;
 
     public UserPreferences() {
@@ -42,5 +38,4 @@ public class UserPreferences extends AbstractAggregate{
     public void setShowBillingNotification(boolean showBillingNotification) {
         this.showBillingNotification = showBillingNotification;
     }
-
 }

@@ -22,7 +22,12 @@ public class AdvancedFilterQueryReaderImpl implements AdvancedFilterQueryReader 
     private EntityManager em;
 
     @Override
-    public <T> Page<T> readQuery(PageRequest request, String requestQuery, String countQuery, Map<String, Object> parameters) {
+    public <T> Page<T> readQuery(
+        PageRequest request,
+        String requestQuery,
+        String countQuery,
+        Map<String, Object> parameters
+    ) {
         final Query query = em.createQuery(requestQuery);
         final Query count = em.createQuery(countQuery);
 

@@ -13,12 +13,13 @@ public class PagedItemInfo {
     public boolean isSortingAsc;
     public String filterQuery;
     @Nullable
-    public AdvancedFilterQueryParams  advancedFilter;
+    public AdvancedFilterQueryParams advancedFilter;
 
     public PagedItemInfo() {
     }
 
-    public PagedItemInfo(int items, int page, String sortingField, boolean sortingAsc, String filterQuery, @Nullable AdvancedFilterQueryParams advancedFilter) {
+    public PagedItemInfo(int items, int page, String sortingField, boolean sortingAsc, String filterQuery,
+                         @Nullable AdvancedFilterQueryParams advancedFilter) {
         this.items = items;
         this.page = page;
         this.sortingField = sortingField;
@@ -29,7 +30,7 @@ public class PagedItemInfo {
 
 
     public static class PagedItem<T> {
-        public  int totalPages;
+        public int totalPages;
         public long itemsCount;
         public List<T> items;
         public int pageNumber;
@@ -73,7 +74,7 @@ public class PagedItemInfo {
             public AdvancedFilterPredicateItem() {
             }
 
-            public static enum AdvancedFilterOperator {
+            public enum AdvancedFilterOperator {
                 EQUAL, NOT_EQUAL, BEGINS_WITH, ENDS_WITH, CONTAINS, NOT_CONTAINS, IS_EMPTY, IS_NOT_EMPTY,
                 GREATER_THAN, LESS_THAN,
                 TRUE, FALSE,

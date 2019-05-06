@@ -5,16 +5,19 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 
+import static javax.persistence.CascadeType.*;
+
 @Entity
 @Table(name = "project_user_collaborator")
-public class ProjectUserCollaborator<U extends UserTemplate<?>, P extends ProjectTemplate<?, ?, ?, ?>> extends AbstractPersistable<Long> {
+public class ProjectUserCollaborator<U extends UserTemplate<?>, P extends ProjectTemplate<?, ?, ?, ?>>
+    extends AbstractPersistable<Long> {
 
     @OneToOne(targetEntity = UserTemplate.class)
     @JoinColumn(name = "user_id")
     private U user;
 
     @JoinColumn(name = "project_id")
-    @ManyToOne(cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE}, targetEntity = ProjectTemplate.class)
+    @ManyToOne(cascade = {REFRESH, DETACH, PERSIST, MERGE}, targetEntity = ProjectTemplate.class)
     private P project;
     private Sharing.Access level;
 

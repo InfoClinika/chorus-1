@@ -10,7 +10,8 @@ public interface ApplicationTypeManagement {
     User findByUsername(String username);
 
     /**
-     * @throws com.infoclinika.sso.model.exception.AccountIsAlreadyLinkedException
+     * @throws com.infoclinika.sso.model.exception.AccountIsAlreadyLinkedException indicates that a specified username
+     *                                                                             is already present in the system
      */
     User updateDetailsAndPersist(String username, String userSecretKey, User targetUser);
 

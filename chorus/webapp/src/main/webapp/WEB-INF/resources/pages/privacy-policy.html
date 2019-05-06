@@ -6,7 +6,7 @@
 	<!-- FavIcon -->
 	<link rel="icon" href="../img/favicon.ico" type="image/x-icon"/>
 
-    <script type="text/javascript" src="../script/util/logging.js"></script>
+    <script type="text/javascript" src="../script/util/logging.js?_version=${static.resources.version}"></script>
 
     <!-- Twitter Bootstrap -->
     <script src="../lib/jquery/jquery-1.8.2.min.js"></script>
@@ -19,14 +19,26 @@
     <script type="text/javascript" src="../lib/angularjs/angular.min.js"></script>
     <script type="text/javascript" src="../lib/angularjs/angular-resource-patched.js"></script>
     <script type="text/javascript" src="../lib/angular-ui/angular-ui.min.js"></script>
-    <script type="text/javascript" src="../script/error-catcher.js"></script>
+    <script type="text/javascript" src="../script/error-catcher.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/security-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/features-back.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/feature.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/user-details.service.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/security-front.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js"></script>
-    <script type="text/javascript" src="../script/enums.js"></script>
-    <script type="text/javascript" src="../script/static-common.js"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript" src="../script/enums.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/static-common.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/header/header.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/header/header.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/footer/footer.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/footer/footer.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/appearance/appearance.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/appearance/appearance.service.js?_version=${static.resources.version}"></script>
 
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.min.css">
     <!-- Custom Fonts -->
@@ -40,8 +52,12 @@
         }
       </style>
     <![endif]-->
-    <link rel="stylesheet" href="../css/dialogs.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dialogs.css?_version=${static.resources.version}">
+    <link rel="stylesheet" href="../css/style.css?_version=${static.resources.version}">
+
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 </head>
 <body class="static-page privacy-page">
     <div class="fixed-area">
@@ -50,40 +66,145 @@
     <div class="main-content">
         <div class="content-box clearfix">
             <div class="center-frame">
+
                 <h2>Privacy Policy</h2>
-                <p>Stratus Biosciences (“Stratus”, “us” or “we”) recognize the importance of your privacy.  Please read the following privacy policy to understand how we will treat your information in connection with our website located at http://chorusproject.org and any successor, replacement or related website (collectively, “Website”), products, and services (which together are referred to here as the “Service”).</p>
-                <p>Our Service may contain links to websites, products or services of other companies, and our Services may be available on the websites of other companies.  These and other third party websites, products, and services are not controlled by us and are not subject to this privacy policy.  This privacy policy applies only to the practices of Stratus in relation to our Service. We recommend that you read the privacy policies of any other websites, products or services that you visit or use. </p>
+
+                <p>Chorus Biosciences (“Chorus”, “us” or “we”) recognize the importance of your privacy. Please read the
+                    following privacy policy to understand how we will treat your information in connection with our
+                    website located at <a href="/" ng-bind="'' | currentHostPrefix"></a> and any successor, replacement
+                    or related website (collectively, “Website”), products, and services (which together are referred to
+                    here as the “Service”).</p>
+                <p>Our Service may contain links to websites, products or services of other companies, and our Services
+                    may be available on the websites of other companies. These and other third party websites, products,
+                    and services are not controlled by us and are not subject to this privacy policy. This privacy
+                    policy applies only to the practices of Chorus in relation to our Service. We recommend that you
+                    read the privacy policies of any other websites, products or services that you visit or use.</p>
+
                 <h3>Changes to This Privacy Policy and Acceptance</h3>
-                <p>We reserve the right to modify, alter, or update this privacy policy at any time.  We will post any changes on this page so please check this page frequently. </p>
-                <p>This privacy policy was last updated on <strong>June 9, 2013</strong>.</p>
+
+                <p>We reserve the right to modify, alter, or update this privacy policy at any time. We will post any
+                    changes on this page so please check this page frequently.</p>
+                <p>This privacy policy was last updated on <strong>July 25, 2018</strong>.</p>
                 <p>By providing information to us, you consent to the collection, use and disclosure of that information in accordance with this privacy policy.</p>
+
                 <h3>Information We Collect</h3>
-                <p>What information we collect from visitors to our Website depends upon how visitors choose to interact with us through the Service.  You can use some parts of our Service without providing any information to us.  However, your election to utilize the full capabilities of our Service may involve providing personal information to us that identifies you or your company or can be used to identify or contact you, such as your name, telephone number, email address, postal address or billing information.</p>
+
+                <p>What information we collect from visitors to our Website depends upon how visitors choose to interact
+                    with us through the Service. You can use some parts of our Service without providing any information
+                    to us. However, your election to utilize the full capabilities of our Service may involve providing
+                    personal information to us that identifies you or your company or can be used to identify or contact
+                    you, such as your name, telephone number, email address, postal address or billing information.</p>
                 <p>The following is a list of types of information we may collect and ways in which it could be collected:</p>
                 <ul>
-                    <li><span>Information you provide</span>. The Service may require that you provide us with personal information as a condition of accessing and using the Service and some portion of the Service may give you the option to provide personal information.  If we offer services or promotions that require registration, we will ask you for personal information such as your name and email address.  If we charge a fee for the Service, we will request your name and credit card number or other payment account information. You may of course choose to submit information to us in various ways as well, such as when you contact us by email.  We may also combine information that you provide to us with information relating to you from the Service or from third parties.  In addition to personal information, as part of the Service you may choose to upload data you have collected related to mass spectrometry (“MS Data”) for use by you and/or other users of the Service.</li>
-                    <li><span>Partners websites</span>. We may offer some of the Service through relationships with other companies and websites. For example, we may offer information and services on third party websites.  Personal and other information that you provide to those websites may be sent to us.</li>
+                    <li><span>Information you provide</span>. The Service may require that you provide us with personal
+                        information as a condition of accessing and using the Service and some portion of the Service
+                        may give you the option to provide personal information. If we offer services or promotions that
+                        require registration, we will ask you for personal information such as your name and email
+                        address. If we charge a fee for the Service, we will request your name and credit card number or
+                        other payment account information. You may of course choose to submit information to us in
+                        various ways as well, such as when you contact us by email. We may also combine information that
+                        you provide to us with information relating to you from the Service or from third parties. In
+                        addition to personal information, as part of the Service you may choose to upload data you have
+                        collected related to mass spectrometry (“MS Data”) for use by you and/or other users of the
+                        Service.
+                    </li>
+                    <li><span>Partners websites</span>. We may offer some of the Service through relationships with
+                        other companies and websites. For example, we may offer information and services on third party
+                        websites. Personal and other information that you provide to those websites may be sent to us.
+                    </li>
                     <li><span>Logged information</span>. We may automatically collect and store some information that you do not actively provide, such as your internet protocol (IP) address, browser type, the date and time of your visit, and the last website or web page you visited.</li>
-                    <li><span>Cookies and other technology</span>. When you visit our Website or use the Service, we may send one or more cookies (i.e., small text files) to your computer or mobile device that uniquely identifies your browser.  Most browsers are initially set to accept cookies, but you can typically change your browser’s settings to refuse all cookies or notify you of a new cookie request.  However, some features of the Service may not function properly if cookies are disabled, deleted or refused. Cookies placed by Stratus or our partners may incorporate personal information, such as your user name and password, if any, although passwords will not be included unless you request that they be saved for automatic login.  We may use other technology, such as clickstreams to, through and from our Website and web beacons (also sometimes called pixel tags or transparent GIFs) to, among other things, track use of our Service, and habits and preferences of our visitors.  During some visits we may use software tools such as JavaScript to measure and collect session information, including page response times, download errors, length of visits to certain pages, page interaction information (such as scrolling, clicks, and mouse-overs), and methods used to browse away from the page.  From time to time, certain software contained in our Service may transmit data to us to assist us in improving our products and services (“Transmitted Data”).  The Transmitted Data will not include any personally identifiable information of you or your company.</li>
+                    <li><span>Cookies and other technology</span>. When you visit our Website or use the Service, we may
+                        send one or more cookies (i.e., small text files) to your computer or mobile device that
+                        uniquely identifies your browser. Most browsers are initially set to accept cookies, but you can
+                        typically change your browser’s settings to refuse all cookies or notify you of a new cookie
+                        request. However, some features of the Service may not function properly if cookies are
+                        disabled, deleted or refused. Cookies placed by Chorus or our partners may incorporate personal
+                        information, such as your user name and password, if any, although passwords will not be
+                        included unless you request that they be saved for automatic login. We may use other technology,
+                        such as clickstreams to, through and from our Website and web beacons (also sometimes called
+                        pixel tags or transparent GIFs) to, among other things, track use of our Service, and habits and
+                        preferences of our visitors. During some visits we may use software tools such as JavaScript to
+                        measure and collect session information, including page response times, download errors, length
+                        of visits to certain pages, page interaction information (such as scrolling, clicks, and
+                        mouse-overs), and methods used to browse away from the page. From time to time, certain software
+                        contained in our Service may transmit data to us to assist us in improving our products and
+                        services (“Transmitted Data”). The Transmitted Data will not include any personally identifiable
+                        information of you or your company.
+                    </li>
                 </ul>
-                <p>We may have relationships with partner websites and advertising companies that allow those companies to use cookies and other internet technology such as web beacons to track, among other things, use of our Service. These companies may combine this information with information about your visits to other sites and services for their use, and we may receive information from these companies about your use of our Service and third party websites. However, we do not provide your personal information to these companies as part of this relationship. It may, however, be possible that these companies could associate personal information that you provide to them when visiting their sites with the tracking data they receive in connection with your use of our Service.  Their use of your personal information is governed by their privacy policies and not this policy.</p>
+                <p>We may have relationships with partner websites and advertising companies that allow those companies
+                    to use cookies and other internet technology such as web beacons to track, among other things, use
+                    of our Service. These companies may combine this information with information about your visits to
+                    other sites and services for their use, and we may receive information from these companies about
+                    your use of our Service and third party websites. However, we do not provide your personal
+                    information to these companies as part of this relationship. It may, however, be possible that these
+                    companies could associate personal information that you provide to them when visiting their sites
+                    with the tracking data they receive in connection with your use of our Service. Their use of your
+                    personal information is governed by their privacy policies and not this policy.</p>
+
                 <h3>Use and Disclosure of Personal Information and Mass Spectrometry Data</h3>
+
                 <p>Personal and other information collected is used to provide the Service, for example to respond to or fulfill requests or inquiries, process registrations, and communicate with you in general.</p>
-                <p>We may also share personal and other information with our selected suppliers, service providers and partner websites in order to facilitate providing the Service to you.  For example, we may provide such information to third parties that are involved with operating and maintaining the Service (including, for example, where another company provides website hosting or customer support services for us), performing business and sales analysis, improving the Service, and processing credit card payments (if applicable).</p>
+                <p>We may also share personal and other information with our selected suppliers, service providers and
+                    partner websites in order to facilitate providing the Service to you. For example, we may provide
+                    such information to third parties that are involved with operating and maintaining the Service
+                    (including, for example, where another company provides website hosting or customer support services
+                    for us), performing business and sales analysis, improving the Service, and processing credit card
+                    payments (if applicable).</p>
                 <p>We collect and use non-personal information and MS Data (whether or not designated as “private”) to display customized content and advertising, measure the usage and effectiveness of our Service and our online advertising and other content and activities, and improve our Service. Much of this information is gathered by us or other companies using cookies or other internet technologies, as described above under “Information We Collect.”</p>
                 <p>We may also share non-personal information with other companies for marketing purposes, such as the display of targeted advertising with or in our Service or the sites or services of other companies. This information may include aggregated information such as usage statistics or demographic trends regarding our users or those of sites or services with which we have a business relationship. It may also include anonymous information regarding particular users, such as information about websites or Web pages visited by the particular user.</p>
                 <p>We use and share personal information or MS Data where you have chosen to allow us to use and share that information for specific purposes. For example, you may choose to allow us to share personal information with other companies for marketing purposes.</p>
-                <p>We disclose personal and other information (including MS Data) if we have a good-faith belief that the disclosure is reasonably necessary to comply with the law, legal process or an enforceable government request; to enforce applicable Terms and Conditions for our Service; to detect, prevent or otherwise address illegal activity, fraud, or security issues; or to protect the property or safety of our users, Stratus, or the public as required or permitted by law.</p>
-                <p>We will use commercially reasonable efforts to not disclose MS Data that you designate as “private” through the Service to other users of the Service unless or until you authorize us to do so.  If you share your MS Data on the Site with others or such data is otherwise put into the public domain, we or any of the users of the Service may use the MS Data freely for any purpose.</p>
-                <p>In connection with a significant transaction involving Stratus, such as a merger or acquisition, we may sell or otherwise transfer personal information, MS Data, and other information to another company.</p>
+                <p>We disclose personal and other information (including MS Data) if we have a good-faith belief that
+                    the disclosure is reasonably necessary to comply with the law, legal process or an enforceable
+                    government request; to enforce applicable Terms and Conditions for our Service; to detect, prevent
+                    or otherwise address illegal activity, fraud, or security issues; or to protect the property or
+                    safety of our users, Chorus, or the public as required or permitted by law.</p>
+                <p>We will use commercially reasonable efforts to not disclose MS Data that you designate as “private”
+                    through the Service to other users of the Service unless or until you authorize us to do so. If you
+                    share your MS Data on the Site with others or such data is otherwise put into the public domain, we
+                    or any of the users of the Service may use the MS Data freely for any purpose.</p>
+                <p>In connection with a significant transaction involving Chorus, such as a merger or acquisition, we
+                    may sell or otherwise transfer personal information, MS Data, and other information to another
+                    company.</p>
+
                 <h3>Your Choices</h3>
+
                 <p>If you have an account with us, you can review and update your account information (such as your name, user name, and contact information) online by logging into your account. We make good faith efforts to provide you with access to your personal information and the ability to correct the information if it is inaccurate or to delete it at your request if it is not required to be retained by law or for legitimate business purposes. We require users to identify themselves and the information they wish to access, correct, or remove before processing these requests, and we may decline to process requests that we believe in good faith are unreasonable or unduly burdensome (such as requests that are repetitive, require disproportionate technical effort, jeopardize the privacy of others, or would be impractical to satisfy).</p>
                 <p>If you have an account with us, you can delete your account at any time by contacting us with that request. If you delete your account, we may retain certain information associated with your account for record keeping. Further, we generally do not remove information that you have made publicly available, and information that has already been provided to third parties as described in this privacy policy may be retained by those third parties and will be subject to their policies, and not this privacy policy.</p>
                 <p>You should not use this Website if you disagree with how we intend to collect or use your information as set forth in this privacy policy.</p>
+
+                <h3>Information Collected via Chorus Correspondence</h3>
+
+                <p>If you correspond with us by email, the postal service, or other form of communication, we may retain
+                    such correspondence and the information contained in it and use it to respond to your inquiry; to
+                    notify you of Chorus conferences or other services; or to keep a record of your complaint,
+                    accommodation request, and the like. As always, if you wish to have Chorus “erase” your personal
+                    information or otherwise refrain from communicating with you, please contact us at <a
+                            href="mailto:support@infoclinika.com">support@infoclinika.com</a> or update your profile in
+                    your account profile section.</p>
+                <p>Note: if you ask Chorus not to contact you by email at a certain email address, the Chorus will
+                    retain a copy of that email address on its “master do not send” list in order to comply with your
+                    no-contact request.</p>
+
+                <h3>Payment and Information</h3>
+
+                <p>You may choose to purchase goods or services from Chorus using a credit card. Typically, credit card
+                    information is provided directly by users, into the PCI/DSS-compliant payment processing service to
+                    which Chorus subscribes, and Chorus does not, itself, process or store the card information.</p>
+
                 <h3>Information Security</h3>
-                <p>If you send us electronic personal information, we will store it on our servers and/or other media we deem appropriate.  We employ firewalls and other electronic and physical measures to help keep your information secure.  You should be aware, however, that no transmission over the Internet, and no electronic data storage method, is 100% secure.  Therefore, we cannot guarantee the absolute security of the personal information, MS Data, or any other information that you may provide to us either during its transmission or its storage on our servers.</p>
+
+                <p>If you send us electronic personal information, we will store it on our servers and/or other media we
+                    deem appropriate. We employ firewalls and other electronic and physical measures to help keep your
+                    information secure. You should be aware, however, that no transmission over the Internet, and no
+                    electronic data storage method, is 100% secure. Therefore, we cannot guarantee the absolute security
+                    of the personal information, MS Data, or any other information that you may provide to us either
+                    during its transmission or its storage on our servers.</p>
+
                 <h3>Contacting Us</h3>
-                <p>If you have any questions or concerns about this privacy policy, please feel free to contact us by email at <a href="mailto:support@chorusproject.org">support@chorusproject.org</a>.</p>
+
+                <p>If you have any questions or concerns about this privacy policy, please feel free to contact us by
+                    email at <a href="mailto:support@infoclinika.com">support@infoclinika.com</a>.</p>
             </div>
         </div>
     </div>

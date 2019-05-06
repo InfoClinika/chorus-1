@@ -18,7 +18,11 @@ import static com.google.common.collect.Lists.newArrayList;
 /**
  * @author Herman Zamula
  */
-public class ConditionsFactory<E extends ExperimentTemplate<?, ?, ?, ?, FA, ?>, F extends ExperimentFileTemplate<?, E, ?>, L extends LevelTemplate<FA>, FA extends FactorTemplate<L, E>> {
+public class ConditionsFactory<E extends ExperimentTemplate<?, ?, ?, ?, FA, ?>,
+    F extends ExperimentFileTemplate<?, E, ?>,
+    L extends LevelTemplate<FA>,
+    FA extends FactorTemplate<L, E>> {
+
     private final List<FA> factors;
     private final E experiment;
     private final List<Condition> conditions;
@@ -52,7 +56,8 @@ public class ConditionsFactory<E extends ExperimentTemplate<?, ?, ?, ?, FA, ?>, 
         }
     }
 
-    //TODO:2015-12-03:andrii.loboda: review this code, cover with tests. It is possible that not all conditions app creates really use them
+    //TODO:2015-12-03:andrii.loboda: review this code, cover with tests. It is possible that not all conditions app
+    // creates really use them
     private void addCondition(List<L> levelUp) {
         final Iterable<F> rawFiles = getRawFilesByLevels(levelUp);
         final Condition<?, ?, ?> condition = Condition.createCondition(experiment, levelUp, rawFiles);
@@ -66,19 +71,16 @@ public class ConditionsFactory<E extends ExperimentTemplate<?, ?, ?, ?, FA, ?>, 
     }
 
     public Iterable<F> getRawFilesByLevels(final List<L> levels) {
-        return filter(rawFilesData, new Predicate<F>() {
-            @Override
-            public boolean apply(F file) {
-                final List<String> factorValues = file.getFactorValues();
-                final Iterator<L> levelIterator = levels.iterator();
-                for (String factorValue : factorValues) {
-                    final L level = levelIterator.next();
-                    if (!factorValue.equals(level.getName())) {
-                        return false;
-                    }
+        return filter(rawFilesData, file -> {
+            final List<String> factorValues = file.getFactorValues();
+            final Iterator<L> levelIterator = levels.iterator();
+            for (String factorValue : factorValues) {
+                final L level = levelIterator.next();
+                if (!factorValue.equals(level.getName())) {
+                    return false;
                 }
-                return true;
             }
+            return true;
         });
     }
 }

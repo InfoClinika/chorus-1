@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:beans="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="messageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter"/>
+    <beans:bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <beans:property name="ignoreUnresolvablePlaceholders" value="true"/>
+        <beans:property name="ignoreResourceNotFound" value="true"/>
+        <beans:property name="locations">
+            <beans:list>
+                <beans:value>file:../../configs/test-application.properties</beans:value>
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+</beans>

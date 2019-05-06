@@ -2,10 +2,11 @@ package com.infoclinika.mssharing.model.test.study;
 
 import com.infoclinika.mssharing.model.read.DashboardReader;
 import com.infoclinika.mssharing.platform.model.read.Filter;
-import junit.framework.Assert;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+
+import static org.testng.AssertJUnit.assertNotNull;
 
 /**
  * @author Oleksii Tymchenko
@@ -27,7 +28,7 @@ public class FolderStructureTest extends AbstractStudyTest {
 
 
         final DashboardReader.FullFolderStructure folderStructure = dashboardReader.readFolderStructure(bob);
-        Assert.assertNotNull(folderStructure);
+        assertNotNull(folderStructure);
     }
 
     @Test
@@ -41,7 +42,7 @@ public class FolderStructureTest extends AbstractStudyTest {
         createFileWithInstrument(bob, instrument, unspecifiedSpecie());
 
         final DashboardReader.FolderStructure folderStructure = dashboardReader.readFolderStructure(bob, Filter.MY);
-        Assert.assertNotNull(folderStructure);
+        assertNotNull(folderStructure);
     }
 
 }

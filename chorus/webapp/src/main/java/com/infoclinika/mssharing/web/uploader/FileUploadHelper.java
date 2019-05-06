@@ -10,10 +10,9 @@ import com.infoclinika.mssharing.model.internal.FileNameSpotter;
 import com.infoclinika.mssharing.model.read.DashboardReader;
 import com.infoclinika.mssharing.model.read.FileLine;
 import com.infoclinika.mssharing.model.write.InstrumentManagement;
-import com.infoclinika.mssharing.platform.model.common.items.AdditionalExtensionImportance;
 import com.infoclinika.mssharing.platform.model.common.items.FileExtensionItem;
 import com.infoclinika.mssharing.platform.model.common.items.VendorItem;
-import com.infoclinika.mssharing.web.util.FilenameUtil;
+import com.infoclinika.util.FilenameUtil;
 
 import java.util.*;
 
@@ -24,31 +23,31 @@ public class FileUploadHelper {
     private static final String ZIP_EXTENSION = ".zip";
 
     public static FileDescription[] filesReadyToUpload(
-            long userId,
-            long instrumentId,
-            VendorItem vendor,
-            FileDescription[] fileDescriptions,
-            InstrumentManagement instrumentManagement,
-            DashboardReader dashboardReader
+        long userId,
+        long instrumentId,
+        VendorItem vendor,
+        FileDescription[] fileDescriptions,
+        InstrumentManagement instrumentManagement,
+        DashboardReader dashboardReader
     ) {
 
         for (FileDescription fileDescription : fileDescriptions) {
             final String fileName = generateNameForUpload(
-                    vendor,
-                    fileDescription.fileName,
-                    fileDescription.directory
+                vendor,
+                fileDescription.fileName,
+                fileDescription.directory
             );
 
             boolean uploaded = instrumentManagement.isFileAlreadyUploadedForInstrument(
-                    userId,
-                    instrumentId,
-                    fileName
+                userId,
+                instrumentId,
+                fileName
             );
             if (uploaded) {
                 final Set<FileLine> files = dashboardReader.readByNameForInstrument(
-                        userId,
-                        instrumentId,
-                        fileName
+                    userId,
+                    instrumentId,
+                    fileName
                 );
                 if (files.iterator().hasNext()) {
                     fileDescription.readyToUpload = files.iterator().next().toReplace;
@@ -62,70 +61,34 @@ public class FileUploadHelper {
     }
 
     public static ComposedFileDescription[] composeFiles(VendorItem vendor, FileDescription[] fileDescriptions) {
-        final String mainExtension = vendor.fileUploadExtensions.iterator().next().name;
         final Map<String, List<FileDescription>> baseNameToFilesMap = new HashMap<>();
         for (FileDescription fileDescription : fileDescriptions) {
             final String fileName = fileDescription.fileName;
             final String baseName = FilenameUtil.getBaseName(fileName);
             baseNameToFilesMap.putIfAbsent(baseName, new ArrayList<>());
-
             baseNameToFilesMap.get(baseName).add(fileDescription);
         }
 
         int i = 0;
         boolean archivingSupport = vendor.folderArchiveUploadSupport || vendor.multipleFiles;
-        final ComposedFileDescription[] composedFileDescriptions = new ComposedFileDescription[baseNameToFilesMap.size()];
+        final ComposedFileDescription[] composedFileDescriptions =
+            new ComposedFileDescription[baseNameToFilesMap.size()];
         for (String baseName : baseNameToFilesMap.keySet()) {
             final List<FileDescription> composedFiles = baseNameToFilesMap.get(baseName);
-            final String composedFileName = archivingSupport ? baseName + mainExtension + ZIP_EXTENSION : baseName + mainExtension;
+            final String extension = composedFiles.get(0).fileName.substring(baseName.length());
+            final String composedFileName =
+                archivingSupport ? baseName + extension + ZIP_EXTENSION : baseName + extension;
+
             composedFileDescriptions[i] = new ComposedFileDescription(
-                    composedFileName,
-                    checkIfAllRequiredFilesArePresented(vendor, composedFiles),
-                    composedFiles.toArray(new FileDescription[composedFiles.size()])
+                composedFileName,
+                true,
+                composedFiles.toArray(new FileDescription[composedFiles.size()])
             );
 
             i++;
         }
 
         return composedFileDescriptions;
-    }
-
-    private static boolean checkIfAllRequiredFilesArePresented(VendorItem vendor, List<FileDescription> fileDescriptions) {
-        final List<String> requiredExtensions = getRequiredExtensions(vendor);
-
-        for (String requiredExtension : requiredExtensions) {
-            boolean presented = false;
-            for (FileDescription fileDescription : fileDescriptions) {
-                final String fileExtension = FilenameUtil.getExtension(fileDescription.fileName);
-                if (requiredExtension.equalsIgnoreCase(fileExtension)) {
-                    presented = true;
-                }
-            }
-
-            if (!presented) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static List<String> getRequiredExtensions(VendorItem vendorItem) {
-        final Set<FileExtensionItem> fileUploadExtensions = vendorItem.fileUploadExtensions;
-
-        final List<String> requiredExtensions = new ArrayList<>();
-        for (FileExtensionItem fileUploadExtension : fileUploadExtensions) {
-            requiredExtensions.add(fileUploadExtension.name);
-
-            final Map<String, AdditionalExtensionImportance> additionalExtensions = fileUploadExtension.additionalExtensions;
-            for (String additionalExtension : additionalExtensions.keySet()) {
-                if (additionalExtensions.get(additionalExtension) == AdditionalExtensionImportance.REQUIRED) {
-                    requiredExtensions.add(additionalExtension);
-                }
-            }
-        }
-
-        return requiredExtensions;
     }
 
     private static String generateNameForUpload(VendorItem vendor, String originalName, boolean directory) {
@@ -148,7 +111,8 @@ public class FileUploadHelper {
                 return FileNameSpotter.replaceInvalidSymbols(originalName + ZIP_EXTENSION);
             case AB_SCIEX:
             case WYATT:
-                return FileNameSpotter.replaceInvalidSymbols(FilenameUtil.getBaseName(originalName) + zipSuffix + ZIP_EXTENSION);
+                return FileNameSpotter.replaceInvalidSymbols(
+                    FilenameUtil.getBaseName(originalName) + zipSuffix + ZIP_EXTENSION);
             case THERMO:
             case MA_AFFYMETRIX:
             case MA_AGILENT:

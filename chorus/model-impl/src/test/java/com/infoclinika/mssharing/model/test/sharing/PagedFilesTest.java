@@ -2,13 +2,13 @@ package com.infoclinika.mssharing.model.test.sharing;
 
 
 import com.google.common.base.Optional;
+import com.infoclinika.mssharing.platform.model.read.Filter;
 import org.testng.annotations.Test;
 
-import com.infoclinika.mssharing.platform.model.read.Filter;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
-public class PagedFilesTest extends AbstractPagedItemTest{
+public class PagedFilesTest extends AbstractPagedItemTest {
     @Test
     public void testReadAllAvailableFiles() {
         final long kate = createKateInLab2and3();
@@ -16,12 +16,13 @@ public class PagedFilesTest extends AbstractPagedItemTest{
         final long poll = uc.createPaul();
         final long project = uc.createProject(poll, uc.getLab3());
         final long experiment = super.createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), project);
-        final long anothherExperiment = createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), uc.createProject(poll, uc.getLab3()));
+        final long anothherExperiment =
+            createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), uc.createProject(poll, uc.getLab3()));
 
         final long file = uc.saveFile(poll);
         updateExperimentFiles(poll, experiment, file);
         updateExperimentFiles(poll, anothherExperiment, file);
-        for(int i = 0; i< 2; i ++){
+        for (int i = 0; i < 2; i++) {
             uc.saveFile(kate);
         }
         uc.sharingWithCollaborator(poll, project, bob);
@@ -39,8 +40,8 @@ public class PagedFilesTest extends AbstractPagedItemTest{
         final long bob = uc.createLab3AndBob();
         final long joe = uc.createJoe();
         Optional<Long> instrument = uc.createInstrumentAndApproveIfNeeded(kate, uc.getLab3());
-        instrumentManagement.addOperatorDirectly(kate, instrument.get(), bob);
-        for(int i = 0; i< 10; i ++){
+
+        for (int i = 0; i < 10; i++) {
             uc.saveFile(kate, instrument.get());
         }
         assertTrue(fileReader.readFiles(kate, Filter.MY, getPagedItemRequest()).items.size() == 10);
@@ -66,7 +67,7 @@ public class PagedFilesTest extends AbstractPagedItemTest{
 
         final long kate = uc.createKateAndLab2();
         uc.sharingWithCollaborator(poll, project, kate);
-        assertSame(fileReader.readFiles(kate, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(),  1);
+        assertSame(fileReader.readFiles(kate, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(), 1);
         assertTrue(fileReader.readFiles(poll, Filter.MY, getPagedItemRequest()).items.size() == 3);
     }
 
@@ -77,8 +78,13 @@ public class PagedFilesTest extends AbstractPagedItemTest{
         final long publicProject = uc.createProject(poll, uc.getLab3());
         sharingManagement.makeProjectPublic(poll, publicProject);
         final long publicExperiment = super.createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), publicProject);
-        final long privateExpeirment = createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), uc.createProject(poll, uc.getLab3()));
-        updateExperimentFiles(poll, publicExperiment, uc.saveFile(poll, instrumentFromExperimentFile(bob, publicExperiment)));
+        final long privateExpeirment =
+            createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), uc.createProject(poll, uc.getLab3()));
+        updateExperimentFiles(
+            poll,
+            publicExperiment,
+            uc.saveFile(poll, instrumentFromExperimentFile(bob, publicExperiment))
+        );
 
         assertSame(fileReader.readFiles(bob, Filter.PUBLIC, getPagedItemRequest()).items.size(), 2);
         assertSame(fileReader.readFiles(poll, Filter.PUBLIC, getPagedItemRequest()).items.size(), 2);
@@ -110,7 +116,6 @@ public class PagedFilesTest extends AbstractPagedItemTest{
     }
 
 
-
     @Test
     public void testReadFilesByInstrument() {
         uc.createKateAndLab2();
@@ -122,7 +127,11 @@ public class PagedFilesTest extends AbstractPagedItemTest{
         final long firstInstrument = createInstrumentAndApproveIfNeeded(poll, uc.getLab3());
         final long secondInstrument = createInstrumentAndApproveIfNeeded(poll, uc.getLab3());
         final long publicExperiment = createExperiment(poll, project, uc.saveFile(poll, firstInstrument), uc.getLab3());
-        final long privateExperiment = createExperiment(poll, uc.createProject(poll, uc.getLab3()), uc.saveFile(poll, secondInstrument), uc.getLab3());
+        final long privateExperiment = createExperiment(poll,
+            uc.createProject(poll, uc.getLab3()),
+            uc.saveFile(poll, secondInstrument),
+            uc.getLab3()
+        );
 
         updateExperimentFiles(poll, publicExperiment, uc.saveFile(poll, firstInstrument));
         updateExperimentFiles(poll, publicExperiment, uc.saveFile(poll, firstInstrument));
@@ -132,17 +141,18 @@ public class PagedFilesTest extends AbstractPagedItemTest{
     }
 
     @Test
-    public void testReadFilesByExperiment(){
+    public void testReadFilesByExperiment() {
         final long poll = uc.createPaul();
         final long project = uc.createProject(poll, uc.getLab3());
         final long experiment = super.createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), project);
-        final long anothherExperiment = createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), uc.createProject(poll, uc.getLab3()));
+        final long anothherExperiment =
+            createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), uc.createProject(poll, uc.getLab3()));
 
         final long file = uc.saveFile(poll);
         updateExperimentFiles(poll, experiment, file);
         updateExperimentFiles(poll, anothherExperiment, file);
 
-        assertSame(fileReader.readFilesByExperiment(poll, experiment, getPagedItemRequest()).items.size(),  2);
+        assertSame(fileReader.readFilesByExperiment(poll, experiment, getPagedItemRequest()).items.size(), 2);
         assertTrue(fileReader.readFilesByExperiment(poll, anothherExperiment, getPagedItemRequest()).items.size() == 2);
     }
 }

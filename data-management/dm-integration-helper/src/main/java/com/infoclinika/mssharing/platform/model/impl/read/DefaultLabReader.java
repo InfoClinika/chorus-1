@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.infoclinika.mssharing.platform.entity.LabTemplate;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.TransformersTemplate;
 import com.infoclinika.mssharing.platform.model.common.items.InstrumentItem;
@@ -27,7 +28,7 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
  */
 @Transactional(readOnly = true)
 public abstract class DefaultLabReader<LAB extends LabTemplate, LAB_LINE extends LabReaderTemplate.LabLineTemplate>
-        implements LabReaderTemplate<LAB_LINE>, DefaultTransformingTemplate<LAB, LAB_LINE> {
+    implements LabReaderTemplate<LAB_LINE>, DefaultTransformingTemplate<LAB, LAB_LINE> {
 
     @Inject
     protected LabReaderHelper<LAB, LAB_LINE> labReaderHelper;
@@ -53,29 +54,32 @@ public abstract class DefaultLabReader<LAB extends LabTemplate, LAB_LINE extends
     public ImmutableSet<LAB_LINE> readUserLabs(long actor) {
 
         return labReaderHelper.readUserLabs(actor)
-                .transform()
-                .toSet();
+            .transform()
+            .toSet();
     }
 
     @Override
     public SortedSet<LabItem> readLabItems(final long userId) {
 
         return labReaderHelper.readUserLabs(userId)
-                .transform(new Function<LAB, LabItem>() {
+            .transform(new Function<LAB, LabItem>() {
 
-                    @Override
-                    public LabItem apply(LAB lab) {
-                        return new LabItem(lab.getId(), lab.getName(), lab.getHead().getId(), filteredLabInstrumentsByOperator(lab, userId));
-                    }
+                @Override
+                public LabItem apply(LAB lab) {
+                    return new LabItem(
+                        lab.getId(), lab.getName(), lab.getHead().getId(),
+                        filteredLabInstrumentsByOperator(lab, userId)
+                    );
+                }
 
-                    private ImmutableSortedSet<InstrumentItem> filteredLabInstrumentsByOperator(LAB lab, long actor) {
-                        //noinspection unchecked
-                        return from(instrumentRepository.findWhereOperatorIsByLab(lab.getId(), actor))
-                                .transform(transformers.instrumentItemTransformer())
-                                .toSortedSet(transformers.instrumentItemComparator());
-                    }
-                })
-                .toSortedSet(transformers.namedItemComparator());
+                private ImmutableSortedSet<InstrumentItem> filteredLabInstrumentsByOperator(LAB lab, long actor) {
+                    //noinspection unchecked
+                    return from(instrumentRepository.findByLab(lab.getId()))
+                        .transform(transformers.instrumentItemTransformer())
+                        .toSortedSet(transformers.instrumentItemComparator());
+                }
+            })
+            .toSortedSet(transformers.namedItemComparator());
 
     }
 
@@ -94,11 +98,14 @@ public abstract class DefaultLabReader<LAB extends LabTemplate, LAB_LINE extends
         beforeReadAllLabs(actor);
 
         return labReaderHelper.readAllLabs()
-                .transform()
-                .toSet();
+            .transform()
+            .toSet();
     }
 
     protected void beforeReadAllLabs(long actor) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         checkAccess(ruleValidator.canReadLabs(actor), "User should be admin to read labs list");
     }
 }

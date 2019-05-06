@@ -3,8 +3,8 @@ package com.infoclinika.mssharing.model.read.dto.details;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.ProjectItemTemplate;
 
 /**
-* @author Herman Zamula
-*/
+ * @author Herman Zamula
+ */
 public class ProjectItem extends ProjectItemTemplate {
     public final long projectId;
     public final boolean blogEnabled;

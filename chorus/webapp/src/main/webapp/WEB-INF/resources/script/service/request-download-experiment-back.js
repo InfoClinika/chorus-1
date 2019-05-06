@@ -1,5 +1,10 @@
+"use strict";
 
-angular.module("request-download-experiment-back", ["ngResource"])
-    .factory("SharingProjectRequest", function ($resource) {
-        return $resource("../projects/sharing");
-    });
+(function () {
+
+    angular.module("request-download-experiment-back", ["ngResource"])
+        .factory("SharingProjectRequest", function ($resource) {
+            return $resource("../projects/sharing");
+        });
+
+})();

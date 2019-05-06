@@ -1,0 +1,54 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <profiles>
+
+        <profile>
+            <id>staging</id>
+            <properties>
+                <deployment.manager.url>http://ec2-54-227-230-104.compute-1.amazonaws.com:8080/manager/text</deployment.manager.url>
+                <deployment.manager.username>admin</deployment.manager.username>
+                <deployment.manager.password>al812*hdnx</deployment.manager.password>
+                <deployment.path>/</deployment.path>
+                <charts.render.server.url>http://ec2-54-227-230-104.compute-1.amazonaws.com:8081</charts.render.server.url>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>production</id>
+            <properties>
+                <deployment.manager.url>http://ec2-54-204-253-147.compute-1.amazonaws.com:8080/manager/text</deployment.manager.url>
+                <deployment.manager.username>admin</deployment.manager.username>
+                <deployment.manager.password>al812*hdnx</deployment.manager.password>
+                <deployment.path>/</deployment.path>
+                <charts.render.server.url>http://ec2-54-83-102-28.compute-1.amazonaws.com:8080</charts.render.server.url>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>production-backup</id>
+            <properties>
+                <deployment.manager.url>http://54.147.58.123:8080/manager/text</deployment.manager.url>
+                <deployment.manager.username>admin</deployment.manager.username>
+                <deployment.manager.password>al812*hdnx</deployment.manager.password>
+                <deployment.path>/</deployment.path>
+                <charts.render.server.url>http://ec2-23-23-63-76.compute-1.amazonaws.com:8080</charts.render.server.url>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>production-backup-2</id>
+            <properties>
+                <deployment.manager.url>http://ec2-54-197-114-255.compute-1.amazonaws.com:8080/manager</deployment.manager.url>
+                <deployment.manager.username>admin</deployment.manager.username>
+                <deployment.manager.password>al812*hdnx</deployment.manager.password>
+                <deployment.path>/</deployment.path>
+                <charts.render.server.url>http://ec2-50-16-107-80.compute-1.amazonaws.com:8080</charts.render.server.url>
+            </properties>
+        </profile>
+
+
+    </profiles>
+
+</settings>

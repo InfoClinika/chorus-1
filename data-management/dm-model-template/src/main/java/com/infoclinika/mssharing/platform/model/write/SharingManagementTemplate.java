@@ -44,7 +44,11 @@ public interface SharingManagementTemplate {
      * @param groups                - actor's groups-access level pair with actor wants share his project
      * @param withEmailNotification - specifies is system should send emails to new collaborators
      */
-    void updateSharingPolicy(long actor, long project, Map<Long, Access> colleagues, Map<Long, Access> groups, boolean withEmailNotification);
+    void updateSharingPolicy(long actor,
+                             long project,
+                             Map<Long, Access> colleagues,
+                             Map<Long, Access> groups,
+                             boolean withEmailNotification);
 
     /**
      * Mark as public.
@@ -74,10 +78,11 @@ public interface SharingManagementTemplate {
 
     /**
      * Creates records that describes level of user access to list of projects;
-     * <p>
-     * TODO: Not part of API. Consider move it to separate service
      */
     void updateProjectAccessRecords(long projectId, Map<Long, Access> sharedTo);
 
-    enum Access {READ, WRITE}
+    enum Access {
+        READ,
+        WRITE
+    }
 }

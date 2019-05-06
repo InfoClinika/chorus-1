@@ -25,7 +25,6 @@ public class ExperimentLabel extends AbstractPersistable<Long> {
         this.name = name;
         this.type = type;
     }
-    /*automatically generated getters, setters, default package constructor*/
 
     public ExperimentLabel() {
     }

@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.test.study;
 
@@ -36,9 +38,21 @@ abstract class AbstractStudyTest extends AbstractTest {
     protected long experimentInNewProject(long user, long lab) {
         final long project1 = uc.createProject(user, lab);
         final long file = uc.saveFile(user);
-        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name(generateString()).description("").experimentType(anyExperimentType()).specie(unspecified())
-                .experimentLabels(new ExperimentLabelsInfo()).project(project1).lab(lab).billLab(lab).is2dLc(false).restriction(restriction(user))
-                .factors(NO_FACTORS).files(noFactoredFile(file)).bounds(new AnalysisBounds()).lockMasses(NO_LOCK_MASSES).sampleTypesCount(1);
+        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name(generateString())
+            .description("")
+            .experimentType(anyExperimentType())
+            .specie(unspecified())
+            .experimentLabels(new ExperimentLabelsInfo())
+            .project(project1)
+            .lab(lab)
+            .billLab(lab)
+            .is2dLc(false)
+            .restriction(restriction(user))
+            .factors(NO_FACTORS)
+            .files(noFactoredFile(file))
+            .bounds(new AnalysisBounds())
+            .lockMasses(NO_LOCK_MASSES)
+            .sampleTypesCount(1);
         return studyManagement.createExperiment(user, builder.build());
     }
 
@@ -77,7 +91,10 @@ abstract class AbstractStudyTest extends AbstractTest {
     }
 
     protected void createFileWithInstrument(long bob, long instrument, long specie) {
-        long file = instrumentManagement.createFile(bob, instrument, new FileMetaDataInfo(UUID.randomUUID().toString(), 0, "", null, specie, false));
+        long file = instrumentManagement.createFile(bob,
+            instrument,
+            new FileMetaDataInfo(UUID.randomUUID().toString(), 0, "", null, specie, false)
+        );
         instrumentManagement.setContent(bob, file, mock(StoredObject.class));
     }
 

@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.repository;
 
@@ -29,7 +31,8 @@ import static com.infoclinika.mssharing.model.internal.repository.ChorusQueries.
  */
 public interface ExperimentRepository extends ExperimentRepositoryTemplate<ActiveExperiment> {
 
-    String EXPERIMENT_DASHBOARD_RECORD = " new com.infoclinika.mssharing.model.internal.entity.view.ExperimentDashboardRecord(" +
+    String EXPERIMENT_DASHBOARD_RECORD =
+        " new com.infoclinika.mssharing.model.internal.entity.view.ExperimentDashboardRecord(" +
             " e.id," +
             " e.name," +
             " nullableLab," +
@@ -38,7 +41,9 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " count(file.id)," +
             " e.lastModification," +
             " e.downloadToken," +
-            " e.experimentCategory" +
+            " e.experimentCategory," +
+            " e.failed," +
+            " e.experimentType" +
             ") ";
     String SELECT_CLAUSE = "select distinct e  from ExperimentDashboardRecord e ";
     String SELECT_COUNT_CLAUSE = "select count( distinct e) from ExperimentDashboardRecord e ";
@@ -48,7 +53,8 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " where e.deleted = 0 and ( e.creator.id = :user or " +
             "p.creator.id = :user " +
             " or p.sharing.type = " + PUBLIC_PROJECT +
-            " or " + HAVE_ACCESS_TO_PROJECT + ")";
+            " or " + HAVE_ACCESS_TO_PROJECT +
+            " or " + IS_LAB_MEMBER + ")";
     String FIND_ALL_AVAILABLE_WITH_FILTER = SELECT_CLAUSE + FIND_ALL_AVAILABLE + " AND e.name like :s";
     String FIND_ALL_AVAILABLE_WITH_ADVANCED_FILTER = SELECT_CLAUSE + FIND_ALL_AVAILABLE;
     String COUNT_ALL_AVAILABLE_WITH_ADVANCED_FILTER = SELECT_COUNT_CLAUSE + FIND_ALL_AVAILABLE;
@@ -70,7 +76,9 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             "  where e.deleted = 0 \n" +
             " and (e.creator.id <> :user " +
             " and p.sharing.type = " + SHARED_PROJECT +
-            " and (p.creator.id = :user or " + HAVE_ACCESS_TO_PROJECT + "))";
+            " and (p.creator.id = :user or " + HAVE_ACCESS_TO_PROJECT + "))" +
+            " or " + IS_LAB_MEMBER;
+
     String FIND_SHARED_WITH_FILTER = SELECT_CLAUSE + FIND_SHARED + " AND e.name like :s";
     String FIND_SHARED_WITH_ADVANCED_FILTER = SELECT_CLAUSE + FIND_SHARED;
     String COUNT_SHARED_WITH_ADVANCED_FILTER = SELECT_COUNT_CLAUSE + FIND_SHARED;
@@ -86,7 +94,8 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
     String FIND_BY_PROJECT_WITH_FILTER = SELECT_CLAUSE + FIND_BY_PROJECT + " and e.name like :query";
     String FIND_BY_PROJECT_WITH_ADVANCED_FILTER = SELECT_CLAUSE + FIND_BY_PROJECT;
     String COUNT_BY_PROJECT_WITH_ADVANCED_FILTER = SELECT_COUNT_CLAUSE + FIND_BY_PROJECT;
-    String FILTER_CLAUSE = " and (cast(e.id as string) like :s or e.name like :s or own.personData.firstName like :s or own.personData.lastName like :s or lab.name like :s or p.name like :s) ";
+    String FILTER_CLAUSE = " and (cast(e.id as string) like :s or e.name like :s or own.personData.firstName like :s " +
+        " or own.personData.lastName like :s or lab.name like :s or p.name like :s) ";
 
     @Query("select count(*) from ActiveExperiment e where e.project.sharing.type = " + PUBLIC_PROJECT)
     long countOnlyPublic();
@@ -101,17 +110,28 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
     List<ShortExperimentDashboardRecord> findShortRecordsByProject(@Param("project") long project);
 
 
-    @Query("select e from ExperimentDashboardRecord e where e.deleted=0 AND e.project = :project and e.name like :query")
-    Page<ExperimentDashboardRecord> findByRecoredsProject(@Param("project") ActiveProject project, Pageable request, @Param("query") String query);
+    @Query("select e from ExperimentDashboardRecord e where e.deleted=0 " +
+        " AND e.project = :project and e.name like :query")
+    Page<ExperimentDashboardRecord> findByRecoredsProject(
+        @Param("project") ActiveProject project,
+        Pageable request,
+        @Param("query") String query
+    );
+
     @Query(FIND_BY_PROJECT_WITH_FILTER)
-    Page<ExperimentDashboardRecord> findByProject(@Param("project") ActiveProject project, Pageable request, @Param("query") String query);
+    Page<ExperimentDashboardRecord> findByProject(
+        @Param("project") ActiveProject project,
+        Pageable request,
+        @Param("query") String query
+    );
 
     @Query("select " +  EXPERIMENT_DASHBOARD_RECORD +
-            " from ActiveExperiment e left join e.rawFiles.data file left join e.lab nullableLab where e.project = :project group by e.id")
+            " from ActiveExperiment e left join e.rawFiles.data file left join e.lab nullableLab " +
+        "where e.project = :project group by e.id")
     List<ExperimentDashboardRecord> findDashboardItemsByProject(@Param("project") ActiveProject project);
 
-    @Query("select new com.infoclinika.mssharing.model.internal.repository.ExperimentShortRecord(e.id, e.name, e.project, e.creator) " +
-            "from ActiveExperiment e where e.project = :project")
+    @Query("select new com.infoclinika.mssharing.model.internal.repository.ExperimentShortRecord(" +
+        "e.id, e.name, e.project, e.creator) from ActiveExperiment e where e.project = :project")
     List<ExperimentShortRecord> findShortItemsByProject(@Param("project") ActiveProject project);
 
     @Query("select count(e) from ActiveExperiment e where e.instrumentRestriction.instrument = :instrument")
@@ -120,9 +140,15 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
     @Query("select e from ActiveExperiment e join e.rawFiles.data file where file.fileMetaData=:metaFile")
     List<ActiveExperiment> findByFile(@Param("metaFile") ActiveFileMetaData fileMetaData);
 
-
     @Query("select e from ActiveExperiment e where e.creator.id = :user and e.name = :name")
     List<ActiveExperiment> findByName(@Param("user") long user, @Param("name") String experimentName);
+
+    @Query("select e from ActiveExperiment e where e.creator.id = :user and e.lab.id = :lab and e.name = :name")
+    ActiveExperiment findByNameInLab(
+        @Param("user") long user,
+        @Param("lab") long lab,
+        @Param("name") String experimentName
+    );
 
     @Query("select distinct e" +
             " from ExperimentDashboardRecord e left join e.project p" +
@@ -130,12 +156,22 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             "p.creator.id = :user " +
             " or p.sharing.type = " + PUBLIC_PROJECT +
             " or " + HAVE_ACCESS_TO_PROJECT + ")")
-    Page<ExperimentDashboardRecord> findAllAvailableRecords(@Param("user") long user, Pageable request, @Param("s") String filterQuery);
+    Page<ExperimentDashboardRecord> findAllAvailableRecords(
+        @Param("user") long user,
+        Pageable request,
+        @Param("s") String filterQuery
+    );
+
+    @Override
     @Query("select e from ActiveExperiment e where e.downloadToken is not null and e.downloadToken = :token")
     ActiveExperiment findOneByToken(@Param("token") String token);
 
     @Query(SELECT_CLAUSE + " left join e.creator own left join e.lab lab " + FIND_ALL_AVAILABLE + FILTER_CLAUSE)
-    Page<ExperimentDashboardRecord> findAllAvailable(@Param("user")long user, Pageable request,@Param("s") String filterQuery);
+    Page<ExperimentDashboardRecord> findAllAvailable(
+        @Param("user")long user,
+        Pageable request,@Param("s")
+            String filterQuery
+    );
 
     @Query("select distinct e.id" +
             " from ExperimentDashboardRecord e left join e.project p" +
@@ -145,8 +181,13 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " or " + HAVE_ACCESS_TO_PROJECT + ")")
     List<Long> findAllAvailableIds(@Param("user")long user);
 
-    @Query(SELECT_CLAUSE + " left join e.project p left join e.creator own left join e.lab lab " + FIND_ALL_BY_LAB + FILTER_CLAUSE)
-    Page<ExperimentDashboardRecord> findAllRecordsByLab(@Param("lab") long lab, Pageable request, @Param("s") String filterQuery);
+    @Query(SELECT_CLAUSE + " left join e.project p left join e.creator own left join e.lab lab " +
+        FIND_ALL_BY_LAB + FILTER_CLAUSE)
+    Page<ExperimentDashboardRecord> findAllRecordsByLab(
+        @Param("lab") long lab,
+        Pageable request,
+        @Param("s") String filterQuery
+    );
 
     @Query("select distinct e" +
             " from ExperimentDashboardRecord e left join e.project p " +
@@ -154,13 +195,27 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " and (e.creator.id <> :user " +
             " and p.sharing.type = " + SHARED_PROJECT +
             " and (p.creator.id = :user or " + HAVE_ACCESS_TO_PROJECT + "))")
-    Page<ExperimentDashboardRecord> findSharedRecords(@Param("user") long user, Pageable request, @Param("s") String filterQuery);
+    Page<ExperimentDashboardRecord> findSharedRecords(
+        @Param("user") long user,
+        Pageable request,
+        @Param("s") String filterQuery
+    );
+
     @Query(SELECT_CLAUSE + " left join e.creator own left join e.lab lab " + FIND_SHARED + FILTER_CLAUSE)
-    Page<ExperimentDashboardRecord> findShared(@Param("user")long user, Pageable request, @Param("s") String filterQuery);
+    Page<ExperimentDashboardRecord> findShared(
+        @Param("user")long user,
+        Pageable request,
+        @Param("s") String filterQuery
+    );
 
     @Query("select distinct e" +
             " from ExperimentDashboardRecord e where e.deleted = 0 AND e.name like :s  and e.creator.id = :user")
-    Page<ExperimentDashboardRecord> findMyRecords(@Param("user") long user, Pageable request, @Param("s") String filterQuery);
+    Page<ExperimentDashboardRecord> findMyRecords(
+        @Param("user") long user,
+        Pageable request,
+        @Param("s") String filterQuery
+    );
+
     @Query(SELECT_CLAUSE + " left join e.creator own left join e.lab lab " + FIND_MY + FILTER_CLAUSE)
     Page<ExperimentDashboardRecord> findMy(@Param("user")long user, Pageable request,@Param("s") String filterQuery);
 
@@ -170,8 +225,12 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
     @Query("select file from ActiveExperiment e join e.rawFiles.data file where e.id=:experimentId")
     List<RawFile> findFilesByExperimentId(@Param("experimentId") long experiment);
 
-    @Query("select file from ActiveExperiment e join e.rawFiles.data file join file.fileMetaData metaFile where e.id=:experimentId and metaFile.id in(:fileMetaDataIds)")
-    List<RawFile> findRawFilesByExperimentIdAndMetaData(@Param("experimentId") long experiment, @Param("fileMetaDataIds") List<Long> fileMetaDataIds);
+    @Query("select file from ActiveExperiment e join e.rawFiles.data file join file.fileMetaData metaFile " +
+        "where e.id=:experimentId and metaFile.id in(:fileMetaDataIds)")
+    List<RawFile> findRawFilesByExperimentIdAndMetaData(
+        @Param("experimentId") long experiment,
+        @Param("fileMetaDataIds") List<Long> fileMetaDataIds
+    );
 
     /* For Search purposes */
 
@@ -179,7 +238,11 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
     List<ExperimentDashboardRecord> searchExperimentsRecords(@Param("user") long user, @Param("query") String query);
 
     @Query(ALL_AVAILABLE_EXPERIMENTS_WITH_QUERY)
-    Page<ExperimentDashboardRecord> searchPagedExperimentsRecords(@Param("user") long user, @Param("query") String query, Pageable pageable);
+    Page<ExperimentDashboardRecord> searchPagedExperimentsRecords(
+        @Param("user") long user,
+        @Param("query") String query,
+        Pageable pageable
+    );
 
     @Query("select new com.infoclinika.mssharing.model.internal.repository.ExperimentAdditionalInfoRecord(" +
 
@@ -215,8 +278,9 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " left join _rf.fileMetaData _fmd " +
             " where _e.id = e.id and (_e.creator.id = :user or (_ms.user.id = :user and _ms.head = true)) " +
             "    and (select count(distinct _f.id) from RawFile _f left join _f.experiment _exp " +
-            "           left join _f.fileMetaData _f_fmd where _exp.id = _e.id and _f_fmd.storageData.storageStatus in (" + STORAGE_STATUS_UNARCHIVED + "," + STORAGE_STATUS_UNARCHIVING + ")" +
-            "               and (_f_fmd.owner.id = :user or (_ms.user.id = :user and _ms.head = true))) > 0 " +
+            "       left join _f.fileMetaData _f_fmd where _exp.id = _e.id and _f_fmd.storageData.storageStatus in " +
+            "          (" + STORAGE_STATUS_UNARCHIVED + "," + STORAGE_STATUS_UNARCHIVING + ")" +
+            "             and (_f_fmd.owner.id = :user or (_ms.user.id = :user and _ms.head = true))) > 0 " +
             "), " +
             //[4] canUnarchiveExperiment
             " (select count(distinct _e.id)" +
@@ -226,7 +290,8 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " left join _e.rawFiles.data _rf " +
             " left join _rf.fileMetaData _fmd " +
             " where _e.id = e.id and (_e.creator.id = :user or (_ms.user.id = :user and _ms.head = true)) " +
-            "    and (select count(distinct _f.id) from RawFile _f left join _f.experiment _exp left join _f.fileMetaData _f_fmd " +
+            "    and (select count(distinct _f.id) from RawFile _f left join _f.experiment _exp " +
+            "       left join _f.fileMetaData _f_fmd " +
             "         where _exp.id = _e.id and (_f_fmd.storageData.storageStatus != " + STORAGE_STATUS_UNARCHIVED +
             "           and (_f_fmd.owner.id = :user or (_ms.user.id = :user and _ms.head = true) ) ) ) > 0 " +
             "), " +
@@ -238,7 +303,8 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " left join _e.rawFiles.data _rf " +
             " left join _rf.fileMetaData _fmd " +
             " where _e.id = e.id and (_e.creator.id = :user or (_ms.user.id = :user and _ms.head = true)) " +
-            "    and (select count(distinct _f.id) from RawFile _f left join _f.experiment _exp left join _f.fileMetaData _f_fmd " +
+            "    and (select count(distinct _f.id) from RawFile _f left join _f.experiment _exp " +
+            "      left join _f.fileMetaData _f_fmd " +
             "         where _exp.id = _e.id and (_f_fmd.storageData.archivedDownloadOnly is true " +
             "           and (_f_fmd.owner.id = :user or (_ms.user.id = :user and _ms.head = true) ) ) ) > 0 " +
             "), " +
@@ -250,22 +316,33 @@ public interface ExperimentRepository extends ExperimentRepositoryTemplate<Activ
             " left join _e.rawFiles.data _rf " +
             " left join _rf.fileMetaData _fmd " +
             " where _e.id = e.id and (_e.creator.id = :user or (_ms.user.id = :user and _ms.head = true)) " +
-            "    and (select count(distinct _f.id) from RawFile _f left join _f.experiment _exp left join _f.fileMetaData _f_fmd " +
+            "    and (select count(distinct _f.id) from RawFile _f left join _f.experiment _exp " +
+            "      left join _f.fileMetaData _f_fmd " +
             "         where _exp.id = _e.id and (_f_fmd.storageData.storageStatus = " + STORAGE_STATUS_UNARCHIVING +
             "           and (_f_fmd.owner.id = :user or (_ms.user.id = :user and _ms.head = true) ) ) ) > 0 " +
-            ")" +
+            ") " +
             ") " +
             " from ActiveExperiment e " +
             " where e.id in(:ids) group by e.id")
-    List<ExperimentAdditionalInfoRecord> getAdditionalInfo(@Param("user") long user, @Param("ids") List<Long> ids);
+    List<ExperimentAdditionalInfoRecord> getAdditionalInfo(
+        @Param("user") long user,
+        @Param("ids") List<Long> ids
+    );
 
-    @Query("select rf.fileMetaData from ActiveExperiment e join e.rawFiles.data rf where e.id = :experiment and rf.fileMetaData.id " +
-            "in (select rf2.fileMetaData.id from ActiveExperiment e2 join e2.rawFiles.data rf2 where e2.id != e.id)")
+    @Query("select rf.fileMetaData from ActiveExperiment e join e.rawFiles.data rf where e.id = :experiment " +
+        "and rf.fileMetaData.id in (select rf2.fileMetaData.id from ActiveExperiment e2 join e2.rawFiles.data rf2 " +
+        "where e2.id != e.id)")
     List<ActiveFileMetaData> filesInOtherExperiments(@Param("experiment") long experiment);
 
-
     @Query("select distinct e from ActiveExperiment e left join e.lab lab left join e.creator own " +
-            " where (e.name like :s or own.personData.firstName like :s or own.personData.lastName like :s or lab.name like :s) ")
+            " where (e.name like :s or own.personData.firstName like :s or own.personData.lastName like :s " +
+            " or lab.name like :s) ")
     Page<ActiveExperiment> findAllWithFilter(@Param("s") String query, Pageable request);
+
+    @Query("select count(e) from ActiveExperiment e where e.lab.id = :labId")
+    int countByLabId(@Param("labId") Long labId);
+
+    @Query("select count(e) from ActiveExperiment e where e.billLaboratory.id = :billLabId")
+    int countByBillLabId(@Param("billLabId") Long billLabId);
 }
 

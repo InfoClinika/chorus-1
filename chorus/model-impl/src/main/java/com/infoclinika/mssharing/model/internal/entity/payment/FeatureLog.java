@@ -32,7 +32,14 @@ public class FeatureLog extends Log {
     }
 
 
-    public FeatureLog(Long lab, Date timestamp, long totalToPay, long storeBalance, FeatureAction action, String message) {
+    public FeatureLog(
+        Long lab,
+        Date timestamp,
+        long totalToPay,
+        long storeBalance,
+        FeatureAction action,
+        String message
+    ) {
         super(lab, timestamp, totalToPay, storeBalance);
         this.action = action;
         this.message = message;

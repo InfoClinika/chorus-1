@@ -5,19 +5,23 @@ import com.google.common.collect.Sets;
 import com.infoclinika.mssharing.model.AdminNotifier;
 import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
-import com.infoclinika.mssharing.model.internal.entity.restorable.StorageData;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
 import com.infoclinika.mssharing.model.internal.repository.UserRepository;
 import com.infoclinika.mssharing.model.write.AdministrationToolsManagement;
 import com.infoclinika.mssharing.model.write.FileOperationsManager;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.repository.UserRepositoryTemplate;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.util.List;
+
+import static com.infoclinika.mssharing.model.internal.entity.restorable.StorageData.Status;
+import static com.infoclinika.mssharing.model.internal.entity.restorable.StorageData.Status.ARCHIVED;
+import static com.infoclinika.mssharing.model.internal.entity.restorable.StorageData.Status.ARCHIVING_REQUESTED;
 
 /**
  * @author Herman Zamula
@@ -25,7 +29,7 @@ import java.util.List;
 @Service
 public class AdministrationToolsManagementImpl implements AdministrationToolsManagement {
 
-    private static final Logger LOGGER = Logger.getLogger(AdministrationToolsManagementImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdministrationToolsManagementImpl.class);
 
     @Inject
     private AdminNotifier adminNotifier;
@@ -60,18 +64,20 @@ public class AdministrationToolsManagementImpl implements AdministrationToolsMan
     public void unarchiveInconsistentFiles(long actor) {
         LOGGER.info("Unarchive inconsistent files");
         final List<Long> fileIds = fileMetaDataRepository.getInconsistentFilesIds();
-        LOGGER.info("Inconsistent files count: " + fileIds.size());
+        LOGGER.info("Inconsistent files count: {}", fileIds.size());
         for (Long fileId : fileIds) {
-            try{
+            try {
                 final ActiveFileMetaData file = fileMetaDataRepository.findOne(fileId);
-                final StorageData.Status storageStatus = file.getStorageData().getStorageStatus();
-                if(storageStatus == StorageData.Status.ARCHIVED || storageStatus == StorageData.Status.ARCHIVING_REQUESTED) {
+                final Status storageStatus = file.getStorageData().getStorageStatus();
+                if (storageStatus == ARCHIVED ||
+                    storageStatus == ARCHIVING_REQUESTED) {
                     fileOperationsManager.markFilesToUnarchive(file.getOwner().getId(), Sets.newHashSet(fileId));
                 }
             } catch (Exception e) {
-                LOGGER.warn("Couldn't unarchive file. ID: " + fileId, e);
+                LOGGER.warn("Couldn't unarchive file. ID: {}", fileId, e);
             }
         }
+
         fileOperationsManager.unarchiveMarkedFiles();
     }
 }

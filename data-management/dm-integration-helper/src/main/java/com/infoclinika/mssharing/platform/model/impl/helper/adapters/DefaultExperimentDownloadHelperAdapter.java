@@ -7,6 +7,7 @@ import com.infoclinika.mssharing.platform.entity.*;
 import com.infoclinika.mssharing.platform.entity.restorable.ExperimentTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import com.infoclinika.mssharing.platform.fileserver.StoredObjectPathsTemplate;
+import com.infoclinika.mssharing.platform.model.InstrumentsDefaults;
 import com.infoclinika.mssharing.platform.model.helper.ExperimentDownloadHelperTemplate;
 import com.infoclinika.mssharing.platform.model.impl.helper.DefaultExperimentDownloadHelper;
 import org.springframework.stereotype.Component;
@@ -23,8 +24,10 @@ import static com.google.common.collect.Lists.newArrayList;
  * @author Herman Zamula
  */
 @Component
-public class DefaultExperimentDownloadHelperAdapter extends DefaultExperimentDownloadHelper<ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
-        ExperimentDownloadHelperTemplate.ExperimentDownloadDataTemplate, ExperimentDownloadHelperTemplate.FileDataTemplate> {
+public class DefaultExperimentDownloadHelperAdapter
+    extends DefaultExperimentDownloadHelper<ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
+    ExperimentDownloadHelperTemplate.ExperimentDownloadDataTemplate,
+    ExperimentDownloadHelperTemplate.FileDataTemplate> {
 
     @Inject
     private StoredObjectPathsTemplate storedObjectPaths;
@@ -41,14 +44,17 @@ public class DefaultExperimentDownloadHelperAdapter extends DefaultExperimentDow
 
     @Override
     protected FileDataTemplate transformFileData(FileMetaDataTemplate metaDataTemplate) {
-        return transformFileDataWithConditions(metaDataTemplate, Collections.<ConditionDataTemplate>emptyList());
+        return transformFileDataWithConditions(metaDataTemplate, Collections.emptyList());
     }
 
 
-    private FileDataTemplate transformFileDataWithConditions(FileMetaDataTemplate metaDataTemplate, List<ConditionDataTemplate> conditions) {
-        return new FileDataTemplate(metaDataTemplate.getId(), metaDataTemplate.getContentId(), metaDataTemplate.getName(),
-                metaDataTemplate.isInvalid(), conditions,
-                metaDataTemplate.getInstrument().getLab().getId());
+    private FileDataTemplate transformFileDataWithConditions(FileMetaDataTemplate metaDataTemplate,
+                                                             List<ConditionDataTemplate> conditions) {
+        return new FileDataTemplate(metaDataTemplate.getId(), metaDataTemplate.getBucket(),
+            metaDataTemplate.getContentId(), metaDataTemplate.getName(),
+            metaDataTemplate.isInvalid(), conditions,
+            metaDataTemplate.getInstrument().getLab().getId(), metaDataTemplate.getInstrument().getName()
+        );
 
     }
 
@@ -74,41 +80,60 @@ public class DefaultExperimentDownloadHelperAdapter extends DefaultExperimentDow
         attachments.addAll(Lists.transform(experiment.attachments, new Function<Attachment, AttachmentDataTemplate>() {
             @Override
             public AttachmentDataTemplate apply(Attachment input) {
-                return new AttachmentDataTemplate(input.getId(),
-                        input.getName(),
-                        storedObjectPaths.experimentAttachmentPath(experiment.getCreator().getId(), input.getId()).getPath()
+                return new AttachmentDataTemplate(
+                    input.getId(),
+                    input.getName(),
+                    storedObjectPaths.experimentAttachmentPath(experiment.getCreator().getId(), input.getId()).getPath()
                 );
             }
         }));
 
         //noinspection unchecked
-        final ImmutableList<FileDataTemplate> files = from(experiment.getRawFiles().getData()).transform(new Function<ExperimentFileTemplate, FileDataTemplate>() {
-            @Override
-            public FileDataTemplate apply(ExperimentFileTemplate input) {
-                //noinspection unchecked
-                final ImmutableList<ConditionDataTemplate> conditions = from(input.getConditions()).transform(new Function<Condition, ConditionDataTemplate>() {
-                    @Override
-                    public ConditionDataTemplate apply(Condition input) {
-                        return new ConditionDataTemplate(input.getId(), input.getName(), experimentName);
-                    }
-                }).toList();
-                return transformFileDataWithConditions(input.getFileMetaData(), conditions);
-            }
-        }).toList();
+        final ImmutableList<FileDataTemplate> files = from(experiment.getRawFiles().getData())
+            .transform(new Function<ExperimentFileTemplate, FileDataTemplate>() {
+                @Override
+                public FileDataTemplate apply(ExperimentFileTemplate input) {
+                    //noinspection unchecked
+                    final ImmutableList<ConditionDataTemplate> conditions =
+                        from(input.getConditions()).transform(new Function<Condition, ConditionDataTemplate>() {
+                            @Override
+                            public ConditionDataTemplate apply(Condition input) {
+                                return new ConditionDataTemplate(input.getId(), input.getName(), experimentName);
+                            }
+                        }).toList();
+                    return transformFileDataWithConditions(input.getFileMetaData(), conditions);
+                }
+            }).toList();
 
 
-        return new ExperimentDownloadDataTemplate(
-                creatorId,
-                experimentName,
-                experimentDescription,
-                projectName,
-                specie,
-                experimentType,
-                allow2dLc,
-                instrumentName,
-                attachments,
-                files
-        );
+        ExperimentDownloadDataTemplate experimentDownloadData = new ExperimentDownloadDataTemplate(attachments, files);
+
+        final String enabled2dLcStr = (allow2dLc && experiment.getExperiment().is2dLc()) ? "Yes" : "No";
+        final String instrumentStr = instrumentName == null ? "All" : instrumentName;
+
+        experimentDownloadData.add(ExperimentDownloadDataTemplate.EXPERIMENT_NAME, experimentName);
+        experimentDownloadData.add("Project", projectName);
+        experimentDownloadData.add("Specie", specie);
+        experimentDownloadData.add("Experiment Type", experimentType);
+        experimentDownloadData.add("Instrument", instrumentStr);
+        experimentDownloadData.add("Description", experimentDescription);
+
+        switch (experiment.getInstrumentRestriction().getInstrumentModel().getStudyType().getName()) {
+            case InstrumentsDefaults.NG_TECHNOLOGY_TYPE:
+                break;
+            case InstrumentsDefaults.MS_TECHNOLOGY_TYPE:
+                experimentDownloadData.add("2D/LC", enabled2dLcStr);
+                break;
+            case InstrumentsDefaults.MA_TECHNOLOGY_TYPE:
+                break;
+            case InstrumentsDefaults.CL_TECHNOLOGY_TYPE:
+                break;
+            default:
+                throw new RuntimeException("Unknown experiment type {"
+                    + experiment.getInstrumentRestriction().getInstrumentModel().getStudyType().getName() + "}");
+        }
+
+        return experimentDownloadData;
 
     }
 
@@ -116,13 +141,12 @@ public class DefaultExperimentDownloadHelperAdapter extends DefaultExperimentDow
     @Override
     protected ExperimentItemTemplate transformExperimentItem(ExperimentTemplate experimentTemplate) {
         //noinspection unchecked
-        return new ExperimentItemTemplate(experimentTemplate.getCreator().getId(), experimentTemplate.getId()
-                , from(experimentTemplate.getRawFiles().getData())
-                .transform(new Function<ExperimentFileTemplate, Long>() {
-                    @Override
-                    public Long apply(ExperimentFileTemplate input) {
-                        return input.getFileMetaData().getId();
-                    }
-                }).toSet());
+        return new ExperimentItemTemplate(
+            experimentTemplate.getCreator().getId(),
+            experimentTemplate.getId(),
+            from(experimentTemplate.getRawFiles().getData())
+            .transform((Function<ExperimentFileTemplate, Long>) input -> input.getFileMetaData().getId())
+                .toSet()
+        );
     }
 }

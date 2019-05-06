@@ -3,12 +3,12 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.web.controller.request;
-
-import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,14 +19,13 @@ import java.util.Map;
  * @author Oleksii Tymchenko
  */
 public class ProjectOperationRequest {
-    private long projectId;
+    private final Map<Long, Boolean> colleagues = new HashMap<Long, Boolean>();
+    private final Map<Long, Boolean> groups = new HashMap<Long, Boolean>();
     public Long lab;
     public String name;
     public String areaOfResearch = "";
     public String description = "";
-
-    private final Map<Long, Boolean> colleagues = new HashMap<Long, Boolean>();
-    private final Map<Long, Boolean> groups = new HashMap<Long, Boolean>();
+    private long projectId;
     private boolean withEmailNotification;
 
     private boolean blogEnabled;

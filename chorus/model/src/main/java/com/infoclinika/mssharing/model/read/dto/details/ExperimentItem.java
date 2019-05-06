@@ -17,7 +17,6 @@ public class ExperimentItem extends DetailsReaderTemplate.ExperimentItemTemplate
     public final Long billLab;
     public final AnalysisBounds bounds;
     public final List<LockMzItem> lockMasses;
-    public final String msChartsLink;
     public final boolean is2dLc;
     public final ExperimentLabelsItem labels;
     public final int sampleTypesCount;
@@ -34,31 +33,29 @@ public class ExperimentItem extends DetailsReaderTemplate.ExperimentItemTemplate
     public final NgsRelatedExperimentInfo ngsRelatedInfo;
 
     public ExperimentItem(
-            ExperimentItemTemplate other,
-            Long billLab,
-            AnalysisBounds bounds,
-            List<LockMzItem> lockMasses,
-            String msChartsLink,
-            boolean is2dLc,
-            ExperimentLabelsItem labels,
-            int sampleTypesCount,
-            List<String> samplesInOrder,
-            String[][] factorValues,
-            int channelsCount,
-            String labelType,
-            String groupSpecificParametersType,
-            double reporterMassTol,
-            boolean filterByPIFEnabled,
-            double minReporterPIF,
-            double minBasePeakRatio,
-            double minReporterFraction,
-            NgsRelatedExperimentInfo ngsRelatedInfo
+        ExperimentItemTemplate other,
+        Long billLab,
+        AnalysisBounds bounds,
+        List<LockMzItem> lockMasses,
+        boolean is2dLc,
+        ExperimentLabelsItem labels,
+        int sampleTypesCount,
+        List<String> samplesInOrder,
+        String[][] factorValues,
+        int channelsCount,
+        String labelType,
+        String groupSpecificParametersType,
+        double reporterMassTol,
+        boolean filterByPIFEnabled,
+        double minReporterPIF,
+        double minBasePeakRatio,
+        double minReporterFraction,
+        NgsRelatedExperimentInfo ngsRelatedInfo
     ) {
         super(other);
         this.billLab = billLab;
         this.bounds = bounds;
         this.lockMasses = lockMasses;
-        this.msChartsLink = msChartsLink;
         this.is2dLc = is2dLc;
         this.labels = labels;
         this.sampleTypesCount = sampleTypesCount;

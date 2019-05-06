@@ -5,7 +5,7 @@ import javax.persistence.Lob;
 import java.util.Date;
 
 @Entity
-public class NewsItem extends AbstractAggregate{
+public class NewsItem extends AbstractAggregate {
 
     private String title;
     @Lob
@@ -15,7 +15,7 @@ public class NewsItem extends AbstractAggregate{
     private String author;
     private Date creationDate;
 
-    public NewsItem(String title,String introduction, String text, String author, Date creationDate) {
+    public NewsItem(String title, String introduction, String text, String author, Date creationDate) {
         this.title = title;
         this.introduction = introduction;
         this.text = text;
@@ -23,7 +23,8 @@ public class NewsItem extends AbstractAggregate{
         this.creationDate = creationDate;
     }
 
-    public NewsItem(){}
+    public NewsItem() {
+    }
 
     public String getTitle() {
         return title;

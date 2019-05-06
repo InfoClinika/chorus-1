@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.test.organization;
 
@@ -17,7 +19,7 @@ import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.model.NotifierTemplate;
 import com.infoclinika.mssharing.platform.model.ObjectNotFoundException;
 import com.infoclinika.mssharing.platform.model.RequestAlreadyHandledException;
-import com.infoclinika.mssharing.platform.model.helper.RegistrationHelperTemplate;
+import com.infoclinika.mssharing.platform.model.helper.RegistrationHelperTemplate.LabItem;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.LabReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.RequestsReaderTemplate.LabRequest;
@@ -159,15 +161,14 @@ public class ManagingLabsTest extends AbstractTest {
     public void testEditingByAdmin() {
         final long request = labManagement.requestLabCreation(Data.LAB_2_DATA, "some");
         final String newLabName = "other name";
-        labManagement.editLabRequestInfo(admin(), request, new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_PAUL_INFO, newLabName));
+        labManagement.editLabRequestInfo(admin(), request,
+            new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_PAUL_INFO, newLabName)
+        );
 
         labManagement.confirmLabCreation(admin(), request);
-        assertTrue(any(registrationHelper.availableLabs(), new Predicate<RegistrationHelperTemplate.LabItem>() {
-            @Override
-            public boolean apply(RegistrationHelperTemplate.LabItem input) {
-                return input.name.equals(newLabName);
-            }
-        }));
+        assertTrue(
+            any(registrationHelper.availableLabs(), (Predicate<LabItem>) input -> input.name.equals(newLabName))
+        );
     }
 
     //Only admins can perform such editing.
@@ -175,7 +176,9 @@ public class ManagingLabsTest extends AbstractTest {
     public void testEditingByRegularUser() {
         final long bob = uc.createLab3AndBob();
         final long request = labManagement.requestLabCreation(Data.LAB_2_DATA, "some");
-        labManagement.editLabRequestInfo(bob, request, new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_PAUL_INFO, "other name"));
+        labManagement.editLabRequestInfo(bob, request,
+            new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_PAUL_INFO, "other name")
+        );
     }
 
     //Lab creation requested
@@ -200,7 +203,9 @@ public class ManagingLabsTest extends AbstractTest {
         final long joe = uc.createJoe();
         uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3());
         assertEquals(size(instrumentReader.readInstrumentsWhereUserIsOperator(paul)), 1);
-        labManagement.editLab(admin(), uc.getLab3(), new LabManagementTemplate.LabInfoTemplate(generateString(), new PersonInfo(generateString(), generateString(), "jjj@j.com"), generateString()));
+        labManagement.editLab(admin(), uc.getLab3(), new LabManagementTemplate.LabInfoTemplate(generateString(),
+            new PersonInfo(generateString(), generateString(), "jjj@j.com"), generateString()
+        ));
         assertEquals(size(instrumentReader.readInstrumentsWhereUserIsOperator(joe)), 1);
     }
 
@@ -212,7 +217,8 @@ public class ManagingLabsTest extends AbstractTest {
         PersonInfo labHeadInfo = userTestHelper.shortForm(john).toPersonInfo();
 
         LabReaderTemplate.LabLineTemplate originalLab = labReader.readLab(uc.createLab4());
-        LabManagementTemplate.LabInfoTemplate labInfoTemplate = new LabManagementTemplate.LabInfoTemplate(newInstitutionUrl, labHeadInfo, newLabName);
+        LabManagementTemplate.LabInfoTemplate labInfoTemplate =
+            new LabManagementTemplate.LabInfoTemplate(newInstitutionUrl, labHeadInfo, newLabName);
         labManagement.editLab(admin(), originalLab.id, labInfoTemplate);
 
         LabReaderTemplate.LabLineTemplate labAfterEdit = labReader.readLab(originalLab.id);
@@ -229,7 +235,8 @@ public class ManagingLabsTest extends AbstractTest {
         final String contactEmail = "lab@mail.com";
         long john = uc.createJohnWithoutLab();
         PersonInfo labHeadInfo = userTestHelper.shortForm(john).toPersonInfo();
-        LabManagementTemplate.LabInfoTemplate labInfoTemplate = new LabManagementTemplate.LabInfoTemplate(newInstitutionUrl, labHeadInfo, newLabName);
+        LabManagementTemplate.LabInfoTemplate labInfoTemplate =
+            new LabManagementTemplate.LabInfoTemplate(newInstitutionUrl, labHeadInfo, newLabName);
         Long lab = labManagement.createLab(admin(), labInfoTemplate, contactEmail);
 
         LabReaderTemplate.LabLineTemplate createdLab = labReader.readLab(lab);
@@ -288,7 +295,8 @@ public class ManagingLabsTest extends AbstractTest {
         final long poll = uc.createPaul();//labHead
         assertEquals(userReader.readUsersByLab(poll, uc.getLab3()).size(), 2);
         labHeadManagement.removeUserFromLab(poll, uc.getLab3(), bob);
-        final List<UserReaderTemplate.UserLineTemplate> usersInLabAfterRemoving = userReader.readUsersByLab(poll, uc.getLab3());
+        final List<UserReaderTemplate.UserLineTemplate> usersInLabAfterRemoving =
+            userReader.readUsersByLab(poll, uc.getLab3());
         assertEquals(usersInLabAfterRemoving.size(), 1);
     }
 
@@ -314,7 +322,8 @@ public class ManagingLabsTest extends AbstractTest {
     @Test
     public void testGeneratedPasswordIsSentToNewlyCreatedLabHead() {
         PersonInfo labHead = new PersonInfo("New", "Head", "newhead@nasa.gov");
-        LabManagementTemplate.LabInfoTemplate labInfo = new LabManagementTemplate.LabInfoTemplate("http://nasa.gov", labHead, "Nasa Lab");
+        LabManagementTemplate.LabInfoTemplate labInfo =
+            new LabManagementTemplate.LabInfoTemplate("http://nasa.gov", labHead, "Nasa Lab");
         labManagement.createLab(admin(), labInfo, "someguy@nasa.gov");
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
@@ -322,14 +331,18 @@ public class ManagingLabsTest extends AbstractTest {
         UserTestHelper.UserShortForm user = userTestHelper.shortForm(userIdCaptor.getValue());
         assertEquals("newhead@nasa.gov", user.email);
         String password = passwordCaptor.getValue();
-        assertTrue(password.length() > 5 && password.length() < 15, "Password length between 5 and 15, but was " + password.length());
+        assertTrue(
+            password.length() > 5 && password.length() < 15,
+            "Password length between 5 and 15, but was " + password.length()
+        );
     }
 
     @Test
     public void testHandleApproveLabMembershipRequest() {
         uc.createPaul();                           //create lab3 & Paul - lab3's head
         final long john = uc.createJohnWithoutLab();                // crate john - the user with no lab
-        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo = getUserLabMemebershipRequestRepository();
+        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo =
+            getUserLabMemebershipRequestRepository();
 
         assertEquals(repo.findPendingByUser(john).size(), 0);              //no requests
         assertEquals(securityHelper.getUserDetails(john).labs.size(), 0);  //no labs
@@ -345,7 +358,8 @@ public class ManagingLabsTest extends AbstractTest {
     public void testHandleRefuseLabMembershipRequest() {
         uc.createPaul();
         final long john = uc.createJohnWithoutLab();
-        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo = getUserLabMemebershipRequestRepository();
+        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo =
+            getUserLabMemebershipRequestRepository();
 
         uc.requestJohnLab3Membership();
         assertEquals(repo.findPendingByUser(john).size(), 1);
@@ -359,7 +373,8 @@ public class ManagingLabsTest extends AbstractTest {
     public void testHandleApproveLabMembershipRequestWhichAlreadyHandled() {
         uc.createPaul();
         final long john = uc.createJohnWithoutLab();
-        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo = getUserLabMemebershipRequestRepository();
+        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo =
+            getUserLabMemebershipRequestRepository();
 
         uc.requestJohnLab3Membership();
         assertEquals(repo.findPendingByUser(john).size(), 1);
@@ -373,7 +388,8 @@ public class ManagingLabsTest extends AbstractTest {
     public void testHandleWrongLabMembershipRequest() {
         uc.createPaul();
         final long john = uc.createJohnWithoutLab();
-        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo = getUserLabMemebershipRequestRepository();
+        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo =
+            getUserLabMemebershipRequestRepository();
 
         uc.requestJohnLab3Membership();
         assertEquals(repo.findPendingByUser(john).size(), 1);
@@ -387,7 +403,8 @@ public class ManagingLabsTest extends AbstractTest {
         uc.createPaul();
         final long john = uc.createJohnWithoutLab();
         uc.requestJohnLab3Membership();
-        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo = getUserLabMemebershipRequestRepository();
+        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo =
+            getUserLabMemebershipRequestRepository();
         long requestId = repo.findPendingByUser(john).get(0).getId();
         userManagement.checkRequest(requestId);
     }
@@ -397,20 +414,23 @@ public class ManagingLabsTest extends AbstractTest {
         long labHead = uc.createPaul();                             //create lab3 & Paul - lab3's head
         final long john = uc.createJohnWithoutLab();                // crate john - the user with no lab
 
-        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo = getUserLabMemebershipRequestRepository();
+        UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> repo =
+            getUserLabMemebershipRequestRepository();
         assertEquals(repo.findPendingByUser(john).size(), 0);       //no requests
 
         final String approveUrl = "testUrl";
-        LabMembershipConfirmationUrlProvider urlProvider = new LabMembershipConfirmationUrlProvider() {
-            @Override
-            public String getUrl(long user, long lab, long requestId, LabMembershipRequestActions action) throws URISyntaxException {
-                return approveUrl;
-            }
-        };
+        LabMembershipConfirmationUrlProvider urlProvider = (user, lab, requestId, action) -> approveUrl;
 
-        userManagement.updatePersonAndSendEmail(john, new PersonInfo("Joe", "J", "jjj@j.com"), ImmutableSet.of(uc.getLab3()), urlProvider);
+        userManagement.updatePersonAndSendEmail(
+            john,
+            new PersonInfo("Joe", "J", "jjj@j.com"),
+            ImmutableSet.of(uc.getLab3()),
+            urlProvider
+        );
         NotifierTemplate notifier = notificator();
-        verify(notifier).sendLabMembershipRequest(eq(labHead), Matchers.any(String.class), eq(john), eq(approveUrl), Matchers.any(String.class));
+        verify(notifier).sendLabMembershipRequest(eq(labHead), Matchers.any(String.class), eq(john), eq(approveUrl),
+            Matchers.any(String.class)
+        );
 
         assertEquals(repo.findPendingByUser(john).size(), 1);       //one request
     }
@@ -429,8 +449,10 @@ public class ManagingLabsTest extends AbstractTest {
     public void testFindingLabsForLabHead() {
         long john = uc.createJohnWithoutLab();
         PersonInfo labHeadInfo = userTestHelper.shortForm(john).toPersonInfo();
-        LabManagementTemplate.LabInfoTemplate labOneInfo = new LabManagementTemplate.LabInfoTemplate("lab1", labHeadInfo, "lab1");
-        LabManagementTemplate.LabInfoTemplate labTwoInfo = new LabManagementTemplate.LabInfoTemplate("lab2", labHeadInfo, "lab2");
+        LabManagementTemplate.LabInfoTemplate labOneInfo =
+            new LabManagementTemplate.LabInfoTemplate("lab1", labHeadInfo, "lab1");
+        LabManagementTemplate.LabInfoTemplate labTwoInfo =
+            new LabManagementTemplate.LabInfoTemplate("lab2", labHeadInfo, "lab2");
         Long lab1 = labManagement.createLab(admin(), labOneInfo, "email1");
         Long lab2 = labManagement.createLab(admin(), labTwoInfo, "email2");
 
@@ -445,7 +467,8 @@ public class ManagingLabsTest extends AbstractTest {
         String labName = "Hudson Lab";
         long john = uc.createJohnWithoutLab();
         PersonInfo labHeadInfo = userTestHelper.shortForm(john).toPersonInfo();
-        LabManagementTemplate.LabInfoTemplate labOneInfo = new LabManagementTemplate.LabInfoTemplate("lab1", labHeadInfo, labName);
+        LabManagementTemplate.LabInfoTemplate labOneInfo =
+            new LabManagementTemplate.LabInfoTemplate("lab1", labHeadInfo, labName);
         Long createdLabId = labManagement.createLab(admin(), labOneInfo, "email1");
 
         LabReaderTemplate.LabLineTemplate createdLabInfo = labReader.readLabByName(labName);
@@ -459,7 +482,8 @@ public class ManagingLabsTest extends AbstractTest {
         final long lab = labManagement.confirmLabCreation(admin(), request);
         final LabReaderTemplate.LabLineTemplate labLine = labReader.readLab(lab);
 
-        verify(notificator(), atLeastOnce()).sendLabCreatedNotification(eq(labLine.labHead), eq(Data.LAB_3_DATA.labName));
+        verify(notificator(), atLeastOnce())
+            .sendLabCreatedNotification(eq(labLine.labHead), eq(Data.LAB_3_DATA.labName));
     }
 
     private boolean labIsActive(long lab) {

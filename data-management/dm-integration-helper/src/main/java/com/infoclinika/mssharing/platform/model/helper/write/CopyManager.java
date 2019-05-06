@@ -21,8 +21,6 @@ import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * @author Herman Zamula
- *         <p>
- *         TODO: Refactor, use this helper with default implementation
  */
 @Component
 public class CopyManager {
@@ -58,21 +56,19 @@ public class CopyManager {
         };
     }
 
-    public Function<ExperimentTemplate, ExperimentTemplate> copyExperimentData(final ProjectTemplate copiedProject, final String copyName) {
-        return new Function<ExperimentTemplate, ExperimentTemplate>() {
-            @Override
-            public ExperimentTemplate apply(ExperimentTemplate origin) {
-                //noinspection unchecked
-                final ExperimentTemplate copy = factories.experiment.get();
-                copy.setCreator(copiedProject.getCreator());
-                copy.setProject(copiedProject);
-                copy.setLab(origin.getLab());
-                copy.setName(copyName);
-                copy.setInstrumentRestriction(origin.getInstrumentRestriction());
-                copy.setSpecie(origin.getSpecie());
-                copy.setLastModification(new Date());
-                return copy;
-            }
+    public Function<ExperimentTemplate, ExperimentTemplate> copyExperimentData(final ProjectTemplate copiedProject,
+                                                                               final String copyName) {
+        return origin -> {
+            //noinspection unchecked
+            final ExperimentTemplate copy = factories.experiment.get();
+            copy.setCreator(copiedProject.getCreator());
+            copy.setProject(copiedProject);
+            copy.setLab(origin.getLab());
+            copy.setName(copyName);
+            copy.setInstrumentRestriction(origin.getInstrumentRestriction());
+            copy.setSpecie(origin.getSpecie());
+            copy.setLastModification(new Date());
+            return copy;
         };
     }
 
@@ -101,17 +97,18 @@ public class CopyManager {
     }
 
     @SuppressWarnings("unchecked")
-    public Function<ExperimentFileTemplate, ExperimentFileTemplate> copyExperimentFileData(final Function<FileMetaDataTemplate, FileMetaDataTemplate> copyMetaFn) {
-        return new Function<ExperimentFileTemplate, ExperimentFileTemplate>() {
-            @Override
-            public ExperimentFileTemplate apply(ExperimentFileTemplate origin) {
-                final ExperimentFileTemplate fileTemplate = factories.rawFile.get();
-                fileTemplate.setFileMetaData(copyMetaFn.apply(origin.getFileMetaData()));
-                fileTemplate.getFactorValues().addAll(newArrayList(origin.getFactorValues()));
-                fileTemplate.getAnnotationList().addAll(from(origin.getAnnotationList()).transform(copyAnnotationFn()).toList());
-                fileTemplate.setCopy(true);
-                return fileTemplate;
-            }
+    public Function<ExperimentFileTemplate, ExperimentFileTemplate> copyExperimentFileData(
+        final Function<FileMetaDataTemplate, FileMetaDataTemplate> copyMetaFn) {
+
+        return origin -> {
+            final ExperimentFileTemplate fileTemplate = factories.rawFile.get();
+            fileTemplate.setFileMetaData(copyMetaFn.apply(origin.getFileMetaData()));
+            fileTemplate.getFactorValues().addAll(newArrayList(origin.getFactorValues()));
+            fileTemplate.getAnnotationList().addAll(
+                from(origin.getAnnotationList()).transform(copyAnnotationFn()).toList()
+            );
+            fileTemplate.setCopy(true);
+            return fileTemplate;
         };
     }
 
@@ -134,7 +131,7 @@ public class CopyManager {
             @Override
             public FactorTemplate apply(FactorTemplate origin) {
                 final FactorTemplate factorTemplate = factories.factor.get();
-                factorTemplate.setbDefault(origin.isbDefault());
+                factorTemplate.setDefault(origin.isDefault());
                 factorTemplate.setExperiment(origin.getExperiment());
                 factorTemplate.setName(origin.getName());
                 factorTemplate.setUnits(origin.getUnits());

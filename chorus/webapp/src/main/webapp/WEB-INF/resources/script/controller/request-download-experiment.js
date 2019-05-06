@@ -1,28 +1,46 @@
-angular.module("request-download-experiment-front", ["security-front", "request-download-experiment-back", 
-    "error-catcher", "current-year"])
+"use strict";
 
-    .controller("requestExperimentAccess", ["$scope", "$location", "SharingProjectRequest", function ($scope, $location, SharingProjectRequest) {
-        CommonLogger.setTags(["REQUEST-DOWNLOAD-EXPERIMENT", "REQUEST-EXPERIMENT-ACCESS-CONTROLLER"]);
-        $scope.requestedLink = decodeURIComponent(urlUtils.getUrlVars().downloadLink);
-        $scope.downloadExperimentLinks = [];
+(function () {
 
-        var requestedExperimentId = urlUtils.getUrlVars($scope.requestedLink).experiment;
+    angular
+        .module(
+            "request-download-experiment-front",
+            ["security-front", "request-download-experiment-back", "error-catcher", "template-components"]
+        )
+        .controller(
+            "requestExperimentAccess",
+            ["$scope", "$location", "SharingProjectRequest", function ($scope, $location, SharingProjectRequest) {
+                CommonLogger.setTags(["REQUEST-DOWNLOAD-EXPERIMENT", "REQUEST-EXPERIMENT-ACCESS-CONTROLLER"]);
+                $scope.requestedLink = decodeURIComponent(urlUtils.getUrlVars().downloadLink);
+                $scope.downloadExperimentLinks = [];
 
-        SharingProjectRequest.get({experimentId: requestedExperimentId}, function (response) {
-            //if sharing request on experiment's projects already exists add one more link to request summary
-            $scope.downloadExperimentLinks = response.downloadExperimentLinks;
-            if ($scope.downloadExperimentLinks.length > 0 && $scope.downloadExperimentLinks.indexOf($scope.requestedLink) == -1) {
-                SharingProjectRequest.save({experimentId: requestedExperimentId, downloadExperimentLink: $scope.requestedLink});
-                $scope.downloadExperimentLinks.push($scope.requestedLink);
-            }
-        });
+                var requestedExperimentId = urlUtils.getUrlVars($scope.requestedLink).experiment;
 
-        $scope.requestAccess = function () {
-            $("#request-access-dialog").modal("show");
-            SharingProjectRequest.save({experimentId: requestedExperimentId, downloadExperimentLink: $scope.requestedLink});
-        };
+                SharingProjectRequest.get({experimentId: requestedExperimentId}, function (response) {
+                    //if sharing request on experiment's projects already exists add one more link to request summary
+                    $scope.downloadExperimentLinks = response.downloadExperimentLinks;
+                    if ($scope.downloadExperimentLinks.length > 0 &&
+                        $scope.downloadExperimentLinks.indexOf($scope.requestedLink) == -1) {
+                        SharingProjectRequest.save({
+                            experimentId: requestedExperimentId,
+                            downloadExperimentLink: $scope.requestedLink
+                        });
+                        $scope.downloadExperimentLinks.push($scope.requestedLink);
+                    }
+                });
 
-        $scope.goToDashboard = function () {
-            window.location = "dashboard.html";
-        }
-    }]);
+                $scope.requestAccess = function () {
+                    $("#request-access-dialog").modal("show");
+                    SharingProjectRequest.save({
+                        experimentId: requestedExperimentId,
+                        downloadExperimentLink: $scope.requestedLink
+                    });
+                };
+
+                $scope.goToDashboard = function () {
+                    window.location = "dashboard.html";
+                };
+            }]
+        );
+
+})();

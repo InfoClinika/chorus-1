@@ -1,4 +1,7 @@
+"use strict";
+
 (function () {
+
     angular.module("client-token-front", ["ngResource", "client-token-back"])
         .controller("client-token", function ($scope, $location, ClientToken, closeTokenWindowConfirmation) {
             var modal = $("#client-token-dialog");
@@ -24,7 +27,7 @@
         })
         .factory("closeTokenWindowConfirmation", function ($location) {
             return function ($scope) {
-                $scope.confirmation = new (function (element) {
+                $scope.confirmation = new function (element) {
                     return {
                         success: function () {
                             $location.url("/");
@@ -38,9 +41,9 @@
                         hidePopup: function () {
                             $(element).hide();
                         }
-                    }
-                })("#close-token-window-confirmation");
+                    };
+                }("#close-token-window-confirmation");
                 $scope.confirmation.showPopup();
-            }
+            };
         });
 })();

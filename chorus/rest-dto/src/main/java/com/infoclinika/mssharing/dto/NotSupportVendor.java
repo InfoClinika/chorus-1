@@ -1,21 +1,22 @@
 package com.infoclinika.mssharing.dto;
 
 import com.infoclinika.mssharing.dto.response.VendorDTO;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * author Ruslan Duboveckij
  */
 public class NotSupportVendor extends RuntimeException {
-    private static final Logger LOG = Logger.getLogger(NotSupportVendor.class);
-    private static final String message = "This vendor is not supported - ";
+    private static final Logger LOG = LoggerFactory.getLogger(NotSupportVendor.class);
+    private static final String THIS_VENDOR_IS_NOT_SUPPORTED = "This vendor is not supported - ";
     private final String vendorName;
 
     public NotSupportVendor(VendorDTO vendor) {
-        super(message + vendor.toString());
+        super(THIS_VENDOR_IS_NOT_SUPPORTED + vendor.toString());
         this.vendorName = vendor.name;
 
-        LOG.error(message + vendor.toString());
+        LOG.error(THIS_VENDOR_IS_NOT_SUPPORTED + vendor.toString());
     }
 
     public String getVendorName() {

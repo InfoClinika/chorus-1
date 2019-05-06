@@ -1,8 +1,8 @@
 package com.infoclinika.mssharing.model.helper;
 
 /**
-* @author Herman Zamula
-*/
+ * @author Herman Zamula
+ */
 public class LockMzItem {
 
     public double lockMass;
@@ -18,13 +18,21 @@ public class LockMzItem {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         LockMzItem that = (LockMzItem) o;
 
-        if (charge != that.charge) return false;
-        if (Double.compare(that.lockMass, lockMass) != 0) return false;
+        if (charge != that.charge) {
+            return false;
+        }
+        if (Double.compare(that.lockMass, lockMass) != 0) {
+            return false;
+        }
 
         return true;
     }
@@ -42,9 +50,9 @@ public class LockMzItem {
     @Override
     public String toString() {
         return "LockMzItem{" +
-                "lockMass=" + lockMass +
-                ", charge=" + charge +
-                '}';
+            "lockMass=" + lockMass +
+            ", charge=" + charge +
+            '}';
     }
 }
 

@@ -26,8 +26,9 @@ import static com.infoclinika.mssharing.platform.model.helper.PagedItemsTransfor
  * @author : Alexander Serebriyan
  */
 @Transactional(readOnly = true)
-public abstract class DefaultProjectReader<PROJECT extends ProjectTemplate, PROJECT_LINE extends ProjectReaderTemplate.ProjectLineTemplate>
-        implements ProjectReaderTemplate<PROJECT_LINE>, DefaultTransformingTemplate<PROJECT, PROJECT_LINE> {
+public abstract class DefaultProjectReader<PROJECT extends ProjectTemplate,
+    PROJECT_LINE extends ProjectReaderTemplate.ProjectLineTemplate>
+    implements ProjectReaderTemplate<PROJECT_LINE>, DefaultTransformingTemplate<PROJECT, PROJECT_LINE> {
 
     @Inject
     protected ProjectReaderHelper<PROJECT, PROJECT_LINE> projectReaderHelper;
@@ -49,39 +50,22 @@ public abstract class DefaultProjectReader<PROJECT extends ProjectTemplate, PROJ
 
     protected Comparator<ProjectLineTemplate> comparator() {
 
-        return new Comparator<ProjectLineTemplate>() {
-            @Override
-            public int compare(ProjectLineTemplate o1, ProjectLineTemplate o2) {
-                final int result = o1.name.compareTo(o2.name);
-                if (result != 0) {
-                    return result;
-                }
-                return ((Long) (o1.id)).compareTo(o2.id);
+        return (o1, o2) -> {
+            final int result = o1.name.compareTo(o2.name);
+            if (result != 0) {
+                return result;
             }
+            return ((Long) (o1.id)).compareTo(o2.id);
         };
 
     }
 
     @Override
     public PROJECT_LINE readProject(long userId, long projectID) {
-        if (!ruleValidator.hasReadAccessOnProject(userId, projectID)) throw new AccessDenied("Project read restricted");
+        if (!ruleValidator.hasReadAccessOnProject(userId, projectID)) {
+            throw new AccessDenied("Project read restricted");
+        }
         return projectReaderHelper.readProject(projectID).transform();
-    }
-
-    @Override
-    public SortedSet<PROJECT_LINE> readProjects(long actor, Filter genericFilter) {
-
-        return projectReaderHelper.readProjectsFiltered(actor, genericFilter)
-                .transform()
-                .toSortedSet(comparator());
-    }
-
-    @Override
-    public SortedSet<PROJECT_LINE> readProjectsAllowedForWriting(final long user) {
-
-        return projectReaderHelper.readProjectsForWriting(user)
-                .transform()
-                .toSortedSet(comparator());
     }
 
     @Override
@@ -90,8 +74,24 @@ public abstract class DefaultProjectReader<PROJECT extends ProjectTemplate, PROJ
         final PageRequest pageRequest = toPageRequest(ProjectTemplate.class, pagedItemInfo);
 
         return projectReaderHelper.readProjects(actor, filter, pageRequest, pagedItemInfo.toFilterQuery())
-                .transform();
+            .transform();
 
+    }
+
+    @Override
+    public SortedSet<PROJECT_LINE> readProjects(long actor, Filter genericFilter) {
+
+        return projectReaderHelper.readProjectsFiltered(actor, genericFilter)
+            .transform()
+            .toSortedSet(comparator());
+    }
+
+    @Override
+    public SortedSet<PROJECT_LINE> readProjectsAllowedForWriting(final long user) {
+
+        return projectReaderHelper.readProjectsForWriting(user)
+            .transform()
+            .toSortedSet(comparator());
     }
 
     @Override
@@ -100,7 +100,7 @@ public abstract class DefaultProjectReader<PROJECT extends ProjectTemplate, PROJ
         final PageRequest pageRequest = toPageRequest(ProjectTemplate.class, pagedItemInfo);
 
         return projectReaderHelper.readProjectsByLab(actor, lab, pageRequest, pagedItemInfo.toFilterQuery())
-                .transform();
+            .transform();
 
     }
 

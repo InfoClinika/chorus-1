@@ -1,5 +1,6 @@
-(function () {
 "use strict";
+
+(function () {
 
 angular.module('watchFighters', [])
 

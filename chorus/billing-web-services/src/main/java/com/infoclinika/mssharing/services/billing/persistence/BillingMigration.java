@@ -6,8 +6,11 @@ import com.infoclinika.mssharing.model.internal.entity.payment.AccountChargeable
 import com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem;
 import com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount;
 import com.infoclinika.mssharing.model.internal.entity.view.ExperimentDashboardRecord;
-import com.infoclinika.mssharing.model.internal.helper.billing.BillingPropertiesProvider;
-import com.infoclinika.mssharing.model.internal.repository.*;
+import com.infoclinika.mssharing.model.internal.helper.billing.DatabaseBillingPropertiesProvider;
+import com.infoclinika.mssharing.model.internal.repository.ChargeableItemRepository;
+import com.infoclinika.mssharing.model.internal.repository.ExperimentRepository;
+import com.infoclinika.mssharing.model.internal.repository.LabPaymentAccountRepository;
+import com.infoclinika.mssharing.model.internal.repository.LabRepository;
 import com.infoclinika.mssharing.model.write.billing.BillingManagement;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.services.billing.persistence.helper.StorageUsageHelper;
@@ -31,9 +34,6 @@ import java.util.stream.StreamSupport;
 @Component
 @Transactional
 public class BillingMigration {
-
-    private static final long MAX_RUN_INTERVAL = 30 * 24 * 60 * 60 * 1000L;
-
     @Inject
     private LabPaymentAccountRepository labPaymentAccountRepository;
     @Inject
@@ -45,7 +45,7 @@ public class BillingMigration {
     @Inject
     private DailyArchiveStorageUsageRepository dailyArchiveStorageUsageRepository;
     @Inject
-    private BillingPropertiesProvider billingPropertiesProvider;
+    private DatabaseBillingPropertiesProvider databaseBillingPropertiesProvider;
     @Inject
     private BillingManagement billingManagement;
     @Inject
@@ -58,7 +58,7 @@ public class BillingMigration {
     private EntityManager em;
 
     public void migrateAccounts(long admin) {
-        if(!ruleValidator.hasAdminRights(admin)) {
+        if (!ruleValidator.hasAdminRights(admin)) {
             throw new AccessDenied("Only admin can run billing migration");
         }
         labPaymentAccountRepository.findAll().forEach(account -> migrateAccount(admin, account));
@@ -76,17 +76,17 @@ public class BillingMigration {
         final Iterable<ChargeableItem> chargeableItems = chargeableItemRepository.findEnabledByDefault();
         account.getBillingData().getFeaturesData().clear();
         account.getBillingData().getFeaturesData().addAll(StreamSupport
-                .stream(chargeableItems.spliterator(), false)
-                .map(input -> new AccountChargeableItemData(true, input, account))
-                .collect(Collectors.toSet()));
+            .stream(chargeableItems.spliterator(), false)
+            .map(input -> new AccountChargeableItemData(true, input, account))
+            .collect(Collectors.toSet()));
 
         labPaymentAccountRepository.save(account);
     }
 
     private void resetBalance(long admin, LabPaymentAccount account) {
         final long storeBalance = account.getStoreBalance();
-        if(storeBalance < 0) {
-            if(account.getScaledToPayValue() != 0) {
+        if (storeBalance < 0) {
+            if (account.getScaledToPayValue() != 0) {
                 account.setScaledToPayValue(0);
                 labPaymentAccountRepository.save(account);
             }
@@ -98,23 +98,24 @@ public class BillingMigration {
 
         final Long ladId = account.getLab().getId();
         final Long labHeadId = getLabHead(ladId);
-        final Long freeAccountStorageLimit = billingPropertiesProvider.getFreeAccountStorageLimit();
+        final Long freeAccountStorageLimit = databaseBillingPropertiesProvider.getFreeAccountStorageLimit();
         final Long lastProcessedDaySinceEpoch = dailyAnalyseStorageUsageRepository.getLastProcessedDaySinceEpoch(ladId);
         final long storageUsageForDay = lastProcessedDaySinceEpoch != null ?
-                getAnalyzableStorageUsage(ladId, lastProcessedDaySinceEpoch) :
-                0;
+            getAnalyzableStorageUsage(ladId, lastProcessedDaySinceEpoch) :
+            0;
 
-        if(storageUsageForDay > freeAccountStorageLimit) {
+        if (storageUsageForDay > freeAccountStorageLimit) {
             billingManagement.makeLabAccountEnterprise(labHeadId, ladId);
         } else {
 
-            final Long freeAccountArchiveStorageLimit = billingPropertiesProvider.getFreeAccountArchiveStorageLimit();
+            final Long freeAccountArchiveStorageLimit =
+                databaseBillingPropertiesProvider.getFreeAccountArchiveStorageLimit();
             final Long lastDayArchiveStorage = dailyArchiveStorageUsageRepository.getLastProcessedDaySinceEpoch(ladId);
             final long archiveStorageUsageForDay = lastDayArchiveStorage != null ?
-                    dailyArchiveStorageUsageRepository.getStorageUsageForDay(ladId, lastDayArchiveStorage) :
-                    0;
+                dailyArchiveStorageUsageRepository.getStorageUsageForDay(ladId, lastDayArchiveStorage) :
+                0;
 
-            if(archiveStorageUsageForDay > freeAccountArchiveStorageLimit) {
+            if (archiveStorageUsageForDay > freeAccountArchiveStorageLimit) {
                 billingManagement.makeLabAccountEnterprise(labHeadId, ladId);
             }
 
@@ -127,15 +128,15 @@ public class BillingMigration {
     }
 
     private List<ExperimentDashboardRecord> findExperimentsByLab(long lab) {
-        final TypedQuery<ExperimentDashboardRecord> query = em.createQuery(ExperimentRepository.FIND_ALL_BY_LAB_WITH_ADVANCED_FILTER, ExperimentDashboardRecord.class);
+        final TypedQuery<ExperimentDashboardRecord> query =
+            em.createQuery(ExperimentRepository.FIND_ALL_BY_LAB_WITH_ADVANCED_FILTER, ExperimentDashboardRecord.class);
         query.setParameter("lab", lab);
         return query.getResultList();
     }
 
     private long getAnalyzableStorageUsage(long lab, long daySinceEpoch) {
         final long rawFilesSize = storageUsageHelper.getRawFilesSize(lab, daySinceEpoch);
-        final long translatedFilesSize = storageUsageHelper.getTranslatedFilesSize(lab, daySinceEpoch);
         final long searchResultsFilesSize = storageUsageHelper.getSearchResultsFilesSize(lab);
-        return rawFilesSize + translatedFilesSize + searchResultsFilesSize;
+        return rawFilesSize + searchResultsFilesSize;
     }
 }

@@ -41,10 +41,29 @@
                             <input id="lastName" name="lastName" type="text" class="dialog-text-input dont-hide" ng-model="account.lastName"/>
                         </div>
                     </div>
-                    <div class="control-group laboratorySelector last-form-group">
+                    <div class="control-group laboratorySelector">
                         <label class="control-label optional">Laboratory&nbsp;<span class="optional-string">(optional)</span></label>
                         <laboratory-selector laboratories="allLabs" selected-laboratories="account.selectedLaboratories" undeletable-laboratories='account.alreadyAddedLaboratories'
                                              pending-labs='pendingLabs' removal-laboratories="account.removalLaboratories"></laboratory-selector>
+                    </div>
+                    <div class="control-group last-form-group" ng-show="accountRemoval">
+                        <label class="control-label">Account Removal</label>
+                        <div ng-show="accountRemoval.date">
+                            <span>You have requested your account removal on <strong><span
+                                    ng-bind="accountRemoval.date | date"></span></strong>.</span>
+                            <span>If you would like to withdraw the request, press the <strong>'Revoke Account Removal Request'</strong> button.</span><br/>
+                            <button class="btn secondary-action " ng-click="revokeAccountRemovalRequest();">Revoke
+                                Account Removal Request
+                            </button>
+                        </div>
+                        <div ng-hide="accountRemoval.date">
+                            <span>If you would like to remove your account, press the <strong>'Request Account Removal'</strong> button.</span>
+                            <span>The request will be processed in 24 hours.</span>
+                            <span>You will be able to withdraw the request until your account is removed.</span><br/>
+                            <button class="btn secondary-action " ng-click="requestAccountRemoval();">Request Account
+                                Removal
+                            </button>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button class="btn secondary-action" data-dismiss="modal" ng-show="page.form.editProfileMode">Cancel</button>
@@ -70,8 +89,9 @@
                             New password <span class="error-message" ng-show="!changePass.newPassword">is required</span>
                             <span class="error-message" ng-show="changePasswordError.new">should not be same as old password</span></label>
                         <span class="error-message" ng-show="!formToChangePass.password.$error.inputValidator && formToChangePass.password.$error.passwordStrength">
-                                doesnt' meet requirements
-                                <i class="icon validation-message-warning" title="Should be at least 8 characters long.&#10;Must contain both letters and digits."></i>
+                                doesn't meet requirements
+                                <i class="icon validation-message-warning"
+                                   title="Should be at least 8 characters long.&#10;Must contain both letters and digits.&#10;Must contain at least one capital letter"></i>
                         </span>
                         <span class="error-message" ng-show="!formToChangePass.password.$error.passwordStrength && formToChangePass.password.$error.passwordBlackList">is in black list</span></label>
                         <input id="password" name="password" type="password"

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+    <import resource="classpath:autoimporter-context.xml"/>
+
+    <!-- <bean id="uploadService">
+         <property name="server" ref="mbeanServerConnection" />
+         <property name="objectName" value="bean:name=uploadService,type=UploadService" />
+         <property name="proxyInterface" value="com.infoclinika.mssharing.autoimporter.service.api.internal.UploadService" />
+     </bean>-->
+
+   <!-- <bean id="klf" class="org.springframework.jmx.support.NotificationListenerHolder">
+        <property name="notificationListener" value="com.infoclinika.mssharing.autoimporter.gui.swing.util.UploadServiceNotificationListener"/>
+        <property name="mappedObjectName" value="bean:name=uploaderService" />
+        &lt;!&ndash;<property name="proxyInterface" value="com.infoclinika.mssharing.autoimporter.service.api.internal.UploadService"/>
+        <property name="server" ref="clientConnector"/>&ndash;&gt;
+    </bean>-->
+
+
+    <bean id="uploadServiceProxy" class="org.springframework.jmx.access.MBeanProxyFactoryBean">
+        <property name="objectName" value="bean:name=uploaderService"/>
+        <property name="proxyInterface" value="com.infoclinika.mssharing.autoimporter.service.api.internal.UploadService"/>
+        <property name="server" ref="clientConnector"/>
+    </bean>
+
+    <bean id="serviceStatus" class="org.springframework.jmx.access.MBeanProxyFactoryBean">
+        <property name="objectName" value="bean:name=serviceStatus"/>
+        <property name="proxyInterface" value="com.infoclinika.mssharing.autoimporter.service.api.internal.ServiceStatus"/>
+        <property name="server" ref="clientConnector"/>
+    </bean>
+
+    <bean id="clientConnector" class="org.springframework.jmx.support.MBeanServerConnectionFactoryBean">
+        <property name="serviceUrl" value="service:jmx:rmi://localhost/jndi/rmi://localhost:10099/uploader"/>
+    </bean>
+
+    <bean id="frameLazyFactory" class="com.infoclinika.mssharing.autoimporter.gui.swing.util.FrameLazyFactory">
+        <lookup-method name="getLoginForm" bean="loginForm"/>
+        <lookup-method name="getAddConfigDialog" bean="configDialog"/>
+        <lookup-method name="getMainForm" bean="mainForm"/>
+    </bean>
+</beans>

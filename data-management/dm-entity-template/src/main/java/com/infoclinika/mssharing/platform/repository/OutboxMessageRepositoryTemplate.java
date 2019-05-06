@@ -10,7 +10,9 @@ import java.util.List;
 /**
  * @author Herman Zamula
  */
-public interface OutboxMessageRepositoryTemplate<ENTITY extends OutboxMessageTemplate> extends CrudRepository<ENTITY, Long> {
+public interface OutboxMessageRepositoryTemplate<ENTITY extends OutboxMessageTemplate>
+    extends CrudRepository<ENTITY, Long> {
+
     @Query("from #{#entityName} m where m.from.id = :from")
     List<OutboxMessageTemplate> findByFrom(@Param("from") long from);
 }

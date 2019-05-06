@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
  * @author Herman Zamula
  */
 @Component
-public class DefaultSecurityHelperAdapter extends DefaultSecurityHelper<UserTemplate, SecurityHelperTemplate.UserDetails> {
+public class DefaultSecurityHelperAdapter
+    extends DefaultSecurityHelper<UserTemplate, SecurityHelperTemplate.UserDetails> {
     @Override
     public UserDetails transform(UserTemplate userTemplate) {
         return transformDefault(userTemplate);

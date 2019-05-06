@@ -29,4 +29,6 @@ public interface FileOperationsManager {
     void checkIsFilesConsistent(long actor);
 
     void checkIsFileConsistent(long actor, long file);
+
+    void markUnsuccessfullyUploadedFilesToReplaceAndCorrupted();
 }

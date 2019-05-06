@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.infoclinika</groupId>
+        <artifactId>clients</artifactId>
+        <version>1.0</version>
+    </parent>
+
+    <artifactId>desktop-clients-common</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.build.timestamp.format>ddMMyyyy</maven.build.timestamp.format>
+        <mockito-all.version>1.9.5</mockito-all.version>
+        <uploader.api.url>http://localhost:8080/rest</uploader.api.url>
+        <version.suffix>v1.0.${maven.build.timestamp}</version.suffix>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-annotations</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-core</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>jackson-databind</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infoclinika</groupId>
+            <artifactId>rest-dto</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infoclinika</groupId>
+            <artifactId>uploader-ws-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infoclinika</groupId>
+            <artifactId>util</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infoclinika</groupId>
+            <artifactId>properties-provider</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-rs-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-transports-http</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-databinding-jaxb</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <filtering>false</filtering>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+            </resource>
+
+            <resource>
+                <filtering>true</filtering>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/VERSION.txt</include>
+                </includes>
+            </resource>
+
+            <resource>
+                <filtering>false</filtering>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>**/VERSION.txt</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>desktop-clients-common-kiev-dev</id>
+            <properties>
+                <uploader.api.url>http://52.90.89.173:8080/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-localhost</id>
+            <properties>
+                <uploader.api.url>http://localhost:8080/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-celgene-crdm</id>
+            <properties>
+                <uploader.api.url>https://crdm.celgene.com/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-staging</id>
+            <properties>
+                <uploader.api.url>http://ec2-54-227-230-104.compute-1.amazonaws.com:8080/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-production</id>
+            <properties>
+                <uploader.api.url>https://chorusproject.org/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-celgene</id>
+            <properties>
+                <uploader.api.url>https://chorus.celgene.com/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-merck</id>
+            <properties>
+                <uploader.api.url>https://chorus-test.merck.com/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-infoclinika-test</id>
+            <properties>
+                <uploader.api.url>http://test.infoclinika.net/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-infoclinika-dev</id>
+            <properties>
+                <uploader.api.url>http://dev.infoclinika.net/rest</uploader.api.url>
+            </properties>
+        </profile>
+        <profile>
+            <id>desktop-clients-common-infoclinika-app</id>
+            <properties>
+                <uploader.api.url>http://app.infoclinika.net/rest</uploader.api.url>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

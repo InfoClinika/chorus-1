@@ -11,7 +11,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "billing_lab_account_feature_usage")
-public class LabAccountFeatureUsage extends AbstractPersistable<Long>{
+public class LabAccountFeatureUsage extends AbstractPersistable<Long> {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "account")

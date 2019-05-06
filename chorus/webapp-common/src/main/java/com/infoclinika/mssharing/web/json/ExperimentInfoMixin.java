@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 abstract class ExperimentInfoMixin {
     @JsonCreator
     public ExperimentInfoMixin(
-            @JsonProperty("name") String name,
-            @JsonProperty("description") String description,
-            @JsonProperty("workflowType") long workflowType,
-            @JsonProperty("specie") long specie) {
+        @JsonProperty("name") String name,
+        @JsonProperty("description") String description,
+        @JsonProperty("workflowType") long workflowType,
+        @JsonProperty("specie") long specie) {
     }
 }

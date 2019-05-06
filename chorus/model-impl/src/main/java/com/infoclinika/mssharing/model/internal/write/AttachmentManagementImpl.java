@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.write;
 
@@ -13,15 +15,12 @@ import com.infoclinika.mssharing.model.internal.entity.AnnotationAttachment;
 import com.infoclinika.mssharing.model.internal.entity.User;
 import com.infoclinika.mssharing.model.internal.entity.Util;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveExperiment;
-import com.infoclinika.mssharing.model.internal.repository.AnnotationAttachmentRepository;
-import com.infoclinika.mssharing.model.internal.repository.ApplicationSettingsRepository;
-import com.infoclinika.mssharing.model.internal.repository.ExperimentRepository;
+import com.infoclinika.mssharing.model.internal.repository.*;
 import com.infoclinika.mssharing.model.write.AttachmentManagement;
 import com.infoclinika.mssharing.platform.entity.Attachment;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.model.helper.write.AttachmentsManager;
 import com.infoclinika.mssharing.platform.model.impl.write.DefaultAttachmentManagement;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +29,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.Date;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -37,13 +37,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Service("attachmentManagement")
 @Transactional
-public class AttachmentManagementImpl extends DefaultAttachmentManagement<Attachment<User>> implements AttachmentManagement {
+public class AttachmentManagementImpl extends DefaultAttachmentManagement<Attachment<User>>
+    implements AttachmentManagement {
 
     @Inject
     private ApplicationSettingsRepository applicationSettingsRepository;
-
-    @Value("${amazon.active.bucket}")
-    private String targetBucket;
     @Inject
     private AnnotationAttachmentRepository annotationAttachmentRepository;
     @Inject
@@ -57,13 +55,15 @@ public class AttachmentManagementImpl extends DefaultAttachmentManagement<Attach
 
     @Override
     public long getMaxAttachmentSize() {
-        return applicationSettingsRepository.findMaxSize().value;
+        return applicationSettingsRepository.findMaxSize().getValue();
     }
 
     @Override
     public void discardAnnotationAttachment(long actor, long annotationAttachment) {
         if (!validator.canModifyAnnotationAttachment(actor, annotationAttachment)) {
-            throw new AccessDenied("User cannot discard the annotation attachment. User ID = " + actor + ". Annoatation Attachment ID = " + annotationAttachment);
+            throw new AccessDenied(
+                "User cannot discard the annotation attachment. User ID = " + actor + ". Annoatation Attachment ID = " +
+                    annotationAttachment);
         }
         final AnnotationAttachment toDiscard = annotationAttachmentRepository.findOne(annotationAttachment);
 
@@ -73,7 +73,9 @@ public class AttachmentManagementImpl extends DefaultAttachmentManagement<Attach
     @Override
     public void updateExperimentAnnotationAttachment(long actor, long experiment, Long annotationAttachment) {
         if (!ruleValidator.userHasEditPermissionsOnExperiment(actor, experiment)) {
-            throw new AccessDenied("User cannot edit the annotation for the experiment. User ID = " + actor + ". Experiment ID = " + experiment);
+            throw new AccessDenied(
+                "User cannot edit the annotation for the experiment. User ID = " + actor + ". Experiment ID = " +
+                    experiment);
         }
         final ActiveExperiment entity = checkNotNull(experimentRepository.findOne(experiment));
 
@@ -85,7 +87,8 @@ public class AttachmentManagementImpl extends DefaultAttachmentManagement<Attach
             discardAnnotationAttachment(actor, existingId);
         }
 
-        entity.annotationAttachment = annotationAttachment == null ? null : annotationAttachmentRepository.findOne(annotationAttachment);
+        entity.annotationAttachment =
+            annotationAttachment == null ? null : annotationAttachmentRepository.findOne(annotationAttachment);
         //explicit save to avoid implicit merge problems on the future transaction commit
         experimentRepository.save(entity);
     }
@@ -97,5 +100,4 @@ public class AttachmentManagementImpl extends DefaultAttachmentManagement<Attach
         final AnnotationAttachment attachment = new AnnotationAttachment(creator, fileName, current.get(), sizeInBytes);
         return annotationAttachmentRepository.save(attachment).getId();
     }
-
 }

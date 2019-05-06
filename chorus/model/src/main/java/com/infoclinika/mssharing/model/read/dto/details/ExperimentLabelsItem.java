@@ -12,10 +12,10 @@ public class ExperimentLabelsItem {
     public final List<Long> specialLabels;
 
     public ExperimentLabelsItem(
-            List<Long> lightLabels,
-            List<Long> mediumLabels,
-            List<Long> heavyLabels,
-            List<Long> specialLabels
+        List<Long> lightLabels,
+        List<Long> mediumLabels,
+        List<Long> heavyLabels,
+        List<Long> specialLabels
     ) {
         this.lightLabels = lightLabels;
         this.mediumLabels = mediumLabels;

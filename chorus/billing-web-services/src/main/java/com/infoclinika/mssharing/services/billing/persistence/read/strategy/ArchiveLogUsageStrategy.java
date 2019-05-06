@@ -2,9 +2,9 @@ package com.infoclinika.mssharing.services.billing.persistence.read.strategy;
 
 import com.google.common.base.Function;
 import com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem;
-import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader;
-import com.infoclinika.mssharing.services.billing.persistence.enity.storage.ArchiveStorageUsage;
 import com.infoclinika.mssharing.services.billing.persistence.enity.ChargeableItemUsage;
+import com.infoclinika.mssharing.services.billing.persistence.enity.storage.ArchiveStorageUsage;
+import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader;
 import com.infoclinika.mssharing.services.billing.persistence.repository.DailyArchiveStorageUsageRepository;
 import org.springframework.stereotype.Component;
 
@@ -32,9 +32,11 @@ public class ArchiveLogUsageStrategy extends AbstractFeatureLogStrategy {
                 params.totalHours = params.totalHours + archiveStorageUsage.hours;
             }
             final ChargeableItemUsage itemUsage = itemUsageOrdering.max(perFileUsage);
-            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(), itemUsage.getBytes(), itemUsage.getInstrument(),
-                    0, 0, itemUsage.getBalance(), (int) params.totalHours,
-                    itemUsage.getFileName(), itemUsage.getTimestampDate());
+            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(), itemUsage.getBytes(),
+                itemUsage.getInstrument(),
+                0, 0, itemUsage.getBalance(), (int) params.totalHours,
+                itemUsage.getFileName(), itemUsage.getTimestampDate()
+            );
         };
     }
 

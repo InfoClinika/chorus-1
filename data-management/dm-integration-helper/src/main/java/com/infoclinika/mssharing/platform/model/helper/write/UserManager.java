@@ -43,7 +43,7 @@ public class UserManager<USER extends UserTemplate<?>> {
     private NotifierTemplate notifier;
     @Inject
     private UserInvitationLinkRepository userInvitationLinkRepository;
-    private Logger LOG = LoggerFactory.getLogger(UserManager.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserManager.class);
 
     //TODO: Method is unused. Consider should we remove it.
     public boolean userWithSpecifiedEmailExists(final String userEmail) {
@@ -54,7 +54,7 @@ public class UserManager<USER extends UserTemplate<?>> {
     public USER createUser(PersonInfo userInfo, String password) {
         final USER existingUser = userRepository.findByEmail(userInfo.email);
         if (existingUser != null) {
-            LOG.warn("Attempt to create a user, which already exists: " + userInfo);
+            LOGGER.warn("Attempt to create a user, which already exists: " + userInfo);
             return existingUser;
         }
         //noinspection unchecked
@@ -64,7 +64,6 @@ public class UserManager<USER extends UserTemplate<?>> {
         return saveAndGetUser(userToSave);
     }
 
-    //TODO [code review]
     public USER createUserWithRandomPassword(PersonInfo userInfo) {
         String password = generateRandomPassword();
         return createUser(userInfo, password);
@@ -96,8 +95,9 @@ public class UserManager<USER extends UserTemplate<?>> {
 
     public USER changePassword(Long id, String oldPassword, String newPasswordHash) {
         final USER user = findUser(id);
-        if (!encoder.matches(oldPassword, user.getPasswordHash()))
+        if (!encoder.matches(oldPassword, user.getPasswordHash())) {
             throw new AccessDenied("Old password doesn't matched");
+        }
         user.setPasswordHash(newPasswordHash);
         return saveAndGetUser(user);
     }

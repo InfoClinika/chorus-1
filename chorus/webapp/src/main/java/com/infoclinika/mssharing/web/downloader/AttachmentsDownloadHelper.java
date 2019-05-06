@@ -12,8 +12,9 @@ public class AttachmentsDownloadHelper {
     private static final byte[] UNKNOWN_BYTES = {'?'};
 
     /**
-     * Inspired by https://github.com/nuxeo/nuxeo-common/blob/7c58a2e031b95af3d02cdf2a84dd32540ed7301d/src/main/java/org/nuxeo/common/utils/RFC2231.java
-     * <p>
+     * Inspired by https://github.com/nuxeo/nuxeo-common/blob/7c58a2e031b95af3d02cdf2a84dd32540ed7301d/src/main/java
+     * /org/nuxeo/common/utils/RFC2231.java
+     * <p/>
      * Does a simple %-escaping of the UTF-8 bytes of the value. Keep only some
      * know safe characters.
      *
@@ -49,7 +50,7 @@ public class AttachmentsDownloadHelper {
      * @param filename  the filename
      * @param userAgent the userAgent
      * @return a full string to set as value of a {@code Content-Disposition}
-     * header
+     *     header
      */
     public static String encodeContentDisposition(String filename, String userAgent) {
         StringBuilder buf = new StringBuilder("attachment; ");

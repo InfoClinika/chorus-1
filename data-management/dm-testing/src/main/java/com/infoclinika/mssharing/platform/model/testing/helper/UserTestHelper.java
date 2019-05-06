@@ -26,29 +26,29 @@ public class UserTestHelper {
     private UserRepositoryTemplate<?> repository;
 
     private static ImmutableSet<String> getLabNames(UserTemplate user) {
-        return FluentIterable.from(user.getLabs()).transform(new Function<LabTemplate, String>() {
-            @Override
-            public String apply(LabTemplate input) {
-                return input.getName();
-            }
-        }).toSet();
+        return FluentIterable.from(user.getLabs())
+            .transform((Function<LabTemplate, String>) input -> input.getName())
+            .toSet();
     }
 
     public UserShortForm shortForm(long actor) {
         final UserTemplate user = find(actor);
-        return new UserShortForm(user.getId(),
-                user.getFullName(),
-                user.getEmail(),
-                getLabNames(user));
+        return new UserShortForm(
+            user.getId(),
+            user.getFullName(),
+            user.getEmail(),
+            getLabNames(user)
+        );
     }
 
     public AccountSettingsForm accountSettingsForm(long actor) {
         final UserTemplate user = find(actor);
         return new AccountSettingsForm(
-                user.getPersonData().getFirstName(),
-                user.getPersonData().getLastName(),
-                getLabNames(user),
-                user.getEmail());
+            user.getPersonData().getFirstName(),
+            user.getPersonData().getLastName(),
+            getLabNames(user),
+            user.getEmail()
+        );
     }
 
     public UserManagementTemplate.PersonInfo readPersonInfo(long actor) {

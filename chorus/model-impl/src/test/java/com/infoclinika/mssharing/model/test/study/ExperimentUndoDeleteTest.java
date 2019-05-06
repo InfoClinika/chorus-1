@@ -1,7 +1,6 @@
 package com.infoclinika.mssharing.model.test.study;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.read.FileLine;
 import com.infoclinika.mssharing.model.write.FileItem;
@@ -62,7 +61,7 @@ public class ExperimentUndoDeleteTest extends AbstractStudyTest {
     }
 
     @Test
-    public void testFindRestoredExperiment() { //TODO: check
+    public void testFindRestoredExperiment() {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 10737418);
         long project = createPrivateProject(bob, uc.getLab3());
@@ -74,7 +73,7 @@ public class ExperimentUndoDeleteTest extends AbstractStudyTest {
     }
 
     @Test
-    public void testRestoreExperimentWithDeletedFiles() { //TODO: check
+    public void testRestoreExperimentWithDeletedFiles() {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 10737418);
         long project = createPrivateProject(bob, uc.getLab3());
@@ -137,7 +136,7 @@ public class ExperimentUndoDeleteTest extends AbstractStudyTest {
         assertEquals(dashboardReader.readExperiments(bob, Filter.MY).size(), 0);
     }
 
-    @Test
+    @Test(enabled = false, description = "test was disabled for open-chorus")
     public void testNotFindRemovedExperimentByRemovingInstrument() {
         long bob = uc.createLab3AndBob();
         long instr = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
@@ -151,7 +150,7 @@ public class ExperimentUndoDeleteTest extends AbstractStudyTest {
 
     }
 
-    @Test(enabled = false /*todo: investigate behavior, fails periodically*/, expectedExceptions = AccessDenied.class/*, dependsOnMethods = {"testNotFindExperimentMovedToTrash", "testFindExperimentInTrash"}*/)
+    @Test(enabled = false, expectedExceptions = AccessDenied.class)
     public void testNotAbleToRestoreExperimentHavingFilesWithDuplicateNames() {
         long bob = uc.createLab3AndBob();
         long instr = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3(), anyThermoInstrumentModel()).get();
@@ -162,8 +161,9 @@ public class ExperimentUndoDeleteTest extends AbstractStudyTest {
         final String factorValue = "2";
         final ExperimentSampleItem sample = sampleWithFactors(file, of(factorValue));
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItem(file, false, 0, preparedSample(file, ImmutableSet.of(sample)))), of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItem(file, false, 0, preparedSample(file, ImmutableSet.of(sample)))), of(factorValue)
+        );
         long deleted = studyManagement.moveExperimentToTrash(bob, experiment);
         instrumentManagement.moveFileToTrash(bob, file);
         uc.saveFileWithName(bob, instr, fileName);

@@ -51,7 +51,7 @@ public class BillingProperty extends AbstractPersistable<Long> {
         ENTERPRISE_ACCOUNT_ARCHIVE_STORAGE_VOLUME_SIZE("Enterprise account archive storage volume size"),
         PROCESSING_FEATURE_COST("Processing feature cost");
 
-        private String value;
+        private final String value;
 
         BillingPropertyName(String value) {
             this.value = value;

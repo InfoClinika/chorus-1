@@ -12,7 +12,8 @@ import com.infoclinika.mssharing.services.billing.persistence.repository.DailyAr
 import com.infoclinika.mssharing.services.billing.persistence.repository.HourlyAnalyseStorageUsageRepository;
 import com.infoclinika.mssharing.services.billing.persistence.repository.HourlyArchiveStorageUsageRepository;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,7 @@ import java.util.Date;
 public class NoS3StorageLogHelperImpl implements StorageLogHelper {
 
 
-    private static final Logger LOGGER = Logger.getLogger(NoS3StorageLogHelperImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NoS3StorageLogHelperImpl.class);
     @Inject
     private FileMetaDataRepository fileRepository;
     @Inject
@@ -70,38 +71,36 @@ public class NoS3StorageLogHelperImpl implements StorageLogHelper {
         Iterable<Lab> labs = labRepository.findAll();
         for (Lab lab : labs) {
             final Page<GroupedStorageUsage<HourlyAnalyzableStorageUsage>> analyzableStorageUsages =
-                    hourlyUsageRepository.groupedNotCompressedUsagesByFile(
-                            lab.getId(),
-                            paymentCalculations.calculationDaySinceEpoch(dateToLog),
-                            new PageRequest(0, Integer.MAX_VALUE)
-                    );
+                hourlyUsageRepository.groupedNotCompressedUsagesByFile(
+                    lab.getId(),
+                    paymentCalculations.calculationDaySinceEpoch(dateToLog),
+                    new PageRequest(0, Integer.MAX_VALUE)
+                );
             for (GroupedStorageUsage<HourlyAnalyzableStorageUsage> storageUsage : analyzableStorageUsages) {
                 final HourlyAnalyzableStorageUsage itemUsage = storageUsage.itemUsage;
                 itemUsage.setHours(storageUsage.hours.intValue());
                 itemUsage.setCharge(storageUsage.summedCharge);
                 final int day = paymentCalculations.calculationDaySinceEpoch(itemUsage.getTimestampDate());
-                itemUsage.setTranslatedCharge(storageUsage.summedTranslatedCharge);
                 itemUsage.setDay(day);
 
                 hourlyUsageRepository.deleteLogsForFilesOfDay(ImmutableSet.of(itemUsage.getFile()), day);
 
                 final DailyAnalyzableStorageUsage entity = new DailyAnalyzableStorageUsage(
-                        itemUsage.getLab(),
-                        itemUsage.getUser(),
-                        itemUsage.getFile(),
-                        itemUsage.getBytes(),
-                        itemUsage.getTimestamp(),
-                        itemUsage.getUsedBy(),
-                        itemUsage.getInstrument(),
-                        itemUsage.getTotalPrice(),
-                        itemUsage.getFileName(),
-                        itemUsage.getHours(),
-                        itemUsage.getBalance()
+                    itemUsage.getLab(),
+                    itemUsage.getUser(),
+                    itemUsage.getFile(),
+                    itemUsage.getBytes(),
+                    itemUsage.getTimestamp(),
+                    itemUsage.getUsedBy(),
+                    itemUsage.getInstrument(),
+                    itemUsage.getTotalPrice(),
+                    itemUsage.getFileName(),
+                    itemUsage.getHours(),
+                    itemUsage.getBalance()
                 );
 
                 entity.setDay(day);
                 entity.setCharge(storageUsage.summedCharge);
-                entity.setTranslatedCharge(storageUsage.summedTranslatedCharge);
                 entity.setCompressed(true);
                 dailyUsageRepository.save(entity);
             }
@@ -112,11 +111,11 @@ public class NoS3StorageLogHelperImpl implements StorageLogHelper {
         Iterable<Lab> labs = labRepository.findAll();
         for (Lab lab : labs) {
             final Page<GroupedStorageUsage<HourlyArchiveStorageUsage>> analyzableStorageUsages =
-                    hourlyArchiveStorageUsageRepository.groupedNotCompressedUsagesByFile(
-                            lab.getId(),
-                            paymentCalculations.calculationDaySinceEpoch(dateToLog),
-                            new PageRequest(0, Integer.MAX_VALUE)
-                    );
+                hourlyArchiveStorageUsageRepository.groupedNotCompressedUsagesByFile(
+                    lab.getId(),
+                    paymentCalculations.calculationDaySinceEpoch(dateToLog),
+                    new PageRequest(0, Integer.MAX_VALUE)
+                );
             for (GroupedStorageUsage<HourlyArchiveStorageUsage> storageUsage : analyzableStorageUsages) {
                 final HourlyArchiveStorageUsage itemUsage = storageUsage.itemUsage;
                 itemUsage.setHours(storageUsage.hours.intValue());
@@ -127,15 +126,15 @@ public class NoS3StorageLogHelperImpl implements StorageLogHelper {
                 hourlyArchiveStorageUsageRepository.deleteLogsForFilesOfDay(ImmutableSet.of(itemUsage.getFile()), day);
 
                 final DailyArchiveStorageUsage entity = new DailyArchiveStorageUsage(
-                        itemUsage.getLab(),
-                        itemUsage.getUser(),
-                        itemUsage.getFile(),
-                        itemUsage.getBytes(),
-                        new Date(itemUsage.getTimestamp()),
-                        itemUsage.getUsedBy(),
-                        itemUsage.getInstrument(),
-                        itemUsage.getCharge(),
-                        itemUsage.getFileName()
+                    itemUsage.getLab(),
+                    itemUsage.getUser(),
+                    itemUsage.getFile(),
+                    itemUsage.getBytes(),
+                    new Date(itemUsage.getTimestamp()),
+                    itemUsage.getUsedBy(),
+                    itemUsage.getInstrument(),
+                    itemUsage.getCharge(),
+                    itemUsage.getFileName()
                 );
 
                 entity.setDay(day);
@@ -156,29 +155,31 @@ public class NoS3StorageLogHelperImpl implements StorageLogHelper {
         final String instrumentName = file.getInstrument().getName();
         final String fileName = file.getName();
 
-        if(StringUtils.isNotEmpty(file.getContentId())) {
+        if (StringUtils.isNotEmpty(file.getContentId())) {
 
             final HourlyAnalyzableStorageUsage entry = new HourlyAnalyzableStorageUsage(
-                    lab,
-                    ownerId,
-                    fileId,
-                    fileSize,
-                    date,
-                    ownerFullName, instrumentName,
-                    0, fileName);
+                lab,
+                ownerId,
+                fileId,
+                fileSize,
+                date,
+                ownerFullName, instrumentName,
+                0, fileName
+            );
             entry.setDay(paymentCalculations.calculationDaySinceEpoch(date));
             hourlyUsageRepository.save(entry);
 
-        } else if(StringUtils.isNotEmpty(file.getArchiveId())) {
+        } else if (StringUtils.isNotEmpty(file.getArchiveId())) {
 
             final HourlyArchiveStorageUsage entry = new HourlyArchiveStorageUsage(
-                    lab,
-                    ownerId,
-                    fileId,
-                    fileSize,
-                    date,
-                    ownerFullName, instrumentName,
-                    0, fileName);
+                lab,
+                ownerId,
+                fileId,
+                fileSize,
+                date,
+                ownerFullName, instrumentName,
+                0, fileName
+            );
             entry.setDay(paymentCalculations.calculationDaySinceEpoch(date));
             hourlyArchiveStorageUsageRepository.save(entry);
 
@@ -186,5 +187,4 @@ public class NoS3StorageLogHelperImpl implements StorageLogHelper {
             throw new RuntimeException("File doesn't have content ID.");
         }
     }
-
 }

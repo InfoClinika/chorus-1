@@ -12,11 +12,15 @@ public class ExperimentAdditionalInfoRecord {
     public final long countArchivedFilesRequestedForDownloadOnly;
     public final long countArchivedFilesRequestedForUnArchiving;
 
-    public ExperimentAdditionalInfoRecord(long experiment, long userCanCreateExperimentsInProject,
-                                          long countFilesReadyToDownload,
-                                          long canArchiveExperiment, long canUnarchiveExperiment,
-                                          long countArchivedFilesRequestedForDownloadOnly,
-                                          long countArchivedFilesRequestedForUnArchiving) {
+    public ExperimentAdditionalInfoRecord(
+        long experiment,
+        long userCanCreateExperimentsInProject,
+        long countFilesReadyToDownload,
+        long canArchiveExperiment,
+        long canUnarchiveExperiment,
+        long countArchivedFilesRequestedForDownloadOnly,
+        long countArchivedFilesRequestedForUnArchiving
+    ) {
         this.experiment = experiment;
         this.userCanCreateExperimentsInProject = userCanCreateExperimentsInProject;
         this.countFilesReadyToDownload = countFilesReadyToDownload;
@@ -24,6 +28,5 @@ public class ExperimentAdditionalInfoRecord {
         this.canUnarchiveExperiment = canUnarchiveExperiment;
         this.countArchivedFilesRequestedForDownloadOnly = countArchivedFilesRequestedForDownloadOnly;
         this.countArchivedFilesRequestedForUnArchiving = countArchivedFilesRequestedForUnArchiving;
-
     }
 }

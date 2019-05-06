@@ -94,12 +94,16 @@ class SampleConditionsFactory {
     }
 
     private static List<Object[]> composeFactorValues(Iterable<ExperimentSample> samples, int factorsCount) {
-        final ListMultimap<Integer, String> factorIndexToFactorValues = asFactorIndexToFactorValuesMap(samples, factorsCount);
+        final ListMultimap<Integer, String> factorIndexToFactorValues =
+            asFactorIndexToFactorValuesMap(samples, factorsCount);
 
         return transformToFactorValuesList(factorIndexToFactorValues, factorsCount);
     }
 
-    private static List<Object[]> transformToFactorValuesList(ListMultimap<Integer, String> factorIndexToFactorValues, int factorsCount) {
+    private static List<Object[]> transformToFactorValuesList(
+        ListMultimap<Integer, String> factorIndexToFactorValues,
+        int factorsCount
+    ) {
         final List<Object[]> factorsValuesList = newArrayList();
         for (int factorIndex = 0; factorIndex < factorsCount; factorIndex++) {
             final List<String> factorValues = factorIndexToFactorValues.get(factorIndex);
@@ -110,12 +114,18 @@ class SampleConditionsFactory {
         return factorsValuesList;
     }
 
-    private static ListMultimap<Integer, String> asFactorIndexToFactorValuesMap(Iterable<ExperimentSample> samples, int factorsCount) {
+    private static ListMultimap<Integer, String> asFactorIndexToFactorValuesMap(
+        Iterable<ExperimentSample> samples,
+        int factorsCount
+    ) {
         final ArrayListMultimap<Integer, String> factorIndexToFactorValues = ArrayListMultimap.create();
         for (ExperimentSample sample : samples) {
             final List<String> sampleFactorValues = sample.getFactorValues();
             final int sampleFactorValuesCount = sampleFactorValues.size();
-            checkState(factorsCount == sampleFactorValuesCount, "Number of factor values doesn't match with factors specified.");
+            checkState(
+                factorsCount == sampleFactorValuesCount,
+                "Number of factor values doesn't match with factors specified."
+            );
             for (int factorIndex = 0; factorIndex < sampleFactorValuesCount; factorIndex++) {
                 factorIndexToFactorValues.put(factorIndex, sampleFactorValues.get(factorIndex));
 
@@ -125,7 +135,11 @@ class SampleConditionsFactory {
     }
 
     @Transient
-    private static SampleCondition createCondition(AbstractExperiment experiment, List<Level> levels, Iterable<ExperimentSample> samples) {
+    private static SampleCondition createCondition(
+        AbstractExperiment experiment,
+        List<Level> levels,
+        Iterable<ExperimentSample> samples
+    ) {
         return new SampleCondition(false, getNameFromLevels(levels), experiment, levels, newArrayList(samples));
     }
 

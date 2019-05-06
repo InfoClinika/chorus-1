@@ -3,7 +3,5 @@ Hello, ${user}!
 
 Imported files have been added to your files.
 ID:${experimentId}"${experimentName}" experiment was created based on these files.
-Processing run with ID:${proteinSearchId} was created for this experiment.
-You can find it under experiment details or you can go directly to processing run results by this link: <a href="${analysisUrl}">Protein Search Results</a>.
 
 Thank you!

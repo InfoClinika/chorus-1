@@ -13,9 +13,10 @@ import java.util.List;
 public abstract class ExperimentFileItemMixin {
     @JsonCreator
     public ExperimentFileItemMixin(
-            @JsonProperty("id") long id,
-            @JsonProperty("factorValues") List<String> factorValues,
-            @JsonProperty("annotations") List<ExperimentManagementTemplate.AnnotationTemplate> annotations,
-            @JsonProperty("copy") boolean copy) {
+        @JsonProperty("id") long id,
+        @JsonProperty("factorValues") List<String> factorValues,
+        @JsonProperty("annotations") List<ExperimentManagementTemplate.AnnotationTemplate> annotations,
+        @JsonProperty("copy") boolean copy
+    ) {
     }
 }

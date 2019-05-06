@@ -17,9 +17,9 @@ public interface ChorusAuthenticationService {
     /**
      * Authenticates user with given credentials.
      *
-     * @return In case of successful authentication returns Single Sign-On(SSO) session attributes and user secret key with status 200.
-     * The key is be stored inside SSO server and is used for repeated attribute fetch {@link #getAttributes}
-     * In case of authentication failure 401 code(Unauthorized) is returned
+     * @return In case of successful authentication returns Single Sign-On(SSO) session attributes and user secret
+     *     key with status 200. The key is be stored inside SSO server and is used for repeated attribute
+     *     fetch {@link #getAttributes} In case of authentication failure 401 code(Unauthorized) is returned
      */
     @POST
     @Path("authenticateUser")
@@ -31,8 +31,8 @@ public interface ChorusAuthenticationService {
      * Gets attributes for Single Sign-On(SSO) session with given credentials(login and secret key)
      *
      * @return In case given credentials matches the user, returns the same set of SSO session attributes
-     * as if {@link #authenticateUser} would have been used with status 200.
-     * In case given credentials don't match the user, 401 code(Unauthorized) is returned
+     *     as if {@link #authenticateUser} would have been used with status 200.
+     *     In case given credentials don't match the user, 401 code(Unauthorized) is returned
      */
     @POST
     @Path("getAttributes")
@@ -59,8 +59,8 @@ public interface ChorusAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("login", login)
-                    .toString();
+                .add("login", login)
+                .toString();
         }
     }
 
@@ -92,8 +92,8 @@ public interface ChorusAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("login", login)
-                    .toString();
+                .add("login", login)
+                .toString();
         }
     }
 
@@ -110,8 +110,8 @@ public interface ChorusAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("attributes", attributes)
-                    .toString();
+                .add("attributes", attributes)
+                .toString();
         }
     }
 
@@ -128,8 +128,8 @@ public interface ChorusAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("attributes", attributes)
-                    .toString();
+                .add("attributes", attributes)
+                .toString();
         }
     }
 
@@ -146,8 +146,8 @@ public interface ChorusAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("value", value)
-                    .toString();
+                .add("value", value)
+                .toString();
         }
     }
 
@@ -164,8 +164,8 @@ public interface ChorusAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("value", value)
-                    .toString();
+                .add("value", value)
+                .toString();
         }
     }
 
@@ -182,8 +182,8 @@ public interface ChorusAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("value", value)
-                    .toString();
+                .add("value", value)
+                .toString();
         }
     }
 

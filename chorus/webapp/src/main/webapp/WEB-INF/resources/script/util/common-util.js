@@ -1,5 +1,5 @@
+"use strict";
 (function () {
-    "use strict";
 
     angular.module("util", [])
         .service("CommonUtil", CommonUtilService);
@@ -10,8 +10,8 @@
         };
 
         function waitUntil(condition, handler, interval) {
-            if(interval == undefined) {
-                interval = 50;  // default interval
+            if (interval == undefined) {
+                interval = 50; // default interval
             }
 
             if (condition()) {

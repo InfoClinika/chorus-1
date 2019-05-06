@@ -3,17 +3,13 @@ package com.infoclinika.mssharing.web.security;
 import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.platform.model.helper.SecurityHelperTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 
 /**
  * @author Pavel Kaplin
- *
- * TODO <herman.zamula> : Migrate to Data Management Web
  */
 //@Component
 public class SpringUserProvider implements ChorusUserProvider {
@@ -29,7 +25,7 @@ public class SpringUserProvider implements ChorusUserProvider {
             throw new UsernameNotFoundException("User with email " + username + " not found");
         }
 
-        if(userDetails.locked) {
+        if (userDetails.locked) {
             throw new BadCredentialsException("User is locked");
         }
 

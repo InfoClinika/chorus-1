@@ -10,9 +10,9 @@ public abstract class InstrumentDetailsTemplateMixin {
     @JsonCreator
     @SuppressWarnings("unused")
     public InstrumentDetailsTemplateMixin(
-            @JsonProperty("name") String name,
-            @JsonProperty("serialNumber") String serialNumber,
-            @JsonProperty("peripherals") String peripherals
+        @JsonProperty("name") String name,
+        @JsonProperty("serialNumber") String serialNumber,
+        @JsonProperty("peripherals") String peripherals
     ) {
     }
 }

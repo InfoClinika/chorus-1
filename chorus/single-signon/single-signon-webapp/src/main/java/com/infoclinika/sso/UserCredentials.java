@@ -17,7 +17,11 @@ public class UserCredentials extends UsernamePasswordCredentials {
     @NotNull
     private final ApplicationType applicationType;
 
-    public UserCredentials(@Nullable Long uniqueID, String username, String password, String clientName, ApplicationType applicationType) {
+    public UserCredentials(@Nullable Long uniqueID,
+                           String username,
+                           String password,
+                           String clientName,
+                           ApplicationType applicationType) {
         super(username, password, clientName);
         this.uniqueID = uniqueID;
         this.applicationType = applicationType;

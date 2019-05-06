@@ -39,8 +39,8 @@ import static com.infoclinika.mssharing.web.downloader.AttachmentsDownloadHelper
 @RequestMapping("/poster")
 @Controller
 public class AdvertisementController {
-    private static final Logger LOG = LoggerFactory.getLogger(AdvertisementController.class);
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdvertisementController.class);
+    private static final String USER_AGENT = "User-Agent";
     @Inject
     private AdvertisementReader advertisementReader;
     @Inject
@@ -49,10 +49,6 @@ public class AdvertisementController {
     private StoredObjectPaths storedObjectPaths;
     @Inject
     private javax.inject.Provider<Date> current;
-
-    private static final String USER_AGENT = "User-Agent";
-
-    private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(AdvertisementController.class);
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
@@ -68,43 +64,80 @@ public class AdvertisementController {
 
     @RequestMapping(value = "/new", method = RequestMethod.POST)
     @ResponseBody
-    public StartAttachmentUploadResponse createAdvertisement(@RequestBody StartAdvertisementImageUploadRequest request, Principal principal) {
-        long attachmentId = advertisementManagement.createAdvertisement(getUserId(principal), new AdvertisementManagement.AdvertisementInfo(request.title, request.startDate, request.endDate, request.redirectLink, request.currentDate, request.filename, request.sizeInBytes, request.isEnabled));
+    public StartAttachmentUploadResponse createAdvertisement(
+        @RequestBody StartAdvertisementImageUploadRequest request,
+        Principal principal
+    ) {
+        long attachmentId = advertisementManagement.createAdvertisement(
+            getUserId(principal),
+            new AdvertisementManagement.AdvertisementInfo(
+                request.title,
+                request.startDate,
+                request.endDate,
+                request.redirectLink,
+                request.currentDate,
+                request.filename,
+                request.sizeInBytes,
+                request.isEnabled
+            )
+        );
         return new StartAttachmentUploadResponse(request.filename, attachmentId);
     }
 
     @RequestMapping(value = "/updateImageUrl", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public void updateAdvertisementImageInfo(@RequestBody final CompleteAdvertisementImageUploadRequest request, final Principal principal) {
-        LOG.debug("Attaching image file to the advertisement:" + request);
+    public void updateAdvertisementImageInfo(
+        @RequestBody final CompleteAdvertisementImageUploadRequest request,
+        final Principal principal
+    ) {
+        LOGGER.debug("Attaching image file to the advertisement: {}", request);
         final long userId = getUserId(principal);
         advertisementManagement.specifyAdvertisementContent(userId, request.advertisementId, request.contentUrl);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public List<AdvertisementReader.AdvertisementAttachmentItem> readImageForAdvertisement(@PathVariable final Long id, Principal principal) {
+    public List<AdvertisementReader.AdvertisementAttachmentItem> readImageForAdvertisement(
+        @PathVariable final Long id,
+        Principal principal
+    ) {
         return advertisementReader.readAttachment(getUserId(principal), id);
     }
 
     @RequestMapping(value = "/destination/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public UploadFilePathResponse composeAdvertisementAttachmentDestination(@PathVariable("id") long advertisementId, Principal principal) {
+    public UploadFilePathResponse composeAdvertisementAttachmentDestination(
+        @PathVariable("id") long advertisementId,
+        Principal principal
+    ) {
         final NodePath nodePath = advertisementReader.readPathForImageUpload(getUserId(principal), advertisementId);
         return new UploadFilePathResponse(nodePath.getPath());
     }
 
     @RequestMapping(value = "/updateDetails/{id}", method = RequestMethod.PUT)
     @ResponseBody
-    public StartAttachmentUploadResponse updateAdvertisementDetails(@PathVariable("id") long advertisementId, @RequestBody StartAdvertisementImageUploadRequest adRequest, Principal principal) {
-        final AdvertisementManagement.AdvertisementInfo info = new AdvertisementManagement.AdvertisementInfo(adRequest.title, adRequest.startDate, adRequest.endDate, adRequest.redirectLink, adRequest.currentDate, adRequest.filename, adRequest.sizeInBytes, adRequest.isEnabled);
+    public StartAttachmentUploadResponse updateAdvertisementDetails(
+        @PathVariable("id") long advertisementId,
+        @RequestBody StartAdvertisementImageUploadRequest adRequest,
+        Principal principal
+    ) {
+        final AdvertisementManagement.AdvertisementInfo info =
+            new AdvertisementManagement.AdvertisementInfo(adRequest.title,
+                adRequest.startDate,
+                adRequest.endDate,
+                adRequest.redirectLink,
+                adRequest.currentDate,
+                adRequest.filename,
+                adRequest.sizeInBytes,
+                adRequest.isEnabled
+            );
         advertisementManagement.updateAdvertisement(getUserId(principal), adRequest.id, info);
         return new StartAttachmentUploadResponse(adRequest.filename, adRequest.id);
     }
 
     @RequestMapping(value = "{id}", method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.OK)
-    public void deleteNews(@PathVariable long id, Principal principal){
+    public void deleteNews(@PathVariable long id, Principal principal) {
         advertisementManagement.deleteAdvertisement(getUserId(principal), id);
     }
 
@@ -116,11 +149,21 @@ public class AdvertisementController {
 
     @RequestMapping(value = "/download/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public void attachmentDownload(@PathVariable("id") final long attachmentId, HttpServletRequest request, HttpServletResponse response, Principal principal) {
+    public void attachmentDownload(
+        @PathVariable("id") final long attachmentId,
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Principal principal
+    ) {
         try {
             final long userId = getUserId(principal);
-            LOGGER.debug("Got the download request for the project attachment with ID = " + attachmentId + " from user with ID" + userId);
-            AdvertisementReader.AdvertisementImageToDownload advertisementImageToDownload = advertisementReader.readAdvertImageFile(userId, attachmentId);
+            LOGGER.debug(
+                "Got the download request for the project attachment with ID = {} from user with ID {}",
+                attachmentId,
+                userId
+            );
+            AdvertisementReader.AdvertisementImageToDownload advertisementImageToDownload =
+                advertisementReader.readAdvertImageFile(userId, attachmentId);
             postAdvertImageToResponse(advertisementImageToDownload, request, response);
         } catch (IOException e) {
             LOGGER.error("Error writing file to output stream.", e);
@@ -137,7 +180,7 @@ public class AdvertisementController {
     @RequestMapping(value = "/incrementsClickCount", method = RequestMethod.PUT)
     @ResponseStatus(HttpStatus.OK)
     public void incrementsClickCount(@RequestParam("id") final long ad) {
-        LOG.debug("Incrementing clicks count for: " + ad);
+        LOGGER.debug("Incrementing clicks count for: {}", ad);
         advertisementManagement.incrementClickedCount(ad, current.get());
     }
 
@@ -149,15 +192,23 @@ public class AdvertisementController {
 
     @ExceptionHandler(AdMediaItemNotResolvableException.class)
     @ResponseBody
-    public void handleAdvertisementException(Exception ex, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void handleAdvertisementException(Exception ex, HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
         response.sendError(404, ex.getLocalizedMessage());
     }
 
-    private void postAdvertImageToResponse(AdvertisementReader.AdvertisementImageToDownload advertisementImageToDownload, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void postAdvertImageToResponse(
+        AdvertisementReader.AdvertisementImageToDownload advertisementImageToDownload,
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) throws IOException {
         final FileInputStream is = new FileInputStream(advertisementImageToDownload.file);
 
         response.setContentType(identifyContentType(advertisementImageToDownload.name));
-        response.setHeader("Content-Disposition", encodeContentDisposition(advertisementImageToDownload.name, request.getHeader(USER_AGENT)));
+        response.setHeader(
+            "Content-Disposition",
+            encodeContentDisposition(advertisementImageToDownload.name, request.getHeader(USER_AGENT))
+        );
         IOUtils.copy(is, response.getOutputStream());
 
         //Set cookie to satisfy AJAX downloader at the client:
@@ -166,10 +217,10 @@ public class AdvertisementController {
         response.flushBuffer();
     }
 
-    private String identifyContentType(String fileName){
+    private String identifyContentType(String fileName) {
         String ext = FilenameUtils.getExtension(fileName).toLowerCase();
         String contentType = null;
-        switch (ext){
+        switch (ext) {
             case "jpeg":
             case "jpg":
                 contentType = "image/jpeg";

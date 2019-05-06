@@ -33,7 +33,11 @@ public interface ExperimentCreationHelperTemplate {
     /**
      * Returns list of instrument models for specified lab, technology type, vendor and instrument type.
      */
-    List<DictionaryItem> availableInstrumentModels(long actor, @Nullable Long lab, long technologyType, long vendor, long instrumentType);
+    List<DictionaryItem> availableInstrumentModels(long actor,
+                                                   @Nullable Long lab,
+                                                   long technologyType,
+                                                   long vendor,
+                                                   long instrumentType);
 
     /**
      * Returns list of instrument types for specified lab, technology type and vendor.
@@ -65,7 +69,8 @@ public interface ExperimentCreationHelperTemplate {
      *
      * @param actor      - user ID
      * @param specie     Specie id
-     * @param instrument - restrict instrument by concrete instrument.  @return available to user files that was produced by instruments that was not restricted.
+     * @param instrument - restrict instrument by concrete instrument.  @return available to user files that was
+     *                   produced by instruments that was not restricted.
      */
     List<FileItem> availableFilesByInstrument(long actor, long specie, long instrument);
 

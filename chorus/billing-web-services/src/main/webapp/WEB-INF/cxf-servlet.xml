@@ -2,14 +2,17 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:jaxrs="http://cxf.apache.org/jaxrs"
        xmlns:context="http://www.springframework.org/schema/context"
-       xmlns:cxf="http://cxf.apache.org/core"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-  http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd">
+  http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd   http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <import resource="classpath:billing-services-application-context.cfg.xml"/>
 
+    <util:properties id="billingWebappProperties"
+                     location="file:${user.home}/application.properties"
+                     ignore-resource-not-found="true"/>
     <context:property-placeholder ignore-resource-not-found="true" ignore-unresolvable="true"
-                                  location="classpath*:billing-webapp.properties, file:${user.home}/billing-webapp.properties"/>
+                                  properties-ref="billingApplicationProperties"/>
 
     <context:annotation-config/>
     <jaxrs:server address="/">

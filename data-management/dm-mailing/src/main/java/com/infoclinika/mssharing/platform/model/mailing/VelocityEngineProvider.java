@@ -21,7 +21,10 @@ public class VelocityEngineProvider {
         VelocityEngineFactory factory = new VelocityEngineFactory();
         Properties properties = new Properties();
         properties.put(Velocity.RESOURCE_LOADER, "class");
-        properties.put("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        properties.put(
+            "class.resource.loader.class",
+            "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader"
+        );
         factory.setVelocityProperties(properties);
         return factory.createVelocityEngine();
     }

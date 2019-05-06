@@ -21,8 +21,8 @@ public class ExperimentAnnotationAttachmentUploadHelper extends AbstractStorageH
     @Override
     protected FileData getData(long item, long userId) {
         return new FileData(
-                null,
-                storedObjectPaths.experimentAnnotationAttachmentPath(userId, item)
+            null,
+            storedObjectPaths.experimentAnnotationAttachmentPath(userId, item)
         );
     }
 }

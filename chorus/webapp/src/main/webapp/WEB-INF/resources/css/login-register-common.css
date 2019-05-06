@@ -246,6 +246,10 @@ form .add-lab-holder .link{
     line-height: 24px !important;
 }
 
+.footer .compatibility.private-install-compatibility a {
+    line-height: 13px !important;
+}
+
 .narrow-footer-wrapper {
 	width:540px;
     padding-left: 10px;

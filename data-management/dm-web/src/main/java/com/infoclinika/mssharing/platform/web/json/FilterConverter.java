@@ -11,7 +11,7 @@ import java.util.Map;
  * @author Pavel Kaplin
  */
 public class FilterConverter implements Converter<String, Filter> {
-    private final static Map<String, Filter> MAPPING;
+    private static final Map<String, Filter> MAPPING;
 
     static {
         Map<String, Filter> mapping = new HashMap<String, Filter>();

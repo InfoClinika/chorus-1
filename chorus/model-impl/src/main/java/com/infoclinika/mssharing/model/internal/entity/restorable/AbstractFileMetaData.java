@@ -9,8 +9,6 @@ import org.hibernate.annotations.Index;
 import javax.annotation.Nullable;
 import javax.persistence.*;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author Elena Kurilina
@@ -30,7 +28,6 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
     @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private FileMetaAnnotations metaInfo;
-
     @Embedded
     private StorageData storageData = new StorageData();
 
@@ -40,6 +37,10 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
 
     @Basic(optional = false)
     private boolean sizeIsConsistent = false;
+
+    @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL)
+    @JoinColumn(name = "external_metadata_id")
+    private ExternalFileMetadata externalMetadata;
 
     public StorageData getStorageData() {
         //Sometimes storageData field is null due to bug in hibernate
@@ -56,7 +57,14 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
     public AbstractFileMetaData() {
     }
 
-    public AbstractFileMetaData(User owner, String name, Date uploadDate, Instrument instrument, long sizeInBytes, String labels, Species specie, boolean archive) {
+    public AbstractFileMetaData(User owner,
+                                String name,
+                                Date uploadDate,
+                                Instrument instrument,
+                                long sizeInBytes,
+                                String labels,
+                                Species specie,
+                                boolean archive) {
         setOwner(owner);
         setName(name);
         setUploadDate(uploadDate);
@@ -120,15 +128,32 @@ public abstract class AbstractFileMetaData extends FileMetaDataTemplate<User, In
         this.sizeIsConsistent = sizeIsConsistent;
     }
 
+    public ExternalFileMetadata getExternalMetadata() {
+        return externalMetadata;
+    }
+
+    public void setExternalMetadata(ExternalFileMetadata externalMetadata) {
+        this.externalMetadata = externalMetadata;
+    }
+
     @Override
-    public FileMetaDataTemplate copy(String copyName, UserTemplate owner){
-        ActiveFileMetaData copy = new ActiveFileMetaData((User) owner, copyName, this.getUploadDate(), this.getInstrument(), this.getSizeInBytes(), this.getLabels(), this.getSpecie(), this.isArchive());
+    public FileMetaDataTemplate copy(String copyName, UserTemplate owner) {
+        final ActiveFileMetaData copy = new ActiveFileMetaData(
+            (User) owner,
+            copyName,
+            this.getUploadDate(),
+            this.getInstrument(),
+            this.getSizeInBytes(),
+            this.getLabels(),
+            this.getSpecie(),
+            this.isArchive()
+        );
         copy.setCopy(true);
         copy.setContentId(this.getContentId());
         copy.setArchiveId(this.getArchiveId());
         copy.setDestinationPath(this.getDestinationPath());
         copy.setStorageData(this.getStorageData());
-        copy.setSizeInBytes(this.getSizeInBytes());
+
         return copy;
     }
 

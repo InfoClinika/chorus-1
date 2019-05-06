@@ -15,19 +15,24 @@ import static com.infoclinika.mssharing.model.internal.read.Transformers.LOCK_MZ
  * @author Herman Zamula
  */
 @Component
-public class RequestDetailsReaderImpl extends DefaultRequestsDetailsReader<InstrumentCreationRequest, LabCreationRequestTemplate, InstrumentCreationItem, LabItemTemplate>
+public class RequestDetailsReaderImpl extends
+    DefaultRequestsDetailsReader<InstrumentCreationRequest, LabCreationRequestTemplate, InstrumentCreationItem,
+        LabItemTemplate>
 
-        implements RequestsDetailsReaderTemplate<InstrumentCreationItem, LabItemTemplate> {
+    implements RequestsDetailsReaderTemplate<InstrumentCreationItem, LabItemTemplate> {
 
     @Override
-    protected InstrumentCreationItem transformInstrumentCreationRequest(InstrumentCreationRequest instrumentCreationRequest) {
+    protected InstrumentCreationItem transformInstrumentCreationRequest(
+        InstrumentCreationRequest instrumentCreationRequest
+    ) {
 
-        final InstrumentCreationItemTemplate template = instrumentRequestDetailsHelper.getDefaultTransformer().apply(instrumentCreationRequest);
+        final InstrumentCreationItemTemplate template =
+            instrumentRequestDetailsHelper.getDefaultTransformer().apply(instrumentCreationRequest);
 
         return new InstrumentCreationItem(
-                template,
-                instrumentCreationRequest.getHplc(),
-                from(instrumentCreationRequest.getLockMasses()).transform(LOCK_MZ_ITEM_FUNCTION).toList()
+            template,
+            instrumentCreationRequest.getHplc(),
+            from(instrumentCreationRequest.getLockMasses()).transform(LOCK_MZ_ITEM_FUNCTION).toList()
         );
 
     }

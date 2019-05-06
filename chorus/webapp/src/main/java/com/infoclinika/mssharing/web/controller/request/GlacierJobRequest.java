@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.web.controller.request;
 
@@ -22,16 +24,18 @@ public class GlacierJobRequest {
     private String inventorySizeInBytes;
     private String jobDescription;
     private String jobId;
-    private String SHA256TreeHash;
-    private String SNSTopic;
+    private String sha256TreeHash;
+    private String snsTopic;
     private String statusCode;
     private String statusMessage;
     private String vaultARN;
 
-    public GlacierJobRequest(String action, String archiveId, String archiveSizeInBytes, String completed,
-                             String completionDate, String creationDate, String inventorySizeInBytes,
-                             String jobDescription, String jobId, String SHA256TreeHash, String SNSTopic,
-                             String statusCode, String statusMessage, String vaultARN) {
+    public GlacierJobRequest(
+        String action, String archiveId, String archiveSizeInBytes, String completed,
+        String completionDate, String creationDate, String inventorySizeInBytes,
+        String jobDescription, String jobId, String sha256TreeHash, String snsTopic,
+        String statusCode, String statusMessage, String vaultARN
+    ) {
         this.action = action;
         this.archiveId = archiveId;
         this.archiveSizeInBytes = archiveSizeInBytes;
@@ -41,8 +45,8 @@ public class GlacierJobRequest {
         this.inventorySizeInBytes = inventorySizeInBytes;
         this.jobDescription = jobDescription;
         this.jobId = jobId;
-        this.SHA256TreeHash = SHA256TreeHash;
-        this.SNSTopic = SNSTopic;
+        this.sha256TreeHash = sha256TreeHash;
+        this.snsTopic = snsTopic;
         this.statusCode = statusCode;
         this.statusMessage = statusMessage;
         this.vaultARN = vaultARN;
@@ -84,12 +88,12 @@ public class GlacierJobRequest {
         return jobId;
     }
 
-    public String getSHA256TreeHash() {
-        return SHA256TreeHash;
+    public String getSha256TreeHash() {
+        return sha256TreeHash;
     }
 
-    public String getSNSTopic() {
-        return SNSTopic;
+    public String getSnsTopic() {
+        return snsTopic;
     }
 
     public String getStatusCode() {
@@ -107,20 +111,20 @@ public class GlacierJobRequest {
     @Override
     public String toString() {
         return "GlacierJobRequest{" +
-                "action='" + action + '\'' +
-                ", archiveId='" + archiveId + '\'' +
-                ", archiveSizeInBytes='" + archiveSizeInBytes + '\'' +
-                ", completed='" + completed + '\'' +
-                ", completionDate='" + completionDate + '\'' +
-                ", creationDate='" + creationDate + '\'' +
-                ", inventorySizeInBytes='" + inventorySizeInBytes + '\'' +
-                ", jobDescription='" + jobDescription + '\'' +
-                ", jobId='" + jobId + '\'' +
-                ", SHA256TreeHash='" + SHA256TreeHash + '\'' +
-                ", SNSTopic='" + SNSTopic + '\'' +
-                ", statusCode='" + statusCode + '\'' +
-                ", statusMessage='" + statusMessage + '\'' +
-                ", vaultARN='" + vaultARN + '\'' +
-                '}';
+            "action='" + action + '\'' +
+            ", archiveId='" + archiveId + '\'' +
+            ", archiveSizeInBytes='" + archiveSizeInBytes + '\'' +
+            ", completed='" + completed + '\'' +
+            ", completionDate='" + completionDate + '\'' +
+            ", creationDate='" + creationDate + '\'' +
+            ", inventorySizeInBytes='" + inventorySizeInBytes + '\'' +
+            ", jobDescription='" + jobDescription + '\'' +
+            ", jobId='" + jobId + '\'' +
+            ", sha256TreeHash='" + sha256TreeHash + '\'' +
+            ", snsTopic='" + snsTopic + '\'' +
+            ", statusCode='" + statusCode + '\'' +
+            ", statusMessage='" + statusMessage + '\'' +
+            ", vaultARN='" + vaultARN + '\'' +
+            '}';
     }
 }

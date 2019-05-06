@@ -10,10 +10,10 @@ import com.infoclinika.mssharing.platform.model.read.ProjectReaderTemplate.Proje
  * @author Herman Zamula
  */
 public interface SearcherTemplate<
-        PROJECT extends ProjectLineTemplate,
-        EXPERIMENT extends ExperimentLineTemplate,
-        FILE extends FileLineTemplate,
-        INSTRUMENT extends InstrumentLineTemplate> {
+    PROJECT extends ProjectLineTemplate,
+    EXPERIMENT extends ExperimentLineTemplate,
+    FILE extends FileLineTemplate,
+    INSTRUMENT extends InstrumentLineTemplate> {
 
     ImmutableList<PROJECT> projects(long actor, String query);
 

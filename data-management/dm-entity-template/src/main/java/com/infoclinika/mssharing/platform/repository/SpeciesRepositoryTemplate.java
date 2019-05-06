@@ -11,4 +11,5 @@ public interface SpeciesRepositoryTemplate<S extends Species> extends Dictionary
     @Query("select s from #{#entityName} s where s.name = 'Unspecified'")
     S getUnspecified();
 
+    S findByName(String name);
 }

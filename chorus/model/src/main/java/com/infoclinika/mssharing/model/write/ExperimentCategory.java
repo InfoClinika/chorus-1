@@ -13,6 +13,9 @@ public enum ExperimentCategory {
      */
     PROTEOMICS,
     /*Experiments with this category work with genes, not proteomes.
-    * */
-    MICROARRAY;
+     * */
+    MICROARRAY,
+    /*Experiments with this category work with genes
+     * */
+    NGS
 }

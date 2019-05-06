@@ -1,11 +1,15 @@
 package com.infoclinika.mssharing.model.internal.entity.restorable;
 
+import com.google.common.base.Objects;
 import com.infoclinika.mssharing.model.internal.entity.Instrument;
 import com.infoclinika.mssharing.model.internal.entity.User;
 import com.infoclinika.mssharing.platform.entity.Species;
 import org.hibernate.annotations.DynamicUpdate;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.SecondaryTable;
+import javax.persistence.Table;
 import java.util.Date;
 
 /**
@@ -30,10 +34,29 @@ public class ActiveFileMetaData extends AbstractFileMetaData {
     @Column(name = "to_replace", nullable = false, columnDefinition = "tinyint(1) default 0")
     private boolean toReplace = false;
 
+    /**
+     * File is indicated as `corrupted` in case of failed upload to S3 bucket.
+     * File can't be marked as `corrupted` if it is not marked as `toReplace`.
+     * `corrupted` flag doesn't affect logic to reload already existing files.
+     * `corrupted` files can be reloaded or removed.
+     */
+    @Column(name = "corrupted", nullable = false, columnDefinition = "tinyint(1) default 0")
+    private boolean corrupted = false;
+
+
     public ActiveFileMetaData() {
     }
 
-    public ActiveFileMetaData(User owner, String name, Date uploadDate, Instrument instrument, long sizeInBytes, String labels, Species specie, boolean archive) {
+    public ActiveFileMetaData(
+        User owner,
+        String name,
+        Date uploadDate,
+        Instrument instrument,
+        long sizeInBytes,
+        String labels,
+        Species specie,
+        boolean archive
+    ) {
         super(owner, name, uploadDate, instrument, sizeInBytes, labels, specie, archive);
     }
 
@@ -73,4 +96,56 @@ public class ActiveFileMetaData extends AbstractFileMetaData {
     public void setToReplace(boolean toReplace) {
         this.toReplace = toReplace;
     }
+
+    public boolean isCorrupted() {
+        return corrupted;
+    }
+
+    public void setCorrupted(boolean corrupted) {
+        this.corrupted = corrupted;
+    }
+
+    @Override
+    public String toString() {
+        return "ActiveFileMetaData{" +
+            "fileUploadBucket='" + fileUploadBucket + '\'' +
+            ", chargingDate=" + chargingDate +
+            ", lastChargingSumDate=" + lastChargingSumDate +
+            ", toReplace=" + toReplace +
+            ", corrupted=" + corrupted +
+            "} " + super.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        final ActiveFileMetaData that = (ActiveFileMetaData) o;
+
+        return isToReplace() == that.isToReplace() &&
+            isCorrupted() == that.isCorrupted() &&
+            Objects.equal(getFileUploadBucket(), that.getFileUploadBucket()) &&
+            Objects.equal(getChargingDate(), that.getChargingDate()) &&
+            Objects.equal(getLastChargingSumDate(), that.getLastChargingSumDate());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(
+            super.hashCode(),
+            getFileUploadBucket(),
+            getChargingDate(),
+            getLastChargingSumDate(),
+            isToReplace(),
+            isCorrupted()
+        );
+    }
 }
+

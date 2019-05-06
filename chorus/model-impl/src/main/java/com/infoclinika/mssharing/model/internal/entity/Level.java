@@ -2,12 +2,12 @@ package com.infoclinika.mssharing.model.internal.entity;
 
 import com.infoclinika.mssharing.platform.entity.LevelTemplate;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
 import java.util.Set;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static javax.persistence.CascadeType.*;
 
 /**
  * @author andrii.loboda
@@ -22,7 +22,8 @@ public class Level extends LevelTemplate<Factor> {
         setName(name);
         setFactor(factor);
     }
-    @ManyToMany(mappedBy = "levels", cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+
+    @ManyToMany(mappedBy = "levels", cascade = {REFRESH, DETACH, PERSIST, MERGE, REMOVE})
     private Set<SampleCondition> sampleConditions = newHashSet();
 
     public Set<SampleCondition> getSampleConditions() {

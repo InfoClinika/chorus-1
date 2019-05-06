@@ -21,8 +21,9 @@ public class PagedItemInfo {
     }
 
     public String toFilterQuery() {
-        if (StringUtils.isEmpty(this.filterQuery))
+        if (StringUtils.isEmpty(this.filterQuery)) {
             return "%";
+        }
         return "%" + this.filterQuery + "%";
     }
 }

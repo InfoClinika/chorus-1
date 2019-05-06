@@ -11,18 +11,17 @@ public interface FileMovingManager {
      * Unarchive the experiment files that don't have "UNARCHIVED" status
      *
      * @param experimentId experiment to unarchive
-     * @param actors users to send email when files will be ready to download
+     * @param actors       users to send email when files will be ready to download
      */
-    public void requestExperimentFilesUnarchiving(long experimentId, Collection<Long> actors);
+    void requestExperimentFilesUnarchiving(long experimentId, Collection<Long> actors);
 
-    public void requestFilesUnarchiving(Collection<Long> files, Long actor);
+    void requestFilesUnarchiving(Collection<Long> files, Long actor);
 
-    public void requestFileUnarchiving(long file);
+    void requestFileUnarchiving(long file);
     //-----------
 
     /**
      * Deprecated since using s3 bucket policies for archive files.
-     *
      */
     @Deprecated
     public void moveFilesToStorageAndListen(Collection<Long> files, String listenerId);

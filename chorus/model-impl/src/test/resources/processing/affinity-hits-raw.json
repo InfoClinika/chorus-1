@@ -1,0 +1,252 @@
+[
+  {
+    "acqId": "43520900011",
+    "moleculeId": "118900077",
+    "retentionTime": 0.0,
+    "retentionTimeSigma": 0.0,
+    "massCharge": 0.0,
+    "massChargeSigma": 0.0,
+    "ions": [
+      {
+        "ionState": "[M+H]+",
+        "massCharge": 912.41747,
+        "retentionTime": 4.37439,
+        "signalStrength": 985604.375,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.53125262260437,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+2H]2+",
+        "massCharge": 456.71244,
+        "retentionTime": 4.35379,
+        "signalStrength": 449394.5,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.700134754180908,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+3H]3+",
+        "massCharge": 912.41747,
+        "retentionTime": 4.37439,
+        "signalStrength": 985604.375,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.53125262260437,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+2H]2+",
+        "massCharge": 456.71244,
+        "retentionTime": 4.35379,
+        "signalStrength": 449394.5,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.700134754180908,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      }
+    ]
+  },
+  {
+    "acqId": "43520900011",
+    "moleculeId": "657300077",
+    "retentionTime": 0.0,
+    "retentionTimeSigma": 0.0,
+    "massCharge": 0.0,
+    "massChargeSigma": 0.0,
+    "ions": [
+      {
+        "ionState": "[M+4H]4+",
+        "massCharge": 309.11277,
+        "retentionTime": 5.30924,
+        "signalStrength": 2232244.0,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.1144204139709473,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+H]+",
+        "massCharge": 309.11277,
+        "retentionTime": 5.30924,
+        "signalStrength": 2232244.0,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.1144204139709473,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      }
+    ]
+  },
+  {
+    "acqId": "43520900011",
+    "moleculeId": "2366360077",
+    "retentionTime": 0.0,
+    "retentionTimeSigma": 0.0,
+    "massCharge": 0.0,
+    "massChargeSigma": 0.0,
+    "ions": [
+      {
+        "ionState": "[M+K]+",
+        "massCharge": 380.12794,
+        "retentionTime": 5.45623,
+        "signalStrength": 9028995.0,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.8040142059326172,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+K]+",
+        "massCharge": 380.12794,
+        "retentionTime": 5.45623,
+        "signalStrength": 9028995.0,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.8040142059326172,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      }
+    ]
+  },
+  {
+    "acqId": "43520900011",
+    "moleculeId": "128710077",
+    "retentionTime": 0.0,
+    "retentionTimeSigma": 0.0,
+    "massCharge": 0.0,
+    "massChargeSigma": 0.0,
+    "ions": [
+      {
+        "ionState": "[M+Na]+",
+        "massCharge": 756.39794,
+        "retentionTime": 5.46776,
+        "signalStrength": 143918.265625,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.6936161518096924,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+Na]+",
+        "massCharge": 756.39794,
+        "retentionTime": 5.46776,
+        "signalStrength": 143918.265625,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.6936161518096924,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      }
+    ]
+  },
+  {
+    "acqId": "43520900011",
+    "moleculeId": "128610077",
+    "retentionTime": 0.0,
+    "retentionTimeSigma": 0.0,
+    "massCharge": 0.0,
+    "massChargeSigma": 0.0,
+    "ions": [
+      {
+        "ionState": "[M-H]-",
+        "massCharge": 622.34979,
+        "retentionTime": 5.62375,
+        "signalStrength": 1.0735727E7,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.7710386514663696,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+H]+",
+        "massCharge": 622.34929,
+        "retentionTime": 7.36633,
+        "signalStrength": 2566821.75,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 0.9588531255722046,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M-4H]4-",
+        "massCharge": 622.34979,
+        "retentionTime": 5.62375,
+        "signalStrength": 1.0735727E7,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.7710386514663696,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M-2H]2-",
+        "massCharge": 622.34929,
+        "retentionTime": 7.36633,
+        "signalStrength": 2566821.75,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 0.9588531255722046,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      }
+    ]
+  },
+  {
+    "acqId": "43521080011",
+    "moleculeId": "5804220715",
+    "retentionTime": 0.0,
+    "retentionTimeSigma": 0.0,
+    "massCharge": 0.0,
+    "massChargeSigma": 0.0,
+    "ions": [
+      {
+        "ionState": "[M+Na-2H]-",
+        "massCharge": 496.76054,
+        "retentionTime": 3.95847,
+        "signalStrength": 1881636.25,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.3662915229797363,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M-H2O-H]-",
+        "massCharge": 496.76023,
+        "retentionTime": 9.09449,
+        "signalStrength": 28551.275390625,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.7436918020248413,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+Br]-",
+        "massCharge": 662.0113,
+        "retentionTime": 3.96417,
+        "signalStrength": 2.034943E7,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.8570518493652344,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+Cl]-",
+        "massCharge": 662.01188,
+        "retentionTime": 9.09449,
+        "signalStrength": 19361.931640625,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 2.742276906967163,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      },
+      {
+        "ionState": "[M+NH4-2H]",
+        "massCharge": 992.51279,
+        "retentionTime": 3.95847,
+        "signalStrength": 3622547.25,
+        "signalToNoiseRatio": 0.0,
+        "massChargeSigma": 1.3291525840759277,
+        "retentionTimeSigma": 0.0,
+        "signalStrengthSigma": 0.0
+      }
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+<div>
+    <p class="helper-text">
+        You may mark each of files with the optional labels to ease the search and filtering in future. For convenience,
+        labels should be delimited with commas. E.g. 'mass-spec, after-treatment, fullscan'
+    </p>
+
+    <div ag-grid="gridOptions" style="height: 220px; width: 100%"></div>
+
+    <label class="text-right">
+        <input type="checkbox" ng-model="addPathToLabels" ng-change="addPathToLabelsChange()">
+        Add path as label
+    </label>
+</div>

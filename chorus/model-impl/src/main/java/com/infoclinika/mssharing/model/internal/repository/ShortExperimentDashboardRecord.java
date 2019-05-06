@@ -16,7 +16,14 @@ public class ShortExperimentDashboardRecord {
     public final int analysisRunCount;
 
 
-    public ShortExperimentDashboardRecord(long id, String name, String creatorEmail, long owner, Date modified, int analysisRunCount) {
+    public ShortExperimentDashboardRecord(
+        long id,
+        String name,
+        String creatorEmail,
+        long owner,
+        Date modified,
+        int analysisRunCount
+    ) {
         this.id = id;
         this.name = name;
         this.creatorEmail = creatorEmail;

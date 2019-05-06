@@ -23,19 +23,27 @@ import static com.google.common.collect.FluentIterable.from;
     }
 
     public static <F, T> Page<T> transformToPage(PagedItem<F> entityPage, Function<F, T> transformerFn) {
-        return new PageImpl<T>(from(entityPage.items).transform(transformerFn).toList(), new PageRequest(entityPage.pageNumber, entityPage.pageSize), entityPage.itemsCount);
+        return new PageImpl<T>(
+            from(entityPage.items).transform(transformerFn).toList(),
+            new PageRequest(entityPage.pageNumber, entityPage.pageSize), entityPage.itemsCount
+        );
     }
 
     public static <F> Page<F> transformToPage(PagedItem<F> entityPage) {
-        return new PageImpl<>(from(entityPage.items).toList(), new PageRequest(entityPage.pageNumber, entityPage.pageSize), entityPage.itemsCount);
+        return new PageImpl<>(
+            from(entityPage.items).toList(), new PageRequest(entityPage.pageNumber, entityPage.pageSize),
+            entityPage.itemsCount
+        );
     }
 
     public static <F, T> PagedItem<T> toPagedItem(Page<F> entityPage, Iterable<T> pagedContent) {
-        return new PagedItem<>(entityPage.getTotalPages(),
-                entityPage.getTotalElements(),
-                entityPage.getNumber(),
-                entityPage.getSize(),
-                from(pagedContent).toList());
+        return new PagedItem<>(
+            entityPage.getTotalPages(),
+            entityPage.getTotalElements(),
+            entityPage.getNumber(),
+            entityPage.getSize(),
+            from(pagedContent).toList()
+        );
     }
 
     public static <F, T> FluentIterable<T> transformToIterable(Iterable<F> items, Function<F, T> transformerFn) {

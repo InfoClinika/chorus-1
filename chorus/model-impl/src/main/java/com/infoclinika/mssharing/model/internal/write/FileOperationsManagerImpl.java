@@ -1,31 +1,32 @@
 package com.infoclinika.mssharing.model.internal.write;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
-import com.infoclinika.analysis.storage.cloud.CloudStorageFactory;
 import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import com.infoclinika.analysis.storage.cloud.CloudStorageService;
-import com.infoclinika.mssharing.model.helper.FileArchivingHelper;
-import com.infoclinika.mssharing.model.helper.StoredObjectPaths;
+import com.infoclinika.mssharing.model.features.ApplicationFeature;
+import com.infoclinika.mssharing.model.helper.FeaturesHelper;
 import com.infoclinika.mssharing.model.internal.RuleValidator;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
+import com.infoclinika.mssharing.model.internal.entity.Lab;
 import com.infoclinika.mssharing.model.internal.entity.Util;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveExperiment;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
 import com.infoclinika.mssharing.model.internal.entity.restorable.StorageData;
-import com.infoclinika.mssharing.model.features.ApplicationFeature;
 import com.infoclinika.mssharing.model.internal.read.Transformers;
 import com.infoclinika.mssharing.model.internal.repository.ExperimentRepository;
-import com.infoclinika.mssharing.model.internal.repository.FeaturesRepository;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
 import com.infoclinika.mssharing.model.write.FileAccessLogService;
 import com.infoclinika.mssharing.model.write.FileMovingManager;
 import com.infoclinika.mssharing.model.write.FileOperationsManager;
 import com.infoclinika.mssharing.platform.entity.ExperimentFileTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.propertiesprovider.AmazonPropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -36,9 +37,7 @@ import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,10 +45,8 @@ import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.FluentIterable.from;
-import static com.google.common.collect.ImmutableSet.copyOf;
 import static com.google.common.collect.Lists.newArrayList;
-import static com.infoclinika.mssharing.model.internal.entity.Feature.FeatureState.DISABLED;
-import static com.infoclinika.mssharing.model.internal.entity.restorable.StorageData.Status.ARCHIVED;
+import static java.util.Calendar.MINUTE;
 
 /**
  * @author Herman Zamula
@@ -57,57 +54,54 @@ import static com.infoclinika.mssharing.model.internal.entity.restorable.Storage
 @Service
 @Transactional
 public class FileOperationsManagerImpl implements FileOperationsManager {
-
     private static final int PAGE_SIZE = 1000;
     private static final int THREADS_COUNT = 5;
     private static final int THREAD_TIMEOUT = 100;
 
-    private static final Logger LOG = Logger.getLogger(FileOperationsManagerImpl.class);
-    @Inject
-    private FileMetaDataRepository fileMetaDataRepository;
-    @Inject
-    private FeaturesRepository featuresRepository;
-    @Inject
-    private RuleValidator ruleValidator;
-    @Inject
-    private FileMovingManager fileMovingManager;
-    @Inject
-    private FileArchivingHelper fileArchivingHelper;
-    @Inject
-    private ExperimentRepository experimentRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileOperationsManagerImpl.class);
+    private static final int MAXIMUM_UPLOAD_DURATION_IN_MINUTES = 60;
+    private final FileMetaDataRepository fileMetaDataRepository;
+    private final FeaturesHelper featuresHelper;
+    private final RuleValidator ruleValidator;
+    private final FileMovingManager fileMovingManager;
+    private final ExperimentRepository experimentRepository;
+    private final FileAccessLogService fileAccessLogService;
+    private final CloudStorageClientsProvider cloudStorageClientsProvider;
+    private final AmazonPropertiesProvider amazonPropertiesProvider;
+
     private TransactionTemplate transactionTemplate;
 
     @Inject
-    private FileAccessLogService fileAccessLogService;
-
-    @Inject
-    private StoredObjectPaths storedObjectPaths;
-
-    @Inject
-    public FileOperationsManagerImpl(PlatformTransactionManager platformTransactionManager) {
-        transactionTemplate = new TransactionTemplate(platformTransactionManager);
+    public FileOperationsManagerImpl(PlatformTransactionManager platformTransactionManager,
+                                     FileMetaDataRepository fileMetaDataRepository,
+                                     FeaturesHelper featuresHelper,
+                                     RuleValidator ruleValidator,
+                                     FileMovingManager fileMovingManager,
+                                     ExperimentRepository experimentRepository,
+                                     FileAccessLogService fileAccessLogService,
+                                     CloudStorageClientsProvider cloudStorageClientsProvider,
+                                     AmazonPropertiesProvider amazonPropertiesProvider) {
+        this.fileMetaDataRepository = fileMetaDataRepository;
+        this.featuresHelper = featuresHelper;
+        this.ruleValidator = ruleValidator;
+        this.fileMovingManager = fileMovingManager;
+        this.experimentRepository = experimentRepository;
+        this.fileAccessLogService = fileAccessLogService;
+        this.cloudStorageClientsProvider = cloudStorageClientsProvider;
+        this.amazonPropertiesProvider = amazonPropertiesProvider;
+        this.transactionTemplate = new TransactionTemplate(platformTransactionManager);
     }
-
-    @Value("${amazon.active.bucket}")
-    private String activeBucket;
-
-    @Value("${amazon.archive.bucket}")
-    private String archiveBucket;
 
     @Override
     public void markFilesToArchive(final long actor, Set<Long> files) {
 
-        if (featuresRepository.get().get(ApplicationFeature.BILLING.getFeatureName()).getEnabledState().equals(DISABLED)) {
-            LOG.warn("Attempt to archive files with disabled billing feature. Return.");
+        if (!featuresHelper.isEnabled(ApplicationFeature.GLACIER)) {
+            LOGGER.warn("Mark files to archive method called with disabled GLACIER feature");
             return;
         }
 
-        final FluentIterable<Long> availableToArchiving = from(files).filter(new Predicate<Long>() {
-            @Override
-            public boolean apply(Long input) {
-                return ruleValidator.canArchiveFile(actor, input);
-            }
-        });
+        final FluentIterable<Long> availableToArchiving = from(files)
+            .filter(input -> ruleValidator.canArchiveFile(actor, input));
 
         for (long file : availableToArchiving) {
             prepareFileToArchive(actor, Optional.<Long>absent(), file);
@@ -116,21 +110,22 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
     }
 
     private void prepareFileToArchive(final long actor, Optional<Long> experiment, long file) {
-
         final ActiveFileMetaData metaData = fileMetaDataRepository.findOne(file);
         metaData.getStorageData().setToArchive(true);
         metaData.getStorageData().setStorageStatus(StorageData.Status.ARCHIVING_REQUESTED);
 
         fileMetaDataRepository.save(metaData);
         fileAccessLogService.logFileArchiveStart(actor, file);
+    }
 
+    private Lab getBillLab(ActiveExperiment activeExperiment) {
+        return activeExperiment.getLab() == null ? activeExperiment.getBillLaboratory() : activeExperiment.getLab();
     }
 
     @Override
     public void markFilesToUnarchive(final long actor, Set<Long> files) {
-
-        if (featuresRepository.get().get(ApplicationFeature.BILLING.getFeatureName()).getEnabledState().equals(DISABLED)) {
-            LOG.warn("Attempt to unarchive files with disabled billing feature. Return.");
+        if (!featuresHelper.isEnabled(ApplicationFeature.GLACIER)) {
+            LOGGER.warn("Mark files to unarchive method called with disabled GLACIER feature");
             return;
         }
 
@@ -145,12 +140,7 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
     }
 
     private Predicate<Long> canUnarchiveFile(final long actor) {
-        return new Predicate<Long>() {
-            @Override
-            public boolean apply(Long file) {
-                return ruleValidator.canUnarchiveFile(actor, file);
-            }
-        };
+        return file -> ruleValidator.canUnarchiveFile(actor, file);
     }
 
     private void prepareFileToUnarchive(Long file, boolean downloadOnly) {
@@ -163,9 +153,8 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
 
     @Override
     public void markExperimentFilesToArchive(long actor, long experiment) {
-
-        if (featuresRepository.get().get(ApplicationFeature.BILLING.getFeatureName()).getEnabledState().equals(DISABLED)) {
-            LOG.warn("Attempt to archive experiment files with disabled billing feature. Return.");
+        if (!featuresHelper.isEnabled(ApplicationFeature.GLACIER)) {
+            LOGGER.warn("Mark experiment files to archive method called with disabled GLACIER feature");
             return;
         }
 
@@ -176,14 +165,8 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
         }
 
         final FluentIterable<Long> files = from(activeExperiment.getRawFiles().getData())
-                .transform(Transformers.RAW_FILES_META_ID_TRANSFORMER)
-                .filter(new Predicate<Long>() {
-                    @Override
-                    public boolean apply(Long input) {
-                        final ActiveFileMetaData fileMetaData = fileMetaDataRepository.findOne(input);
-                        return !fileMetaData.getStorageData().getStorageStatus().equals(ARCHIVED);
-                    }
-                });
+            .transform(Transformers.RAW_FILES_META_ID_TRANSFORMER)
+            .filter(input -> ruleValidator.canArchiveFile(actor, input));
 
         for (Long file : files) {
             prepareFileToArchive(actor, Optional.of(experiment), file);
@@ -192,9 +175,8 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
 
     @Override
     public void markExperimentFilesToUnarchive(long actor, long experiment) {
-
-        if (featuresRepository.get().get(ApplicationFeature.BILLING.getFeatureName()).getEnabledState().equals(DISABLED)) {
-            LOG.warn("Attempt to unarchive experiment files with disabled billing feature. Return.");
+        if (!featuresHelper.isEnabled(ApplicationFeature.GLACIER)) {
+            LOGGER.warn("Mark experiment files to unarchive method called with disabled GLACIER feature");
             return;
         }
 
@@ -204,8 +186,8 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
         }
 
         final FluentIterable<Long> rawFiles = from(activeExperiment.getRawFiles().getData())
-                .transform(Transformers.RAW_FILES_META_ID_TRANSFORMER)
-                .filter(canUnarchiveFile(actor));
+            .transform(Transformers.RAW_FILES_META_ID_TRANSFORMER)
+            .filter(canUnarchiveFile(actor));
 
         for (Long file : rawFiles) {
             prepareFileToUnarchive(file, false);
@@ -216,7 +198,12 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
 
     @Override
     public void archiveMarkedFiles() {
-        LOG.info("** Archive marked files method called. **");
+        if (!featuresHelper.isEnabled(ApplicationFeature.GLACIER)) {
+            LOGGER.warn("Archive marked files method called with disabled GLACIER feature");
+            return;
+        }
+
+        LOGGER.info("** Archive marked files method called. **");
         final List<Long> forArchiving = fileMetaDataRepository.findIdsMarkedForArchiving();
         for (final Long file : forArchiving) {
             transactionTemplate.execute(new TransactionCallbackWithoutResult() {
@@ -233,15 +220,24 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
 
     @Override
     public void unarchiveMarkedFiles() {
-        LOG.info("** Unarchive marked files method called. **");
+        if (!featuresHelper.isEnabled(ApplicationFeature.GLACIER)) {
+            LOGGER.warn("Unarchive marked files method called with disabled GLACIER feature");
+            return;
+        }
+        LOGGER.info("** Unarchive marked files method called. **");
         fileMovingManager.moveReadyToUnarchiveToAnalysableStorage();
-        LOG.info("** Unarchive marked files method completed. **");
+        LOGGER.info("** Unarchive marked files method completed. **");
     }
 
     @Override
     public void makeExperimentFilesAvailableForDownload(long actor, long experiment) {
-
         final ActiveExperiment activeExperiment = experimentRepository.findOne(experiment);
+
+        if (!ruleValidator.canUnarchiveExperiment(actor, activeExperiment)) {
+            throw new AccessDenied(
+                "User with ID: " + actor + " is not allowed to unarchive experiment with ID: " + experiment
+            );
+        }
 
         for (ExperimentFileTemplate rawFile : activeExperiment.getRawFiles().getData()) {
             prepareFileToUnarchive(rawFile.getFileMetaData().getId(), true);
@@ -253,6 +249,13 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
 
     @Override
     public void makeFilesAvailableForDownload(long actor, Set<Long> files) {
+        final boolean canUnarchiveAll = files.stream().allMatch(fId -> ruleValidator.canUnarchiveFile(actor, fId));
+
+        if (!canUnarchiveAll) {
+            throw new AccessDenied("User with ID: " + actor + " is not allowed to unarchive some of the " +
+                "files with IDs " + Joiner.on(", ").join(files)
+            );
+        }
 
         for (Long file : files) {
             prepareFileToUnarchive(file, true);
@@ -267,29 +270,30 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
             throw new AccessDenied("Non-admin user is now allowed to check file size consistent.");
         }
 
-        final CloudStorageService cloudStorageService = CloudStorageFactory.service();
+        final CloudStorageService cloudStorageService = cloudStorageClientsProvider.getCloudStorageService();
 
         int pageNum = 0;
         final ExecutorService executorService = Executors.newFixedThreadPool(THREADS_COUNT);
 
         while (true) {
-            final Page<ActiveFileMetaData> files = fileMetaDataRepository.findBySizeIsConsistent(false, new PageRequest(pageNum, PAGE_SIZE));
+            final Page<ActiveFileMetaData> files =
+                fileMetaDataRepository.findBySizeIsConsistent(false, new PageRequest(pageNum, PAGE_SIZE));
             final List<Callable<Object>> tasks = new ArrayList<>(PAGE_SIZE);
 
             for (ActiveFileMetaData file : files) {
-                if(!file.isSizeConsistent() && (file.getContentId() != null || file.getArchiveId() != null) ){
+                if (!file.isSizeConsistent() && (file.getContentId() != null || file.getArchiveId() != null)) {
                     tasks.add(createCheckFileSizeIsConsistentTask(file, cloudStorageService));
                 }
             }
 
-            LOG.info("Run " + THREADS_COUNT + " threads with " + tasks.size() + " tasks to check file size consistent.");
+            LOGGER.info("Run {} threads with {} tasks to check file size consistent.", THREADS_COUNT, tasks.size());
             try {
                 final List<Future<Object>> futures = executorService.invokeAll(tasks);
                 for (Future<Object> future : futures) {
                     future.get();
                 }
             } catch (Exception e) {
-                LOG.warn("Error while executing tasks for check file size consistent.", e);
+                LOGGER.warn("Error while executing tasks for check file size consistent.", e);
                 throw Throwables.propagate(e);
             }
 
@@ -305,58 +309,79 @@ public class FileOperationsManagerImpl implements FileOperationsManager {
     @Override
     public void checkIsFileConsistent(long actor, long id) {
         final ActiveFileMetaData file = fileMetaDataRepository.findOne(id);
-        if (!file.getOwner().equals(Util.USER_FROM_ID.apply(actor)))
+        if (!file.getOwner().equals(Util.USER_FROM_ID.apply(actor))) {
             throw new AccessDenied("Only owner is able to check file consistent");
+        }
 
-        final CloudStorageService cloudStorageService = CloudStorageFactory.service();
+        final CloudStorageService cloudStorageService = cloudStorageClientsProvider.getCloudStorageService();
 
         try {
-            final String bucket = activeBucket;
+            final String bucket = amazonPropertiesProvider.getActiveBucket();
             final String objectPath = file.getContentId();
-            LOG.info("Try to read size of file " + bucket + "|" + objectPath);
-            final long contentLength = cloudStorageService.readContentLength(new CloudStorageItemReference(bucket, objectPath));
+            LOGGER.info("Try to read size of file {} | {}", bucket, objectPath);
+            final long contentLength =
+                cloudStorageService.readContentLength(new CloudStorageItemReference(bucket, objectPath));
             file.setSizeIsConsistent(contentLength == file.getSizeInBytes());
             fileMetaDataRepository.save(file);
         } catch (Exception e) {
-            LOG.warn("Error read size of file from S3", e);
+            LOGGER.warn("Error read size of file from S3", e);
         }
     }
 
-    private Callable<Object> createCheckFileSizeIsConsistentTask(ActiveFileMetaData fileMetaData, CloudStorageService cloudStorageService) {
-        return new Callable<Object>() {
-            @Override
-            public Object call() throws Exception {
-                if (fileMetaData == null) {
-                    return null;
-                }
+    @Override
+    public void markUnsuccessfullyUploadedFilesToReplaceAndCorrupted() {
+        final Calendar instance = Calendar.getInstance();
+        instance.setTime(new Date());
+        instance.add(MINUTE, -MAXIMUM_UPLOAD_DURATION_IN_MINUTES);
+        final Date fromDate = instance.getTime();
 
-                final String bucket = fileMetaData.getContentId() != null ? activeBucket : archiveBucket;
-                final String contentId = fileMetaData.getContentId() != null ? fileMetaData.getContentId() : fileMetaData.getArchiveId();
-                long contentLength;
-                try {
-                    LOG.info("Try to read size of file " + bucket + "|" + contentId);
-                    contentLength = cloudStorageService.readContentLength(new CloudStorageItemReference(bucket, contentId));
-                } catch (Exception e) {
-                    LOG.warn("Error read size of file from S3", e);
-                    return null;
-                }
-
-                final boolean sizeIsConsistent = fileMetaData.getSizeInBytes() == contentLength;
-                LOG.info("File " + bucket + "|" + contentId + ". Consistent: " + sizeIsConsistent +
-                        ". Size in database: " + fileMetaData.getSizeInBytes() + " Size in storage: " + contentLength );
-
-                transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-                    @Override
-                    protected void doInTransactionWithoutResult(TransactionStatus status) {
-                        fileMetaData.setSizeIsConsistent(sizeIsConsistent);
-                        fileMetaDataRepository.save(fileMetaData);
-                    }
-                });
-
-                Thread.sleep(THREAD_TIMEOUT);
-                return null;
-            }
-        };
+        fileMetaDataRepository.markAllUnsuccessfullyUploadedFilesToReplaceAndCorrupted(fromDate);
     }
 
+    private Callable<Object> createCheckFileSizeIsConsistentTask(ActiveFileMetaData fileMetaData,
+                                                                 CloudStorageService cloudStorageService) {
+        return () -> {
+            if (fileMetaData == null) {
+                return null;
+            }
+
+            final String bucket = fileMetaData.getContentId() != null
+                ? amazonPropertiesProvider.getActiveBucket()
+                : amazonPropertiesProvider.getArchiveBucket();
+
+            final String contentId = fileMetaData.getContentId() != null
+                ? fileMetaData.getContentId()
+                : fileMetaData.getArchiveId();
+            long contentLength;
+            try {
+                LOGGER.info("Try to read size of file {} | {}", bucket, contentId);
+                contentLength =
+                    cloudStorageService.readContentLength(new CloudStorageItemReference(bucket, contentId));
+            } catch (Exception e) {
+                LOGGER.warn("Error read size of file from S3", e);
+                return null;
+            }
+
+            final boolean sizeIsConsistent = fileMetaData.getSizeInBytes() == contentLength;
+            LOGGER.info(
+                "File {} | {}. Consistent: {}. Size in database: {}. Size in storage: {}",
+                bucket,
+                contentId,
+                sizeIsConsistent,
+                fileMetaData.getSizeInBytes(),
+                contentLength
+            );
+
+            transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+                @Override
+                protected void doInTransactionWithoutResult(TransactionStatus status) {
+                    fileMetaData.setSizeIsConsistent(sizeIsConsistent);
+                    fileMetaDataRepository.save(fileMetaData);
+                }
+            });
+
+            Thread.sleep(THREAD_TIMEOUT);
+            return null;
+        };
+    }
 }

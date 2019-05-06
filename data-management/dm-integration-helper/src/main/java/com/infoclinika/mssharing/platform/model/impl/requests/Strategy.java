@@ -8,13 +8,13 @@ import java.util.Collection;
  * @author Pavel Kaplin
  */
 public abstract class Strategy {
-    abstract public Collection<RequestsTemplate.InboxItem> getInboxItems(long actor);
+    public abstract Collection<RequestsTemplate.InboxItem> getInboxItems(long actor);
 
-    abstract public void approve(long actor, String request);
+    public abstract void approve(long actor, String request);
 
-    abstract public void refuse(long actor, String request, String comment);
+    public abstract void refuse(long actor, String request, String comment);
 
-    abstract public void remove(long actor, String request);
+    public abstract void remove(long actor, String request);
 
     boolean canHandle(String request) {
         return request.startsWith(getIdPrefix());

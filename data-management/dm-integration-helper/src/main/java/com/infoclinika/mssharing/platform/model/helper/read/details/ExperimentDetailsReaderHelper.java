@@ -31,8 +31,8 @@ import static com.infoclinika.mssharing.platform.entity.EntityUtil.ENTITY_TO_ID;
 @Component
 @Scope(value = "prototype")
 public class ExperimentDetailsReaderHelper<EXPERIMENT extends ExperimentTemplate,
-        EXPERIMENT_ITEM extends ExperimentItemTemplate>
-        extends AbstractReaderHelper<EXPERIMENT, EXPERIMENT_ITEM, ExperimentItemTemplate> {
+    EXPERIMENT_ITEM extends ExperimentItemTemplate>
+    extends AbstractReaderHelper<EXPERIMENT, EXPERIMENT_ITEM, ExperimentItemTemplate> {
 
 
     @Inject
@@ -55,9 +55,12 @@ public class ExperimentDetailsReaderHelper<EXPERIMENT extends ExperimentTemplate
                 final InstrumentStudyType technologyType = instrumentModel.getStudyType();
                 final Vendor vendor = instrumentModel.getVendor();
 
-                final ImmutableList<DetailsReaderTemplate.MetaFactorTemplate> factors = from(rawFiles.getFactors()).transform(detailsTransformers.factorsTransformer()).toList();
-                final ImmutableList<FileItemTemplate> files = from(rawFiles.getData()).transform(detailsTransformers.experimentFileTransformer()).toList();
-                final ImmutableList<AttachmentItem> attachments = from(ex.attachments).transform(detailsTransformers.attachmentTransformer()).toList();
+                final ImmutableList<DetailsReaderTemplate.MetaFactorTemplate> factors =
+                    from(rawFiles.getFactors()).transform(detailsTransformers.factorsTransformer()).toList();
+                final ImmutableList<FileItemTemplate> files =
+                    from(rawFiles.getData()).transform(detailsTransformers.experimentFileTransformer()).toList();
+                final ImmutableList<AttachmentItem> attachments =
+                    from(ex.attachments).transform(detailsTransformers.attachmentTransformer()).toList();
 
                 final Optional<LabTemplate> lab = fromNullable(ex.getLab());
                 final String labName = lab.isPresent() ? lab.get().getName() : null;
@@ -65,30 +68,30 @@ public class ExperimentDetailsReaderHelper<EXPERIMENT extends ExperimentTemplate
 
                 final InstrumentType instrumentType = instrumentModel.getType();
                 return new ExperimentItemTemplate(
-                        ex.getId(),
-                        ex.getName(),
-                        ex.getProject().getId(),
-                        ex.getExperiment().getDescription(),
-                        ex.getLastModification(),
-                        labName,
-                        ex.getNumberOfFiles(),
-                        factors,
-                        files,
-                        ex.getSpecie().getId(),
-                        ex.getCreator().getEmail(),
-                        technologyType.getId(),
-                        ex.getExperimentType().getId(),
-                        fromNullable(instrument).transform(ENTITY_TO_ID),
-                        collectFactorValues(rawFiles),
-                        attachments,
-                        instrument == null ? null : instrument.getName(),
-                        vendor.getName(),
-                        vendor.getId(),
-                        instrumentModel.getId(),
-                        instrumentType.getId(),
-                        lab.transform(ENTITY_TO_ID).orNull(),
-                        DefaultTransformers.fromSharingType(ex.getProject().getSharing().getType()),
-                        labHead
+                    ex.getId(),
+                    ex.getName(),
+                    ex.getProject().getId(),
+                    ex.getExperiment().getDescription(),
+                    ex.getLastModification(),
+                    labName,
+                    ex.getNumberOfFiles(),
+                    factors,
+                    files,
+                    ex.getSpecie().getId(),
+                    ex.getCreator().getEmail(),
+                    technologyType.getId(),
+                    ex.getExperimentType().getId(),
+                    fromNullable(instrument).transform(ENTITY_TO_ID),
+                    collectFactorValues(rawFiles),
+                    attachments,
+                    instrument == null ? null : instrument.getName(),
+                    vendor.getName(),
+                    vendor.getId(),
+                    instrumentModel.getId(),
+                    instrumentType.getId(),
+                    lab.transform(ENTITY_TO_ID).orNull(),
+                    DefaultTransformers.fromSharingType(ex.getProject().getSharing().getType()),
+                    labHead
                 );
             }
         };

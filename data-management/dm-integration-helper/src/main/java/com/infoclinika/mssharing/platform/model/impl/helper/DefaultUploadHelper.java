@@ -31,17 +31,17 @@ public abstract class DefaultUploadHelper implements UploadHelperTemplate {
     public ImmutableSet<DictionaryItem> species() {
 
         return from(speciesRepository.findAll())
-                .transform(transformers.dictionaryItemTransformer())
-                .toSet();
+            .transform(transformers.dictionaryItemTransformer())
+            .toSet();
 
     }
 
     @Override
     public ImmutableSortedSet<FileItem> existingFiles(long actor, long instrument) {
 
-        return from(fileMetaDataRepository.findByInstrument(actor, instrument))
-                .transform(transformers.fileTransformer())
-                .toSortedSet(transformers.dictionaryItemComparator());
+        return from(fileMetaDataRepository.findAvailableByInstrument(actor, instrument))
+            .transform(transformers.fileTransformer())
+            .toSortedSet(transformers.dictionaryItemComparator());
 
     }
 }

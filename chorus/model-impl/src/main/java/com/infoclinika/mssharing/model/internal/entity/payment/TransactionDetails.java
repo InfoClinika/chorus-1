@@ -15,7 +15,7 @@ public class TransactionDetails extends AbstractPersistable<Long> {
 
     @ElementCollection
     @CollectionTable(name = "billing_transaction_details_parameters",
-            joinColumns = @JoinColumn(name = "details_id"))
+        joinColumns = @JoinColumn(name = "details_id"))
     @MapKeyColumn(name = "param_key")
     @Column(name = "param_value")
     private Map<String, String> parameters = new HashMap<>();

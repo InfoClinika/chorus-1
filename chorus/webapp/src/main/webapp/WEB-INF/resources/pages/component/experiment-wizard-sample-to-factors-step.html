@@ -8,7 +8,8 @@
         </div>
         <div class="control-group">
             <label class="control-label" for="factorType">Value Type</label>
-            <select ui-select2 class=" dialog-select" ng-model="vm.factor.isNumeric" id="factorType">
+            <select ui-select2="{minimumResultsForSearch: 3}" class=" dialog-select" ng-model="vm.factor.isNumeric"
+                    id="factorType">
                 <option value="false">Text</option>
                 <option value="true">Number</option>
             </select>
@@ -19,51 +20,85 @@
             <input class="dialog-text-input dont-hide disabled" ng-model="vm.factor.units" id="factorUnits"
                    ng-disabled="vm.factor.isNumeric != 'true'"/>
         </div>
-        <div class="control-group">
-            <label class="control-label">&nbsp;</label>
-            <button class="btn secondary-action" ng-disabled="vm.addFactorBtnDisabled()" ng-click="vm.addFactor()">Add
-            </button>
+        <div class="new-factor-holder-buttons">
+            <div class="control-group">
+                <button class="btn secondary-action"
+                        ng-disabled="vm.addBtnDisabled()"
+                        ng-click="vm.addAnnotation()">
+                    Add as Annotation
+                </button>
+            </div>
+            <div class="control-group">
+                <button class="btn secondary-action"
+                        ng-disabled="vm.addBtnDisabled()"
+                        ng-click="vm.addFactor()">
+                    Add as Factor
+                </button>
+            </div>
+            <div class="control-group">
+                <experiment-design-from-csv keys="vm.loadDesignKeys"
+                                            values="vm.loadDesignKeyValues"
+                                            callback="vm.loadDesignCallback">
+                </experiment-design-from-csv>
+            </div>
         </div>
     </div>
     <div class="hint" ng-show="vm.factors.length > 0">All fields should be filled</div>
-    <div class="limit-table limit-table-body">
-        <table class="table table-hover factor-table fixed-index"
-               ng-class="{
-               'column2' : vm.factors.length == 0,
-               'column3' : vm.factors.length == 1,
-               'column4': vm.factors.length == 2,
-               'column5': vm.factors.length == 3
-               }" id="factor-table">
+    <div class="limit-table">
+        <table class="table table-hover factor-table restore-display"
+               id="factor-table">
             <thead>
             <tr>
-                <th class="width32"><span class="number-cell">Row</span></th>
+                <th class="width32" ng-class="{'fixed-name-cell': pinCells()}"><span class="number-cell">Row</span></th>
                 <th sorting="name" sort-by-default="asc" ng-click="vm.changeSorting('name')"
-                    ng-class="{'fixed-name-cell': vm.factors.length > 2}"><span
-                        class="name-cell">Sample Name</span></th>
-                <th ng-repeat="factor in vm.factors"
-                    ng-class="{'fixed-factor-cell': vm.factors.length > 2}">
-                                    <span class=" m-btn red icn-only" ng-click="vm.removeFactor(factor)">
+                    ng-class="{'fixed-name-cell': pinCells()}"><span class="name-cell">Sample Name</span></th>
+                <th ng-repeat="factor in vm.factors">
+                    <span class=" m-btn red icn-only" ng-click="vm.removeFactor(factor)">
+                        <a class="icon item-delete removefromcart" packageid="2"
+                           title="Remove factor"></a>
+                    </span>
+                    <span ng-class="{annotation: factor.annotation}">
+                        <span class="factor-name ellipsize"
+                              ng-bind="factor.name"
+                              title="{{factor.name}}"></span>
+                        <span ng-show="factor.isNumeric" style="text-transform: none">({{factor.units}})</span>
+                    </span>
+                </th>
+                <th ng-repeat="annotation in vm.annotations" class="annotation-mark">
+                                    <span class=" m-btn red icn-only" ng-click="vm.removeAnnotation(annotation)">
                                         <a class="icon item-delete removefromcart" packageid="2"
-                                           title="Remove factor"></a>
+                                           title="Remove annotation"></a>
                                     </span>
-                    <span class="factor-name ellipsize" ng-bind="factor.name" title="{{factor.name}}"></span>
-                    <span ng-show="factor.isNumeric" style="text-transform: none">({{factor.units}})</span>
+                    <span class="factor-name ellipsize"
+                          ng-bind="annotation.name"
+                          title="{{annotation.name}}"></span>
+                    <span ng-show="annotation.isNumeric" style="text-transform: none">({{annotation.units}})</span>
                 </th>
             </tr>
             </thead>
             <tbody>
             <tr ng-repeat="sample in vm.samples">
-                <td ng-bind="$index+1"></td>
-                <td title="{{sample.name}}" ng-class="{'fixed-name-cell': vm.factors.length > 2}">
+                <td ng-bind="$index+1" ng-class="{'fixed-name-cell': pinCells()}"></td>
+                <td title="{{sample.name}}" ng-class="{'fixed-name-cell': pinCells()}">
                     <div ng-bind="sample.name" class="ellipsize"></div>
                 </td>
-                <td class="factor-value" ng-repeat="factor in vm.factors"
-                    ng-class="{'fixed-factor-cell': vm.factors.length > 2}" >
+                <td class="factor-value"
+                    ng-repeat="factor in vm.factors"
+                    ng-class="{'fixed-factor-cell': isCellPinned()}">
                     <div contenteditable input-key-press="vm.keyPressedInFactorTable()"
                          class="contenteditable-label"
                          ng-model="sample.factorValues[factor.id]"
                          title="Value of factor '{{factor.name}}'"
                          double-value-validation="factor.isNumeric" can-be-negative="true" delay-validation="true"
+                         paste-in-table-validation></div>
+                </td>
+                <td class="factor-value"
+                    ng-repeat="annotation in vm.annotations">
+                    <div contenteditable input-key-press="vm.keyPressedInFactorTable()"
+                         class="contenteditable-label"
+                         ng-model="sample.annotationValues[annotation.id]"
+                         title="Value of annotation '{{annotation.name}}'"
+                         double-value-validation="annotation.isNumeric" can-be-negative="true" delay-validation="true"
                          paste-in-table-validation></div>
                 </td>
             </tr>

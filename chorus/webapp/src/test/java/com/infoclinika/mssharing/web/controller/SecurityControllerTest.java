@@ -2,37 +2,53 @@ package com.infoclinika.mssharing.web.controller;
 
 import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.model.internal.entity.User;
+import com.infoclinika.mssharing.model.internal.repository.UserRepository;
+import com.infoclinika.mssharing.model.write.UserManagement;
 import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
 import com.infoclinika.mssharing.web.controller.response.SuccessErrorResponse;
-import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
+import com.infoclinika.mssharing.web.demo.SpringSupportTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-
+import javax.inject.Inject;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 
-import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.*;
 
 /**
  * @author Pavel Kaplin
  */
-public class SecurityControllerTest extends AbstractDataBasedTest {
+//@RunWith(Theories.class)
+public class SecurityControllerTest extends SpringSupportTest {
 
     public static final String PAVEL_EMAIL = "pavel@example.com";
     public static final String JOHN_EMAIL = "john@example.com";
+    @Inject
+    private SecurityController securityController;
+
+    @Inject
+    private EmailVerificationCrypto crypto;
+
+    @Inject
+    private UserManagement userManagement;
+    @Inject
+    private UserRepository userRepository;
+
+    @Inject
+    private SecurityHelper securityHelper;
 
     private SecurityHelper.UserDetails pavel;
     private SecurityHelper.UserDetails johnWithExpiredLink;
-
 
     @BeforeMethod
     public void setUp() {
 
         // pavel is a normal user
-        final UserManagementTemplate.PersonInfo pavelInfo = new UserManagementTemplate.PersonInfo("Pavel", "Kaplin", PAVEL_EMAIL);
+        final UserManagementTemplate.PersonInfo pavelInfo =
+            new UserManagementTemplate.PersonInfo("Pavel", "Kaplin", PAVEL_EMAIL);
         final String password = "password";
         final String link = "/link";
         userManagement.createPerson(pavelInfo, password, new HashSet<>(), link);
@@ -40,7 +56,12 @@ public class SecurityControllerTest extends AbstractDataBasedTest {
 
 
         // john is a user with expired email verification link
-        final long johnId = userManagement.createPerson(new UserManagementTemplate.PersonInfo("John", "Wick", JOHN_EMAIL), password, new HashSet<>(), link);
+        final long johnId =
+            userManagement.createPerson(new UserManagementTemplate.PersonInfo("John", "Wick", JOHN_EMAIL),
+                password,
+                new HashSet<>(),
+                link
+            );
         final User john = userRepository.findOne(johnId);
         final Calendar now = Calendar.getInstance();
         now.add(Calendar.DAY_OF_MONTH, -7);
@@ -91,7 +112,8 @@ public class SecurityControllerTest extends AbstractDataBasedTest {
 
         String macCode = securityController.getMac(johnWithExpiredLink);
         final MockHttpSession session = new MockHttpSession();
-        final SuccessErrorResponse successErrorResponse = securityController.canResetPassword(johnWithExpiredLink.email, macCode, session);
+        final SuccessErrorResponse successErrorResponse =
+            securityController.canResetPassword(johnWithExpiredLink.email, macCode, session);
 
         assertNull(successErrorResponse.successMessage);
         assertNotNull(successErrorResponse.errorMessage);
@@ -103,7 +125,8 @@ public class SecurityControllerTest extends AbstractDataBasedTest {
 
         String macCode = securityController.getMac(pavel);
         final MockHttpSession session = new MockHttpSession();
-        final SuccessErrorResponse successErrorResponse = securityController.canResetPassword(pavel.email, macCode, session);
+        final SuccessErrorResponse successErrorResponse =
+            securityController.canResetPassword(pavel.email, macCode, session);
 
         assertNull(successErrorResponse.errorMessage);
         assertNotNull(successErrorResponse.successMessage);

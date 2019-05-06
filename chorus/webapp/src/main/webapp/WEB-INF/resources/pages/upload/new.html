@@ -247,7 +247,7 @@
 							</colgroup>
 							<tbody>
 								<tr ng-repeat="item in getUploadItems()">
-									<td title="{{item.name}}"><div class="ellipsize" ng-bind="item.name"></div></td>
+									<td title="{{item.name}}"><div class="ellipsize start-upload" ng-bind="item.name"></div></td>
 									<td>
                                         <!-- State Info -->
                                         <span ng-show="item.status == 'waiting'" class="current-state-info">{{item.size | fileSize}}&nbsp;&nbsp;&nbsp;Waiting</span>
@@ -296,7 +296,7 @@
                 <span ng-switch="zipFailed.type">
                     <span ng-switch-when="SIZE_LIMIT_EXCEED">
                         Files size > 4GB. Please use
-                        <a class='desktopUploaderLink' desktop-uploader-url>Desktop Uploader<span hide-when-private-installation="true">(Beta)</span></a>.
+                        <a class='desktopUploaderLink' desktop-uploader-url>Desktop Uploader</a>.
                     </span>
                 </span>
 

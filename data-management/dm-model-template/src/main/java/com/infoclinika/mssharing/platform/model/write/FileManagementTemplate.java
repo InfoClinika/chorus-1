@@ -19,14 +19,47 @@ public interface FileManagementTemplate<FILE_META_DATA_INFO extends FileManageme
         public final String destinationPath;
         public final long species;
         public final boolean archive;
+        public final String bucket;
+        public final String storedKey;
+        public final boolean readOnly;
 
-        public FileMetaDataInfoTemplate(String fileName, long sizeInBytes, String labels, String destinationPath, long species, boolean archive) {
+        public FileMetaDataInfoTemplate(String fileName,
+                                        long sizeInBytes,
+                                        String labels,
+                                        String destinationPath,
+                                        long species,
+                                        boolean archive) {
+            this(
+                fileName,
+                sizeInBytes,
+                labels,
+                destinationPath,
+                species,
+                archive,
+                null,
+                null,
+                false
+            );
+        }
+
+        public FileMetaDataInfoTemplate(String fileName,
+                                        long sizeInBytes,
+                                        String labels,
+                                        String destinationPath,
+                                        long species,
+                                        boolean archive,
+                                        String bucket,
+                                        String storedKey,
+                                        boolean readOnly) {
             this.fileName = fileName;
             this.sizeInBytes = sizeInBytes;
             this.labels = labels;
             this.destinationPath = destinationPath;
             this.species = species;
             this.archive = archive;
+            this.bucket = bucket;
+            this.storedKey = storedKey;
+            this.readOnly = readOnly;
         }
     }
 

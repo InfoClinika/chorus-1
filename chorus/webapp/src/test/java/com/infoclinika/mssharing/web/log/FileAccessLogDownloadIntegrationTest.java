@@ -5,45 +5,61 @@ import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.model.internal.entity.FileAccessLog;
 import com.infoclinika.mssharing.model.read.FileAccessLogReader;
 import com.infoclinika.mssharing.model.read.FileLine;
+import com.infoclinika.mssharing.model.read.UserReader;
 import com.infoclinika.mssharing.platform.model.PagedItem;
 import com.infoclinika.mssharing.platform.model.PagedItemInfo;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
-import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
+import com.infoclinika.mssharing.web.demo.DemoDataBasedTest;
 import com.infoclinika.mssharing.web.downloader.ChorusDownloadData;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.web.downloader.ChorusSingleFileDownloadHelper;
 import org.testng.annotations.Test;
+
+import javax.inject.Inject;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TreeSet;
 
-import static junit.framework.Assert.fail;
-import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.fail;
 
 /**
  * @author vladislav.kovchug
  */
-public class FileAccessLogDownloadIntegrationTest extends AbstractDataBasedTest {
+public class FileAccessLogDownloadIntegrationTest extends DemoDataBasedTest {
 
+    @Inject
+    private FileAccessLogReader fileAccessLogReader;
 
+    @Inject
+    private UserReader userReader;
 
-    @Value("${database.data.admin.email}")
-    private String adminEmail;
+    @Inject
+    private ChorusSingleFileDownloadHelper chorusSingleFileDownloadHelper;
 
-    @Test
+    @Inject
+    private SecurityHelper securityHelper;
+
+    @Test(enabled = false, description = "test was disabled for open-chorus")
     public void test_file_download_logging() throws InterruptedException {
 
-        final Long pavelKaplin = pavelKaplinAtGmail();
+        final Long demoUser = demoUser();
 
-        final SecurityHelper.UserDetails admin = securityHelper.getUserDetailsByEmail(adminEmail);
+        final SecurityHelper.UserDetails admin =
+            securityHelper.getUserDetailsByEmail(demoDataPropertiesProvider.getAdminEmail());
 
-        UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(pavelKaplin);
-        final Set<FileLine> fileLines = dashboardReader.readFiles(pavelKaplin, Filter.ALL);
-        final FileLine file = fileLines.iterator().next();
+        UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(demoUser);
+        final Set<FileLine> fileLines = dashboardReader.readFiles(demoUser, Filter.ALL);
+        final Set<FileLine> sortedFilesById = new TreeSet<>(Comparator.comparingLong(o -> o.id));
+        sortedFilesById.addAll(fileLines);
 
-        chorusSingleFileDownloadHelper.getDownloadUrl(pavelKaplin, new ChorusDownloadData(file.id, file.labId));
+        final FileLine file = sortedFilesById.iterator().next();
+
+        chorusSingleFileDownloadHelper.getDownloadUrl(demoUser, new ChorusDownloadData(file.id, file.labId));
         Thread.sleep(1000);
         final Optional<FileAccessLogReader.FileAccessLogDTO> lastLogEntry = readLastLog(admin.id);
-        if(lastLogEntry.isPresent()) {
+        if (lastLogEntry.isPresent()) {
             FileAccessLogReader.FileAccessLogDTO lastLog = lastLogEntry.get();
 
             assertEquals(lastLog.operationType, FileAccessLog.OperationType.FILE_DOWNLOAD_STARTED.toString());
@@ -59,7 +75,7 @@ public class FileAccessLogDownloadIntegrationTest extends AbstractDataBasedTest 
 
     private Optional<FileAccessLogReader.FileAccessLogDTO> readLastLog(long actor) {
         final PagedItem<FileAccessLogReader.FileAccessLogDTO> logs =
-                fileAccessLogReader.readLogs(actor, new PagedItemInfo(1, 0, "id", false, ""));
+            fileAccessLogReader.readLogs(actor, new PagedItemInfo(1, 0, "id", false, ""));
 
         final Iterator<FileAccessLogReader.FileAccessLogDTO> iterator = logs.iterator();
         FileAccessLogReader.FileAccessLogDTO lastLog = null;

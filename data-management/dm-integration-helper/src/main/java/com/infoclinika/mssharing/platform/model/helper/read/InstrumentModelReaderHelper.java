@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @Component
 @Scope(value = "prototype")
 public class InstrumentModelReaderHelper<MODEL extends InstrumentModel, MODEL_LINE extends InstrumentModelLineTemplate>
-        extends AbstractReaderHelper<MODEL, MODEL_LINE, MODEL_LINE> {
+    extends AbstractReaderHelper<MODEL, MODEL_LINE, MODEL_LINE> {
 
     @Inject
     private InstrumentModelRepositoryTemplate<MODEL> instrumentModelRepository;
@@ -55,14 +55,14 @@ public class InstrumentModelReaderHelper<MODEL extends InstrumentModel, MODEL_LI
     @Override
     public Function<MODEL, MODEL_LINE> getDefaultTransformer() {
         return instrumentModel -> (MODEL_LINE) new InstrumentModelLineTemplate(
-                instrumentModel.getId(),
-                instrumentModel.getName(),
-                toDictionaryItem(instrumentModel.getStudyType()),
-                toDictionaryItem(instrumentModel.getVendor()),
-                toDictionaryItem(instrumentModel.getType()),
-                instrumentModel.getExtensions().stream().map(VendorExtension::getExtension).collect(Collectors.toSet()),
-                instrumentModel.isAdditionalFiles(),
-                instrumentModel.isFolderArchiveSupport()
+            instrumentModel.getId(),
+            instrumentModel.getName(),
+            toDictionaryItem(instrumentModel.getStudyType()),
+            toDictionaryItem(instrumentModel.getVendor()),
+            toDictionaryItem(instrumentModel.getType()),
+            instrumentModel.getExtensions().stream().map(VendorExtension::getExtension).collect(Collectors.toSet()),
+            instrumentModel.isAdditionalFiles(),
+            instrumentModel.isFolderArchiveSupport()
         );
     }
 

@@ -4,11 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.infoclinika.mssharing.model.PaginationItems.AdvancedFilterQueryParams;
-import com.infoclinika.mssharing.model.PaginationItems.AdvancedFilterQueryParams.AdvancedFilterPredicateItem;
 import com.infoclinika.mssharing.model.helper.ExperimentCreationHelper;
 import com.infoclinika.mssharing.model.helper.ExperimentCreationHelper.ExperimentLabelItem;
 import com.infoclinika.mssharing.model.helper.ExperimentCreationHelper.ExperimentLabelTypeItem;
-import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.read.AdministrationToolsReader;
 import com.infoclinika.mssharing.model.read.DashboardReader;
 import com.infoclinika.mssharing.model.read.DetailsReader;
@@ -17,37 +15,41 @@ import com.infoclinika.mssharing.model.read.dto.details.ExperimentItem;
 import com.infoclinika.mssharing.model.write.ExperimentInfo;
 import com.infoclinika.mssharing.model.write.FileOperationsManager;
 import com.infoclinika.mssharing.model.write.StudyManagement;
+import com.infoclinika.mssharing.model.write.ngs.NgsExperimentImporter;
+import com.infoclinika.mssharing.model.write.ngs.dto.NgsExperimentImportRequest;
 import com.infoclinika.mssharing.platform.model.PagedItem;
 import com.infoclinika.mssharing.platform.model.PagedItemInfo;
-import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
-import com.infoclinika.mssharing.platform.model.common.items.FileItem;
-import com.infoclinika.mssharing.platform.model.common.items.InstrumentItem;
-import com.infoclinika.mssharing.platform.model.common.items.NamedItem;
+import com.infoclinika.mssharing.platform.model.common.items.*;
 import com.infoclinika.mssharing.platform.model.helper.ExperimentCreationHelperTemplate.ExperimentTypeItem;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.ExperimentShortInfo;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.Restriction;
 import com.infoclinika.mssharing.web.controller.request.ExperimentDetails;
-import com.infoclinika.mssharing.web.controller.request.SameSpeciesCheckRequest;
-import com.infoclinika.mssharing.web.controller.response.DetailsResponse;
-import com.infoclinika.mssharing.web.controller.response.ExperimentIdResponse;
-import com.infoclinika.mssharing.web.controller.response.ValueResponse;
-import org.apache.log4j.Logger;
+import com.infoclinika.mssharing.web.controller.request.PageRequest;
+import com.infoclinika.mssharing.web.controller.response.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 
+
 import static com.google.common.collect.Lists.newArrayList;
-import static com.infoclinika.mssharing.model.PaginationItems.AdvancedFilterQueryParams.AdvancedFilterPredicateItem.AdvancedFilterOperator.*;
+import static com.infoclinika.mssharing.model.read.DashboardReader.ExperimentLevelItem;
+import static com.infoclinika.mssharing.model.read.DashboardReader.StorageStatus;
+import static com.infoclinika.mssharing.model.read.DashboardReader.StorageStatus.*;
 import static com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.ShortExperimentFileItem;
 import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId;
 import static com.infoclinika.mssharing.web.transform.ExperimentTransformer.TO_EXPERIMENT_DETAILS;
 import static com.infoclinika.mssharing.web.transform.ExperimentTransformer.TO_EXPERIMENT_INFO;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 /**
  * @author Pavel Kaplin
@@ -55,10 +57,13 @@ import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 @Controller
 @RequestMapping("/experiments")
 public class ExperimentsController extends PagedItemsController {
-
-    public static final String DATE_FILTER_PROPERTY_NAME = "uploadDate";
-    public static final String CONTAINS_FILTER_PROPERTY_NAME = "name";
-    private Logger LOG = Logger.getLogger(ExperimentsController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentsController.class);
+    private static final EnumSet<StorageStatus> STORAGE_STATUSES = EnumSet.of(
+        ARCHIVED,
+        ARCHIVING_IN_PROCESS,
+        UN_ARCHIVING_IN_PROCESS,
+        UN_ARCHIVING_FOR_DOWNLOAD_IN_PROCESS
+    );
 
     @Inject
     private DashboardReader dashboardReader;
@@ -73,20 +78,21 @@ public class ExperimentsController extends PagedItemsController {
     @Inject
     private FileOperationsManager fileOperationsManager;
     @Inject
-    private RuleValidator validator;
+    private NgsExperimentImporter ngsExperimentImporter;
 
     @RequestMapping(value = "/details/{id}", method = RequestMethod.GET)
     @ResponseBody
     public DetailsResponse<ExperimentDetails> getDetails(@PathVariable final Long id, Principal principal) {
         ExperimentItem experiment = detailsReader.readExperiment(getUserId(principal), id);
         final ExperimentDetails experimentDetails = TO_EXPERIMENT_DETAILS.apply(experiment);
+
         return DetailsResponse.ok(experimentDetails);
     }
 
     @RequestMapping(method = RequestMethod.POST)
     @ResponseBody
     public ExperimentIdResponse save(@RequestBody ExperimentDetails experiment, Principal principal) {
-        LOG.info("Saving an experiment: " + experiment);
+        LOGGER.info("Saving an experiment: {}", experiment);
         long userId = getUserId(principal);
         long experimentId;
         // decide which lab is going to pay
@@ -102,6 +108,7 @@ public class ExperimentsController extends PagedItemsController {
             experimentId = experiment.id;
             studyManagement.updateExperiment(userId, experimentId, experimentInfo);
         }
+
         return new ExperimentIdResponse(experimentId);
     }
 
@@ -113,15 +120,28 @@ public class ExperimentsController extends PagedItemsController {
 
     @RequestMapping("/new/instrumentModels")
     @ResponseBody
-    public List<DictionaryItem> getInstrumentModels(Principal principal,
-                                                    @RequestParam(required = false) Long lab,
-                                                    @RequestParam(required = false) Long technologyType,
-                                                    @RequestParam(required = false) Long vendor,
-                                                    @RequestParam(required = false) Long instrumentType) {
+    public List<DictionaryItem> getInstrumentModels(
+        Principal principal,
+        @RequestParam(required = false) Long lab,
+        @RequestParam(required = false) Long technologyType,
+        @RequestParam(required = false) Long vendor,
+        @RequestParam(required = false) Long instrumentType
+    ) {
         if (instrumentType == null) {
-            return experimentCreationHelper.availableInstrumentModels(getUserId(principal), lab, technologyType, vendor);
+            return experimentCreationHelper.availableInstrumentModels(
+                getUserId(principal),
+                lab,
+                technologyType,
+                vendor
+            );
         } else {
-            return experimentCreationHelper.availableInstrumentModels(getUserId(principal), lab, technologyType, vendor, instrumentType);
+            return experimentCreationHelper.availableInstrumentModels(
+                getUserId(principal),
+                lab,
+                technologyType,
+                vendor,
+                instrumentType
+            );
         }
     }
 
@@ -133,79 +153,31 @@ public class ExperimentsController extends PagedItemsController {
 
     @RequestMapping("/new/instrumentTypes")
     @ResponseBody
-    public List<DictionaryItem> getInstruments(Principal principal,
-                                               @RequestParam(required = false) Long lab,
-                                               @RequestParam(required = false) Long technologyType,
-                                               @RequestParam(required = false) Long vendor) {
+    public List<DictionaryItem> getInstruments(
+        Principal principal,
+        @RequestParam(required = false) Long lab,
+        @RequestParam(required = false) Long technologyType,
+        @RequestParam(required = false) Long vendor
+    ) {
         return experimentCreationHelper.availableInstrumentTypes(getUserId(principal), lab, technologyType, vendor);
-    }
-
-    @RequestMapping(value = "/new/files", method = RequestMethod.GET)
-    @ResponseBody
-    public List<FileItem> getFiles(@RequestParam long specie,
-                                   @RequestParam(required = false) Long instrument,
-                                   @RequestParam(required = false) Long model,
-                                   @RequestParam(required = false) Long lab,
-                                   Principal principal) {
-        if (instrument != null) {
-            return experimentCreationHelper.availableFilesByInstrument(getUserId(principal), specie, instrument);
-        }
-        return experimentCreationHelper.availableFilesByInstrumentModel(getUserId(principal), specie, model, lab);
     }
 
     @RequestMapping(value = "/new/files/exist", method = RequestMethod.GET)
     @ResponseBody
-    public ValueResponse<Boolean> checkIfFilesExist(@RequestParam(required = false) long species,
-                                                    @RequestParam(required = false) Long instrument,
-                                                    @RequestParam(required = false) Long model,
-                                                    @RequestParam(required = false) Long lab,
-                                                    Principal principal) {
-
-        if (instrument != null) {
-            return new ValueResponse<>(experimentCreationHelper.hasFilesByInstrument(getUserId(principal), species, instrument));
-        } else {
-            return new ValueResponse<>(experimentCreationHelper.hasFilesByModel(getUserId(principal), species, model, lab));
-        }
-    }
-
-    @RequestMapping(value = "/paged/new/files", method = RequestMethod.GET)
-    @ResponseBody
-    public PagedItem<FileItem> getPagedFiles(@RequestParam long specie,
-                                             @RequestParam(required = false) Long instrument,
-                                             @RequestParam(required = false) Long model, @RequestParam(required = false) Long lab,
-                                             @RequestParam(required = false) String fromDateFilterQuery, @RequestParam(required = false) String toDateFilterQuery,
-                                             @RequestParam int page, @RequestParam int items, @RequestParam String sortingField,
-                                             @RequestParam boolean asc, @RequestParam(required = false) String filterQuery,
-                                             Principal principal) {
-
-        final List<AdvancedFilterPredicateItem> predicates = new ArrayList<>();
-
-        if (fromDateFilterQuery != null && !fromDateFilterQuery.isEmpty()) {
-            predicates.add(new AdvancedFilterPredicateItem(DATE_FILTER_PROPERTY_NAME, fromDateFilterQuery,
-                    IS_ON_AND_AFTER));
-        }
-
-        if (toDateFilterQuery != null && !toDateFilterQuery.isEmpty()) {
-            predicates.add(new AdvancedFilterPredicateItem(DATE_FILTER_PROPERTY_NAME, toDateFilterQuery,
-                    IS_ON_OR_BEFORE));
-        }
-
-        if (filterQuery != null && !filterQuery.isEmpty()) {
-            predicates.add(new AdvancedFilterPredicateItem(CONTAINS_FILTER_PROPERTY_NAME, filterQuery,
-                    CONTAINS));
-        }
-
-        AdvancedFilterQueryParams advancedFilter = null;
-        if (!predicates.isEmpty()) {
-            advancedFilter = new AdvancedFilterQueryParams(true, predicates);
-        }
-        final PagedItemInfo pagedInfo = createPagedInfo(page, items, sortingField, asc, filterQuery, advancedFilter);
-
-        if (instrument != null) {
-            return experimentCreationHelper.availableFilesByInstrument(getUserId(principal), specie, instrument, pagedInfo);
-        }
-
-        return experimentCreationHelper.availableFilesByInstrumentModel(getUserId(principal), specie, model, lab, pagedInfo);
+    public ValueResponse<Boolean> checkIfFilesExist(
+        @RequestParam(required = false) Long species,
+        @RequestParam(required = false) Long instrument,
+        @RequestParam(required = false) Long model,
+        @RequestParam(required = false) Long lab,
+        Principal principal
+    ) {
+        return new ValueResponse<>(experimentCreationHelper.hasFilesByParams(
+            getUserId(principal),
+            species,
+            instrument,
+            model,
+            lab
+        ));
     }
 
     @RequestMapping(value = "/details/{experiment}/files", method = RequestMethod.GET)
@@ -228,13 +200,13 @@ public class ExperimentsController extends PagedItemsController {
 
     @RequestMapping("/new/labels")
     @ResponseBody
-    public ImmutableSet<ExperimentLabelItem> labels() {
+    public Set<ExperimentLabelItem> labels() {
         return experimentCreationHelper.experimentLabels();
     }
 
     @RequestMapping("/new/labelTypes")
     @ResponseBody
-    public ImmutableSet<ExperimentLabelTypeItem> labelTypes() {
+    public Set<ExperimentLabelTypeItem> labelTypes() {
         return experimentCreationHelper.experimentLabelTypes();
     }
 
@@ -244,10 +216,17 @@ public class ExperimentsController extends PagedItemsController {
         return experimentCreationHelper.specie(id);
     }
 
+    @RequestMapping(value = "/new/species/default", method = RequestMethod.GET)
+    @ResponseBody
+    public DictionaryItem getDefaultSpecie() {
+        return experimentCreationHelper.defaultSpecie();
+    }
+
     @RequestMapping(value = "/{filter}", method = RequestMethod.GET)
     @ResponseBody
     public Iterable<ExperimentLine> getExperiments(
-            @PathVariable("filter") final Filter filter, Principal principal) {
+        @PathVariable("filter") final Filter filter, Principal principal
+    ) {
         return newArrayList(dashboardReader.readExperiments(getUserId(principal), filter));
     }
 
@@ -257,34 +236,63 @@ public class ExperimentsController extends PagedItemsController {
         return detailsReader.readFilesInOtherExperiments(getUserId(principal), id);
     }
 
-    @RequestMapping(value = "/haveSameSpecies/files", method = RequestMethod.POST)
-    @ResponseBody
-    public ValueResponse<Boolean> doFilesHaveSameSpecie(@RequestBody SameSpeciesCheckRequest request) {
-        return new ValueResponse<>(validator.canSaveExperimentWithSpecies(request.specieId, request.fileIds));
-    }
-
     @RequestMapping(value = "/by-project/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public PagedItem<ExperimentLine> getPagedExperimentsByProject(@PathVariable("id") final long id,
-                                                                  @RequestBody PagedExperimentRequest request,
-                                                                  Principal principal) {
-        return dashboardReader.readPagedExperimentsByProject(getUserId(principal), id, createPagedInfo(request.page, request.items, request.sortingField, request.asc, request.filterQuery, request.advancedFilter));
+    public PagedItem<ExperimentLine> getPagedExperimentsByProject(
+        @PathVariable("id") final long id,
+        @RequestBody PagedExperimentRequest request,
+        Principal principal
+    ) {
+        return dashboardReader.readPagedExperimentsByProject(
+            getUserId(principal),
+            id,
+            createPagedInfo(
+                request.page,
+                request.items,
+                request.sortingField,
+                request.asc,
+                request.filterQuery,
+                request.advancedFilter
+            )
+        );
     }
 
     @RequestMapping(value = "/paged/{filter}", method = RequestMethod.POST)
     @ResponseBody
-    public PagedItem<ExperimentLine> getPagedExperiments(@PathVariable Filter filter,
-                                                         @RequestBody PagedExperimentRequest request,
-                                                         Principal principal) {
-        return dashboardReader.readExperiments(getUserId(principal), filter, createPagedInfo(request.page, request.items, request.sortingField, request.asc, request.filterQuery, request.advancedFilter));
+    public PagedItem<ExperimentLine> getPagedExperiments(
+        @PathVariable Filter filter,
+        @RequestBody PagedExperimentRequest request,
+        Principal principal
+    ) {
+        return dashboardReader.readExperiments(
+            getUserId(principal),
+            filter,
+            createPagedInfo(
+                request.page,
+                request.items,
+                request.sortingField,
+                request.asc,
+                request.filterQuery,
+                request.advancedFilter
+            )
+        );
     }
 
     @RequestMapping(value = "/paged", method = RequestMethod.POST)
     @ResponseBody
-    public PagedItem<ExperimentLine> getPagedExperiments(@RequestBody PagedExperimentRequest request,
-                                                         Principal principal) {
+    public PagedItem<ExperimentLine> getPagedExperiments(
+        @RequestBody PagedExperimentRequest request,
+        Principal principal
+    ) {
         final long actor = getUserId(principal);
-        final PagedItemInfo pagedInfo = createPagedInfo(request.page, request.items, request.sortingField, request.asc, request.filterQuery, request.advancedFilter);
+        final PagedItemInfo pagedInfo = createPagedInfo(
+            request.page,
+            request.items,
+            request.sortingField,
+            request.asc,
+            request.filterQuery,
+            request.advancedFilter
+        );
         return dashboardReader.readExperimentsByLab(actor, request.labId, pagedInfo);
     }
 
@@ -297,7 +305,11 @@ public class ExperimentsController extends PagedItemsController {
 
     @RequestMapping(method = DELETE)
     @ResponseStatus(HttpStatus.OK)
-    public void removeExperiment(@RequestParam long experiment, @RequestParam boolean removePermanently, Principal principal) {
+    public void removeExperiment(
+        @RequestParam long experiment,
+        @RequestParam boolean removePermanently,
+        Principal principal
+    ) {
         if (removePermanently) {
             studyManagement.deleteExperiment(getUserId(principal), experiment);
         } else {
@@ -308,7 +320,10 @@ public class ExperimentsController extends PagedItemsController {
 
     @RequestMapping(value = "/details/{experimentId}/levels", method = RequestMethod.GET)
     @ResponseBody
-    public Set<DashboardReader.ExperimentLevelItem> getExperimentLevels(@PathVariable final long experimentId, Principal principal) {
+    public Set<ExperimentLevelItem> getExperimentLevels(
+        @PathVariable final long experimentId,
+        Principal principal
+    ) {
         return dashboardReader.readExperimentLevels(getUserId(principal), experimentId);
     }
 
@@ -321,7 +336,7 @@ public class ExperimentsController extends PagedItemsController {
     @RequestMapping(value = "/precache/{id}", method = RequestMethod.GET)
     @ResponseStatus(HttpStatus.OK)
     public void preCacheViewers(@PathVariable("id") long id, Principal principal) {
-        LOG.debug("Pre-cache viewers call arrived to the controller. Experiment ID = " + id);
+        LOGGER.debug("Pre-cache viewers call arrived to the controller. Experiment ID = {}", id);
         studyManagement.runPreCacheViewers(getUserId(principal), id);
     }
 
@@ -343,6 +358,80 @@ public class ExperimentsController extends PagedItemsController {
         fileOperationsManager.markExperimentFilesToUnarchive(getUserId(principal), id);
     }
 
+    @RequestMapping(value = "/markAsFailed/{id}/{failed}", method = RequestMethod.PUT)
+    @ResponseStatus(HttpStatus.OK)
+    public void markAsFailed(@PathVariable long id, @PathVariable boolean failed, Principal principal) {
+        LOGGER.info("Changed status of experiment: " + id + " on failed: " + failed);
+
+        dashboardReader.setExperimentFailed(getUserId(principal), id, failed);
+    }
+
+    @RequestMapping(value = "/importNGSExperiment", method = RequestMethod.POST)
+    @ResponseBody
+    public SuccessErrorResponse importNGSExperiment(ImportNgsExperimentRequest request, Principal principal)
+        throws IOException {
+
+        final long actor = getUserId(principal);
+        final byte[] fileAsBytes = request.getFile().getBytes();
+        final NgsExperimentImportRequest importRequest = new NgsExperimentImportRequest(
+            request.getName(),
+            request.getProject(),
+            request.getLab(),
+            request.getInstrument(),
+            fileAsBytes
+        );
+
+        try {
+            final long experimentId = ngsExperimentImporter.makeImport(actor, importRequest);
+
+            return new SuccessErrorResponse(
+                null,
+                "NGS Experiment has been successfully imported. Experiment ID: " + experimentId
+            );
+        } catch (Exception ex) {
+            return new SuccessErrorResponse(ex.getMessage(), null);
+        }
+    }
+
+    @RequestMapping(value = "/ngs/getLibraryPrepTypes", method = GET)
+    @ResponseBody
+    public ValueResponse<List<DictItem<String, String>>> getLibraryPrepTypes() {
+        final List<DictItem<String, String>> ngsLibraryPrepTypes = experimentCreationHelper.getNgsLibraryPrepTypes();
+
+        return new ValueResponse<>(ngsLibraryPrepTypes);
+    }
+
+    @RequestMapping(value = "/ngs/getExperimentPrepMethodsByType", method = GET)
+    @ResponseBody
+    public ValueResponse<List<DictItem<Integer, String>>> getExperimentPrepMethodsByType(
+        @RequestParam("typeId") int typeId
+    ) {
+        final List<DictItem<Integer, String>> ngsExperimentPrepMethods =
+            experimentCreationHelper.getNgsExperimentPrepMethodsByExperimentType(typeId);
+
+        return new ValueResponse<>(ngsExperimentPrepMethods);
+    }
+
+    @RequestMapping(value = "/ngs/getNtExtractionMethods", method = GET)
+    @ResponseBody
+    public ValueResponse<List<DictItem<Long, String>>> getNtExtractionMethods() {
+        final List<DictItem<Long, String>> ntExtractionMethods = experimentCreationHelper.getNtExtractionMethods();
+
+        return new ValueResponse<>(ntExtractionMethods);
+    }
+
+    @RequestMapping(value = "/ngs/getNgsExperimentTypes", method = GET)
+    @ResponseBody
+    public ValueResponse<List<DictItem<Integer, String>>> getNgsExperimentTypes() {
+        final List<DictItem<Integer, String>> ngsExperimentTypes = experimentCreationHelper.getNgsExperimentTypes();
+
+        return new ValueResponse<>(ngsExperimentTypes);
+    }
+
+    private static class RetranslateExperimentsRequest {
+        public List<Long> experiments;
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PagedExperimentRequest {
         public Long labId;
@@ -352,5 +441,54 @@ public class ExperimentsController extends PagedItemsController {
         public boolean asc;
         public String filterQuery;// nullable
         public AdvancedFilterQueryParams advancedFilter;// nullable
+    }
+
+    public static class ImportNgsExperimentRequest {
+
+        private MultipartFile file;
+        private String name;
+        private long project;
+        private long lab;
+        private long instrument;
+
+        public MultipartFile getFile() {
+            return file;
+        }
+
+        public void setFile(MultipartFile file) {
+            this.file = file;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public long getProject() {
+            return project;
+        }
+
+        public void setProject(long project) {
+            this.project = project;
+        }
+
+        public long getLab() {
+            return lab;
+        }
+
+        public void setLab(long lab) {
+            this.lab = lab;
+        }
+
+        public long getInstrument() {
+            return instrument;
+        }
+
+        public void setInstrument(long instrument) {
+            this.instrument = instrument;
+        }
     }
 }

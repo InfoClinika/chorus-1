@@ -11,12 +11,16 @@ import com.infoclinika.mssharing.platform.repository.*;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author Herman Zamula
  */
 @Transactional(readOnly = true)
-public abstract class DefaultMailSendingHelper<USER_DETAILS extends MailSendingHelperTemplate.UserDetails> implements MailSendingHelperTemplate, DefaultTransformingTemplate<UserTemplate, USER_DETAILS> {
+public abstract class DefaultMailSendingHelper<USER_DETAILS extends MailSendingHelperTemplate.UserDetails>
+    implements MailSendingHelperTemplate, DefaultTransformingTemplate<UserTemplate, USER_DETAILS> {
 
     @Inject
     private UserRepositoryTemplate<UserTemplate> userRepository;
@@ -59,5 +63,12 @@ public abstract class DefaultMailSendingHelper<USER_DETAILS extends MailSendingH
         return experimentRepository.findOne(experiment).getName();
     }
 
-
+    @Override
+    public List<String> labMembersEmails(long labId) {
+        return userRepository.findAllUsersByLab(labId)
+            .stream()
+            .filter(UserTemplate::isEmailVerified)
+            .map(UserTemplate::getEmail)
+            .collect(toList());
+    }
 }

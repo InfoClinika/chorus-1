@@ -1,6 +1,7 @@
 package com.infoclinika.mssharing.web.rest;
 
 import com.infoclinika.mssharing.dto.request.ConfirmMultipartUploadDTO;
+import com.infoclinika.mssharing.dto.request.DesktopUploadDoneDTO;
 import com.infoclinika.mssharing.dto.request.UploadFilesDTORequest;
 import com.infoclinika.mssharing.dto.request.UserNamePassDTO;
 import com.infoclinika.mssharing.dto.response.*;
@@ -12,12 +13,16 @@ import java.util.Set;
 
 /**
  * @author timofey.kasyanov
- *         date: 19.03.2014
+ *     date: 19.03.2014
  */
 @Path("/uploaderAPI")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.WILDCARD)
 public interface UploaderRestService {
+
+    @Path("/healthcheck")
+    @GET
+    String healthcheck();
 
     @Path("/authenticate")
     @POST
@@ -36,6 +41,11 @@ public interface UploaderRestService {
     @GET
     Set<DictionaryDTO> getVendors(@QueryParam("token") String token);
 
+    @Path("/getVendorsByTechnologyType")
+    @GET
+    Set<DictionaryDTO> getVendorsByTechnologyType(@QueryParam("token") String token,
+                                                  @QueryParam("technologyTypeId") long technologyTypeId);
+
     @Path("/getLabs")
     @GET
     Set<DictionaryDTO> getLabs(@QueryParam("token") String token);
@@ -43,13 +53,19 @@ public interface UploaderRestService {
     @Path("/getInstrumentModels")
     @GET
     Set<DictionaryDTO> getInstrumentModels(
-            @QueryParam("token") String token,
-            @QueryParam("technologyType") long technologyType,
-            @QueryParam("vendor") long vendor);
+        @QueryParam("token") String token,
+        @QueryParam("technologyType") long technologyType,
+        @QueryParam("vendor") long vendor
+    );
 
     @Path("/getInstrumentsByModel")
     @GET
-    List<InstrumentDTO> getInstruments(@QueryParam("token") String token, @QueryParam("instrumentModel") long instrumentModel);
+    List<InstrumentDTO> getInstruments(@QueryParam("token") String token,
+                                       @QueryParam("instrumentModel") long instrumentModel);
+
+    @Path("/getInstruments")
+    @GET
+    List<InstrumentDTO> getInstruments(@QueryParam("token") String token);
 
     @Path("/getInstrument/{id}")
     @GET
@@ -57,11 +73,9 @@ public interface UploaderRestService {
 
     @Path("/createDefaultInstrument")
     @POST
-    InstrumentDTO createDefaultInstrument(@QueryParam("lab") long lab, @QueryParam("instrumentModel") long instrumentModel, String token);
+    InstrumentDTO createDefaultInstrument(@QueryParam("lab") long lab,
+                                          @QueryParam("instrumentModel") long instrumentModel, String token);
 
-    @Path("/getInstruments")
-    @GET
-    List<InstrumentDTO> getInstruments(@QueryParam("token") String token);
 
     @Path("/getInstrumentFiles/{id}")
     @GET
@@ -98,6 +112,11 @@ public interface UploaderRestService {
     @Consumes(MediaType.APPLICATION_JSON)
     UploadFilesDTOResponse uploadRequest(UploadFilesDTORequest request, @QueryParam("token") String token);
 
+    @Path("/simpleUploadRequest")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    SimpleUploadFilesDTOResponse simpleUploadRequest(UploadFilesDTORequest request, @QueryParam("token") String token);
+
     @Path("/sseUploadRequest")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -108,4 +127,13 @@ public interface UploaderRestService {
     @Consumes(MediaType.APPLICATION_JSON)
     CompleteUploadDTO completeUpload(ConfirmMultipartUploadDTO request, @QueryParam("token") String token);
 
+    @Path("/done/{id}")
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    void finalizeUpload(@PathParam("id") String id, DesktopUploadDoneDTO dto, @QueryParam("token") String token);
+
+    @Path("/getUploadConfig")
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    UploadConfigDTO getUploadConfig(@QueryParam("token") String token);
 }

@@ -16,8 +16,11 @@ var CorsRequestSignUrls = {
 };
 
 var UploadDefaults = {
-    packetSize: 1024 * 1024 * 6  // bytes, defaults to 6MB packets; Amazon min packet size is 5Mb
+    packetSize: 1024 * 1024 * 6 // bytes, defaults to 6MB packets; Amazon min packet size is 5Mb
 };
+
+//If part upload won't be uploaded in selected time uploader will cancel or retry it.
+var MAX_PART_UPLOAD_TIME = 600000; // ten minutes
 
 
 angular.module("js-upload", ["file-hash", "error-catcher"])
@@ -76,7 +79,8 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
 
                 self.totalWorkers = 10;
 
-                log("Total size: " + self.totalSize / (1024 * 1024) + " mb, total of " + self.totalPackages + " packets");
+                log("Total size: " + self.totalSize / (1024 * 1024) + " mb, total of " + self.totalPackages +
+                    " packets");
 
                 if (options.onUploadStart) {
                     options.onUploadStart(self.fileItemID);
@@ -95,7 +99,8 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 if (unfinishedUpload) {
                     var uploadId = unfinishedUpload.uploadId;
                     var destinationPath = unfinishedUpload.destinationPath;
-                    log("Resuming upload for the multipart upload with ID " + uploadId + " and destination path " + destinationPath);
+                    log("Resuming upload for the multipart upload with ID " + uploadId + " and destination path " +
+                        destinationPath);
                     startWithDetails({
                         fileItemID: unfinishedUpload.id,
                         uploadId: uploadId,
@@ -124,10 +129,10 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                         data: JSON.stringify(confirmMultipartUploadRequest),
                         dataType: "json",
                         contentType: "application/json",
-                        success: function() {
+                        success: function () {
                             verificationSuccessFn();
                         },
-                        error: function() {
+                        error: function () {
                             verificationFailFn();
                         }
                     });
@@ -144,12 +149,12 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 self.chunkUploadWorkers = [];
                 self.smallFileUploader = null;
 
-                if(self.fileDetails.destinationPath) {
+                if (self.fileDetails.destinationPath) {
                     self.destinationPath = self.fileDetails.destinationPath;
                 }
 
-                var getJobTickets = function(callback) {
-                    if(self.fileDetails.uploadId) {
+                var getJobTickets = function (callback) {
+                    if (self.fileDetails.uploadId) {
 
                         log("Resuming upload. Obtaining the list of uploaded packets from Amazon...");
                         AmazonMultipartUploader.listUploadedPackets(self.destinationPath, self.fileDetails.uploadId,
@@ -158,10 +163,10 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                                 for (var t = 0; t < self.totalPackages; t++) {
                                     var packet = (function (ticketNumber) {
                                         return $.grep(packets, function (packet) {
-                                            return packet.partNumber == (ticketNumber + 1);
+                                            return packet.partNumber == ticketNumber + 1;
                                         });
                                     })(t);
-                                    if(packet.length == 0) {
+                                    if (packet.length == 0) {
                                         //packet with index t has not been uploaded yet; adding to queue
                                         jobTickets.push(t);
                                     }
@@ -169,7 +174,8 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                                 log("List of packet indexes to upload during resume: " + jobTickets.join(", "));
                                 self.packetsUploadedInPreviousSession = packets;
                                 callback(jobTickets);
-                            });
+                            }
+                        );
                     } else {
                         log("Starting the upload from scratch.");
                         var jobTickets = [];
@@ -183,8 +189,12 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
 
                 if (self.totalSize > self.packetSize) {
                     log("Uploading size is greater than packet size. Using multipart upload...");
-                    var uploader = new AmazonMultipartUploader(self.destinationPath, self.fileItemID, self.startMultipartUrl);
-                    if(self.fileDetails.uploadId) {
+                    var uploader = new AmazonMultipartUploader(
+                        self.destinationPath,
+                        self.fileItemID,
+                        self.startMultipartUrl
+                    );
+                    if (self.fileDetails.uploadId) {
                         //supply uploaders with an upload ID if it already exists
                         uploader.uploadId = self.fileDetails.uploadId;
                     }
@@ -192,30 +202,37 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 } else {
                     log("Uploading size is less than packet size. Using plain upload directly to S3");
                     self.smallFileUploader = new AmazonSmallFileUploader();
-                    self.smallFileUploader.uploadFile(self.destinationPath, getWholeFile(), function(remoteDestination) {
-                        log("Notifying server...");
-                        confirmUploadWithServer(verificationSuccess, verificationFail);
+                    self.smallFileUploader.uploadFile(
+                        self.destinationPath,
+                        getWholeFile(),
+                        function (remoteDestination) {
+                            log("Notifying server...");
+                            confirmUploadWithServer(verificationSuccess, verificationFail);
 
-                        function verificationSuccess() {
-                            //set progressbar to 100%, set the serverFileId for the download link
-                            options.progressHandler(self.fileDetails.fileItemID, self.totalSize, null);
-                            if (options.onUploadFinished) {
-                                options.onUploadFinished(self.fileDetails.fileItemID, self.destinationPath);
+                            function verificationSuccess() {
+                                //set progressbar to 100%, set the serverFileId for the download link
+                                options.progressHandler(self.fileDetails.fileItemID, self.totalSize, null);
+                                if (options.onUploadFinished) {
+                                    options.onUploadFinished(self.fileDetails.fileItemID, self.destinationPath);
+                                }
                             }
-                        }
 
-                        function verificationFail() {
-                            options.onUploadVerificationFailed && options.onUploadVerificationFailed(self.fileDetails.fileItemID);
-                        }
+                            function verificationFail() {
+                                options.onUploadVerificationFailed &&
+                                options.onUploadVerificationFailed(self.fileDetails.fileItemID);
+                            }
 
-                    }, function() {
-                        //todo[tymchenko]: handle errors
-                    }, function(loaded) {
-                        //update progress bar for a single file
-                        var currentMs = (new Date()).getTime();
-                        var elapsedSec = (currentMs - self.startTime) / 1000;
-                        options.progressHandler(self.fileDetails.fileItemID, loaded, loaded / elapsedSec);
-                    });
+                        },
+                        function () {
+                            //todo[tymchenko]: handle errors
+                        },
+                        function (loaded) {
+                            //update progress bar for a single file
+                            var currentMs = (new Date()).getTime();
+                            var elapsedSec = (currentMs - self.startTime) / 1000;
+                            options.progressHandler(self.fileDetails.fileItemID, loaded, loaded / elapsedSec);
+                        }
+                    );
 
                 }
             }
@@ -252,21 +269,26 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                             uploader.completeUpload(validateParts, completeCallback, verificationFailFn);
 
                             function verificationFailFn() {
-                                if(retriesLeft > 0) {
+                                if (retriesLeft > 0) {
                                     --retriesLeft;
-                                    setTimeout(function() {
+                                    setTimeout(function () {
                                         uploader.completeUpload(validateParts, completeCallback, verificationFailFn);
-                                    }, 1000)
+                                    }, 1000);
                                 } else {
-                                    options.onUploadVerificationFailed() && options.onUploadVerificationFailed(self.fileItemID)
+                                    options.onUploadVerificationFailed() &&
+                                    options.onUploadVerificationFailed(self.fileItemID);
                                 }
                             }
 
                             function validateParts(parts) {
                                 return parts.length == self.totalPackages
                                     && parts
-                                        .map(function(part){return parseInt(part.size);})
-                                        .reduce(function(prev, curr) {return prev + curr}) == self.totalSize
+                                        .map(function (part) {
+                                            return parseInt(part.size);
+                                        })
+                                        .reduce(function (prev, curr) {
+                                            return prev + curr;
+                                        }) == self.totalSize;
                             }
 
                             function completeCallback(contentUrl) {
@@ -285,7 +307,8 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                                 }
 
                                 function verificationFail() {
-                                    options.onUploadVerificationFailed && options.onUploadVerificationFailed(self.fileDetails.fileItemID);
+                                    options.onUploadVerificationFailed &&
+                                    options.onUploadVerificationFailed(self.fileDetails.fileItemID);
                                 }
                             }
 
@@ -296,7 +319,8 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                             for (var s = 0; s < self.chunkUploadWorkers.length; s++) {
                                 totalProcessedByWorkers += self.chunkUploadWorkers[s].jobsProcessed.length;
                             }
-                            var totalProcessedForFile = (totalProcessedByWorkers + self.packetsUploadedInPreviousSession.length);
+                            var totalProcessedForFile = totalProcessedByWorkers +
+                                self.packetsUploadedInPreviousSession.length;
                             log("** Total processed: " + totalProcessedForFile + " out of " + self.totalPackages);
                             return totalProcessedForFile >= self.totalPackages;
                         };
@@ -305,8 +329,12 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
 
                         //init workers
                         for (var i = self.chunkUploadWorkers.length; i < self.totalWorkers; i++) {
-                            self.chunkUploadWorkers.push(new ChunkUploadWorker(uploader, i, canObtainNextJob, isEverythingCompleted,
-                                onWholeUploadCompleted));
+                            self.chunkUploadWorkers.push(new ChunkUploadWorker(uploader,
+                                i,
+                                canObtainNextJob,
+                                isEverythingCompleted,
+                                onWholeUploadCompleted
+                            ));
                         }
 
                         //pass the jobs
@@ -328,14 +356,14 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
             }
 
             function calculatePacketSize(packetIdx) {
-                if(packetIdx < 0 && packetIdx >= self.totalPackages) {
+                if (packetIdx < 0 && packetIdx >= self.totalPackages) {
                     return 0;
                 }
-                if(packetIdx < (self.totalPackages - 1)) {
+                if (packetIdx < self.totalPackages - 1) {
                     return self.packetSize;
-                } else {
-                    return self.totalSize - (self.totalPackages - 1) * self.packetSize;
                 }
+                return self.totalSize - (self.totalPackages - 1) * self.packetSize;
+
             }
 
             function updateMultipartUploadProgress() {
@@ -344,27 +372,35 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
 
                 var uploadedInPreviousSession = 0;
 
-                for(var w = 0; w < self.packetsUploadedInPreviousSession.length; w++) {
+                for (var w = 0; w < self.packetsUploadedInPreviousSession.length; w++) {
                     var packet = self.packetsUploadedInPreviousSession[w];
                     uploadedInPreviousSession += calculatePacketSize(packet.partNumber - 1);
                 }
 
                 var uploadedInThisSession = 0;
-                for(var j = 0; j < self.chunkUploadWorkers.length; j++) {
+                for (var j = 0; j < self.chunkUploadWorkers.length; j++) {
                     var worker = self.chunkUploadWorkers[j];
-                    for(var p = 0; p < worker.jobsProcessed.length; p++) {
+                    for (var p = 0; p < worker.jobsProcessed.length; p++) {
                         var packetIdx = worker.jobsProcessed[p];
                         uploadedInThisSession += calculatePacketSize(packetIdx);
                     }
                     uploadedInThisSession += worker.jobUploadedBytes;
                 }
 
-                options.progressHandler(self.fileDetails.fileItemID, uploadedInThisSession + uploadedInPreviousSession, uploadedInThisSession / elapsedSec);
+                options.progressHandler(
+                    self.fileDetails.fileItemID,
+                    uploadedInThisSession + uploadedInPreviousSession,
+                    uploadedInThisSession / elapsedSec
+                );
 
             }
 
 
-            var ChunkUploadWorker = function(uploader, workerIdx, canGetNextJob, isEverythingCompletedFn, wholeUploadCompletedFn) {
+            var ChunkUploadWorker = function (uploader,
+                                              workerIdx,
+                                              canGetNextJob,
+                                              isEverythingCompletedFn,
+                                              wholeUploadCompletedFn) {
                 this.uploader = uploader;
                 this.workerIdx = workerIdx;
                 this.canGetNextJob = canGetNextJob;
@@ -375,8 +411,8 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 this.indexes = [];
             };
 
-            ChunkUploadWorker.prototype.start = function() {
-                log(" -- Worker #"+ this.workerIdx + " starting. -- ");
+            ChunkUploadWorker.prototype.start = function () {
+                log(" -- Worker #" + this.workerIdx + " starting. -- ");
                 var worker = this;
                 var isEverythingCompleted = this.isEverythingCompletedFn;
                 var canGetNextJob = this.canGetNextJob() && !isEverythingCompleted();
@@ -414,7 +450,7 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 }
             };
 
-            ChunkUploadWorker.prototype.pauseUpload = function() {
+            ChunkUploadWorker.prototype.pauseUpload = function () {
                 this.uploader.stopRequests();
                 this.uploader.jobUploadedBytes = 0;
                 updateMultipartUploadProgress();
@@ -432,14 +468,12 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 if ("mozSlice" in self.file) {
                     // mozilla
                     packet = self.file.mozSlice(startByte, endByte);
+                } else if (self.file.slice) {
+                    // webkit
+                    packet = self.file.slice(startByte, endByte);
                 } else {
-                    if(self.file.slice) {
-                        // webkit
-                        packet = self.file.slice(startByte, endByte);
-                    } else {
-                        //for safari if slice is undefined
-                        packet = self.file.webkitSlice(startByte, endByte);
-                    }
+                    //for safari if slice is undefined
+                    packet = self.file.webkitSlice(startByte, endByte);
                 }
                 return packet;
             }
@@ -471,8 +505,10 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                     }
 
                     if (self.fileDetails.uploadId) {
-                        AmazonMultipartUploader.discardUnfinishedUpload(self.fileDetails.uploadId,
-                            self.fileDetails.destinationPath);
+                        AmazonMultipartUploader.discardUnfinishedUpload(
+                            self.fileDetails.uploadId,
+                            self.fileDetails.destinationPath
+                        );
                     }
 
                     if (self.smallFileUploader) {
@@ -485,11 +521,11 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 log("Pause click");
                 if (self.state == "uploading") {
                     self.state = "paused";
-                    for(var i = 0; i < self.chunkUploadWorkers.length; i++) {
+                    for (var i = 0; i < self.chunkUploadWorkers.length; i++) {
                         var worker = self.chunkUploadWorkers[i];
                         worker.pauseUpload();
                     }
-                    if(self.smallFileUploader) {
+                    if (self.smallFileUploader) {
                         self.smallFileUploader.pauseUpload();
                     }
                 } else if (self.state == "paused") {
@@ -504,7 +540,7 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 options.logger(message);
             }
 
-              function inProgress(){
+            function inProgress() {
                 return !self.stopped;
             }
 
@@ -515,19 +551,23 @@ angular.module("js-upload", ["file-hash", "error-catcher"])
                 pause: onPauseClick,
                 inProgress: inProgress
             };
-        }
+        };
     });
 
 
 //CORS upload sample is inspired by http://www.ioncannon.net/programming/1539/
 
-var AmazonSmallFileUploader = function() {
+var AmazonSmallFileUploader = function () {
     this.signSingleFileUrl = CorsRequestSignUrls.signSingleFileUrl;
     this.currentRequest = null;
     this.progressCallback = null;
 };
 
-AmazonSmallFileUploader.prototype.uploadFile = function(objectName, file, successCallback, errorCallback, progressCallback) {
+AmazonSmallFileUploader.prototype.uploadFile = function (objectName,
+                                                         file,
+                                                         successCallback,
+                                                         errorCallback,
+                                                         progressCallback) {
     var signRequest = {
         objectName: objectName
     };
@@ -543,15 +583,30 @@ AmazonSmallFileUploader.prototype.uploadFile = function(objectName, file, succes
         success: function (reply) {
             CommonLogger.log("Signed single file upload: " + JSON.stringify(reply) + ". Starting upload...");
 
-            uploadToS3(file, decodeURIComponent(reply.signedUrl), reply.serverSideEncryption , function() {
-                CommonLogger.log("Single file upload completed");
-                if(successCallback) {successCallback();}
-            }, function() {
-                CommonLogger.log("Error uploading single file");
-                if(errorCallback) {errorCallback();}
-            }, function(uploaded) {
-                if(progressCallback) {progressCallback(uploaded);}
-            });
+            uploadToS3(
+                file,
+                decodeURIComponent(reply.signedUrl),
+                reply.serverSideEncryption,
+                reply.useAmazonToken,
+                reply.amazonToken,
+                function () {
+                    CommonLogger.log("Single file upload completed");
+                    if (successCallback) {
+                        successCallback();
+                    }
+                },
+                function () {
+                    CommonLogger.log("Error uploading single file");
+                    if (errorCallback) {
+                        errorCallback();
+                    }
+                },
+                function (uploaded) {
+                    if (progressCallback) {
+                        progressCallback(uploaded);
+                    }
+                }
+            );
         },
         dataType: "json",
         contentType: "application/json"
@@ -561,33 +616,42 @@ AmazonSmallFileUploader.prototype.uploadFile = function(objectName, file, succes
      * Use a CORS call to upload the given file to S3. Assumes the url
      * parameter has been signed and is accessable for upload.
      */
-    function uploadToS3(file, url, serverSideEncryption, callback, errorCallback, progressCallback) {
-        CommonLogger.log("Uploading a single file to Amazon S3 via CORS to URL: " + url );
+    function uploadToS3(file,
+                        url,
+                        serverSideEncryption,
+                        useAmazonToken,
+                        amazonToken,
+                        callback,
+                        errorCallback,
+                        progressCallback) {
+        CommonLogger.log("Uploading a single file to Amazon S3 via CORS to URL: " + url);
         var xhr = createCORSRequest("PUT", url);
         if (!xhr) {
             CommonLogger.log("CORS not supported");
-            if(errorCallback) {errorCallback();}
-        }
-        else {
+            if (errorCallback) {
+                errorCallback();
+            }
+        } else {
             xhr.onload = function () {
-                if (xhr.status == 200) {
+                if (xhr.status === 200) {
                     CommonLogger.log("Chunk upload completed");
-                    if(callback) {
+                    if (callback) {
                         callback();
                     }
-                }
-                else {
+                } else {
                     CommonLogger.log("Upload error: " + xhr.status);
                 }
             };
 
             xhr.onerror = function () {
                 CommonLogger.log("XHR error");
-                if(errorCallback) {errorCallback();}
+                if (errorCallback) {
+                    errorCallback();
+                }
             };
 
             xhr.upload.onprogress = function (e) {
-                if(progressCallback && e.lengthComputable) {
+                if (progressCallback && e.lengthComputable) {
                     progressCallback(e.loaded);
                 }
             };
@@ -597,6 +661,9 @@ AmazonSmallFileUploader.prototype.uploadFile = function(objectName, file, succes
             if (serverSideEncryption) {
                 xhr.setRequestHeader("x-amz-server-side-encryption", "AES256");
             }
+            if (useAmazonToken) {
+                xhr.setRequestHeader("x-amz-security-token", amazonToken);
+            }
 
             uploader.currentRequest = xhr;
             xhr.send(file);
@@ -604,11 +671,11 @@ AmazonSmallFileUploader.prototype.uploadFile = function(objectName, file, succes
     }
 };
 
-AmazonSmallFileUploader.prototype.pauseUpload = function() {
-    if(this.currentRequest) {
+AmazonSmallFileUploader.prototype.pauseUpload = function () {
+    if (this.currentRequest) {
         CommonLogger.log("Pausing the small file upload");
         this.currentRequest.abort();
-        if(this.progressCallback) {
+        if (this.progressCallback) {
             this.progressCallback(0);
         }
     } else {
@@ -617,12 +684,10 @@ AmazonSmallFileUploader.prototype.pauseUpload = function() {
 };
 
 
-
-
-var AmazonMultipartUploader = function(objectName, fileId, startMultipartUrl) {
+var AmazonMultipartUploader = function (objectName, fileId, startMultipartUrl) {
     this.uploadId = null;
     this.initialSignUrl = CorsRequestSignUrls.signInitialMultipartRequestUrl;
-    this.partSignUrl = CorsRequestSignUrls.signPartUploadRequestUrl ;
+    this.partSignUrl = CorsRequestSignUrls.signPartUploadRequestUrl;
     this.startMultipartUrl = startMultipartUrl;
     this.objectName = objectName;
     this.fileId = fileId;
@@ -633,17 +698,16 @@ var AmazonMultipartUploader = function(objectName, fileId, startMultipartUrl) {
     this.stopped = false;
 };
 
-AmazonMultipartUploader.prototype.stopRequests = function() {
+AmazonMultipartUploader.prototype.stopRequests = function () {
     CommonLogger.log("Stopping current execution for " + this.currentPutRequests.length + " requests...");
     this.stopped = true;
-    for(var r = 0; r < this.currentPutRequests.length; r++) {
+    for (var r = 0; r < this.currentPutRequests.length; r++) {
         this.currentPutRequests[r].abort();
     }
 };
 
 
-
-AmazonMultipartUploader.prototype.initiateUpload = function(callback) {
+AmazonMultipartUploader.prototype.initiateUpload = function (callback) {
 
     var objectName = this.objectName;
     var uploader = this;
@@ -653,7 +717,7 @@ AmazonMultipartUploader.prototype.initiateUpload = function(callback) {
     };
 
     //we already have uploadID; it's likely a resume upload case
-    if(this.uploadId) {
+    if (this.uploadId) {
         callback();
     } else {
 
@@ -671,37 +735,40 @@ AmazonMultipartUploader.prototype.initiateUpload = function(callback) {
                         request.setRequestHeader("Authorization", reply.authorization);
                         request.setRequestHeader("x-amz-acl", "private");
                         request.setRequestHeader("x-amz-date", reply.date);
-                        if ( reply.serverSideEncryption ) {
+                        if (reply.serverSideEncryption) {
                             request.setRequestHeader("x-amz-server-side-encryption", "AES256");
+                        }
+                        if (reply.useAmazonToken) {
+                            request.setRequestHeader("x-amz-security-token", reply.amazonToken);
                         }
                     }
                 }).done(function (data, textStatus, jqXHR) {
-                        uploader.uploadId = $(data).find("UploadId").text();
+                    uploader.uploadId = $(data).find("UploadId").text();
                     CommonLogger.log("Initiated multipart upload. UploadID is: " + uploader.uploadId);
 
-                        if (uploader.startMultipartUrl) {
-                            CommonLogger.log("Informing server of multipart upload...");
-                            var startRequest = {
-                                fileId: uploader.fileId,
-                                uploadId: uploader.uploadId,
-                                destinationPath: objectName
-                            };
-                            $.ajax({
-                                type: "POST",
-                                url: uploader.startMultipartUrl,
-                                data: JSON.stringify(startRequest),
-                                dataType: "json",
-                                contentType: "application/json"
-                            });
-                        } else {
-                            //makes sense for attachments
-                            CommonLogger.log("No start multipart URL has been submitted");
-                        }
+                    if (uploader.startMultipartUrl) {
+                        CommonLogger.log("Informing server of multipart upload...");
+                        var startRequest = {
+                            fileId: uploader.fileId,
+                            uploadId: uploader.uploadId,
+                            destinationPath: objectName
+                        };
+                        $.ajax({
+                            type: "POST",
+                            url: uploader.startMultipartUrl,
+                            data: JSON.stringify(startRequest),
+                            dataType: "json",
+                            contentType: "application/json"
+                        });
+                    } else {
+                        //makes sense for attachments
+                        CommonLogger.log("No start multipart URL has been submitted");
+                    }
 
-                        if (callback) {
-                            callback(uploader.uploadId);
-                        }
-                    });
+                    if (callback) {
+                        callback(uploader.uploadId);
+                    }
+                });
 
             },
             dataType: "json",
@@ -710,13 +777,13 @@ AmazonMultipartUploader.prototype.initiateUpload = function(callback) {
     }
 };
 
-AmazonMultipartUploader.prototype.uploadPart = function(file, partNumber, successCallback, progressCallback) {
-    if(!this.uploadId) {
+AmazonMultipartUploader.prototype.uploadPart = function (file, partNumber, successCallback, progressCallback) {
+    if (!this.uploadId) {
         CommonLogger.log("Upload ID is absent. Cannot upload.");
         return;
     }
 
-    if(this.stopped) {
+    if (this.stopped) {
         CommonLogger.log("Upload has been stopped. Not uploading packet for now.");
         return;
     }
@@ -733,23 +800,24 @@ AmazonMultipartUploader.prototype.uploadPart = function(file, partNumber, succes
 
     var retryUpload = function (number) {
         CommonLogger.log("! --------- XHR error ---");
-        if(uploader.stopped) {
+        if (uploader.stopped) {
             CommonLogger.log("Current upload has been stopped by user. Not retrying the request for now.");
             return;
         }
         var count = uploader.putRetryCount[number];
-        if(!count) {
+        if (!count) {
             uploader.putRetryCount[number] = 0;
             count = 0;
         }
         if (count < uploader.maxRetryCount) {
             CommonLogger.log(" ---------------- Retrying PUT for packet # " + number);
             uploader.putRetryCount[number]++;
-            setTimeout(function() {
+            setTimeout(function () {
                 uploader.uploadPart(file, number, successCallback, progressCallback);
             }, 500);
         } else {
-            CommonLogger.log(" ----------- FAILURE: max retry count limit has been reached for packet: " + number + ". Total attempts made: " + count);
+            CommonLogger.log(" ----------- FAILURE: max retry count limit has been reached for packet: " + number +
+                ". Total attempts made: " + count);
         }
     };
 
@@ -765,22 +833,23 @@ AmazonMultipartUploader.prototype.uploadPart = function(file, partNumber, succes
 
             var scheduledTimeout = null;
 
-            var onRequestTimeout = function ()  {
-                CommonLogger.log(" -------- PUT request timed out for part "+partNumber+"! Retrying...");
+            var onRequestTimeout = function () {
+                CommonLogger.log(" -------- PUT request timed out for part " + partNumber + "! Retrying...");
                 xhr.abort();
                 retryUpload(partNumber);
             };
 
 
             xhr.onload = function () {
-                if (xhr.status == 200) {
+                if (xhr.status === 200) {
                     CommonLogger.log("Chunk upload completed");
-                    if(scheduledTimeout) {
+                    if (scheduledTimeout) {
                         clearTimeout(scheduledTimeout);
                     }
-                    if(successCallback) { successCallback(); }
-                }
-                else {
+                    if (successCallback) {
+                        successCallback();
+                    }
+                } else {
                     retryUpload(partNumber);
                 }
             };
@@ -790,7 +859,7 @@ AmazonMultipartUploader.prototype.uploadPart = function(file, partNumber, succes
             };
 
             xhr.upload.onprogress = function (e) {
-                if(progressCallback && e.lengthComputable) {
+                if (progressCallback && e.lengthComputable) {
                     progressCallback(e.loaded);
                 }
             };
@@ -798,20 +867,23 @@ AmazonMultipartUploader.prototype.uploadPart = function(file, partNumber, succes
             xhr.setRequestHeader("Authorization", reply.authorization);
             xhr.setRequestHeader("x-amz-date", reply.date);
             xhr.setRequestHeader("Content-Type", "application/octet-stream");
+            if (reply.useAmazonToken) {
+                xhr.setRequestHeader("x-amz-security-token", reply.amazonToken);
+            }
 
 
             xhr.send(file);
-            scheduledTimeout = setTimeout(onRequestTimeout, 60000);
+            scheduledTimeout = setTimeout(onRequestTimeout, MAX_PART_UPLOAD_TIME);
 
             uploader.currentPutRequests.push(xhr);
         },
         dataType: "json",
         contentType: "application/json"
-    })
+    });
 };
 
-AmazonMultipartUploader.prototype.completeUpload = function(validateCallback, successFn, verificationFailFn) {
-    if(!this.uploadId) {
+AmazonMultipartUploader.prototype.completeUpload = function (validateCallback, successFn, verificationFailFn) {
+    if (!this.uploadId) {
         CommonLogger.log("Upload ID is absent. Cannot upload.");
         return;
     }
@@ -820,11 +892,11 @@ AmazonMultipartUploader.prototype.completeUpload = function(validateCallback, su
     var uploadId = this.uploadId;
     var objectName = this.objectName;
 
-    AmazonMultipartUploader.listUploadedPackets(objectName, uploadId, function(parts) {
-        if(validateCallback(parts)) {
+    AmazonMultipartUploader.listUploadedPackets(objectName, uploadId, function (parts) {
+        if (validateCallback(parts)) {
             AmazonMultipartUploader._executeCompleteUpload(objectName, uploadId, parts, successFn);
         } else {
-            verificationFailFn()
+            verificationFailFn();
         }
     });
 
@@ -832,20 +904,20 @@ AmazonMultipartUploader.prototype.completeUpload = function(validateCallback, su
 
 //static methods
 
-AmazonMultipartUploader._executeCompleteUpload = function(objectName, uploadId, parts, completeCallback) {
-
+AmazonMultipartUploader._executeCompleteUpload = function (objectName, uploadId, parts, completeCallback) {
 
 
     var signRequest = {
         objectName: objectName,
-        uploadId: uploadId,
-        addCharsetToContentType: $.browser.mozilla
+        uploadId: uploadId
+        // This fix breaks file upload for Firefox with version 61.0.1 (64-bit). For more details see CEL-284.
+        // addCharsetToContentType: $.browser.mozilla
     };
 
     var body = "<CompleteMultipartUpload>";
-    for(var i = 0; i < parts.length; i++) {
+    for (var i = 0; i < parts.length; i++) {
         var part = parts[i];
-        body += "<Part><PartNumber>"+part.partNumber+"</PartNumber><ETag>"+part.etag+"</ETag></Part>"
+        body += "<Part><PartNumber>" + part.partNumber + "</PartNumber><ETag>" + part.etag + "</ETag></Part>";
     }
     body += "</CompleteMultipartUpload>";
 
@@ -865,12 +937,17 @@ AmazonMultipartUploader._executeCompleteUpload = function(objectName, uploadId, 
                 beforeSend: function (request) {
                     request.setRequestHeader("Authorization", reply.authorization);
                     request.setRequestHeader("x-amz-date", reply.date);
+                    if (reply.useAmazonToken) {
+                        request.setRequestHeader("x-amz-security-token", reply.amazonToken);
+                    }
                 },
                 contentType: "text/xml"
             }).done(function (data, textStatus, jqXHR) {
                 CommonLogger.log("Completed upload request. S3 response is " + data);
-                    if(completeCallback) {completeCallback(signRequest.objectName);}
-                });
+                if (completeCallback) {
+                    completeCallback(signRequest.objectName);
+                }
+            });
 
         },
         dataType: "json",
@@ -878,7 +955,7 @@ AmazonMultipartUploader._executeCompleteUpload = function(objectName, uploadId, 
     });
 };
 
-AmazonMultipartUploader.discardUnfinishedUpload = function(uploadId, destinationPath) {
+AmazonMultipartUploader.discardUnfinishedUpload = function (uploadId, destinationPath) {
     var signRequest = {
         objectName: destinationPath,
         uploadId: uploadId
@@ -899,10 +976,13 @@ AmazonMultipartUploader.discardUnfinishedUpload = function(uploadId, destination
                 beforeSend: function (request) {
                     request.setRequestHeader("Authorization", reply.authorization);
                     request.setRequestHeader("x-amz-date", reply.date);
+                    if (reply.useAmazonToken) {
+                        request.setRequestHeader("x-amz-security-token", reply.amazonToken);
+                    }
                 }
             }).done(function (data, textStatus, jqXHR) {
                 CommonLogger.log("Aborted upload request. S3 response is " + data);
-                });
+            });
 
         },
         dataType: "json",
@@ -930,22 +1010,27 @@ AmazonMultipartUploader.listUploadedPackets = function (objectName, uploadId, ca
                 beforeSend: function (request) {
                     request.setRequestHeader("Authorization", reply.authorization);
                     request.setRequestHeader("x-amz-date", reply.date);
+                    if (reply.useAmazonToken) {
+                        request.setRequestHeader("x-amz-security-token", reply.amazonToken);
+                    }
                 }
             }).done(function (data, textStatus, jqXHR) {
                 CommonLogger.log("Listing the uploaded parts from:" + data);
 
-                    var parts = [];
+                var parts = [];
 
-                    $(data).find("Part").each(function(key, part) {
-                        var etag = $(part).find("ETag").text();
-                        var partNumber = $(part).find("PartNumber").text();
-                        var partSize = $(part).find("Size").text();
-                        CommonLogger.log(" *** PartNumber = "+partNumber+", ETag: " + etag + ", Size: " + partSize);
-                        parts.push({partNumber: partNumber, etag: etag, size: partSize});
-                    });
-
-                    if(callback) {callback(parts);}
+                $(data).find("Part").each(function (key, part) {
+                    var etag = $(part).find("ETag").text();
+                    var partNumber = $(part).find("PartNumber").text();
+                    var partSize = $(part).find("Size").text();
+                    CommonLogger.log(" *** PartNumber = " + partNumber + ", ETag: " + etag + ", Size: " + partSize);
+                    parts.push({partNumber: partNumber, etag: etag, size: partSize});
                 });
+
+                if (callback) {
+                    callback(parts);
+                }
+            });
 
         },
         dataType: "json",
@@ -959,16 +1044,13 @@ function createCORSRequest(method, url) {
     var xhr = new XMLHttpRequest();
     if ("withCredentials" in xhr) {
         xhr.open(method, url, true);
-    }
-    else if (typeof XDomainRequest != "undefined") {
+    } else if (typeof XDomainRequest !== "undefined") {
         xhr = new XDomainRequest();
         xhr.open(method, url);
-    }
-    else {
+    } else {
         xhr = null;
     }
     return xhr;
 }
-
 
 

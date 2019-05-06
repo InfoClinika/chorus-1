@@ -1,7 +1,6 @@
 package com.infoclinika.mssharing.model.test.userpreferences;
 
 import com.infoclinika.mssharing.model.helper.AbstractTest;
-import com.infoclinika.mssharing.model.read.UserPreferencesReader;
 import com.infoclinika.mssharing.model.read.UserPreferencesReader.UserPreferencesInfo;
 import org.testng.annotations.Test;
 
@@ -18,7 +17,11 @@ public class UserPreferencesTest extends AbstractTest {
 
         final long bob = uc.createLab3AndBob();
         final UserPreferencesInfo userPreferences = userPreferencesReader.readUserPreferences(bob);
-        assertEquals(userPreferences.shouldShowBillingNotification, true, "Billing Notification is not shown for new user, but billing feature is enabled");
+        assertEquals(
+            userPreferences.shouldShowBillingNotification,
+            true,
+            "Billing Notification is not shown for new user, but billing feature is enabled"
+        );
     }
 
     @Test
@@ -27,7 +30,11 @@ public class UserPreferencesTest extends AbstractTest {
 
         final long bob = uc.createLab3AndBob();
         final UserPreferencesInfo userPreferences = userPreferencesReader.readUserPreferences(bob);
-        assertEquals(userPreferences.shouldShowBillingNotification, false, "Billing Notification is shown despite the fact that billing feature is disabled");
+        assertEquals(
+            userPreferences.shouldShowBillingNotification,
+            false,
+            "Billing Notification is shown despite the fact that billing feature is disabled"
+        );
     }
 
     @Test
@@ -36,7 +43,8 @@ public class UserPreferencesTest extends AbstractTest {
         userPreferencesManagement.removeBillingNotification(bob);
         final UserPreferencesInfo userPreferences = userPreferencesReader.readUserPreferences(bob);
         assertEquals(userPreferences.shouldShowBillingNotification, false,
-                "Billing Notification is still shown for user, it should be disabled, though");
+            "Billing Notification is still shown for user, it should be disabled, though"
+        );
     }
 
 }

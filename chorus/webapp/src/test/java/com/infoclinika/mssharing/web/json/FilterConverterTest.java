@@ -4,7 +4,7 @@ import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.web.json.FilterConverter;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
 
 /**
  * @author Pavel Kaplin

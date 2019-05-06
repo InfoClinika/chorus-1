@@ -22,24 +22,45 @@ public interface ExperimentRepositoryTemplate<E extends ExperimentTemplate> exte
     @Query("select e from #{#entityName} e where e.downloadToken is not null and e.downloadToken = :token")
     E findOneByToken(@Param("token") String token);
 
-    /*------------------------------- List methods --------------------------------------------------------------------*/
+    /*------------------------------- List methods -------------------------------------------------------*/
     @Query("select distinct e" +
-            " from #{#entityName} e join e.project p" +
-            " where ( e.creator.id = :user or " +
-            "p.creator.id = :user " +
-            " or p.sharing.type = " + PUBLIC_PROJECT +
-            " or " + HAVE_ACCESS_TO_PROJECT + ")")
+        " from #{#entityName} e join e.project p" +
+        " where ( e.creator.id = :user or " +
+        "p.creator.id = :user " +
+        " or p.sharing.type = " + PUBLIC_PROJECT +
+        " or " + HAVE_ACCESS_TO_PROJECT + ")")
     List<E> findAllAvailable(@Param("user") long user);
 
+    @Query("select distinct e  from #{#entityName} e join e.project p" +
+        " where e.name like :s and ( e.creator.id = :user or " +
+        "p.creator.id = :user " +
+        " or p.sharing.type = " + PUBLIC_PROJECT +
+        " or " + HAVE_ACCESS_TO_PROJECT + ")")
+    Page<E> findAllAvailable(@Param("user") long user, @Param("s") String filterQuery, Pageable request);
+
     @Query("select distinct e" +
-            " from #{#entityName} e join e.project p " +
-            "  where (e.creator.id <> :user " +
-            " and p.sharing.type = " + SHARED_PROJECT +
-            " and (p.creator.id = :user or " + HAVE_ACCESS_TO_PROJECT + "))")
+        " from #{#entityName} e join e.project p " +
+        "  where (e.creator.id <> :user " +
+        " and p.sharing.type = " + SHARED_PROJECT +
+        " and (p.creator.id = :user or " + HAVE_ACCESS_TO_PROJECT + "))")
     List<E> findShared(@Param("user") long user);
 
-    @Query("select distinct e from #{#entityName} e join e.project p join fetch e.rawFiles.data d where (p.sharing.type = " + PUBLIC_PROJECT + ")")
+    @Query("select distinct e" +
+        " from #{#entityName} e join e.project p " +
+        "  where e.name like :s \n" +
+        " and (e.creator.id <> :user " +
+        " and p.sharing.type = " + SHARED_PROJECT +
+        " and (p.creator.id = :user or " + HAVE_ACCESS_TO_PROJECT + "))")
+    Page<E> findShared(@Param("user") long user, @Param("s") String filterQuery, Pageable request);
+
+    @Query("select distinct e from #{#entityName} e join e.project p join fetch e.rawFiles.data d " +
+        "where (p.sharing.type = " + PUBLIC_PROJECT + ")")
     List<E> findPublic();
+
+
+    @Query("select distinct e from #{#entityName} e join e.project p " +
+        "where e.name like :s and (p.sharing.type = " + PUBLIC_PROJECT + ")")
+    Page<E> findPublic(@Param("s") String filterQuery, Pageable request);
 
     @Query("select distinct e from #{#entityName} e where e.creator.id = :user")
     List<E> findOwned(@Param("user") long user);
@@ -47,52 +68,41 @@ public interface ExperimentRepositoryTemplate<E extends ExperimentTemplate> exte
     @Query("select distinct e from #{#entityName} e join fetch e.rawFiles.data d where e.creator.id = :user")
     List<E> findMy(@Param("user") long user);
 
-    @Query("select distinct e from #{#entityName} e join fetch e.rawFiles.data d where e.project.id = :project")
-    List<E> findByProject(@Param("project") long project);
-
-    @Query("select distinct e from #{#entityName} e join e.project p where p.id = :project and p.creator.id=e.creator.id")
-    List<E> findCreatedByProjectCreator(@Param("project") long project);
-
-    /*--------------------------------- Paged ------------------------------------------------------------------------*/
-
-    @Query("select distinct e  from #{#entityName} e join e.project p" +
-            " where e.name like :s and ( e.creator.id = :user or " +
-            "p.creator.id = :user " +
-            " or p.sharing.type = " + PUBLIC_PROJECT +
-            " or " + HAVE_ACCESS_TO_PROJECT + ")")
-    Page<E> findAllAvailable(@Param("user") long user, @Param("s") String filterQuery, Pageable request);
-
-    @Query("select distinct e" +
-            " from #{#entityName} e join e.project p " +
-            "  where e.name like :s \n" +
-            " and (e.creator.id <> :user " +
-            " and p.sharing.type = " + SHARED_PROJECT +
-            " and (p.creator.id = :user or " + HAVE_ACCESS_TO_PROJECT + "))")
-    Page<E> findShared(@Param("user") long user, @Param("s") String filterQuery, Pageable request);
-
     @Query("select distinct e from #{#entityName} e where e.name like :s and e.creator.id = :user")
     Page<E> findMy(@Param("user") long user, @Param("s") String filterQuery, Pageable request);
 
-    @Query("select distinct e from #{#entityName} e join e.project p where e.name like :s and (p.sharing.type = " + PUBLIC_PROJECT + ")")
-    Page<E> findPublic(@Param("s") String filterQuery, Pageable request);
+    @Query("select distinct e from #{#entityName} e join fetch e.rawFiles.data d where e.project.id = :project")
+    List<E> findByProject(@Param("project") long project);
+
+    @Query("select distinct e from #{#entityName} e where e.project.id = :project and e.name like :query")
+    Page<E> findByProject(@Param("project") long project, @Param("query") String query, Pageable request);
+
+    @Query("select distinct e from #{#entityName} e where e.project.id = :project")
+    List<E> findByProjectAndDoNotFetchFiles(@Param("project") long project);
+
+    @Query("select distinct e from #{#entityName} e join e.project p " +
+        "where p.id = :project and p.creator.id=e.creator.id")
+    List<E> findCreatedByProjectCreator(@Param("project") long project);
 
     @Query("select distinct e from #{#entityName} e join e.project p join e.lab l where l.id=:lab and e.name like :s")
     Page<E> findAllByLab(@Param("lab") long lab, @Param("s") String filterQuery, Pageable request);
 
-    @Query("select distinct e from #{#entityName} e where e.project.id = :project and e.name like :query")
-    Page<E> findByProject(@Param("project") long project, @Param("query") String query, Pageable request);
 
     /**
      * Validation helper methods
      */
 
-    @Query("select coalesce(count(e.id), 0l) from #{#entityName} e join e.rawFiles.data file where file.fileMetaData.id=:file")
+    @Query("select coalesce(count(e.id), 0l) from #{#entityName} e join e.rawFiles.data file " +
+        "where file.fileMetaData.id=:file")
     long countByFile(@Param("file") long file);
+
+    @Query("select count(e) from #{#entityName} e where e.instrumentRestriction.instrument.id=:instrumentId")
+    long countByInstrument(@Param("instrumentId") Long instrumentId);
 
     @Query("select coalesce(count(e.id), 0l) from #{#entityName} e where e.project.id = :project")
     long countByProject(@Param("project") long project);
 
-        /* For Search purposes */
+    /* For Search purposes */
 
     @Query(Search.Experiment.COUNT_ALL_AVAILABLE_EXPERIMENTS_WITH_QUERY)
     long searchExperimentsCount(@Param("user") long user, @Param("query") String query);

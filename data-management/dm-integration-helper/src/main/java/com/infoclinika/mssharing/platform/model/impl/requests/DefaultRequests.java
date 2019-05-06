@@ -1,6 +1,5 @@
 package com.infoclinika.mssharing.platform.model.impl.requests;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSortedSet;
 import com.infoclinika.mssharing.platform.entity.OutboxMessageTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
@@ -24,26 +23,23 @@ import static com.google.common.collect.Collections2.transform;
 @Service
 public class DefaultRequests implements RequestsTemplate {
 
-    private static final Comparator<RequestsTemplate.InboxItem> INBOX_ITEMS_BY_DATE = new Comparator<RequestsTemplate.InboxItem>() {
-        @Override
-        public int compare(RequestsTemplate.InboxItem one, RequestsTemplate.InboxItem two) {
+    private static final Comparator<RequestsTemplate.InboxItem> INBOX_ITEMS_BY_DATE =
+        (one, two) -> {
             int result = one.sent.compareTo(two.sent);
             if (result == 0) {
                 return one.hashCode() - two.hashCode();
             }
             return result;
-        }
-    };
-    private static final Comparator<RequestsTemplate.OutboxItem> OUTBOX_ITEMS_BY_DATE = new Comparator<RequestsTemplate.OutboxItem>() {
-        @Override
-        public int compare(RequestsTemplate.OutboxItem one, RequestsTemplate.OutboxItem two) {
+        };
+    private static final Comparator<RequestsTemplate.OutboxItem> OUTBOX_ITEMS_BY_DATE =
+        (one, two) -> {
             int result = one.sent.compareTo(two.sent);
             if (result == 0) {
                 return one.hashCode() - two.hashCode();
             }
             return result;
-        }
-    };
+        };
+
     @Inject
     private Collection<Strategy> strategies;
     @Inject
@@ -54,7 +50,8 @@ public class DefaultRequests implements RequestsTemplate {
     @Override
     @Transactional(readOnly = true)
     public ImmutableSortedSet<RequestsTemplate.InboxItem> getInboxItems(long actor) {
-        final ImmutableSortedSet.Builder<RequestsTemplate.InboxItem> builder = ImmutableSortedSet.orderedBy(INBOX_ITEMS_BY_DATE);
+        final ImmutableSortedSet.Builder<RequestsTemplate.InboxItem> builder =
+            ImmutableSortedSet.orderedBy(INBOX_ITEMS_BY_DATE);
 
         for (Strategy strategy : strategies) {
             builder.addAll(strategy.getInboxItems(actor));
@@ -115,13 +112,19 @@ public class DefaultRequests implements RequestsTemplate {
     @Transactional(readOnly = true)
     public ImmutableSortedSet<RequestsTemplate.OutboxItem> getOutboxItems(long actor) {
         List<OutboxMessageTemplate> messages = outboxMessageRepository.findByFrom(actor);
-        ImmutableSortedSet.Builder<RequestsTemplate.OutboxItem> builder = ImmutableSortedSet.orderedBy(OUTBOX_ITEMS_BY_DATE);
-        builder.addAll(transform(messages, new Function<OutboxMessageTemplate, RequestsTemplate.OutboxItem>() {
-            @Override
-            public RequestsTemplate.OutboxItem apply(OutboxMessageTemplate input) {
-                return new RequestsTemplate.OutboxItem(input.getId().toString(), input.getRecipient(), input.getMessage(), input.getDate());
-            }
-        }));
+        ImmutableSortedSet.Builder<RequestsTemplate.OutboxItem> builder =
+            ImmutableSortedSet.orderedBy(OUTBOX_ITEMS_BY_DATE);
+        builder.addAll(
+            transform(
+                messages,
+                input -> new OutboxItem(
+                    input.getId().toString(),
+                    input.getRecipient(),
+                    input.getMessage(),
+                    input.getDate()
+                )
+            )
+        );
         return builder.build();
     }
 

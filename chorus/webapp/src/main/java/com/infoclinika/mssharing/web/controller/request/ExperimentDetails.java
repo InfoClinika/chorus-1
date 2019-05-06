@@ -41,7 +41,7 @@ public class ExperimentDetails {
     public boolean filterByPIFEnabled;
     public double minReporterPIF;
     public double minBasePeakRatio;
-    public double minReporterFraction; 
+    public double minReporterFraction;
     public NgsRelatedExperimentInfo ngsRelatedInfo;
 
     public ExperimentDetails() {
@@ -50,33 +50,33 @@ public class ExperimentDetails {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("lab", lab)
-                .add("labHead", labHead)
-                .add("billLab", billLab)
-                .add("info", info)
-                .add("project", project)
-                .add("files", files)
-                .add("factors", factors)
-                .add("is2dLc", is2dLc)
-                .add("restriction", restriction)
-                .add("type", type)
-                .add("ownerEmail", ownerEmail)
-                .add("bounds", bounds)
-                .add("lockMasses", lockMasses)
-                .add("accessLevel", accessLevel)
-                .add("experimentLabels", experimentLabels)
-                .add("mixedSamplesCount", mixedSamplesCount)
-                .add("labName", labName)
-                .add("channelsCount", channelsCount)
-                .add("labelType", labelType)
-                .add("groupSpecificParametersType", groupSpecificParametersType)
-                .add("reporterMassTol", reporterMassTol)
-                .add("filterByPIFEnabled", filterByPIFEnabled)
-                .add("minReporterPIF", minReporterPIF)
-                .add("minBasePeakRatio", minBasePeakRatio)
-                .add("minReporterFraction", minReporterFraction)
-                .add("ngsRelatedInfo", ngsRelatedInfo)
-                .toString();
+            .add("id", id)
+            .add("lab", lab)
+            .add("labHead", labHead)
+            .add("billLab", billLab)
+            .add("info", info)
+            .add("project", project)
+            .add("files", files)
+            .add("factors", factors)
+            .add("is2dLc", is2dLc)
+            .add("restriction", restriction)
+            .add("type", type)
+            .add("ownerEmail", ownerEmail)
+            .add("bounds", bounds)
+            .add("lockMasses", lockMasses)
+            .add("accessLevel", accessLevel)
+            .add("experimentLabels", experimentLabels)
+            .add("mixedSamplesCount", mixedSamplesCount)
+            .add("labName", labName)
+            .add("channelsCount", channelsCount)
+            .add("labelType", labelType)
+            .add("groupSpecificParametersType", groupSpecificParametersType)
+            .add("reporterMassTol", reporterMassTol)
+            .add("filterByPIFEnabled", filterByPIFEnabled)
+            .add("minReporterPIF", minReporterPIF)
+            .add("minBasePeakRatio", minBasePeakRatio)
+            .add("minReporterFraction", minReporterFraction)
+            .add("ngsRelatedInfo", ngsRelatedInfo)
+            .toString();
     }
 }

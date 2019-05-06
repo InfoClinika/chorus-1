@@ -9,7 +9,8 @@
         }
     </style>
 
-    <div ng-hide="!vm.is2dLc && !vm.mixedSamplesCount" class="control-group control-group-optional clearfix" style="    padding-left: 12px;">
+    <div ng-hide="!(vm.is2dLc || vm.mixedSamplesCount || vm.pairedEnd)"
+         class="control-group control-group-optional clearfix" style="    padding-left: 12px;">
         <label class="optional-fields" ng-click="autoFillAssistOpened = !autoFillAssistOpened">
             <i class="icon {{autoFillAssistOpened && 'up' || 'down'}}"
                ng-bind="autoFillAssistOpened && 'Close' || 'Open'"></i>
@@ -36,26 +37,36 @@
     <div ng-show="vm.getValidationErrorMessage().trim().length > 0" class="hint" style="color:#df0000"><span ng-bind="vm.getValidationErrorMessage()"></span>&nbsp;</div>
     <div class="limit-table limit-table-body" style="margin-top: 10px;     ">
         <table class="table table-hover factor-table fixed-index"
-               ng-class="{'column4' : vm.is2dLc, 'column3': !vm.is2dLc}" id="preps-table">
+               ng-class="{'column6' : vm.pairedEnd, 'column5' : vm.is2dLc, 'column4': !(vm.is2dLc || vm.pairedEnd)}"
+               id="preps-table">
             <thead>
             <tr>
                 <th class="width32"><span class="number-cell">#</span></th>
                 <th sorting="name" sort-by-default="asc">File Name
                 </th>
+                <th sorting="labels">Labels</th>
                 <th class="annotation">
-                    <div title="Prep Name">Prep Name</div>
+                    <div title="Prep Name" ng-show="vm.multiplexing">Prep Name</div>
+                    <div title="Sample Name" ng-show="!vm.multiplexing">Sample Name</div>
                 </th>
                 <th class="annotation" ng-show="vm.is2dLc">
                     <div class="" title="Fraction Number">Fraction Number</div>
                 </th>
+                <th class="annotation" ng-show="vm.pairedEnd">
+                    <div title="Paired End">Paired End</div>
+                </th>
+                <th class="annotation" ng-show="vm.pairedEnd">
+                    <div class="" title="Lane Number">Lane Number</div>
+                </th>
             </tr>
             </thead>
             <tbody style="max-height: 355px;">
-            <tr ng-repeat="file in vm.files | orderBy:sorting.field:sorting.reverse">
+            <tr ng-repeat="file in vm.files | localeOrderBy:sorting.field:sorting.reverse">
                 <td class="width32" ng-bind="$index+1"></td>
                 <td title="{{file.name}}">
                     <div ng-bind="file.name" class="ellipsize"></div>
                 </td>
+                <td ng-bind="file.labels" class="ellipsize"></td>
                 <td class="annotation-value">
                     <div contenteditable input-key-press="vm.keyPressedInTable()"
                          class="contenteditable-label"
@@ -69,6 +80,20 @@
                          class="contenteditable-label "
                          ng-model="file.fractionNumber"
                          title="Fraction number for {{file.name}}"
+                         paste-in-table-validation></div>
+                </td>
+                <td class="factor-value" ng-show="vm.pairedEnd">
+                    <div contenteditable input-key-press="vm.keyPressedInTable()"
+                         class="contenteditable-label "
+                         ng-model="file.pairedEnd"
+                         title="Paired End for {{file.name}}"
+                         paste-in-table-validation></div>
+                </td>
+                <td class="factor-value" ng-show="vm.pairedEnd">
+                    <div contenteditable input-key-press="vm.keyPressedInTable()"
+                         class="contenteditable-label "
+                         ng-model="file.fractionNumber"
+                         title="Lane Number for {{file.name}}"
                          paste-in-table-validation></div>
                 </td>
             </tr>

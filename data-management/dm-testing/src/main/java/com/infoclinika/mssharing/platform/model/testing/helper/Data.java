@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.testing.helper;
 
@@ -15,6 +17,8 @@ import com.google.common.collect.Maps;
 import com.infoclinika.mssharing.platform.model.common.items.AdditionalExtensionImportance;
 import com.infoclinika.mssharing.platform.model.common.items.FileExtensionItem;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
+import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.FileItemTemplate;
+import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.MetaFactorTemplate;
 import com.infoclinika.mssharing.platform.model.write.LabManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate.PersonInfo;
 
@@ -24,6 +28,7 @@ import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Sets.newHashSet;
+import static com.infoclinika.mssharing.platform.model.common.items.AdditionalExtensionImportance.NOT_REQUIRED;
 
 /**
  * Provides some reusable test data
@@ -31,9 +36,9 @@ import static com.google.common.collect.Sets.newHashSet;
  * @author Stanislav Kurilin
  */
 public class Data {
-    public static final ImmutableSet<ExperimentManagementTemplate.FileItemTemplate> NO_FILES = ImmutableSet.of();
-    public static final List<ExperimentManagementTemplate.MetaFactorTemplate> NO_FACTORS = ImmutableList.of();
-    public static final List<String> NO_FACTOR_VALUES = ImmutableList.of();
+    public static final ImmutableSet<FileItemTemplate> NO_FILES = ImmutableSet.of();
+    public static final ImmutableList<MetaFactorTemplate> NO_FACTORS = ImmutableList.of();
+    public static final ImmutableList<String> NO_FACTOR_VALUES = ImmutableList.of();
 
     public static final String BOBS_EMAIL = "bob.marley@example.com";
     public static final String BOBS_FIRST = "Bob";
@@ -65,12 +70,16 @@ public class Data {
     public static final PersonInfo L_KATE_INFO = new PersonInfo(KATE_FIRST_NAME, KATE_LAST_NAME, KATE_EMAIL);
     public static final PersonInfo L_BOB_INFO = new PersonInfo(BOBS_FIRST, BOBS_LAST, BOBS_EMAIL);
 
-    public static final LabManagementTemplate.LabInfoTemplate LAB_4_DATA = new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_4);
-    public static final LabManagementTemplate.LabInfoTemplate LAB_3_DATA = new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_3);
-    public static final LabManagementTemplate.LabInfoTemplate LAB_2_DATA = new LabManagementTemplate.LabInfoTemplate("", L_PAUL_INFO, "");
-    public static final ImmutableList<ExperimentManagementTemplate.AnnotationTemplate> EMPTY_ANNOTATIONS = ImmutableList.<ExperimentManagementTemplate.AnnotationTemplate>of();
+    public static final LabManagementTemplate.LabInfoTemplate LAB_4_DATA =
+        new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_4);
+    public static final LabManagementTemplate.LabInfoTemplate LAB_3_DATA =
+        new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_3);
+    public static final LabManagementTemplate.LabInfoTemplate LAB_2_DATA =
+        new LabManagementTemplate.LabInfoTemplate("", L_PAUL_INFO, "");
+    public static final ImmutableList<ExperimentManagementTemplate.AnnotationTemplate> EMPTY_ANNOTATIONS =
+        ImmutableList.of();
     public static final String PROJECT_TITLE = "Running";
-    public static final Map<String, String> ANNOTATIONS = ImmutableMap.of("mykey", "myVal");
+    public static final ImmutableMap<String, String> ANNOTATIONS = ImmutableMap.of("mykey", "myVal");
     public static final String studyType1 = "Mass Spectrometry";
     public static final String vendor1 = "Thermo";
     public static final String instrumentType11 = "Mass Spectrometer";
@@ -80,17 +89,20 @@ public class Data {
     public static final String AB_SCIEX_INSTRUMENT_MODEL = "AB_SCIEX_MODEL";
     public static final String AB_SCIEX = "Sciex";
     public static final HashSet<FileExtensionItem> AB_SCIEX_EXTENSIONS = newHashSet(
-            new FileExtensionItem(".wiff", ".wiff",
-                    Maps.newHashMap(
-                            ImmutableMap.of(
-                                    ".wiff.scan", AdditionalExtensionImportance.NOT_REQUIRED,
-                                    ".wiff.mtd", AdditionalExtensionImportance.NOT_REQUIRED)
-                    )));
+        new FileExtensionItem(".wiff", ".wiff",
+            Maps.newHashMap(
+                ImmutableMap.of(
+                    ".wiff.scan", NOT_REQUIRED,
+                    ".wiff.mtd", NOT_REQUIRED
+                )
+            )
+        ));
     public static final String BRUKER_INSTRUMENT_MODEL = "Bruker_MODEL";
     public static final String BRUKER = "Bruker";
     public static final HashSet<FileExtensionItem> BRUKER_EXTENSIONS = newHashSet(
-            new FileExtensionItem(".d", ".d",
-                    Maps.<String, AdditionalExtensionImportance>newHashMap()));
+        new FileExtensionItem(".d", ".d",
+            Maps.newHashMap()
+        ));
     public static final String instrumentType21 = "Mass Spectrometer";
     public static final String ADMIN_EMAIL = "mark@mmm.c";
     public static final String ADMIN_EMAIL_2 = "mark3@mmm.c";

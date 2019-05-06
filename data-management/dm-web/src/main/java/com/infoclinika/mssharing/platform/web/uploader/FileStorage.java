@@ -27,7 +27,8 @@ public interface FileStorage {
      */
     void newUpload(String fileName, long totalSize, UUID fileId) throws IOException;
 
-    void receivePacket(UUID fileId, int packetNumber, InputStream inputStream, String hash) throws IOException, IncorrectHashException;
+    void receivePacket(UUID fileId, int packetNumber, InputStream inputStream, String hash)
+        throws IOException, IncorrectHashException;
 
     void finishUpload(UUID fileId) throws IOException;
 

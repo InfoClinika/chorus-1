@@ -66,6 +66,9 @@ public class StorageData {
     }
 
     public enum Status {
-        ARCHIVING_REQUESTED, ARCHIVED, UNARCHIVED, UNARCHIVING_REQUESTED
+        ARCHIVING_REQUESTED,
+        ARCHIVED,
+        UNARCHIVED,
+        UNARCHIVING_REQUESTED
     }
 }

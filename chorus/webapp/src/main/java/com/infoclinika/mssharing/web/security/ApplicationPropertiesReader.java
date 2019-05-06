@@ -19,16 +19,13 @@ import java.util.Properties;
  */
 @SuppressWarnings("UtilityClass")
 public class ApplicationPropertiesReader {
-    private static final Logger LOG = LoggerFactory.getLogger(ApplicationPropertiesReader.class);
-
-    private static final String USER_HOME = "user.home";
-    private static final String USER_DIR = "user.dir";
-
-    private static final Properties properties = loadProperties();
-
-    /*package*/ static final String APPLICATION_PROPERTIES = "application.properties";
     /* The property specified in application.properties */
     public static final String SSO_ENABLED_PROPERTY = "chorus.sso";
+    /*package*/ static final String APPLICATION_PROPERTIES = "application.properties";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationPropertiesReader.class);
+    private static final String USER_HOME = "user.home";
+    private static final String USER_DIR = "user.dir";
+    private static final Properties properties = loadProperties();
 
     private ApplicationPropertiesReader() {
     }
@@ -42,29 +39,17 @@ public class ApplicationPropertiesReader {
     private static Properties loadProperties() {
         final Properties properties = new Properties();
 
-        final URL classpathProperties = Resources.getResource(APPLICATION_PROPERTIES);
-        loadProperties(properties, classpathProperties);
-
         final File userHomeProperties = new File(System.getProperty(USER_HOME), APPLICATION_PROPERTIES);
         loadPropertiesFromFile(properties, userHomeProperties);
 
         final File userDirProperties = new File(System.getProperty(USER_DIR), APPLICATION_PROPERTIES);
         loadPropertiesFromFile(properties, userDirProperties);
+
         return properties;
-
-    }
-
-    private static void loadPropertiesFromFile(Properties properties, File file) {
-        try {
-            final URL userHomeProperties = file.toURI().toURL();
-            loadProperties(properties, userHomeProperties);
-        } catch (MalformedURLException ignored) {
-            LOG.error("Failed to load properties from file: " + file);
-        }
     }
 
     private static void loadProperties(Properties properties, URL propertiesUrl) {
-        LOG.info("Loading properties from " + propertiesUrl);
+        LOGGER.info("Loading properties from " + propertiesUrl);
 
         final ByteSource byteSource = Resources.asByteSource(propertiesUrl);
 
@@ -72,7 +57,16 @@ public class ApplicationPropertiesReader {
 
             properties.load(inputStream);
         } catch (IOException ignored) {
-            LOG.error("Failed to load properties from: " + propertiesUrl);
+            LOGGER.error("Failed to load properties from: " + propertiesUrl);
+        }
+    }
+
+    private static void loadPropertiesFromFile(Properties properties, File file) {
+        try {
+            final URL userHomeProperties = file.toURI().toURL();
+            loadProperties(properties, userHomeProperties);
+        } catch (MalformedURLException ignored) {
+            LOGGER.error("Failed to load properties from file: " + file);
         }
     }
 }

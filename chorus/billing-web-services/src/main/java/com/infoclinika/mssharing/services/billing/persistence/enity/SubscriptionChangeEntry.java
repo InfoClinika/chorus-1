@@ -67,14 +67,20 @@ public class SubscriptionChangeEntry extends AbstractPersistable<Long> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
         SubscriptionChangeEntry that = (SubscriptionChangeEntry) o;
         return userId == that.userId &&
-                labId == that.labId &&
-                timestamp == that.timestamp &&
-                Objects.equals(subscription, that.subscription);
+            labId == that.labId &&
+            timestamp == that.timestamp &&
+            Objects.equals(subscription, that.subscription);
     }
 
     @Override

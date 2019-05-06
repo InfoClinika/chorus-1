@@ -36,13 +36,21 @@ public class LockMz {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         LockMz lockMz = (LockMz) o;
 
-        if (charge != lockMz.charge) return false;
-        if (Double.compare(lockMz.mass, mass) != 0) return false;
+        if (charge != lockMz.charge) {
+            return false;
+        }
+        if (Double.compare(lockMz.mass, mass) != 0) {
+            return false;
+        }
 
         return true;
     }

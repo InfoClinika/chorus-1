@@ -1,0 +1,12 @@
+Chorus: Issue Deleted By Admin
+Hello, ${user}!
+
+Your issue was deleted by admin.
+
++ Issue Id:
+${issueId}
+
++ Issue Title:
+${issueTitle}
+
+Thanks!

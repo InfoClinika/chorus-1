@@ -1,8 +1,8 @@
 package com.infoclinika.mssharing.model.helper.items;
 
 /**
-* @author Herman Zamula
-*/
+ * @author Herman Zamula
+ */
 public class LockMzData {
 
     public double value;

@@ -1,6 +1,7 @@
 package com.infoclinika.mssharing.platform.model.impl.write;
 
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.write.FileManager;
 import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate;
@@ -17,8 +18,9 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
 @Transactional
 @Component
 public class DefaultFileManagement<
-        FILE extends FileMetaDataTemplate,
-        FILE_META_DATA_INFO extends FileManagementTemplate.FileMetaDataInfoTemplate> implements FileManagementTemplate<FILE_META_DATA_INFO> {
+    FILE extends FileMetaDataTemplate,
+    FILE_META_DATA_INFO extends FileManagementTemplate.FileMetaDataInfoTemplate>
+    implements FileManagementTemplate<FILE_META_DATA_INFO> {
 
     @Inject
     private FileManager<FILE> helper;
@@ -40,8 +42,13 @@ public class DefaultFileManagement<
     }
 
     protected void beforeCreateFile(long actor, long instrument, FILE_META_DATA_INFO fileMetaDataInfo) {
-        checkAccess(ruleValidator.canFileBeUploadedByInstrument(fileMetaDataInfo.archive, instrument),
-                "Vendor of this instrument doesn't provide an ability to upload archives");
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        checkAccess(
+            ruleValidator.canFileBeUploadedByInstrument(fileMetaDataInfo.archive, instrument),
+            "Vendor of this instrument doesn't provide an ability to upload archives"
+        );
 
     }
 
@@ -62,6 +69,9 @@ public class DefaultFileManagement<
     }
 
     protected void beforeUpdateFile(long actor, long file, FILE_META_DATA_INFO fileMetaDataInfo) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
     }
 
     protected void afterUpdateFile(FILE updated, FILE_META_DATA_INFO fileMetaDataInfo) {
@@ -82,8 +92,9 @@ public class DefaultFileManagement<
     }
 
     protected void beforeDeleteFile(long actor, long file, boolean permanently) {
-
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         checkAccess(ruleValidator.canRemoveFile(actor, file), "Cannot move file to trash");
-
     }
 }

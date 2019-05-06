@@ -21,16 +21,20 @@
     <script type="text/javascript" src="../script/error-catcher.js"></script>
     <script type="text/javascript" src="../script/service/security-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/features-back.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/feature.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/user-details.service.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/security-front.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js"></script>
     <script type="text/javascript" src="../script/enums.js"></script>
     <script type="text/javascript" src="../script/news.js"></script>
     <script type="text/javascript" src="../script/service/news-back.js"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/appearance/appearance.js"></script>
     <script type="text/javascript" src="../script/appearance/appearance.service.js"></script>
     <script type="text/javascript" src="../script/header/header.js"></script>
     <script type="text/javascript" src="../script/header/header.controller.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.controller.js"></script>
 
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.min.css">
     <!-- Custom Fonts -->
@@ -44,12 +48,17 @@
         }
       </style>
     <![endif]-->
+    <link rel="stylesheet" href="../lib/jquery-ui/jquery-ui.css"/>
     <link rel="stylesheet" href="../css/dialogs.css">
     <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 </head>
 <body class="static-page news-page">
     <div class="fixed-area">
-        <div ng-init="activePage = 'news'" class="ng-include: 'header.html'"></div>
+        <div ng-init="activePage = 'news'; showConsent = true" class="ng-include: 'header.html'"></div>
     </div>
     <div class="main-content">
         <div class="content-box clearfix">

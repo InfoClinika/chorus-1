@@ -67,7 +67,7 @@ public class PagedProjectsTest extends AbstractPagedItemTest {
     }
 
     private void createTestData(long kate, long poll) {
-        for(int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             uc.createProject(poll, uc.getLab3());
         }
         final long publicProject = uc.createProject(poll, uc.getLab3());

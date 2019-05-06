@@ -23,12 +23,12 @@ public class VendorDTO implements Serializable {
     }
 
     public VendorDTO(
-            long id,
-            String name,
-            Set<FileExtensionDTO> fileUploadExtensions,
-            boolean folderArchiveUploadSupport,
-            boolean multipleFiles,
-            DictionaryDTO studyTypeItem
+        long id,
+        String name,
+        Set<FileExtensionDTO> fileUploadExtensions,
+        boolean folderArchiveUploadSupport,
+        boolean multipleFiles,
+        DictionaryDTO studyTypeItem
     ) {
         this.id = id;
         this.name = name;
@@ -94,12 +94,12 @@ public class VendorDTO implements Serializable {
     @Override
     public String toString() {
         return "VendorDTO{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", fileUploadExtensions=" + fileUploadExtensions +
-                ", folderArchiveUploadSupport=" + folderArchiveUploadSupport +
-                ", multipleFiles=" + multipleFiles +
-                ", studyTypeItem=" + studyTypeItem +
-                '}';
+            "id=" + id +
+            ", name='" + name + '\'' +
+            ", fileUploadExtensions=" + fileUploadExtensions +
+            ", folderArchiveUploadSupport=" + folderArchiveUploadSupport +
+            ", multipleFiles=" + multipleFiles +
+            ", studyTypeItem=" + studyTypeItem +
+            '}';
     }
 }

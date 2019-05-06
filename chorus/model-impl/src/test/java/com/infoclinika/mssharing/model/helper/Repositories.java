@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.helper;
 
@@ -34,7 +36,7 @@ class Repositories {
     @Inject
     private GroupRepository groupRepository;
     @Inject
-    private ExperimentRepository experimentRepository;
+    /*package*/ ExperimentRepository experimentRepository;
     @Inject
     private DeletedExperimentRepository deletedExperimentRepository;
     @Inject
@@ -42,11 +44,12 @@ class Repositories {
     @Inject
     private DeletedProjectRepository deletedProjectRepository;
     @Inject
-    private FileMetaDataRepository fileRepository;
+    protected FileMetaDataRepository fileRepository;
     @Inject
     private AnnotationAttachmentRepository annotationAttachmentRepository;
     @Inject
     private DeletedFileMetaDataRepository deletedFileMetaDataRepository;
+
     @Inject
     public ChargeableItemRepository chargeableItemRepository;
     @Inject
@@ -62,7 +65,7 @@ class Repositories {
     @Inject
     RawFilesRepository experimentFileRepository;
     @Inject
-    FeaturesRepository featuresRepository;
+    private FeaturesRepository featuresRepository;
     @Inject
     FactorRepository factorRepository;
     @Inject
@@ -87,11 +90,6 @@ class Repositories {
     @Inject
     protected LabCreationRequestRepository labCreationRequestRepository;
 
-
-    @Inject
-    protected ProteinDatabaseRepository proteinDatabaseRepository;
-    @Inject
-    private ProteinDescriptionRepository proteinDescriptionRepository;
     @Inject
     private UserInvitationLinkRepository userInvitationLinkRepository;
     @Inject
@@ -99,7 +97,8 @@ class Repositories {
     @Inject
     private FileDownloadGroupRepository fileDownloadGroupRepository;
     @Inject
-    protected UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate<User, Lab>> userLabMembershipRequestRepository;
+    protected UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate<User, Lab>>
+        userLabMembershipRequestRepository;
     @Inject
     private PayPalLogEntryRepository paymentLogEntryRepository;
     @Inject
@@ -140,62 +139,76 @@ class Repositories {
     FailedEmailsNotifierRepository failedEmailsNotifierRepository;
     @Inject
     private BillingPropertyRepository billingPropertyRepository;
+    @Inject
+    private AdductsRepository adductsRepository;
+    @Inject
+    private IssueRepository issueRepository;
+    @Inject
+    /*package*/ NgsExperimentTypeRepository ngsExperimentTypeRepository;
+    @Inject
+    /*package*/ ExperimentPrepMethodRepository experimentPrepMethodRepository;
+    @Inject
+    /*package*/ NtExtractionMethodRepository ntExtractionMethodRepository;
 
     public List<CrudRepository> get() {
-        return ImmutableList.<CrudRepository>of(
-                instrumentCreationRequestRepository,
-                labCreationRequestRepository,
-                userProjectAccessRepository,
-                userLabMembershipRequestRepository,
-                copyProjectRequestRepository,
-                inboxMessageRepository,
-                outboxMessageRepository,
-                proteinDescriptionRepository,
-                proteinDatabaseRepository,
-                experimentLabelToExperimentRepository,
-                experimentRepository,
-                deletedExperimentRepository,
-                annotationAttachmentRepository,
-                experimentFileRepository,
-                prepToExperimentSampleRepository,
-                experimentPreparedSampleRepository,
-                experimentSampleRepository,
-                factorRepository,
-                fileDownloadGroupRepository,
-                fileDownloadJobRepository,
-                fileRepository,
-                deletedFileMetaDataRepository,
-                projectRepository,
-                deletedProjectRepository,
-                attachmentRepository,
-                groupRepository,
-                instrumentRepository,
-                pendingOperatorRepository,
-                userLabMembershipRepository,
-                userInvitationLinkRepository,
-                storeCreditLogEntryRepository,
-                userPreferencesRepository,
-                failedEmailsRecordRepository,
-                failedEmailsNotifierRepository,
-                userRepository,
-                transactionDetailsRepository,
-                labPaymentAccountRepository,
-                chargeableItemRepository,
-                labRepository,
-                instrumentModelRepository,
-                vendorRepository,
-                instrumentTypeRepository,
-                experimentTypeRepository,
-                speciesRepository,
-                paymentLogEntryRepository,
-                featureLogRepository,
-                projectSharingRequestRepository,
-                advertisementRepository,
-                fileAccessLogRepository,
-                advertisementRepository,
-                experimentLabelRepository,
-                experimentLabelTypeRepository,
-                billingPropertyRepository
+        return ImmutableList.of(
+            featuresRepository,
+            instrumentCreationRequestRepository,
+            labCreationRequestRepository,
+            userProjectAccessRepository,
+            userLabMembershipRequestRepository,
+            copyProjectRequestRepository,
+            inboxMessageRepository,
+            outboxMessageRepository,
+            experimentLabelToExperimentRepository,
+            experimentRepository,
+            deletedExperimentRepository,
+            annotationAttachmentRepository,
+            experimentFileRepository,
+            prepToExperimentSampleRepository,
+            experimentPreparedSampleRepository,
+            experimentSampleRepository,
+            factorRepository,
+            fileDownloadGroupRepository,
+            fileDownloadJobRepository,
+            fileRepository,
+            deletedFileMetaDataRepository,
+            projectRepository,
+            deletedProjectRepository,
+            attachmentRepository,
+            groupRepository,
+            instrumentRepository,
+            pendingOperatorRepository,
+            userLabMembershipRepository,
+            userInvitationLinkRepository,
+            storeCreditLogEntryRepository,
+            userPreferencesRepository,
+            failedEmailsRecordRepository,
+            failedEmailsNotifierRepository,
+            issueRepository,
+            userRepository,
+            transactionDetailsRepository,
+            labPaymentAccountRepository,
+            chargeableItemRepository,
+            labRepository,
+            instrumentModelRepository,
+            vendorRepository,
+            instrumentTypeRepository,
+            experimentTypeRepository,
+            speciesRepository,
+            paymentLogEntryRepository,
+            featureLogRepository,
+            projectSharingRequestRepository,
+            advertisementRepository,
+            fileAccessLogRepository,
+            advertisementRepository,
+            experimentLabelRepository,
+            experimentLabelTypeRepository,
+            billingPropertyRepository,
+            adductsRepository,
+            ngsExperimentTypeRepository,
+            experimentPrepMethodRepository,
+            ntExtractionMethodRepository
         );
     }
 }

@@ -23,7 +23,7 @@ public class ArchivedFile implements StoredObject {
     @Override
     public String toString() {
         return "StoredFile{" +
-                "inputStream=" + inputStream +
-                '}';
+            "inputStream=" + inputStream +
+            '}';
     }
 }

@@ -20,29 +20,24 @@ public class BillingRepositories {
     @Inject
     private HourlyArchiveStorageUsageRepository hourlyArchiveStorageUsageRepository;
     @Inject
-    private TranslationUsageRepository translationUsageRepository;
-    @Inject
     private MonthlySummaryRepository monthlySummaryRepository;
     @Inject
     private DownloadUsageRepository downloadUsageRepository;
     @Inject
     private DailySummaryRepository dailySummaryRepository;
     @Inject
-    private ProteinIDSearchUsageRepository proteinIDSearchUsageRepository;
-    @Inject
     private PublicDownloadUsageRepository publicDownloadUsageRepository;
 
     public List<CrudRepository> get() {
-        return ImmutableList.<CrudRepository>of(
-                usageRepository,
-                hourlyRepository,
-                dailyArchiveStorageUsageRepository,
-                hourlyArchiveStorageUsageRepository,
-                translationUsageRepository,
-                downloadUsageRepository,
-                proteinIDSearchUsageRepository,
-                publicDownloadUsageRepository,
-                monthlySummaryRepository,
-                dailySummaryRepository);
+        return ImmutableList.of(
+            usageRepository,
+            hourlyRepository,
+            dailyArchiveStorageUsageRepository,
+            hourlyArchiveStorageUsageRepository,
+            downloadUsageRepository,
+            publicDownloadUsageRepository,
+            monthlySummaryRepository,
+            dailySummaryRepository
+        );
     }
 }

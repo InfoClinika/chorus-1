@@ -19,9 +19,9 @@ public class FileExtensionDTO implements Serializable {
 
     @JsonCreator
     public FileExtensionDTO(
-            @JsonProperty("name") String name,
-            @JsonProperty("zip")String zip,
-            @JsonProperty("additionalExtensions")Map<String, AdditionalExtensionImportance> additionalExtensions) {
+        @JsonProperty("name") String name,
+        @JsonProperty("zip") String zip,
+        @JsonProperty("additionalExtensions") Map<String, AdditionalExtensionImportance> additionalExtensions) {
         this.name = name;
         this.zip = zip;
         this.additionalExtensions = additionalExtensions;
@@ -30,10 +30,10 @@ public class FileExtensionDTO implements Serializable {
     @Override
     public String toString() {
         return "FileExtensionDTO{" +
-                "name='" + name + '\'' +
-                ", zip='" + zip + '\'' +
-                ", additionalExtensions=" + additionalExtensions +
-                '}';
+            "name='" + name + '\'' +
+            ", zip='" + zip + '\'' +
+            ", additionalExtensions=" + additionalExtensions +
+            '}';
     }
 
     public static enum AdditionalExtensionImportance {

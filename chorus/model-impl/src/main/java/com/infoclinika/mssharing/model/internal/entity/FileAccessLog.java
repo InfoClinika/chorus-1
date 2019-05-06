@@ -51,7 +51,19 @@ public class FileAccessLog {
     private Date operationDate;
 
 
-    public FileAccessLog(Long userId, String userEmail, Long userLabId, String userLabName, Long fileId, Long fileSize, String fileContentId, String fileArchiveId, String fileName, OperationType operationType, Date operationDate) {
+    public FileAccessLog(
+        Long userId,
+        String userEmail,
+        Long userLabId,
+        String userLabName,
+        Long fileId,
+        Long fileSize,
+        String fileContentId,
+        String fileArchiveId,
+        String fileName,
+        OperationType operationType,
+        Date operationDate
+    ) {
         this.userId = userId;
         this.userEmail = userEmail;
         this.userLabId = userLabId;
@@ -164,7 +176,7 @@ public class FileAccessLog {
         this.id = id;
     }
 
-    public enum OperationType{
+    public enum OperationType {
         FILE_UPLOAD_STARTED,
         FILE_UPLOAD_CONFIRMED,
         FILE_DELETED,
@@ -173,5 +185,4 @@ public class FileAccessLog {
         FILE_ARCHIVE_CONFIRMED,
         FILE_DOWNLOAD_STARTED
     }
-
 }

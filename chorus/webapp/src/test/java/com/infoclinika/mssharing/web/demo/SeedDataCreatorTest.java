@@ -1,53 +1,91 @@
 package com.infoclinika.mssharing.web.demo;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
+import com.infoclinika.mssharing.model.helper.ExperimentCreationHelper;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
-import com.infoclinika.mssharing.platform.model.helper.ExperimentCreationHelperTemplate;
-import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
 
+import javax.inject.Inject;
 import java.util.Collection;
 
+import static com.google.common.collect.Collections2.transform;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
+
 
 /**
  * @author Pavel Kaplin
  */
-public class SeedDataCreatorTest extends AbstractDataBasedTest {
+//@RunWith(Theories.class)
+public class SeedDataCreatorTest extends SpringSupportTest {
+
+    @Inject
+    private ExperimentCreationHelper helper;
 
     @Test
     public void testExperimentTypes() {
-        final Collection<DictionaryItem> types = Collections2.transform(helper.experimentTypes(), new Function<ExperimentCreationHelperTemplate.ExperimentTypeItem, DictionaryItem>() {
-            @Override
-            public DictionaryItem apply(ExperimentCreationHelperTemplate.ExperimentTypeItem experimentTypeItem) {
-                return new DictionaryItem(experimentTypeItem.id, experimentTypeItem.name);
-            }
-        });
+        final Collection<DictionaryItem> types = transform(
+            helper.experimentTypes(),
+            experimentTypeItem -> new DictionaryItem(experimentTypeItem.id, experimentTypeItem.name)
+        );
 
-        assertThat(types, isDictionaryOf("Bottom Up Proteomics", "Metabolomics", "DMPK", "Other", "Top Down Proteomics"));
+        assertThat(
+            types,
+            isDictionaryOf(
+                "Bottom Up Proteomics",
+                "Metabolomics",
+                "DMPK",
+                "Other",
+                "Top Down Proteomics",
+                "ALIS Screening"
+            )
+        );
     }
 
-     @Test
+    @Test
     public void testSpecies() {
         ImmutableSet<DictionaryItem> species = helper.species();
-        assertThat(species, isDictionaryOf("Unspecified", "Arabidopsis thaliana", "Escherichia coli", "Pneumocystis carinii",
-                "Bos taurus", "Hepatitis C virus", "Rattus norvegicus",
-                "Caenorhabditis elegans", "Homo sapiens", "Saccharomyces cerevisiae",
-                "Chlamydomonas reinhardtii", "Mus musculus", "Schizosaccharomyces pombe",
-                "Danio rerio (zebrafish)", "Mycoplasma pneumoniae", "Takifugu rubripes",
-                "Dictyostelium discoideum", "Oryza sativa", "Xenopus laevis",
-                "Drosophila melanogaster", "Plasmodium falciparum", "Zea mays",
-                "Bemisia tabaci (Gennadius)", "Mucata mulata", "Canis familiaris", "Gallus gallus", "Sus scrofa",
-                "Anopheles gambiae", "Caenorhabditis briggsae", "Caenorhabditis remanei", "Haliotis rufescens", "Pseudomonas aeruginosa",
-                "Staphylococcus aureus", "Gasterosteus aculeatus (fish)",
-                "Trichomonas vaginalis"));
+        assertThat(species, isDictionaryOf(
+            "Unspecified",
+            "Arabidopsis thaliana",
+            "Escherichia coli",
+            "Pneumocystis carinii",
+            "Bos taurus",
+            "Hepatitis C virus",
+            "Rattus norvegicus",
+            "Caenorhabditis elegans",
+            "Homo sapiens",
+            "Saccharomyces cerevisiae",
+            "Chlamydomonas reinhardtii",
+            "Mus musculus",
+            "Schizosaccharomyces pombe",
+            "Danio rerio (zebrafish)",
+            "Mycoplasma pneumoniae",
+            "Takifugu rubripes",
+            "Dictyostelium discoideum",
+            "Oryza sativa",
+            "Xenopus laevis",
+            "Drosophila melanogaster",
+            "Plasmodium falciparum",
+            "Zea mays",
+            "Bemisia tabaci (Gennadius)",
+            "Mucata mulata",
+            "Canis familiaris",
+            "Gallus gallus",
+            "Sus scrofa",
+            "Anopheles gambiae",
+            "Caenorhabditis briggsae",
+            "Caenorhabditis remanei",
+            "Haliotis rufescens",
+            "Pseudomonas aeruginosa",
+            "Staphylococcus aureus",
+            "Gasterosteus aculeatus (fish)",
+            "Trichomonas vaginalis"
+        ));
     }
 
     private Matcher<DictionaryItem> withName(final String name) {
@@ -65,6 +103,7 @@ public class SeedDataCreatorTest extends AbstractDataBasedTest {
         for (String value : values) {
             itemMatchers[i++] = Matchers.hasItem(withName(value));
         }
+
         return allOf(hasSize(values.length), allOf(itemMatchers));
     }
 }

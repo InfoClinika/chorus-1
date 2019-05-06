@@ -25,6 +25,7 @@ public class ExperimentLabelManagementImpl implements ExperimentLabelManagement 
         checkNotNull(typeToCreate);
         checkNotNull(typeToCreate.name);
         final ExperimentLabelType type = new ExperimentLabelType(typeToCreate.name, typeToCreate.maxSamples);
+
         return experimentLabelTypeRepository.save(type).getId();
     }
 
@@ -34,6 +35,8 @@ public class ExperimentLabelManagementImpl implements ExperimentLabelManagement 
         checkNotNull(labelToCreate.name);
         final ExperimentLabelType type = experimentLabelTypeRepository.findOne(labelToCreate.type);
         checkNotNull(type);
-        return experimentLabelRepository.save(new ExperimentLabel(labelToCreate.aminoAcid, labelToCreate.name, type)).getId();
+
+        return experimentLabelRepository.save(new ExperimentLabel(labelToCreate.aminoAcid, labelToCreate.name, type))
+            .getId();
     }
 }

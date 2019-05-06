@@ -6,12 +6,15 @@ import com.infoclinika.mssharing.model.internal.entity.UploadAppConfiguration;
 import com.infoclinika.mssharing.model.internal.entity.restorable.*;
 import com.infoclinika.mssharing.platform.model.read.AccessLevel;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
  * @author Pavel Kaplin
  */
 public interface RuleValidator extends com.infoclinika.mssharing.platform.model.RuleValidator {
+
+    boolean userHasPermissionToCreateSearch(long creator, long experiment);
 
     Predicate<ActiveFileMetaData> userHasReadPermissionsOnFilePredicate(long userId);
 
@@ -21,11 +24,14 @@ public interface RuleValidator extends com.infoclinika.mssharing.platform.model.
 
     boolean canAccessExistingInstrument(long actor, String serialNumber);
 
+
     boolean canReadLabBilling(long actor, long lab);
 
     boolean isProjectOwner(long actor, long projectId);
 
+
     boolean canReadUsersInLab(long labHead, long labId);
+
 
     boolean canRestoreProject(long actor, DeletedProject projectId);
 
@@ -39,6 +45,7 @@ public interface RuleValidator extends com.infoclinika.mssharing.platform.model.
 
     boolean fileHasDuplicateName(DeletedFileMetaData file);
 
+
     Predicate<ActiveExperiment> isUserCanReadExperimentPredicate(long actor);
 
     Predicate<Instrument> isUserCanReadInstrumentPredicate(long actor);
@@ -47,13 +54,10 @@ public interface RuleValidator extends com.infoclinika.mssharing.platform.model.
 
     boolean canManageNews(long actor);
 
+
     boolean isUploadAppConfigurationOwner(long actor, UploadAppConfiguration configuration);
 
     boolean isExperimentReadyToDownload(ActiveExperiment experiment);
-
-    boolean canModifyProteinDatabase(long actor, long proteinDatabase);
-
-    boolean canReadProteinDatabase(long actor, long proteinDatabase);
 
     boolean canArchiveFile(long actor, long file);
 
@@ -65,25 +69,19 @@ public interface RuleValidator extends com.infoclinika.mssharing.platform.model.
 
     boolean isBillingEnabledForLab(long lab);
 
-    boolean isSearchResultsFeatureEnabledForLab(long lab);
-
-    boolean canUserAccessSearchResults(long actor, long run);
-
     boolean canModifyAnnotationAttachment(long actor, long annotationAttachment);
-
-    /*Defines whether user is able to persist proteins from protein database file(e.g. fasta)*/
-    boolean hasRightsToPersistProteins(long actor, long db);
-
-    boolean canModifyAnalysis(long actor, long analysis);
-
-    boolean canModifyAnalysisTemplate(long actor, long analysisTemplate);
 
     boolean isLabHead(long actor, long lab);
 
+    boolean usersInSameLab(long user1, long user2);
+
+    boolean canCreatePostProcessingPipeline(long actor);
+    
     boolean canUserManageLabAccount(long actor, long lab);
 
     boolean canImportMicroArrays(long actor, long lab);
 
-    boolean shouldSearchResultsBePersistedInBlibFile(long run);
+    boolean isLabMember(long actor, long lab);
 
+    boolean userCanUploadFileOfInstrument(long userId, long instrumentId);
 }

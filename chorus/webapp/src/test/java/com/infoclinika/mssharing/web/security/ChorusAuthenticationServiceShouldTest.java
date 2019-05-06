@@ -2,23 +2,47 @@ package com.infoclinika.mssharing.web.security;
 
 import com.infoclinika.auth.ChorusAuthenticationService;
 import com.infoclinika.auth.ChorusAuthenticationService.*;
+import com.infoclinika.mssharing.model.helper.SecurityHelper;
 import com.infoclinika.mssharing.model.helper.SecurityHelper.UserDetails;
-import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
+import com.infoclinika.mssharing.model.write.UserManagement;
+import com.infoclinika.mssharing.web.demo.SpringSupportTest;
 import org.testng.annotations.Test;
+
+import javax.inject.Inject;
+
 import static com.infoclinika.mssharing.web.security.UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_ID;
 import static com.infoclinika.mssharing.web.security.UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_USERNAME;
-import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.*;
 
 
 /**
  * @author Andrii Loboda
  */
-public class ChorusAuthenticationServiceShouldTest extends AbstractDataBasedTest {
+@SuppressWarnings("InstanceMethodNamingConvention")
+//@RunWith(Theories.class)
+public class ChorusAuthenticationServiceShouldTest extends SpringSupportTest {
 
-    private static final UserLogin USER_LOGIN = new UserLogin("pavel.kaplin@gmail.com");
-    private static final UserPassword USER_PASSWORD = new UserPassword("pwd");
+    public static final String MAIN_ACTOR_EMAIL = "demo.user@infoclinika.com";
+    public static final String PASSWORD = "pwd";
+
+    private static final UserLogin USER_LOGIN = new UserLogin(MAIN_ACTOR_EMAIL);
+    private static final UserPassword USER_PASSWORD = new UserPassword(PASSWORD);
+    @Inject
+    private ChorusAuthenticationService chorusAuthenticationService;
+    @Inject
+    private SecurityHelper securityHelper;
+    @Inject
+    private UserManagement userManagement;
+
+    private static void checkAttributes(Attributes attributes, UserDetails userDetails) {
+        assertTrue(attributes.attributes.containsKey(ATTRIBUTE_CHORUS_USERNAME));
+        assertTrue(attributes.attributes.containsKey(ATTRIBUTE_CHORUS_ID));
+        assertEquals(attributes.attributes.size(), 2);
 
 
+        assertEquals(userDetails.id, attributes.attributes.get(ATTRIBUTE_CHORUS_ID));
+        assertTrue(userDetails.email, attributes.attributes.containsKey(ATTRIBUTE_CHORUS_USERNAME));
+    }
 
     @Test
     public void react_on_health_check() {
@@ -91,16 +115,5 @@ public class ChorusAuthenticationServiceShouldTest extends AbstractDataBasedTest
         final GetAttributesResponse response = chorusAuthenticationService.getAttributes(request);
 
         assertNull(response);
-    }
-
-
-    private static void checkAttributes(Attributes attributes, UserDetails userDetails) {
-        assertTrue(attributes.attributes.containsKey(ATTRIBUTE_CHORUS_USERNAME));
-        assertTrue(attributes.attributes.containsKey(ATTRIBUTE_CHORUS_ID));
-        assertEquals(attributes.attributes.size(), 2);
-
-
-        assertEquals(userDetails.id, attributes.attributes.get(ATTRIBUTE_CHORUS_ID));
-        assertEquals(userDetails.email, attributes.attributes.get(ATTRIBUTE_CHORUS_USERNAME));
     }
 }

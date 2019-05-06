@@ -1,5 +1,6 @@
 package com.infoclinika.mssharing.model.internal.entity;
 
+import com.infoclinika.mssharing.model.internal.entity.workflow.PrepToExperimentSample;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Basic;

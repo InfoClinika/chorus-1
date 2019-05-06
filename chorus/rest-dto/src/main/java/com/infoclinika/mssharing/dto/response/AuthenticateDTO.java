@@ -9,7 +9,8 @@ public class AuthenticateDTO {
     private String userEmail;
     private UploadConfigDTO uploadConfig;
 
-    public AuthenticateDTO(){}
+    public AuthenticateDTO() {
+    }
 
     public AuthenticateDTO(String restToken, String email, UploadConfigDTO uploadConfig) {
         this.restToken = restToken;

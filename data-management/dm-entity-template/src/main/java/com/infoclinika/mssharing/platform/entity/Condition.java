@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.entity;
 
@@ -24,32 +26,39 @@ import static com.google.common.collect.Lists.newArrayList;
  */
 @Entity
 @Table(name = "condition_")
-public class Condition<E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>, L extends LevelTemplate<?>, F extends ExperimentFileTemplate<?, ?, ?>> extends AbstractPersistable {
+public class Condition<E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>, L extends LevelTemplate<?>,
+    F extends ExperimentFileTemplate<?, ?, ?>>
+    extends AbstractPersistable {
+
     public static final String UNDEFINED_CONDITION_NAME = "undefined";
     public static final long UNDEFINED_CONDITION_ID = -1L;
     private static final int LONG_STRING = 4000;
+
     @Column(name = "baseline_flag")
     private boolean baseLineFlag;
+
     @Column(name = "condition_name", length = LONG_STRING)
     private String name;
+
     @ManyToOne(targetEntity = ExperimentTemplate.class)
     @JoinColumns({@JoinColumn(name = "experiment_id")})
     private E experiment;
+
     @ManyToMany(targetEntity = LevelTemplate.class)
     @JoinTable(name = "condition_to_level",
-            joinColumns =
-            @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
-            inverseJoinColumns =
-            @JoinColumn(name = "level_id", referencedColumnName = "id", nullable = false)
+        joinColumns =
+        @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
+        inverseJoinColumns =
+        @JoinColumn(name = "level_id", referencedColumnName = "id", nullable = false)
     )
     private List<L> levels = new ArrayList<>();
 
     @ManyToMany(targetEntity = ExperimentFileTemplate.class)
     @JoinTable(name = "condition_to_lane",
-            joinColumns =
-            @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
-            inverseJoinColumns =
-            @JoinColumn(name = "lane_id", referencedColumnName = "id", nullable = false)
+        joinColumns =
+        @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
+        inverseJoinColumns =
+        @JoinColumn(name = "lane_id", referencedColumnName = "id", nullable = false)
     )
     private List<F> files = new ArrayList<>();
 
@@ -65,15 +74,22 @@ public class Condition<E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>, L extends
     }
 
     @Transient
-    public static <E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>, L extends LevelTemplate<?>, F extends ExperimentFileTemplate<?, E, ?>>
-    Condition createCondition(E experiment, List<L> levels, Iterable<F> files) {
+    public static <
+        E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>,
+        L extends LevelTemplate<?>,
+        F extends ExperimentFileTemplate<?, E, ?>> Condition createCondition(E experiment,
+                                                                             List<L> levels,
+                                                                             Iterable<F> files) {
         return new Condition<>(false, getNameFromLevels(levels), experiment, levels, newArrayList(files));
     }
 
     @Transient
-    public static <E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>, F extends ExperimentFileTemplate<?, ?, ?>>
-    Condition createUndefinedCondition(E experiment, Iterable<F> files) {
-        final Condition undefined = new Condition<>(false, UNDEFINED_CONDITION_NAME, experiment, null, newArrayList(files));
+    public static <
+        E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>,
+        F extends ExperimentFileTemplate<?, ?, ?>> Condition createUndefinedCondition(E experiment,
+                                                                                      Iterable<F> files) {
+        final Condition undefined =
+            new Condition<>(false, UNDEFINED_CONDITION_NAME, experiment, null, newArrayList(files));
         undefined.setId(UNDEFINED_CONDITION_ID);
         return undefined;
     }

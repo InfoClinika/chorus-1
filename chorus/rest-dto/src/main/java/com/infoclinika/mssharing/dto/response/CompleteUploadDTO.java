@@ -7,7 +7,8 @@ public class CompleteUploadDTO {
 
     private boolean confirmed;
 
-    public CompleteUploadDTO(){}
+    public CompleteUploadDTO() {
+    }
 
     public CompleteUploadDTO(boolean confirmed) {
         this.confirmed = confirmed;

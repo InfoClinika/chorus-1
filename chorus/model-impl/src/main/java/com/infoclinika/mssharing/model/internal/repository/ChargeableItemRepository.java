@@ -20,7 +20,6 @@ public interface ChargeableItemRepository extends CrudRepository<ChargeableItem,
     @Query("select i from ChargeableItem i where i.feature in (" +
             "com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem$Feature.ANALYSE_STORAGE," +
             "com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem$Feature.DOWNLOAD," +
-            "com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem$Feature.ANALYSIS," +
             "com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem$Feature.PUBLIC_DOWNLOAD)")
     Set<ChargeableItem> findEnabledByDefault();
 }

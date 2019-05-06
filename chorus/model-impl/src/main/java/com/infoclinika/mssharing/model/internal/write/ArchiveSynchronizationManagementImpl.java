@@ -2,15 +2,16 @@ package com.infoclinika.mssharing.model.internal.write;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.infoclinika.analysis.storage.cloud.CloudStorageFactory;
 import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import com.infoclinika.analysis.storage.cloud.CloudStorageService;
 import com.infoclinika.mssharing.model.helper.FileArchivingHelper;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
 import com.infoclinika.mssharing.model.write.ArchiveSynchronizationManagement;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.propertiesprovider.AmazonPropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -26,17 +27,24 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Service
-public class ArchiveSynchronizationManagementImpl implements ArchiveSynchronizationManagement<ArchiveSynchronizationManagementImpl.Status> {
-    @Value("${amazon.active.bucket}")
-    private String rawFilesBucket;
-    @Value("${amazon.archive.bucket}")
-    private String archiveBucket;
+public class ArchiveSynchronizationManagementImpl
+    implements ArchiveSynchronizationManagement<ArchiveSynchronizationManagementImpl.Status> {
+
+    private final FileMetaDataRepository fileMetaDataRepository;
+    private final FileArchivingHelper fileArchivingHelper;
+    private final CloudStorageClientsProvider cloudStorageClientsProvider;
+    private final AmazonPropertiesProvider amazonPropertiesProvider;
 
     @Inject
-    private FileMetaDataRepository fileMetaDataRepository;
-
-    @Inject
-    private FileArchivingHelper fileArchivingHelper;
+    public ArchiveSynchronizationManagementImpl(FileMetaDataRepository fileMetaDataRepository,
+                                                FileArchivingHelper fileArchivingHelper,
+                                                CloudStorageClientsProvider cloudStorageClientsProvider,
+                                                AmazonPropertiesProvider amazonPropertiesProvider) {
+        this.fileMetaDataRepository = fileMetaDataRepository;
+        this.fileArchivingHelper = fileArchivingHelper;
+        this.cloudStorageClientsProvider = cloudStorageClientsProvider;
+        this.amazonPropertiesProvider = amazonPropertiesProvider;
+    }
 
     private enum State {
         IN_PROGRESS,
@@ -49,24 +57,27 @@ public class ArchiveSynchronizationManagementImpl implements ArchiveSynchronizat
 
     private ScheduledExecutorService scheduledExecutorService;
 
-    private static final Logger LOGGER = Logger.getLogger(ArchiveSynchronizationManagementImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ArchiveSynchronizationManagementImpl.class);
 
     @Override
     public void synchronizeS3StateWithDB() {
-        synchronizeS3StateWithDB(rawFilesBucket, archiveBucket);
+        synchronizeS3StateWithDB(
+            amazonPropertiesProvider.getActiveBucket(),
+            amazonPropertiesProvider.getArchiveBucket()
+        );
     }
 
     @Override
     public void synchronizeS3StateWithDB(String activeBucket, String archiveBucket) {
-        final CloudStorageService cloudStorageService = CloudStorageFactory.service();
+        final CloudStorageService cloudStorageService = cloudStorageClientsProvider.getCloudStorageService();
 
         status = new Status(State.IN_PROGRESS);
 
-        LOGGER.info("Start looking for files in " + archiveBucket + " directory");
+        LOGGER.info("Start looking for files in {} directory", archiveBucket);
         final List<CloudStorageItemReference> archivedFiles = cloudStorageService.list(
-                archiveBucket,
-                null,
-                Optional.of(Calendar.getInstance().getTime())
+            archiveBucket,
+            null,
+            Optional.of(Calendar.getInstance().getTime())
         );
 
         final List<CloudStorageItemReference> missedFiles = new ArrayList<>();
@@ -78,7 +89,7 @@ public class ArchiveSynchronizationManagementImpl implements ArchiveSynchronizat
             status.state = State.IN_PROGRESS;
 
             try {
-                LOGGER.info("Found " + archivedFiles.size() + " files");
+                LOGGER.info("Found {} files", archivedFiles.size());
                 for (CloudStorageItemReference archivedFile : archivedFiles) {
 
                     final String archiveId = archivedFile.getKey();
@@ -115,7 +126,7 @@ public class ArchiveSynchronizationManagementImpl implements ArchiveSynchronizat
 
                 if (!missedFiles.isEmpty()) {
                     for (CloudStorageItemReference missedFile : missedFiles) {
-                        LOGGER.error("There is no file in DB: " + missedFile.getKey());
+                        LOGGER.error("There is no file in DB: {}", missedFile.getKey());
                     }
                 }
 
@@ -137,19 +148,20 @@ public class ArchiveSynchronizationManagementImpl implements ArchiveSynchronizat
         return status;
     }
 
-    private void moveFileToActiveBucket(
-            String activeBucket,
-            String archiveBucket,
-            CloudStorageService cloudStorageService,
-            CloudStorageItemReference rawFile
-    ) {
-        LOGGER.info("Start moving file " + rawFile.getKey() + " from " + archiveBucket + " to " + activeBucket);
-        final CloudStorageItemReference copy = new CloudStorageItemReference(rawFilesBucket, rawFile.getKey());
+    private void moveFileToActiveBucket(String activeBucket,
+                                        String archiveBucket,
+                                        CloudStorageService cloudStorageService,
+                                        CloudStorageItemReference rawFile) {
+        LOGGER.info("Start moving file {} from {} to {}", rawFile.getKey(), archiveBucket, activeBucket);
+        final CloudStorageItemReference copy = new CloudStorageItemReference(
+            amazonPropertiesProvider.getActiveBucket(),
+            rawFile.getKey()
+        );
         cloudStorageService.copy(rawFile, copy);
         LOGGER.info("File was copied successfully");
 
         if (cloudStorageService.existsAtCloud(copy)) {
-            LOGGER.info("Delete file " + rawFile.getKey() + " from " + archiveBucket);
+            LOGGER.info("Delete file {} from {}", rawFile.getKey(), archiveBucket);
             cloudStorageService.deleteFromCloud(rawFile);
             LOGGER.info("File was deleted successfully");
         }
@@ -166,9 +178,9 @@ public class ArchiveSynchronizationManagementImpl implements ArchiveSynchronizat
         @Override
         public String toString() {
             return "Status{" +
-                    "state=" + state +
-                    ", error='" + error + '\'' +
-                    '}';
+                "state=" + state +
+                ", error='" + error + '\'' +
+                '}';
         }
     }
 }

@@ -32,9 +32,11 @@ public class HourlyArchiveLogUsageStrategy extends AbstractFeatureLogStrategy {
                 params.totalHours = params.totalHours + archiveStorageUsage.hours;
             }
             final ChargeableItemUsage itemUsage = itemUsageOrdering.max(perFileUsage);
-            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(), itemUsage.getBytes(), itemUsage.getInstrument(),
-                    0, 0, itemUsage.getBalance(), (int) params.totalHours,
-                    itemUsage.getFileName(), itemUsage.getTimestampDate());
+            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(), itemUsage.getBytes(),
+                itemUsage.getInstrument(),
+                0, 0, itemUsage.getBalance(), (int) params.totalHours,
+                itemUsage.getFileName(), itemUsage.getTimestampDate()
+            );
         };
     }
 

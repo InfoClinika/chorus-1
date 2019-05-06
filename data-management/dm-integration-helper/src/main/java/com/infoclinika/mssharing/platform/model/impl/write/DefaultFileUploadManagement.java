@@ -2,11 +2,13 @@ package com.infoclinika.mssharing.platform.model.impl.write;
 
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.write.FileUploadManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.FileRepositoryTemplate;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Component
 public class DefaultFileUploadManagement implements FileUploadManagementTemplate {
 
-    private static final Logger LOGGER = Logger.getLogger(DefaultFileUploadManagement.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultFileUploadManagement.class);
     @Inject
     private RuleValidator ruleValidator;
     @Inject
@@ -44,7 +46,7 @@ public class DefaultFileUploadManagement implements FileUploadManagementTemplate
         }
         entity.setUploadId(uploadId);
         entity.setDestinationPath(destinationPath);
-        LOGGER.debug("The multipart upload ID = " + file + " for user " + actor + " has been set: " + uploadId);
+        LOGGER.debug("The multipart upload ID = {} for user {} has been set: {}", file, actor, uploadId);
         fileMetaDataRepository.save(entity);
     }
 
@@ -62,24 +64,27 @@ public class DefaultFileUploadManagement implements FileUploadManagementTemplate
         onCompleteMultipartUpload(actor, file, contentId, entity);
     }
 
-    protected Long onCompleteMultipartUpload(final long actor, final long file, final String contentId, final FileMetaDataTemplate entity) {
+    protected Long onCompleteMultipartUpload(final long actor, final long file, final String contentId,
+                                             final FileMetaDataTemplate entity) {
 
-        return transactionTemplate.execute(new TransactionCallback<Long>() {
-            @Override
-            public Long doInTransaction(TransactionStatus status) {
+        return transactionTemplate.execute(status -> {
 
-                entity.setContentId(contentId);
-                LOGGER.debug("The content for file with ID = " + file + " for user " + actor + " has been set. Path = " + contentId);
+            entity.setContentId(contentId);
+            LOGGER.debug(
+                "The content for file with ID = {} for user {} has been set. Path = {}", file, actor, contentId
+            );
 
-                entity.setUploadId(null);
-                entity.setDestinationPath(null);
-                fileMetaDataRepository.save(entity);
-                return entity.getId();
-            }
+            entity.setUploadId(null);
+            entity.setDestinationPath(null);
+            fileMetaDataRepository.save(entity);
+            return entity.getId();
         });
     }
 
     protected void beforeCompleteMultipartUpload(long actor, FileMetaDataTemplate file, String contentId) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         if (!file.getOwner().getId().equals(actor)) {
             throw new AccessDenied("Only owner can set content");
         }
@@ -91,14 +96,16 @@ public class DefaultFileUploadManagement implements FileUploadManagementTemplate
     @Override
     public void cancelUpload(long actor, long file) {
         final FileMetaDataTemplate entity = load(file);
-        if (!entity.getOwner().getId().equals(actor))
+        if (!entity.getOwner().getId().equals(actor)) {
             throw new AccessDenied("Only owner is able to cancel file upload");
+        }
         fileMetaDataRepository.delete(entity);
     }
 
     @Override
     public boolean checkMultipleFilesValidForUpload(long instrument, List<String> files) {
-        throw new NotImplementedException("Method DefaultFileUploadManagement#checkMultipleFilesValidForUpload is not implemented yet");
+        throw new NotImplementedException(
+            "Method DefaultFileUploadManagement#checkMultipleFilesValidForUpload is not implemented yet");
     }
 
     @Override
