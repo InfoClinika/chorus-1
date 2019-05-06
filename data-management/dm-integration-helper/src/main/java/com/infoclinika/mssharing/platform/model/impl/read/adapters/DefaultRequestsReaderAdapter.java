@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DefaultRequestsReaderAdapter extends DefaultRequestsReader<InstrumentTemplate,
-        ProjectSharingRequestTemplate,
-        UserLabMembershipRequestTemplate,
-        LabCreationRequestTemplate,
-        InstrumentCreationRequestTemplate> {
+    ProjectSharingRequestTemplate,
+    UserLabMembershipRequestTemplate,
+    LabCreationRequestTemplate,
+    InstrumentCreationRequestTemplate> {
 
 }

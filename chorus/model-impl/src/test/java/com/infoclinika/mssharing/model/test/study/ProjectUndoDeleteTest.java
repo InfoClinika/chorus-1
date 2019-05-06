@@ -7,8 +7,6 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 
-import static com.google.common.collect.Sets.newHashSet;
-
 /**
  * @author Elena Kurilina
  */
@@ -41,7 +39,7 @@ public class ProjectUndoDeleteTest extends AbstractStudyTest {
     }
 
     @Test
-     public void testNotFindProjectWithExperimentMovedToTrash() {
+    public void testNotFindProjectWithExperimentMovedToTrash() {
         long bob = uc.createLab3AndBob();
         long project = createPrivateProject(bob, uc.getLab3());
         createExperiment(bob, project);
@@ -87,7 +85,10 @@ public class ProjectUndoDeleteTest extends AbstractStudyTest {
         long project = createPrivateProject(bob, uc.getLab3());
         long file = uc.saveFile(bob);
         createExperiment(bob, project, file, uc.getLab3());
-        long copy = studyManagement.copyProject(bob, new StudyManagement.CopyProjectInfo(project, joe, bob, uc.getLab3(), false));
+        long copy = studyManagement.copyProject(
+            bob,
+            new StudyManagement.CopyProjectInfo(project, joe, bob, uc.getLab3(), false)
+        );
         long deleted = studyManagement.moveProjectToTrash(joe, copy);
         studyManagement.removeProject(deleted);
         assertEquals(dashboardReader.readProjects(joe, Filter.MY).size(), 0);
@@ -105,7 +106,7 @@ public class ProjectUndoDeleteTest extends AbstractStudyTest {
     }
 
     @Test(dependsOnMethods = "testNotFindProjectMovedToTrash")
-    public void  testFindRestoredProject() {
+    public void testFindRestoredProject() {
         long bob = uc.createLab3AndBob();
         long project = createPrivateProject(bob, uc.getLab3());
         long deleted = studyManagement.moveProjectToTrash(bob, project);
@@ -114,7 +115,7 @@ public class ProjectUndoDeleteTest extends AbstractStudyTest {
     }
 
     @Test(dependsOnMethods = "testFindRestoredProject")
-    public void  testRestoredProjectHaveSameName() {
+    public void testRestoredProjectHaveSameName() {
         long bob = uc.createLab3AndBob();
         long project = createPrivateProject(bob, uc.getLab3());
         final String beforeName = dashboardReader.readProjects(bob, Filter.MY).iterator().next().name;
@@ -125,7 +126,7 @@ public class ProjectUndoDeleteTest extends AbstractStudyTest {
     }
 
     @Test(dependsOnMethods = "testNotFindProjectMovedToTrash")
-    public void  testCreateExperimentInRestoredProject() {
+    public void testCreateExperimentInRestoredProject() {
         long bob = uc.createLab3AndBob();
         long project = createPrivateProject(bob, uc.getLab3());
         long deleted = studyManagement.moveProjectToTrash(bob, project);
@@ -202,7 +203,8 @@ public class ProjectUndoDeleteTest extends AbstractStudyTest {
 
     }
 
-    @Test(expectedExceptions = AccessDenied.class, dependsOnMethods = {"testNotFindProjectMovedToTrash", "testFindProjectInTrash"})
+    @Test(expectedExceptions = AccessDenied.class,
+        dependsOnMethods = {"testNotFindProjectMovedToTrash", "testFindProjectInTrash"})
     public void testNotAbleToRestoreProjectWithDuplicateName() {
         long bob = uc.createLab3AndBob();
         final String projectName = "NewProject";
@@ -213,7 +215,8 @@ public class ProjectUndoDeleteTest extends AbstractStudyTest {
         studyManagement.restoreProject(bob, deleted);
     }
 
-    @Test(expectedExceptions = AccessDenied.class, dependsOnMethods = {"testNotFindProjectMovedToTrash", "testFindProjectInTrash"})
+    @Test(expectedExceptions = AccessDenied.class,
+        dependsOnMethods = {"testNotFindProjectMovedToTrash", "testFindProjectInTrash"})
     public void testNotAbleToRestoreProjectHavingExperimentsWithDuplicateNames() {
         long bob = uc.createLab3AndBob();
         final String experimentName = "NewExperiment";

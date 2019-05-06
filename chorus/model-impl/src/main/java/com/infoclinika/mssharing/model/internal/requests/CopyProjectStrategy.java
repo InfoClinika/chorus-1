@@ -6,6 +6,7 @@ import com.infoclinika.mssharing.model.read.RequestsReader;
 import com.infoclinika.mssharing.model.write.StudyManagement;
 import com.infoclinika.mssharing.platform.model.RequestsTemplate.InboxItem;
 import com.infoclinika.mssharing.platform.model.impl.requests.Strategy;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -21,10 +22,11 @@ public class CopyProjectStrategy extends Strategy {
 
     @Inject
     private RequestsReader requestsReader;
+
+    @Lazy
     @Inject
     private StudyManagement studyManagement;
 
-    
     @Override
     public Collection<InboxItem> getInboxItems(long actor) {
         final ImmutableSortedSet<RequestsReader.ProjectCopyRequest> requests = requestsReader.myCopyProjectInbox(actor);
@@ -32,11 +34,11 @@ public class CopyProjectStrategy extends Strategy {
             @Override
             public InboxItem apply(RequestsReader.ProjectCopyRequest input) {
                 return new InboxItem(
-                        buildGlobalId(input.project),
-                        input.fullName,
-                        String.format("%s has passed a copy of \"%s\" project to You", input.fullName, input.projectName),
-                        input.dateSent,
-                        InboxItem.Actions.APPROVE_REFUSE
+                    buildGlobalId(input.project),
+                    input.fullName,
+                    String.format("%s has passed a copy of \"%s\" project to You", input.fullName, input.projectName),
+                    input.dateSent,
+                    InboxItem.Actions.APPROVE_REFUSE
                 );
             }
         });
@@ -60,7 +62,7 @@ public class CopyProjectStrategy extends Strategy {
     }
 
     @Override
-    public  void remove(long actor, String request) {
+    public void remove(long actor, String request) {
         throw new IllegalStateException("Unsupported Operation: Remove.");
     }
 }

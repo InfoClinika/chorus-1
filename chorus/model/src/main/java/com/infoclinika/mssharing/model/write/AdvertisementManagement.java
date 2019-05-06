@@ -1,6 +1,5 @@
 package com.infoclinika.mssharing.model.write;
 
-import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -35,7 +34,8 @@ public interface AdvertisementManagement {
         public final long imageSize;
         public final boolean isEnabled;
 
-        public AdvertisementInfo(String title, Date startDate, Date endDate, String redirectLink, Date currentDate, String imageName, long imageSize, boolean isEnabled) {
+        public AdvertisementInfo(String title, Date startDate, Date endDate, String redirectLink, Date currentDate,
+                                 String imageName, long imageSize, boolean isEnabled) {
             this.title = title;
             this.startDate = startDate;
             this.endDate = endDate;

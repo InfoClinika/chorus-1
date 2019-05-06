@@ -28,13 +28,16 @@ public class HourlyAnalyzeDataLogUsageStrategy extends AbstractFeatureLogStrateg
             final UsageParams params = new UsageParams();
             for (ChargeableItemUsage usage : perFileUsage) {
                 final AnalyzableStorageUsage analyzableUsage = (AnalyzableStorageUsage) usage;
-                params.totalPrice = params.totalPrice + analyzableUsage.getCharge() + analyzableUsage.getTranslatedCharge();
+                params.totalPrice =
+                    params.totalPrice + analyzableUsage.getCharge();
                 params.totalHours = params.totalHours + analyzableUsage.getHours();
             }
             final AnalyzableStorageUsage itemUsage = (AnalyzableStorageUsage) itemUsageOrdering.max(perFileUsage);
-            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(), (itemUsage.getBytes() + itemUsage.getTranslatedBytes()), itemUsage.getInstrument(),
-                    0, 0, itemUsage.getBalance(), (int) params.totalHours,
-                    itemUsage.getFileName(), itemUsage.getTimestampDate());
+            return new ChargeableItemUsageReader.FileUsageLine(itemUsage.getFile(),
+                itemUsage.getBytes(), itemUsage.getInstrument(),
+                0, 0, itemUsage.getBalance(), (int) params.totalHours,
+                itemUsage.getFileName(), itemUsage.getTimestampDate()
+            );
         };
 
     }

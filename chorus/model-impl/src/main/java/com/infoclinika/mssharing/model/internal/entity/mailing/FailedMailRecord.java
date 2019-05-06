@@ -35,7 +35,15 @@ public class FailedMailRecord extends AbstractPersistable<Long> {
     @Column(name = "creation_date")
     private Date creationDate;
 
-    public FailedMailRecord(User user, String bounceType, String bounceSubType, String bounceTimestampString, String reason, String rawJson, Date creationDate) {
+    public FailedMailRecord(
+        User user,
+        String bounceType,
+        String bounceSubType,
+        String bounceTimestampString,
+        String reason,
+        String rawJson,
+        Date creationDate
+    ) {
         this.user = user;
         this.bounceType = bounceType;
         this.bounceSubType = bounceSubType;

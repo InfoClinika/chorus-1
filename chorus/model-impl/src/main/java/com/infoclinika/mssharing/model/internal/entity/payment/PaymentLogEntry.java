@@ -20,7 +20,14 @@ public abstract class PaymentLogEntry extends Log {
     protected PaymentLogEntry() {
     }
 
-    protected PaymentLogEntry(long amount, Long lab, Date timestamp, long totalToPay, long storeBalance, String transactionId) {
+    protected PaymentLogEntry(
+        long amount,
+        Long lab,
+        Date timestamp,
+        long totalToPay,
+        long storeBalance,
+        String transactionId
+    ) {
         super(lab, timestamp, totalToPay, storeBalance);
         this.amount = amount;
         this.transactionId = transactionId;

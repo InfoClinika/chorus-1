@@ -21,7 +21,8 @@ public class FileDTO {
     private boolean invalid;
     private FileColumnsDTO columns;
 
-    public FileDTO(){}
+    public FileDTO() {
+    }
 
     public FileDTO(long id,
                    String name,
@@ -168,24 +169,24 @@ public class FileDTO {
     @Override
     public String toString() {
         return "FileDTO{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", instrumentId=" + instrumentId +
-                ", specieId=" + specieId +
-                ", contentId='" + contentId + '\'' +
-                ", uploadId='" + uploadId + '\'' +
-                ", destinationPath='" + destinationPath + '\'' +
-                ", accessLevel=" + accessLevel +
-                ", usedInExperiments=" + usedInExperiments +
-                ", owner=" + owner +
-                ", lastPingDate=" + lastPingDate +
-                ", isArchive=" + isArchive +
-                ", invalid=" + invalid +
-                ", columns=" + columns +
-                '}';
+            "id=" + id +
+            ", name='" + name + '\'' +
+            ", instrumentId=" + instrumentId +
+            ", specieId=" + specieId +
+            ", contentId='" + contentId + '\'' +
+            ", uploadId='" + uploadId + '\'' +
+            ", destinationPath='" + destinationPath + '\'' +
+            ", accessLevel=" + accessLevel +
+            ", usedInExperiments=" + usedInExperiments +
+            ", owner=" + owner +
+            ", lastPingDate=" + lastPingDate +
+            ", isArchive=" + isArchive +
+            ", invalid=" + invalid +
+            ", columns=" + columns +
+            '}';
     }
 
-    public static enum AccessLevel {
+    public enum AccessLevel {
         PRIVATE, SHARED, PUBLIC
     }
 }

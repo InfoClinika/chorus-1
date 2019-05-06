@@ -1,9 +1,7 @@
 package com.infoclinika.mssharing.platform.model.impl.read;
 
 import com.infoclinika.mssharing.platform.entity.InstrumentModel;
-import com.infoclinika.mssharing.platform.model.PagedItem;
-import com.infoclinika.mssharing.platform.model.PagedItemInfo;
-import com.infoclinika.mssharing.platform.model.RuleValidator;
+import com.infoclinika.mssharing.platform.model.*;
 import com.infoclinika.mssharing.platform.model.helper.read.InstrumentModelReaderHelper;
 import com.infoclinika.mssharing.platform.model.impl.DefaultTransformingTemplate;
 import com.infoclinika.mssharing.platform.model.read.InstrumentModelReaderTemplate;
@@ -16,8 +14,9 @@ import java.util.Set;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 @Transactional(readOnly = true)
-public abstract class DefaultInstrumentModelsReader<MODEL extends InstrumentModel, MODEL_LINE extends InstrumentModelLineTemplate>
-        implements InstrumentModelReaderTemplate<MODEL_LINE>, DefaultTransformingTemplate<MODEL, MODEL_LINE> {
+public abstract class DefaultInstrumentModelsReader<MODEL extends InstrumentModel,
+    MODEL_LINE extends InstrumentModelLineTemplate>
+    implements InstrumentModelReaderTemplate<MODEL_LINE>, DefaultTransformingTemplate<MODEL, MODEL_LINE> {
 
     @Inject
     protected InstrumentModelReaderHelper<MODEL, MODEL_LINE> instrumentModelReaderHelper;
@@ -60,6 +59,11 @@ public abstract class DefaultInstrumentModelsReader<MODEL extends InstrumentMode
     }
 
     protected void beforeReadInstrumentModels(long actor) {
-        ruleValidator.canUserReadInstrumentModels(actor);
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        if (!ruleValidator.canUserReadInstrumentModels(actor)) {
+            throw new AccessDenied(" *** User with ID: " + actor + " is not allowed to read instrument models.");
+        }
     }
 }

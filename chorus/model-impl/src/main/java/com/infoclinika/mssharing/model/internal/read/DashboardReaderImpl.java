@@ -3,15 +3,17 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.read;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.*;
-import com.google.common.collect.Sets.SetView;
+import com.infoclinika.mssharing.model.PaginationItems;
 import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.entity.*;
 import com.infoclinika.mssharing.model.internal.entity.restorable.*;
@@ -27,10 +29,11 @@ import com.infoclinika.mssharing.platform.model.PagedItemInfo;
 import com.infoclinika.mssharing.platform.model.common.items.FileItem;
 import com.infoclinika.mssharing.platform.model.common.items.InstrumentItem;
 import com.infoclinika.mssharing.platform.model.common.items.LabItem;
-import com.infoclinika.mssharing.platform.model.impl.ValidatorPredicates;
+import com.infoclinika.mssharing.platform.model.helper.write.ExperimentManager;
 import com.infoclinika.mssharing.platform.model.read.*;
 import com.infoclinika.mssharing.platform.repository.ProjectSharingRequestRepositoryTemplate;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,14 +42,13 @@ import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.*;
-import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Predicates.*;
 import static com.google.common.collect.FluentIterable.from;
-import static com.google.common.collect.ImmutableSet.copyOf;
-import static com.google.common.collect.Sets.intersection;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditions.checkPresence;
+import static com.infoclinika.mssharing.platform.model.impl.ValidatorPredicates.*;
 
 /**
  * @author Stanislav Kurilin
@@ -55,13 +57,15 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
 @Transactional(readOnly = true)
 public class DashboardReaderImpl implements DashboardReader {
 
-    private static final Logger LOGGER = Logger.getLogger(DashboardReaderImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DashboardReaderImpl.class);
 
 
     @Inject
     private ProjectRepository projectRepository;
     @Inject
     private ExperimentRepository experimentRepository;
+    @Inject
+    private ExperimentManager experimentManager;
     @Inject
     private FileMetaDataRepository fileMetaDataRepository;
     @Inject
@@ -94,7 +98,7 @@ public class DashboardReaderImpl implements DashboardReader {
     private ProjectReaderTemplate<ProjectLine> projectReader;
     @Inject
     @Named("fileReaderImpl")
-    private FileReaderTemplate<FileLine> fileReader;
+    private FileReader<FileLine> fileReader;
     @Inject
     private ExperimentReaderTemplate<ExperimentLine> experimentReader;
     @Inject
@@ -109,27 +113,30 @@ public class DashboardReaderImpl implements DashboardReader {
             return o1.name.compareTo(o2.name);
         }
     };
-    public static final Comparator<ShortExperimentDashboardRecord> SHORT_EXPERIMENT_RECORD_COMPARATOR = new Comparator<ShortExperimentDashboardRecord>() {
-        @Override
-        public int compare(ShortExperimentDashboardRecord o1, ShortExperimentDashboardRecord o2) {
-            return o1.name.compareTo(o2.name);
-        }
-    };
+    public static final Comparator<ShortExperimentDashboardRecord> SHORT_EXPERIMENT_RECORD_COMPARATOR =
+        new Comparator<ShortExperimentDashboardRecord>() {
+            @Override
+            public int compare(ShortExperimentDashboardRecord o1, ShortExperimentDashboardRecord o2) {
+                return o1.name.compareTo(o2.name);
+            }
+        };
 
-    public static final Function<ExperimentFileTemplate, UploadedFile> UPLOADED_FILE_ITEM_FROM_RAW = new Function<ExperimentFileTemplate, UploadedFile>() {
-        @Override
-        public UploadedFile apply(ExperimentFileTemplate input) {
-            AbstractFileMetaData data = (AbstractFileMetaData) input.getFileMetaData();
-            return toUploadedFile(data);
-        }
-    };
+    public static final Function<ExperimentFileTemplate, UploadedFile> UPLOADED_FILE_ITEM_FROM_RAW =
+        new Function<ExperimentFileTemplate, UploadedFile>() {
+            @Override
+            public UploadedFile apply(ExperimentFileTemplate input) {
+                AbstractFileMetaData data = (AbstractFileMetaData) input.getFileMetaData();
+                return toUploadedFile(data);
+            }
+        };
 
-    public static final Function<ActiveFileMetaData, UploadedFile> UPLOADED_FILE_ITEM_FROM_META_DATA = new Function<ActiveFileMetaData, UploadedFile>() {
-        @Override
-        public UploadedFile apply(ActiveFileMetaData data) {
-            return toUploadedFile(data);
-        }
-    };
+    public static final Function<ActiveFileMetaData, UploadedFile> UPLOADED_FILE_ITEM_FROM_META_DATA =
+        new Function<ActiveFileMetaData, UploadedFile>() {
+            @Override
+            public UploadedFile apply(ActiveFileMetaData data) {
+                return toUploadedFile(data);
+            }
+        };
 
     private static UploadedFile toUploadedFile(AbstractFileMetaData data) {
         final Instrument instrument = data.getInstrument();
@@ -137,16 +144,25 @@ public class DashboardReaderImpl implements DashboardReader {
         final Date acquisitionDate = metaInfo == null ? null : metaInfo.getCreationDate();
 
         return new UploadedFile(data.getId(), data.getName(), instrument.getName(),
-                Transformers.toFullInstrumentModel(instrument.getModel()),
-                data.getUploadDate(), acquisitionDate, data.getSizeInBytes(),
-                data.getOwner().getId());
+            Transformers.toFullInstrumentModel(instrument.getModel()),
+            data.getUploadDate(), acquisitionDate, data.getSizeInBytes(),
+            data.getOwner().getId()
+        );
     }
 
+    @Override
+    @Transactional
+    public void setExperimentFailed(long actor, long experiment, boolean failed) {
+        final ActiveExperiment activeExperiment = checkNotNull(experimentRepository.findOne(experiment));
+        activeExperiment.setFailed(failed);
+
+        experimentManager.saveExperiment(activeExperiment);
+    }
 
     @Override
     public ImmutableSet<InstrumentItem> instrumentsWithAvailableFiles(long actor) {
         return from(fileMetaDataRepository.instrumentsWithAvailableFiles(actor))
-                .transform(transformers.instrumentItemTransformer()).toSet();
+            .transform(transformers.instrumentItemTransformer()).toSet();
     }
 
     @Override
@@ -165,6 +181,11 @@ public class DashboardReaderImpl implements DashboardReader {
     }
 
     @Override
+    public PagedItem<ProjectLine> readProjects(long user, Filter filter, PagedItemInfo pageInfo) {
+        return projectReader.readProjects(user, filter, pageInfo);
+    }
+
+    @Override
     public PagedItem<ProjectLine> readProjectsByLab(long actor, Long lab, PagedItemInfo pagedItemInfo) {
         return projectReader.readProjectsByLab(actor, lab, pagedItemInfo);
     }
@@ -177,11 +198,6 @@ public class DashboardReaderImpl implements DashboardReader {
     @Override
     public SortedSet<ProjectLine> readProjectsAllowedForWriting(long user) {
         return projectReader.readProjectsAllowedForWriting(user);
-    }
-
-    @Override
-    public PagedItem<ProjectLine> readProjects(long user, Filter filter, PagedItemInfo pageInfo) {
-        return projectReader.readProjects(user, filter, pageInfo);
     }
 
     /**
@@ -213,8 +229,18 @@ public class DashboardReaderImpl implements DashboardReader {
     }
 
     @Override
+    public Set<FileLine> readFilesByLab(long userId, long labId) {
+        return fileReader.readFilesByLab(userId, labId);
+    }
+
+    @Override
     public PagedItem<FileLine> readFilesByInstrument(long actor, long instrument, PagedItemInfo pagedInfo) {
         return fileReader.readFilesByInstrument(actor, instrument, pagedInfo);
+    }
+
+    @Override
+    public Set<FileLine> readFilesByInstrument(long actor, long instrument) {
+        return fileReader.readFilesByInstrument(actor, instrument);
     }
 
     @Override
@@ -228,23 +254,13 @@ public class DashboardReaderImpl implements DashboardReader {
     }
 
     @Override
-    public Set<FileLine> readUnfinishedFiles(long user) {
-        return fileReader.readUnfinishedFiles(user);
-    }
-
-    @Override
-    public Set<FileLine> readFilesByInstrument(long actor, long instrument) {
-        return fileReader.readFilesByInstrument(actor, instrument);
-    }
-
-    @Override
-    public Set<FileLine> readFilesByLab(long userId, long labId) {
-        return fileReader.readFilesByLab(userId, labId);
-    }
-
-    @Override
     public Set<FileLine> readFilesByExperiment(long actor, long experiment) {
         return fileReader.readFilesByExperiment(actor, experiment);
+    }
+
+    @Override
+    public Set<FileLine> readUnfinishedFiles(long user) {
+        return fileReader.readUnfinishedFiles(user);
     }
 
     @Override
@@ -262,13 +278,13 @@ public class DashboardReaderImpl implements DashboardReader {
     }
 
     @Override
-    public PagedItem<ExperimentLine> readExperimentsByLab(long actor, long labId, PagedItemInfo pagedItemInfo) {
-        return experimentReader.readExperimentsByLab(actor, labId, pagedItemInfo);
+    public SortedSet<ExperimentLine> readExperiments(long actor, Filter filter) {
+        return experimentReader.readExperiments(actor, filter);
     }
 
     @Override
-    public SortedSet<ExperimentLine> readExperiments(long actor, Filter filter) {
-        return experimentReader.readExperiments(actor, filter);
+    public PagedItem<ExperimentLine> readExperimentsByLab(long actor, long labId, PagedItemInfo pagedItemInfo) {
+        return experimentReader.readExperimentsByLab(actor, labId, pagedItemInfo);
     }
 
     @Override
@@ -286,18 +302,23 @@ public class DashboardReaderImpl implements DashboardReader {
     }
 
     @Override
-    public PagedItem<InstrumentLine> readInstruments(long actor, PagedItemInfo pagedInfo) {
-        return instrumentReader.readInstruments(actor, pagedInfo);
-    }
-
-    @Override
     public PagedItem<InstrumentLine> readInstrumentsByLab(long actor, long lab, PagedItemInfo pagedInfo) {
         return instrumentReader.readInstrumentsByLab(actor, lab, pagedInfo);
     }
 
     @Override
+    public PagedItem<InstrumentLine> readInstruments(long actor, PagedItemInfo pagedInfo) {
+        return instrumentReader.readInstruments(actor, pagedInfo);
+    }
+
+    @Override
     public Set<InstrumentLine> readInstruments(long userId) {
         return instrumentReader.readInstruments(userId);
+    }
+
+    @Override
+    public Set<InstrumentLine> readInstrumentsByLabAndStudyType(long actor, long lab, long studyType) {
+        return instrumentReader.readInstrumentsByLabAndStudyType(actor, lab, studyType);
     }
 
     /**
@@ -335,15 +356,9 @@ public class DashboardReaderImpl implements DashboardReader {
 
     @Override
     public PagedItem<ExperimentLine> readPagedExperimentsByProject(long actor, long projectId, PagedItemInfo
-            pagedItemInfo) {
+        pagedItemInfo) {
 
         return experimentReader.readPagedExperimentsByProject(actor, projectId, pagedItemInfo);
-    }
-
-
-    @Override
-    public String getChartsUrlForFiles(long user, List<Long> files) {
-        return transformers.getChartsLink(files);
     }
 
     /**
@@ -358,11 +373,13 @@ public class DashboardReaderImpl implements DashboardReader {
         final Set<UploadedFile> myFiles = readDetailedFiles(user, Filter.MY);
 
         final Set<ProjectLine> sharedProjects = readProjects(user, Filter.SHARED_WITH_ME);
-        final ImmutableSortedSet<ExperimentLine> sharedExperiments = readExperimentsForFolderStructure(user, Filter.SHARED_WITH_ME);
+        final ImmutableSortedSet<ExperimentLine> sharedExperiments =
+            readExperimentsForFolderStructure(user, Filter.SHARED_WITH_ME);
         final Set<UploadedFile> sharedFiles = readDetailedFiles(user, Filter.SHARED_WITH_ME);
 
         final Set<ProjectLine> publicProjects = readProjects(user, Filter.PUBLIC);
-        final ImmutableSortedSet<ExperimentLine> publicExperiments = readExperimentsForFolderStructure(user, Filter.PUBLIC);
+        final ImmutableSortedSet<ExperimentLine> publicExperiments =
+            readExperimentsForFolderStructure(user, Filter.PUBLIC);
         final Set<UploadedFile> publicFiles = readDetailedFiles(user, Filter.PUBLIC);
 
         final FullFolderStructure result = new FullFolderStructure();
@@ -390,71 +407,76 @@ public class DashboardReaderImpl implements DashboardReader {
             result = readSharedFolderStructure(user, filter);
         } else {
             final Set<ProjectLine> projects = readProjects(user, filter);
-            final ImmutableSortedSet<ShortExperimentDashboardRecord> experiments = readShortExperimentsForFolderStructure(user, projects);
+            final ImmutableSortedSet<ShortExperimentDashboardRecord> experiments =
+                readShortExperimentsForFolderStructure(user, projects);
             final Set<UploadedFile> files = readDetailedFiles(user, filter);
             result = new FolderStructure();
             result.projects.addAll(toProjectStructure(user, projects, true));
             result.experiments.addAll(shortRecordsToExperimentStructure(user, experiments, true));
             result.files.addAll(files);
         }
-        LOGGER.info(" + Total \n + projects: " + result.projects.size()
-                + " \n + experiments: " + result.experiments.size()
-                + " \n + files: " + result.files.size());
+        LOGGER.info(
+            " + Total \n + projects: {} \n + experiments: {} \n + files: {}" + result.projects.size(),
+            result.experiments.size(),
+            result.files.size()
+        );
         return result;
     }
 
     @Override
     public SortedSet<ProjectStructure> readProjectsOnlyStructure(long userId, Filter filter) {
         final Set<ProjectLine> projects = readProjects(userId, filter);
-        LOGGER.info(" + Total projects: " + projects.size());
+        LOGGER.info(" + Total projects: {}", projects.size());
         return ImmutableSortedSet.copyOf(toProjectStructure(userId, projects, false));
     }
 
     @Override
     public SortedSet<ExperimentStructure> readExperimentsOnlyStructureByProject(long userId, long projectId) {
         final SortedSet<ExperimentLine> experimentLines = readExperimentsByProject(userId, projectId);
-        LOGGER.info(" + Total experiments for project ID = " + projectId + ": " + experimentLines.size());
+        LOGGER.info(" + Total experiments for project ID = {}: {}", projectId, experimentLines.size());
         return ImmutableSortedSet.copyOf(toExperimentStructure(userId, experimentLines, false));
     }
 
     @Override
     public SortedSet<UploadedFile> readFilesStructureByExperiment(long userId, long experimentId) {
         final Collection<UploadedFile> fileItems = readExperimentDetailedFiles(userId, experimentId);
-        LOGGER.info(" + Total files for experiment ID = " + experimentId + ": " + fileItems.size());
+        LOGGER.info(" + Total files for experiment ID = {}: {}", experimentId, fileItems.size());
         return ImmutableSortedSet.copyOf(fileItems);
     }
 
     @Override
     public SortedSet<ExperimentStructure> readExperimentsOnlyStructure(long userId, Filter filter) {
         final ImmutableSortedSet<ExperimentLine> experiments = readExperimentsForFolderStructure(userId, filter);
-        LOGGER.info(" + Total experiments: " + experiments.size());
+        LOGGER.info(" + Total experiments: {}", experiments.size());
         return ImmutableSortedSet.copyOf(toExperimentStructure(userId, experiments, false));
     }
 
     @Override
     public SortedSet<UploadedFile> readFilesOnlyStructure(long userId, Filter filter) {
         final Set<UploadedFile> files = readDetailedFiles(userId, filter);
-        LOGGER.info(" + Total files: " + files.size());
+        LOGGER.info(" + Total files: {}", files.size());
         return ImmutableSortedSet.copyOf(files);
     }
 
     private FolderStructure readSharedFolderStructure(final long user, Filter filter) {
         final FolderStructure folderStructure = readProjectsTreeForFilter(user, filter);
-        final Set<ExperimentStructure> nonOwnedExperiments = new HashSet<>(Collections2.filter(folderStructure.experiments, new Predicate<ExperimentStructure>() {
-            @Override
-            public boolean apply(ExperimentStructure exp) {
-                return !exp.currentUserOwner;
-            }
-        }));
+        final Set<ExperimentStructure> nonOwnedExperiments =
+            new HashSet<>(Collections2.filter(folderStructure.experiments, new Predicate<ExperimentStructure>() {
+                @Override
+                public boolean apply(ExperimentStructure exp) {
+                    return !exp.currentUserOwner;
+                }
+            }));
         folderStructure.experiments.clear();
         folderStructure.experiments.addAll(nonOwnedExperiments);
 
         final Set<Long> sharedFileIds = new HashSet<>(fileMetaDataRepository.findAllSharedIds(user));
-        final Set<UploadedFile> filteredSharedFiles = new HashSet<>(Sets.filter(folderStructure.files, new Predicate<UploadedFile>() {
-            public boolean apply(UploadedFile input) {
-                return sharedFileIds.contains(input.id);
-            }
-        }));
+        final Set<UploadedFile> filteredSharedFiles =
+            new HashSet<>(Sets.filter(folderStructure.files, new Predicate<UploadedFile>() {
+                public boolean apply(UploadedFile input) {
+                    return sharedFileIds.contains(input.id);
+                }
+            }));
 
         folderStructure.files.clear();
         folderStructure.files.addAll(filteredSharedFiles);
@@ -490,26 +512,34 @@ public class DashboardReaderImpl implements DashboardReader {
 
     private ImmutableSortedSet<ExperimentLine> readExperimentsForFolderStructure(long user, Filter filter) {
 
-        final ImmutableSortedSet.Builder<ExperimentLine> builder = ImmutableSortedSet.orderedBy(EXPERIMENT_LINE_COMPARATOR);
+        final ImmutableSortedSet.Builder<ExperimentLine> builder =
+            ImmutableSortedSet.orderedBy(EXPERIMENT_LINE_COMPARATOR);
         final User actor = userRepository.findOne(user);
         final FluentIterable<ActiveProject> projects = from(projectRepository.findAllAvailable(user));
 
         for (ActiveProject project : projects) {
-            final List<ExperimentDashboardRecord> dashboardItemsByProject = experimentRepository.findRecordsByProject(project.getId());
+            final List<ExperimentDashboardRecord> dashboardItemsByProject =
+                experimentRepository.findRecordsByProject(project.getId());
             final FluentIterable<ExperimentDashboardRecord> filteredExperiments = from(dashboardItemsByProject)
-                    .filter(getFilteredExperimentDashboardRecords(project, actor, filter));
-            final List<ExperimentLine> list = transformers.transformExperimentRecords(user, filteredExperiments).toList();
+                .filter(getFilteredExperimentDashboardRecords(project, actor, filter));
+            final List<ExperimentLine> list =
+                transformers.transformExperimentRecords(user, filteredExperiments).toList();
             builder.addAll(Iterables.transform(list, transformers.experimentFolderStructureTransformer));
         }
         return builder.build();
     }
 
 
-    private ImmutableSortedSet<ShortExperimentDashboardRecord> readShortExperimentsForFolderStructure(long user, Set<ProjectLine> projects) {
-        final ImmutableSortedSet.Builder<ShortExperimentDashboardRecord> builder = ImmutableSortedSet.orderedBy(SHORT_EXPERIMENT_RECORD_COMPARATOR);
+    private ImmutableSortedSet<ShortExperimentDashboardRecord> readShortExperimentsForFolderStructure(
+        long user,
+        Set<ProjectLine> projects
+    ) {
+        final ImmutableSortedSet.Builder<ShortExperimentDashboardRecord> builder =
+            ImmutableSortedSet.orderedBy(SHORT_EXPERIMENT_RECORD_COMPARATOR);
 
         for (ProjectLine project : projects) {
-            final List<ShortExperimentDashboardRecord> dashboardItemsByProject = experimentRepository.findShortRecordsByProject(project.id);
+            final List<ShortExperimentDashboardRecord> dashboardItemsByProject =
+                experimentRepository.findShortRecordsByProject(project.id);
             builder.addAll(dashboardItemsByProject);
         }
         return builder.build();
@@ -538,20 +568,26 @@ public class DashboardReaderImpl implements DashboardReader {
         return readFilteredFiles(user, filter, filesToFilter);
     }
 
-    private FluentIterable<ActiveFileMetaData> readFilteredFiles(long user, Filter filter, Iterable<ActiveFileMetaData> toFilter) {
+    private FluentIterable<ActiveFileMetaData> readFilteredFiles(long user,
+                                                                 Filter filter,
+                                                                 Iterable<ActiveFileMetaData> toFilter) {
         return from(toFilter)
-                .filter(filterForFile(user, filter));
+            .filter(filterForFile(user, filter));
     }
 
-    private Collection<ProjectStructure> toProjectStructure(final long user, Set<ProjectLine> projects, final boolean readExperimentData) {
+    private Collection<ProjectStructure> toProjectStructure(final long user,
+                                                            Set<ProjectLine> projects,
+                                                            final boolean readExperimentData) {
 
         return Collections2.transform(projects, new Function<ProjectLine, ProjectStructure>() {
             @Override
             public ProjectStructure apply(ProjectLine input) {
                 final String labName = input.lab == null ? "<No Lab>" : input.lab.name;
-                final ProjectStructure projectStructure = new ProjectStructure(input.id, input.name, labName, input.creator, input.modified);
+                final ProjectStructure projectStructure =
+                    new ProjectStructure(input.id, input.name, labName, input.creator, input.modified);
                 if (readExperimentData) {
-                    final SortedSet<ShortExperimentDashboardRecord> experimentLines = readShortExperimentsForFolderStructure(user, Sets.newHashSet(input));
+                    final SortedSet<ShortExperimentDashboardRecord> experimentLines =
+                        readShortExperimentsForFolderStructure(user, Sets.newHashSet(input));
                     projectStructure.experiments.addAll(shortRecordsToExperimentStructure(user, experimentLines, true));
                 }
                 return projectStructure;
@@ -559,12 +595,15 @@ public class DashboardReaderImpl implements DashboardReader {
         });
     }
 
-    private Collection<ExperimentStructure> toExperimentStructure(final long user, SortedSet<ExperimentLine> experiments, final boolean readFiles) {
+    private Collection<ExperimentStructure> toExperimentStructure(final long user,
+                                                                  SortedSet<ExperimentLine> experiments,
+                                                                  final boolean readFiles) {
         return Collections2.transform(experiments, new Function<ExperimentLine, ExperimentStructure>() {
             @Override
             public ExperimentStructure apply(ExperimentLine input) {
                 final ExperimentStructure experimentStructure = new ExperimentStructure(input.id,
-                        input.name, input.creator, input.isOwner, input.modified, input.analyzesCount);
+                    input.name, input.creator, input.isOwner, input.modified, input.analyzesCount
+                );
                 if (readFiles) {
                     final Collection<UploadedFile> fileItems = readExperimentDetailedFiles(user, input.id);
                     experimentStructure.files.addAll(fileItems);
@@ -574,12 +613,17 @@ public class DashboardReaderImpl implements DashboardReader {
         });
     }
 
-    private Collection<ExperimentStructure> shortRecordsToExperimentStructure(final long user, SortedSet<ShortExperimentDashboardRecord> experiments, final boolean readFiles) {
+    private Collection<ExperimentStructure> shortRecordsToExperimentStructure(
+        final long user,
+        SortedSet<ShortExperimentDashboardRecord> experiments,
+        final boolean readFiles
+    ) {
         return Collections2.transform(experiments, new Function<ShortExperimentDashboardRecord, ExperimentStructure>() {
             @Override
             public ExperimentStructure apply(ShortExperimentDashboardRecord input) {
                 final ExperimentStructure experimentStructure = new ExperimentStructure(input.id,
-                        input.name, input.creatorEmail, input.owner == user, input.modified, input.analysisRunCount);
+                    input.name, input.creatorEmail, input.owner == user, input.modified, input.analysisRunCount
+                );
                 if (readFiles) {
                     final Collection<UploadedFile> fileItems = readExperimentDetailedFiles(user, input.id);
                     experimentStructure.files.addAll(fileItems);
@@ -587,42 +631,6 @@ public class DashboardReaderImpl implements DashboardReader {
                 return experimentStructure;
             }
         });
-    }
-
-    @Override
-    public Map<String, Boolean> getFeatures(long actor) {
-        final Map<String, FeatureItem> features = getFeatureItems(actor);
-        return Maps.transformValues(features, input -> input.enabledGlobally || !input.enabledForLabs.isEmpty());
-
-    }
-
-    @Override
-    public Map<String, FeatureItem> getFeatureItems(long actor) {
-        final Map<String, Feature> featureMap = featuresRepository.get();
-        final ImmutableMap.Builder<String, FeatureItem> builder = ImmutableMap.builder();
-
-        for (String key : featureMap.keySet()) {
-            final Feature feature = featureMap.get(key);
-            switch (feature.getEnabledState()) {
-                case DISABLED:
-                    builder.put(key, new FeatureItem(false, ImmutableSet.of()));
-                    break;
-                case ENABLED:
-                    builder.put(key, new FeatureItem(true, ImmutableSet.of()));
-                    break;
-                case ENABLED_PER_LAB:
-                    final List<Lab> forUser = labRepository.findForUser(actor);
-
-                    final SetView<Lab> labsWithEnabledFeature = intersection(copyOf(forUser), feature.getEnabledLabs());
-                    final Set<Long> labIdsWithEnabledFeature = labsWithEnabledFeature.stream()
-                            .map(lab -> lab.getId())
-                            .collect(Collectors.toSet());
-                    builder.put(key, new FeatureItem(false, labIdsWithEnabledFeature));
-                    break;
-            }
-        }
-
-        return builder.build();
     }
 
     @Override
@@ -631,14 +639,20 @@ public class DashboardReaderImpl implements DashboardReader {
         final List<Factor> factors = ex.rawFiles.getFilteredFactors();
         final Set<ExperimentLevelItem> results = newHashSet();
         for (Factor f : factors) {
-            final ExperimentLevelItem.ExperimentFactorItem factorItem = new ExperimentLevelItem.ExperimentFactorItem(f.getId(), f.getName());
+            final ExperimentLevelItem.ExperimentFactorItem factorItem =
+                new ExperimentLevelItem.ExperimentFactorItem(f.getId(), f.getName());
             for (Level l : f.getLevels()) {
-                results.add(new ExperimentLevelItem(l.getId(), l.getName(), factorItem, newHashSet(Collections2.transform(l.getSampleConditions(), new Function<SampleCondition, Long>() {
-                    @Override
-                    public Long apply(SampleCondition c) {
-                        return c.getId();
-                    }
-                }))));
+                results.add(new ExperimentLevelItem(
+                    l.getId(),
+                    l.getName(),
+                    factorItem,
+                    newHashSet(Collections2.transform(l.getSampleConditions(), new Function<SampleCondition, Long>() {
+                        @Override
+                        public Long apply(SampleCondition c) {
+                            return c.getId();
+                        }
+                    }))
+                ));
             }
         }
         return results;
@@ -648,8 +662,10 @@ public class DashboardReaderImpl implements DashboardReader {
     @Override
     public ProjectSharingRequestInfo readProjectSharingRequest(long user, long accessExperimentId) {
         final ActiveExperiment requestedExperiment = checkPresence(experimentRepository.findOne(accessExperimentId));
-        ProjectSharingRequestTemplate request = projectSharingRequestRepository.findByRequesterAndProject(user, requestedExperiment.getProject().getId());
-        List<String> downloadExperimentLinks = request != null ? request.getDownloadExperimentLinks() : new ArrayList<String>();
+        ProjectSharingRequestTemplate request =
+            projectSharingRequestRepository.findByRequesterAndProject(user, requestedExperiment.getProject().getId());
+        List<String> downloadExperimentLinks =
+            request != null ? request.getDownloadExperimentLinks() : new ArrayList<String>();
         return new ProjectSharingRequestInfo(downloadExperimentLinks);
     }
 
@@ -676,10 +692,15 @@ public class DashboardReaderImpl implements DashboardReader {
             case MY:
                 return owner(actor);
             case SHARED_WITH_ME:
-                final Predicate<AbstractProject> or = or(ValidatorPredicates.isProjectShared(user), ValidatorPredicates.isOwnerInProject(user));
-                return and(not(owner(actor)), ruleValidator.filesFromMatchedProjectsPredicate(or), not(filterForFile(actor, Filter.PUBLIC)));
+                final Predicate<AbstractProject> or =
+                    or(isProjectShared(user), isOwnerInProject(user));
+                return and(
+                    not(owner(actor)),
+                    ruleValidator.filesFromMatchedProjectsPredicate(or),
+                    not(filterForFile(actor, Filter.PUBLIC))
+                );
             case PUBLIC:
-                return ruleValidator.filesFromMatchedProjectsPredicate(ValidatorPredicates.<AbstractProject>isPublicProject());
+                return ruleValidator.filesFromMatchedProjectsPredicate(isPublicProject());
             default:
                 throw new AssertionError(filter);
         }
@@ -693,7 +714,7 @@ public class DashboardReaderImpl implements DashboardReader {
         }
         final Lab lab = labRepository.findOne(labId);
         return from(userRepository.findAllUsersByLab(lab.getId()))
-                .transform(transformToUserLineFunction(labId)).toSet();
+            .transform(transformToUserLineFunction(labId)).toSet();
     }
 
     private Collection<UploadedFile> readExperimentDetailedFiles(long actor, long experimentId) {
@@ -704,7 +725,9 @@ public class DashboardReaderImpl implements DashboardReader {
         return from(experiment.getRawFiles().getData()).transform(UPLOADED_FILE_ITEM_FROM_RAW).toSet();
     }
 
-    private Predicate<ExperimentDashboardRecord> getFilteredExperimentDashboardRecords(final ActiveProject project, final User actor, final Filter filter) {
+    private Predicate<ExperimentDashboardRecord> getFilteredExperimentDashboardRecords(final ActiveProject project,
+                                                                                       final User actor,
+                                                                                       final Filter filter) {
         return new Predicate<ExperimentDashboardRecord>() {
             @Override
             public boolean apply(ExperimentDashboardRecord input) {
@@ -712,10 +735,13 @@ public class DashboardReaderImpl implements DashboardReader {
                     case ALL:
                         return true;
                     case SHARED_WITH_ME:
-                        return (project.getSharing().getType() == Sharing.Type.SHARED && !input.getCreator().equals(actor)) &&
-                                (project.getSharing().getAllCollaborators().keySet().contains(actor) || project.getCreator().equals(actor));
+                        return (project.getSharing().getType() == Sharing.Type.SHARED &&
+                            !input.getCreator().equals(actor)) &&
+                            (project.getSharing().getAllCollaborators().keySet().contains(actor) ||
+                                project.getCreator().equals(actor));
                     case PUBLIC:
-                        return !input.getCreator().equals(actor) && project.getSharing().getType() == Sharing.Type.PUBLIC;
+                        return !input.getCreator().equals(actor) &&
+                            project.getSharing().getType() == Sharing.Type.PUBLIC;
                     case MY:
                         return input.getCreator().equals(actor);
                     default:
@@ -751,6 +777,44 @@ public class DashboardReaderImpl implements DashboardReader {
         return instrumentModelReader.readInstrumentModels(actor, pagedItem);
     }
 
+    @Override
+    public StringBuffer readFileCompoundsAsCSV(long actor, Set<Long> files) {
+        final List<ActiveFileMetaData> filesMetadata = fileMetaDataRepository.findAll(files);
+        return readCompounds(actor, filesMetadata);
+    }
+
+    @Override
+    public StringBuffer readRawFileCompoundsAsCSV(long actor, Set<Long> rawFiles) {
+        if (rawFiles.isEmpty()) {
+            return new StringBuffer();
+        }
+
+        final List<ActiveFileMetaData> files = fileMetaDataRepository.findAllByRawFileId(rawFiles);
+        return readCompounds(actor, files);
+    }
+
+    private StringBuffer readCompounds(long actor, List<ActiveFileMetaData> filesMetadata) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (ActiveFileMetaData file : filesMetadata) {
+            if (!ruleValidator.userHasReadPermissionsOnFile(actor, file.getId())) {
+                throw new RuntimeException("No permissions for file " + file);
+            }
+
+            final Set<com.infoclinika.mssharing.model.internal.FileCompound> fileCompounds =
+                file.getExternalMetadata().getFileCompounds();
+            fileCompounds.forEach(compound -> {
+                stringBuffer.append(compound.getCompoundId());
+                stringBuffer.append(",");
+                stringBuffer.append(compound.getFormula());
+                stringBuffer.append(",");
+                stringBuffer.append(compound.getWeight());
+                stringBuffer.append("\n");
+            });
+        }
+
+        return stringBuffer;
+    }
+
     private static Function<User, UserLine> transformToUserLineFunction(final long lab) {
         return new Function<User, UserLine>() {
             @Override
@@ -761,9 +825,19 @@ public class DashboardReaderImpl implements DashboardReader {
                         labHead = true;
                     }
                 }
-                return new UserLine(input.getId(), input.getEmail(), input.getFirstName(), input.getLastName(), labHead);
+                return new UserLine(
+                    input.getId(),
+                    input.getEmail(),
+                    input.getFirstName(),
+                    input.getLastName(),
+                    labHead
+                );
             }
         };
     }
 
+    @Override
+    public PagedItem<FileLine> filterPageableFile(long actor, Filter filter, PaginationItems.PagedItemInfo pagedInfo) {
+        return fileReader.filterPageableFile(actor, filter, pagedInfo);
+    }
 }

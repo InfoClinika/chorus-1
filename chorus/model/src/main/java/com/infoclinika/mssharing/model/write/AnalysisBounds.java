@@ -59,22 +59,26 @@ public class AnalysisBounds {
     @Override
     public String toString() {
         return "AnalysisBounds{" +
-                "minMz=" + minMz +
-                ", maxMz=" + maxMz +
-                ", minRt=" + minRt +
-                ", maxRt=" + maxRt +
-                '}';
+            "minMz=" + minMz +
+            ", maxMz=" + maxMz +
+            ", minRt=" + minRt +
+            ", maxRt=" + maxRt +
+            '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AnalysisBounds that = (AnalysisBounds) o;
         return Objects.equal(minMz, that.minMz) &&
-                Objects.equal(maxMz, that.maxMz) &&
-                Objects.equal(minRt, that.minRt) &&
-                Objects.equal(maxRt, that.maxRt);
+            Objects.equal(maxMz, that.maxMz) &&
+            Objects.equal(minRt, that.minRt) &&
+            Objects.equal(maxRt, that.maxRt);
     }
 
     @Override

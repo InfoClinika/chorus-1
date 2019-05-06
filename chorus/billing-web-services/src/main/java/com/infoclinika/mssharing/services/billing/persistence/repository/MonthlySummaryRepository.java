@@ -13,7 +13,9 @@ import java.util.List;
  */
 public interface MonthlySummaryRepository extends JpaRepository<MonthlySummary, Long> {
 
-    @Query("SELECT s FROM MonthlySummary s where month(s.loggedMonth) = month(:dateMonth) and year(s.loggedMonth) = year(:dateMonth)")
+    @Query(
+        "SELECT s FROM MonthlySummary s where month(s.loggedMonth) = month(:dateMonth) " +
+            "and year(s.loggedMonth) = year(:dateMonth)")
     List<MonthlySummary> findForMonth(@Param("dateMonth") Date dateMonth);
 
     List<MonthlySummary> findByLabId(long lab);

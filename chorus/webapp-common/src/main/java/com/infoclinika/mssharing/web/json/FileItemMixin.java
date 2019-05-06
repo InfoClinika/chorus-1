@@ -10,10 +10,10 @@ import com.infoclinika.mssharing.model.helper.ExperimentPreparedSampleItem;
 abstract class FileItemMixin {
     @JsonCreator
     public FileItemMixin(
-            @JsonProperty("id") long id,
-            @JsonProperty("copy") boolean copy,
-            @JsonProperty("fractionNumber") int fractionNumber,
-            @JsonProperty("preparedSample") ExperimentPreparedSampleItem preparedSample
+        @JsonProperty("id") long id,
+        @JsonProperty("copy") boolean copy,
+        @JsonProperty("fractionNumber") int fractionNumber,
+        @JsonProperty("preparedSample") ExperimentPreparedSampleItem preparedSample
     ) {
     }
 }

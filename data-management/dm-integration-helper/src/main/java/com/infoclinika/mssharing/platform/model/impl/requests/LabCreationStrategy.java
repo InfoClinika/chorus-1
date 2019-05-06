@@ -29,14 +29,10 @@ class LabCreationStrategy extends Strategy {
     @Override
     public Collection<InboxItem> getInboxItems(long actor) {
         ImmutableSortedSet<LabRequest> labRequests = requestsReader.myLabsInbox(actor);
-        return transform(labRequests, new Function<LabRequest, InboxItem>() {
-            @Override
-            public InboxItem apply(LabRequest input) {
-                return new InboxItem(buildGlobalId(input.labRequest), input.contactEmail,
-                        "Requested creation of " + input.labName + " laboratory",
-                        input.sent, APPROVE_REFUSE);
-            }
-        });
+        return transform(labRequests, input -> new InboxItem(buildGlobalId(input.labRequest), input.contactEmail,
+            "Requested creation of " + input.labName + " laboratory",
+            input.sent, APPROVE_REFUSE
+        ));
     }
 
     private long getRequestId(String request) {

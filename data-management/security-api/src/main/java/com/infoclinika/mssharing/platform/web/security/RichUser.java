@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 
 import java.security.Principal;
@@ -20,7 +21,14 @@ public class RichUser extends User {
     private final long id;
     private final ImmutableSet<Long> labs;
 
-    public RichUser(long id, String username, String password, Collection<? extends GrantedAuthority> authorities, String firstName, String lastName, boolean enabled, Set<Long> labs) {
+    public RichUser(long id,
+                    String username,
+                    String password,
+                    Collection<? extends GrantedAuthority> authorities,
+                    String firstName,
+                    String lastName,
+                    boolean enabled,
+                    Set<Long> labs) {
         super(username, password, enabled, true, true, true, authorities);
         this.id = id;
         this.firstName = firstName;
@@ -29,7 +37,9 @@ public class RichUser extends User {
     }
 
     public static RichUser get(Principal principal) {
-        if (principal == null) throw new AccessDeniedException("User is unauthorized");
+        if (principal == null) {
+            throw new AccessDeniedException("User is unauthorized");
+        }
         // inspired by http://stackoverflow.com/questions/8764545/best-practice-for-getting-active-users-userdetails
         return (RichUser) ((Authentication) principal).getPrincipal();
     }
@@ -52,5 +62,9 @@ public class RichUser extends User {
 
     public Set<Long> getLabs() {
         return labs;
+    }
+
+    public static long getCurrentUserId() {
+        return getUserId(SecurityContextHolder.getContext().getAuthentication());
     }
 }

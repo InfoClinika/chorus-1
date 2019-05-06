@@ -12,7 +12,10 @@ import java.util.Date;
 @Table(name = "billing_store_log_entry")
 public class StoreLogEntry extends PaymentLogEntry {
 
-    public enum Direction {IN, OUT}
+    public enum Direction {
+        IN,
+        OUT
+    }
 
     @Basic
     private Direction direction;
@@ -21,7 +24,15 @@ public class StoreLogEntry extends PaymentLogEntry {
 
     }
 
-    public StoreLogEntry(long amount, Long user, Date timestamp, long totalToPay, Direction direction, long storeBalance, String transactionId) {
+    public StoreLogEntry(
+        long amount,
+        Long user,
+        Date timestamp,
+        long totalToPay,
+        Direction direction,
+        long storeBalance,
+        String transactionId
+    ) {
         super(amount, user, timestamp, totalToPay, storeBalance, transactionId);
         this.direction = direction;
     }

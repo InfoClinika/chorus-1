@@ -1,19 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="http://java.sun.com/xml/ns/persistence" version="2.0">
     <persistence-unit name="mssharing_billing" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.storage.DailyAnalyzableStorageUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.storage.HourlyAnalyzableStorageUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.storage.DailyArchiveStorageUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.storage.HourlyArchiveStorageUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.SubscriptionChangeEntry</class>
-        <class>com.infoclinika.mssharing.services.billing.persistence.enity.TranslationUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.DownloadUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.PublicDownloadUsage</class>
-        <class>com.infoclinika.mssharing.services.billing.persistence.enity.ProteinIDSearchUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.MonthlySummary</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.DailySummary</class>
-        <class>com.infoclinika.mssharing.services.billing.persistence.enity.ProcessingUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.StorageVolumeUsage</class>
         <class>com.infoclinika.mssharing.services.billing.persistence.enity.ArchiveStorageVolumeUsage</class>
         <class>com.infoclinika.mssharing.model.internal.entity.payment.BillingProperty</class>

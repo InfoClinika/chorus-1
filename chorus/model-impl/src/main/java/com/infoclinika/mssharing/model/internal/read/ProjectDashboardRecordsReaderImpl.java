@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
-
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -46,7 +45,10 @@ public class ProjectDashboardRecordsReaderImpl extends DefaultProjectReader<Acti
 
     @Override
     public PagedItem<ProjectLine> readProjectsByLab(long actor, Long lab, PagedItemInfo pagedItemInfo) {
-        final Page<ProjectDashboardRecord> records = projectRepository.findByLab(lab, pagedItemsTransformer.toFilterQuery(pagedItemInfo), pagedItemsTransformer.toPageRequest(ProjectDashboardRecord.class, pagedItemInfo));
+        final Page<ProjectDashboardRecord> records = projectRepository.findByLab(lab,
+            pagedItemsTransformer.toFilterQuery(pagedItemInfo),
+            pagedItemsTransformer.toPageRequest(ProjectDashboardRecord.class, pagedItemInfo)
+        );
         return getProjectLinePagedItem(records);
     }
 
@@ -61,17 +63,22 @@ public class ProjectDashboardRecordsReaderImpl extends DefaultProjectReader<Acti
         final List<ProjectDashboardRecord> rawRecords;
         switch (genericFilter) {
             case ALL:
-                rawRecords = projectRepository.findAllAvailableRecords(actor); break;
+                rawRecords = projectRepository.findAllAvailableRecords(actor);
+                break;
             case SHARED_WITH_ME:
-                rawRecords = projectRepository.sharedProjects(actor); break;
+                rawRecords = projectRepository.sharedProjects(actor);
+                break;
             case MY:
-                rawRecords = projectRepository.privateProjects(actor); break;
+                rawRecords = projectRepository.privateProjects(actor);
+                break;
             case PUBLIC:
-                rawRecords= projectRepository.publicProjectsNotOwned(actor); break;
+                rawRecords = projectRepository.publicProjectsNotOwned(actor);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown filter: " + genericFilter);
         }
-        final List<ProjectLine> transformed = Lists.transform(rawRecords, transformers.projectDashboardRecordTransformer);
+        final List<ProjectLine> transformed =
+            Lists.transform(rawRecords, transformers.projectDashboardRecordTransformer);
         final TreeSet<ProjectLine> result = new TreeSet<>(comparator());
         result.addAll(transformed);
         return result;
@@ -79,11 +86,11 @@ public class ProjectDashboardRecordsReaderImpl extends DefaultProjectReader<Acti
 
     private PagedItem<ProjectLine> getProjectLinePagedItem(Page<ProjectDashboardRecord> pagedFiles) {
         return new PagedItem<>(
-                pagedFiles.getTotalPages(),
-                pagedFiles.getTotalElements(),
-                pagedFiles.getNumber(), pagedFiles.getSize(), from(pagedFiles.getContent())
-                .transform(transformers.projectDashboardRecordTransformer)
-                .toList()
+            pagedFiles.getTotalPages(),
+            pagedFiles.getTotalElements(),
+            pagedFiles.getNumber(), pagedFiles.getSize(), from(pagedFiles.getContent())
+            .transform(transformers.projectDashboardRecordTransformer)
+            .toList()
         );
     }
 
@@ -91,13 +98,21 @@ public class ProjectDashboardRecordsReaderImpl extends DefaultProjectReader<Acti
         Pageable request = pagedItemsTransformer.toPageRequest(ProjectDashboardRecord.class, pagedInfo);
         switch (filter) {
             case ALL:
-                return projectRepository.findAllAvailableRecords(user, pagedItemsTransformer.toFilterQuery(pagedInfo), request);
+                return projectRepository.findAllAvailableRecords(
+                    user,
+                    pagedItemsTransformer.toFilterQuery(pagedInfo),
+                    request
+                );
             case SHARED_WITH_ME:
                 return projectRepository.sharedProjects(user, request, pagedItemsTransformer.toFilterQuery(pagedInfo));
             case MY:
                 return projectRepository.privateProjects(user, request, pagedItemsTransformer.toFilterQuery(pagedInfo));
             case PUBLIC:
-                return projectRepository.publicProjectsRecordsNotOwned(user, pagedItemsTransformer.toFilterQuery(pagedInfo), request);
+                return projectRepository.publicProjectsRecordsNotOwned(
+                    user,
+                    pagedItemsTransformer.toFilterQuery(pagedInfo),
+                    request
+                );
             default:
                 throw new AssertionError(filter);
         }

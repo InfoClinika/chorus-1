@@ -12,31 +12,55 @@ import java.util.Date;
 public class ExperimentLine extends ExperimentReaderTemplate.ExperimentLineTemplate {
 
     public final boolean isOwner;
-    public final String msChartsUrl;
-//    public final String translationErrors;
-//    public final Date lastTranslationAttemptDate;
     public final boolean isAvailableForCopying;
     public final boolean downloadAvailable;
     public final boolean hasUnArchiveRequest;
     public final boolean hasUnArchiveDownloadOnlyRequest;
-//    public final boolean translationAvailable;
     public final boolean canUnarchive;
     public final boolean canArchive;
     public final int analyzesCount;
     public final Long billLab;
-//    public final DashboardReader.TranslationStatus translationStatus;
     public final DashboardReader.ExperimentColumns columns;
+    public final Long experimentType;
 
-    public ExperimentLine(long id, LabReaderTemplate.LabLineTemplate lab, String name, String creator, String project,
-                          long files, Date modified, AccessLevel accessLevel, String msChartsUrl,
-                          String downloadLink,
-                          boolean owner, boolean isAvailableForCopying, boolean downloadAvailable, boolean hasUnArchiveRequest, boolean hasUnArchiveDownloadOnlyRequest,
-                          boolean canArchive, boolean canUnarchive,
-                          int analyzesCount,
-                          Long billLab, long ownerId,
-                          DashboardReader.ExperimentColumns columns) {
-        super(id, name, project, files, modified, lab, downloadLink, creator, accessLevel, ownerId);
-        this.msChartsUrl = msChartsUrl;
+    public ExperimentLine(
+        long id,
+        LabReaderTemplate.LabLineTemplate lab,
+        String name,
+        String creator,
+        String project,
+        long files,
+        Date modified,
+        AccessLevel accessLevel,
+        String downloadLink,
+        boolean owner,
+        boolean isAvailableForCopying,
+        boolean downloadAvailable,
+        boolean hasUnArchiveRequest,
+        boolean hasUnArchiveDownloadOnlyRequest,
+        boolean canArchive,
+        boolean canUnarchive,
+        int analyzesCount,
+        Long billLab,
+        long ownerId,
+        DashboardReader.ExperimentColumns columns,
+        Long experimentType,
+        boolean failed
+    ) {
+        super(
+            id,
+            name,
+            project,
+            files,
+            modified,
+            lab,
+            downloadLink,
+            creator,
+            accessLevel,
+            ownerId,
+            failed
+        );
+
         isOwner = owner;
         this.isAvailableForCopying = isAvailableForCopying;
         this.downloadAvailable = downloadAvailable;
@@ -47,17 +71,18 @@ public class ExperimentLine extends ExperimentReaderTemplate.ExperimentLineTempl
         this.analyzesCount = analyzesCount;
         this.billLab = billLab;
         this.columns = columns;
+        this.experimentType = experimentType;
     }
 
     public ExperimentLine(ExperimentReaderTemplate.ExperimentLineTemplate other,
-                          boolean isOwner, String msChartsUrl,
-                          boolean isAvailableForCopying, boolean downloadAvailable, boolean hasUnArchiveRequest, boolean hasUnArchiveDownloadOnlyRequest,
+                          boolean isOwner, boolean isAvailableForCopying, boolean downloadAvailable,
+                          boolean hasUnArchiveRequest, boolean hasUnArchiveDownloadOnlyRequest,
                           boolean canUnarchive, boolean canArchive,
                           int analyzesCount, Long billLab,
-                          DashboardReader.ExperimentColumns columns) {
+                          DashboardReader.ExperimentColumns columns,
+                          Long experimentType) {
         super(other);
         this.isOwner = isOwner;
-        this.msChartsUrl = msChartsUrl;
         this.isAvailableForCopying = isAvailableForCopying;
         this.downloadAvailable = downloadAvailable;
         this.hasUnArchiveRequest = hasUnArchiveRequest;
@@ -67,33 +92,59 @@ public class ExperimentLine extends ExperimentReaderTemplate.ExperimentLineTempl
         this.analyzesCount = analyzesCount;
         this.billLab = billLab;
         this.columns = columns;
+        this.experimentType = experimentType;
     }
 
     public ExperimentLine(ExperimentReaderTemplate.ExperimentLineTemplate lineTemplate, long billLab) {
-        this(lineTemplate, false, null, false, false, false, false, false, false,
-                0, billLab, null);
+        this(lineTemplate, false, false, false, false, false, false, false,
+            0, billLab, null, null
+        );
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ExperimentLine)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ExperimentLine)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         ExperimentLine that = (ExperimentLine) o;
 
-        if (analyzesCount != that.analyzesCount) return false;
-        if (canArchive != that.canArchive) return false;
-        if (canUnarchive != that.canUnarchive) return false;
-        if (downloadAvailable != that.downloadAvailable) return false;
-        if (hasUnArchiveDownloadOnlyRequest != that.hasUnArchiveDownloadOnlyRequest) return false;
-        if (hasUnArchiveRequest != that.hasUnArchiveRequest) return false;
-        if (isAvailableForCopying != that.isAvailableForCopying) return false;
-        if (isOwner != that.isOwner) return false;
-        if (billLab != null ? !billLab.equals(that.billLab) : that.billLab != null) return false;
-        if (columns != null ? !columns.equals(that.columns) : that.columns != null) return false;
-        if (msChartsUrl != null ? !msChartsUrl.equals(that.msChartsUrl) : that.msChartsUrl != null) return false;
-
+        if (analyzesCount != that.analyzesCount) {
+            return false;
+        }
+        if (canArchive != that.canArchive) {
+            return false;
+        }
+        if (canUnarchive != that.canUnarchive) {
+            return false;
+        }
+        if (downloadAvailable != that.downloadAvailable) {
+            return false;
+        }
+        if (hasUnArchiveDownloadOnlyRequest != that.hasUnArchiveDownloadOnlyRequest) {
+            return false;
+        }
+        if (hasUnArchiveRequest != that.hasUnArchiveRequest) {
+            return false;
+        }
+        if (isAvailableForCopying != that.isAvailableForCopying) {
+            return false;
+        }
+        if (isOwner != that.isOwner) {
+            return false;
+        }
+        if (billLab != null ? !billLab.equals(that.billLab) : that.billLab != null) {
+            return false;
+        }
+        if (columns != null ? !columns.equals(that.columns) : that.columns != null) {
+            return false;
+        }
         return true;
     }
 
@@ -101,7 +152,6 @@ public class ExperimentLine extends ExperimentReaderTemplate.ExperimentLineTempl
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (isOwner ? 1 : 0);
-        result = 31 * result + (msChartsUrl != null ? msChartsUrl.hashCode() : 0);
         result = 31 * result + (isAvailableForCopying ? 1 : 0);
         result = 31 * result + (downloadAvailable ? 1 : 0);
         result = 31 * result + (hasUnArchiveRequest ? 1 : 0);

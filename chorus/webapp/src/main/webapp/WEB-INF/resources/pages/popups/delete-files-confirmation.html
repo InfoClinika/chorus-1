@@ -1,0 +1,67 @@
+<div class="modal hide confirmation-modal delete-files-confirmation" tabindex="-1" role="dialog">
+    <div class="modal-holder">
+        <div class="modal-frame" ng-class="{'show-not-available-files': !!vm.filteredFiles.notAvailable.length}">
+            <div class="modal-header">
+                <h3>Remove Files?</h3>
+            </div>
+            <form>
+                <div class="modal-body">
+                    <div class="modal-body-container">
+                        <p>Are you sure you want to remove selected files?</p>
+
+                        <p>Your files will be moved to Trash or you can remove the selected files permanently.</p>
+
+                        <div class="control-group remove-permanently-checkbox clearfix">
+                            <label for="remove-permanently">Remove permanently</label>
+                            <input type="checkbox" class="dont-hide" ng-model="vm.removePermanently"
+                                   id="remove-permanently">
+                        </div>
+
+                        <div ng-show="!!vm.filteredFiles.notAvailable.length">
+                            <div>
+                                <label>Can't delete those files cause they are used in
+                                    Experiments/Processing Runs/External Processing Runs.</label>
+                                <div class="delete-files-table">
+                                    <label> Files Count: {{ vm.filteredFiles.notAvailable.length }}</label>
+                                    <div class="limit-table">
+                                        <table class="table table-hover factor-table">
+                                            <tbody>
+                                            <tr ng-repeat="file in vm.filteredFiles.notAvailable">
+                                                <td><span ng-bind="file.name"></span></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div ng-show="!!vm.filteredFiles.available.length">
+                                <label>Files Available for deletion.</label>
+                                <div class="delete-files-table">
+                                    <label> Files Count: {{ vm.filteredFiles.available.length }}</label>
+                                    <div class="limit-table">
+                                        <table class="table table-hover factor-table">
+                                            <tbody>
+                                            <tr ng-repeat="file in vm.filteredFiles.available">
+                                                <td><span ng-bind="file.name"></span></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
+                            ng-click="vm.cancel()">Cancel
+                    </button>
+                    <button type="submit" ng-disabled="!vm.filteredFiles.available.length"
+                            class="btn btn-primary main-action" ng-click="vm.ok()" ng-bind="vm.removeButtonTitle">
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -7,11 +7,12 @@ import java.util.List;
 
 public class PaginationItems {
 
-    public static final class PagedItemInfo  extends com.infoclinika.mssharing.platform.model.PagedItemInfo{
+    public static final class PagedItemInfo extends com.infoclinika.mssharing.platform.model.PagedItemInfo {
 
         public final Optional<AdvancedFilterQueryParams> advancedFilter;
 
-        public PagedItemInfo(int items, int page, String sortingField, boolean sortingAsc, String filterQuery, Optional<AdvancedFilterQueryParams> advancedFilter) {
+        public PagedItemInfo(int items, int page, String sortingField, boolean sortingAsc, String filterQuery,
+                             Optional<AdvancedFilterQueryParams> advancedFilter) {
             super(items, page, sortingField, sortingAsc, filterQuery);
             this.advancedFilter = advancedFilter;
         }
@@ -33,10 +34,11 @@ public class PaginationItems {
         }
     }
 
-    public static class AdvancedFilterQueryParams{
+    public static class AdvancedFilterQueryParams {
         public boolean conjunction;
         public List<AdvancedFilterPredicateItem> predicates;
-        public static class AdvancedFilterPredicateItem{
+
+        public static class AdvancedFilterPredicateItem {
             public String prop;
             public String value;
             public AdvancedFilterOperator operator;
@@ -50,7 +52,7 @@ public class PaginationItems {
             public AdvancedFilterPredicateItem() {
             }
 
-            public static enum AdvancedFilterOperator {
+            public enum AdvancedFilterOperator {
                 EQUAL, NOT_EQUAL, BEGINS_WITH, ENDS_WITH, CONTAINS, NOT_CONTAINS, IS_EMPTY, IS_NOT_EMPTY,
                 GREATER_THAN, LESS_THAN,
                 TRUE, FALSE,

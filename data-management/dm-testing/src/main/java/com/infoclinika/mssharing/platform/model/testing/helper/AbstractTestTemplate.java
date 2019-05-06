@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.testing.helper;
 
@@ -22,9 +24,6 @@ import com.infoclinika.mssharing.platform.model.common.items.AdditionalExtension
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.common.items.FileExtensionItem;
 import com.infoclinika.mssharing.platform.model.helper.*;
-import com.infoclinika.mssharing.platform.model.helper.ExperimentDownloadHelperTemplate.ExperimentDownloadDataTemplate;
-import com.infoclinika.mssharing.platform.model.helper.ExperimentDownloadHelperTemplate.ExperimentItemTemplate;
-import com.infoclinika.mssharing.platform.model.helper.ExperimentDownloadHelperTemplate.FileDataTemplate;
 import com.infoclinika.mssharing.platform.model.helper.InstrumentCreationHelperTemplate.PotentialOperator;
 import com.infoclinika.mssharing.platform.model.helper.SecurityHelperTemplate.UserDetails;
 import com.infoclinika.mssharing.platform.model.read.*;
@@ -42,14 +41,12 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
@@ -60,6 +57,7 @@ import static com.google.common.collect.ImmutableList.of;
 import static com.google.common.collect.Iterables.find;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Sets.newHashSet;
+import static com.infoclinika.mssharing.platform.model.testing.helper.Data.*;
 import static java.util.Collections.emptyList;
 
 /**
@@ -69,88 +67,116 @@ import static java.util.Collections.emptyList;
  */
 @SuppressWarnings("unchecked")
 public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractTestTemplate.class);
 
-    public static final List<Long> NO_OPERATORS = emptyList();
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
     public UseCase uc;
+
     @Inject
     protected ProjectManagementTemplate<ProjectInfoTemplate> projectManagement;
+
     @Inject
     protected InstrumentManagementTemplate<InstrumentDetailsTemplate> instrumentManagement;
+
     @Inject
     protected InstrumentCreationHelperTemplate<PotentialOperator> instrumentCreationHelper;
+
     @Inject
     protected SharingManagementTemplate sharingManagement;
+
     @Inject
     protected AttachmentManagementTemplate attachmentManagement;
+
     @Inject
     @Named("defaultSharingProjectShortRecordAdapter")
     protected SharingProjectHelperTemplate sharingProjectHelper;
+
     @Inject
     protected ExperimentCreationHelperTemplate experimentCreationHelper;
+
     @Inject
     protected FileReaderTemplate<FileLineTemplate> fileReader;
+
     @Inject
     protected GroupsReaderTemplate<GroupsReaderTemplate.GroupLine> groupsReader;
+
     @Inject
     protected PasswordEncoder encoder;
+
     @Inject
     protected DetailsReaderTemplate detailsReader;
+
     @Inject
     protected RequestsDetailsReaderTemplate requestsDetailsReader;
+
     @Inject
     protected UserManagementTemplate userManagement;
+
     @Inject
     protected LabHeadManagementTemplate labHeadManagement;
+
     @Inject
     protected SecurityHelperTemplate<UserDetails> securityHelper;
+
     @Inject
     protected RegistrationHelperTemplate registrationHelper;
+
     @Inject
     protected LabManagementTemplate<LabManagementTemplate.LabInfoTemplate> labManagement;
+
     @Inject
     protected UserTestHelper userTestHelper;
+
     @Inject
     protected UserReaderTemplate<UserReaderTemplate.UserLineTemplate> userReader;
+
     @Inject
     protected RequestsReaderTemplate requestsReader;
+
     @Inject
     protected UploadHelperTemplate uploadHelper;
+
     @Inject
     protected RequestsTemplate requests;
+
     @Inject
-    protected ExperimentManagementTemplate<ExperimentManagementTemplate.ExperimentInfoTemplate<?, ?>> experimentManagement;
+    protected ExperimentManagementTemplate<ExperimentManagementTemplate.ExperimentInfoTemplate<?, ?>>
+        experimentManagement;
+
     @Inject
     protected LabReaderTemplate labReader;
+
     @Inject
     protected InstrumentReaderTemplate<?> instrumentReader;
+
     @Inject
     protected FileManagementTemplate fileManagement;
+
     @Inject
     protected ExperimentReaderTemplate<?> experimentReader;
+
     @Inject
     protected ProjectReaderTemplate<?> projectReader;
+
     @Inject
     protected ProjectSharingRequestManagement projectSharingRequestManagement;
-    @Inject
-    protected ExperimentDownloadHelperTemplate<
-            ExperimentItemTemplate,
-            ExperimentDownloadDataTemplate,
-            FileDataTemplate> downloadHelper;
+
     @Inject
     protected FileUploadManagementTemplate fileUploadManagement;
+
     @Inject
     private WriteServices writeServices;
+
     @Inject
     private ReadServices readServices;
+
     @Inject
     private Repositories repos;
+
     @Inject
     private PredefinedDataCreatorTemplate predefinedDataCreator;
+
     private long adminId;
     private long secondAdminId;
-    @Value("${protein.dbs.target.folder}")
-    private String proteinDatabasesPrefix;
 
     public static List<String> sameListAs(List<String> strings) {
         class StringListMatcher extends ArgumentMatcher<List<String>> {
@@ -189,7 +215,12 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
     }
 
     public long createInstrumentAndApproveIfNeeded(long user, long lab) {
-        return createInstrumentAndApproveIfNeeded(user, lab, anyInstrumentModelByVendor(anyVendor()), instrumentDetails()).get();
+        return createInstrumentAndApproveIfNeeded(
+            user,
+            lab,
+            anyInstrumentModelByVendor(anyVendor()),
+            instrumentDetails()
+        ).get();
     }
 
     public Optional<Long> createInstrumentAndApproveIfNeeded(long user,
@@ -202,30 +233,29 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
             return Optional.of(instrumentManagement.createInstrument(user, lab, model, details));
         } else {
             final Optional<Long> instrumentRequest =
-                    instrumentManagement.newInstrumentRequest(user, lab, model, details, new ArrayList<Long>());
+                instrumentManagement.newInstrumentRequest(user, lab, model, details);
             final LabReaderTemplate.LabLineTemplate labLine = labReader.readLab(lab);
-            return Optional.of(instrumentManagement.approveInstrumentCreation(labLine.labHead, instrumentRequest.get()));
+            return Optional.of(instrumentManagement.approveInstrumentCreation(
+                labLine.labHead,
+                instrumentRequest.get()
+            ));
         }
 
     }
 
     public Optional<Long> createInstrumentCreationRequest(long user, long lab) {
         return instrumentManagement.newInstrumentRequest(
-                user,
-                lab,
-                anyInstrumentModelByVendor(anyVendor()),
-                instrumentDetails(),
-                NO_OPERATORS
+            user,
+            lab,
+            anyInstrumentModelByVendor(anyVendor()),
+            instrumentDetails()
         );
     }
 
     public void checkHasAccessToFile(long user, long lab, final long file) {
-        if (!Iterables.any(fileReader.readFiles(user, Filter.ALL), new Predicate<FileLineTemplate>() {
-            @Override
-            public boolean apply(FileLineTemplate input) {
-                return input.id == file;
-            }
-        })) throw new AccessDenied("asserting");
+        if (!Iterables.any(fileReader.readFiles(user, Filter.ALL), input -> input.id == file)) {
+            throw new AccessDenied("asserting");
+        }
         detailsReader.readFile(user, file);
         reuseFile(user, lab, file);
     }
@@ -257,19 +287,33 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
     }
 
     public long abSciexInstrumentModel() {
-        Long model = getInstrumentModelByNames(Data.AB_SCIEX, Data.AB_SCIEX_INSTRUMENT_MODEL);
+        Long model = getInstrumentModelByNames(Data.AB_SCIEX, AB_SCIEX_INSTRUMENT_MODEL);
         if (model == null) {
             //initialize AB SCIEX instrument model
-            return predefinedDataCreator.instrumentModel(Data.AB_SCIEX, Data.instrumentType11, Data.studyType1, Data.AB_SCIEX_INSTRUMENT_MODEL, false, true, Data.AB_SCIEX_EXTENSIONS);
+            return predefinedDataCreator.instrumentModel(Data.AB_SCIEX,
+                instrumentType11,
+                studyType1,
+                AB_SCIEX_INSTRUMENT_MODEL,
+                false,
+                true,
+                AB_SCIEX_EXTENSIONS
+            );
         }
         return model;
     }
 
     public long brukerInstrumentModel() {
-        Long model = getInstrumentModelByNames(Data.BRUKER, Data.BRUKER_INSTRUMENT_MODEL);
+        Long model = getInstrumentModelByNames(Data.BRUKER, BRUKER_INSTRUMENT_MODEL);
         if (model == null) {
             //initialize Bruker instrument model
-            return predefinedDataCreator.instrumentModel(Data.BRUKER, Data.instrumentType11, Data.studyType1, Data.BRUKER_INSTRUMENT_MODEL, true, false, Data.BRUKER_EXTENSIONS);
+            return predefinedDataCreator.instrumentModel(Data.BRUKER,
+                instrumentType11,
+                studyType1,
+                BRUKER_INSTRUMENT_MODEL,
+                true,
+                false,
+                BRUKER_EXTENSIONS
+            );
         }
         return model;
     }
@@ -328,12 +372,8 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
     }
 
     public ImmutableList<ExperimentManagementTemplate.FileItemTemplate> noFactoredFiles(List<Long> files) {
-        return from(files).transformAndConcat(new Function<Long, ImmutableList<ExperimentManagementTemplate.FileItemTemplate>>() {
-            @Override
-            public ImmutableList<ExperimentManagementTemplate.FileItemTemplate> apply(Long fileId) {
-                return noFactoredFile(fileId);
-            }
-        }).toList();
+        return from(files).transformAndConcat((Function<Long,
+            ImmutableList<ExperimentManagementTemplate.FileItemTemplate>>) fileId -> noFactoredFile(fileId)).toList();
     }
 
     public ImmutableList<ExperimentManagementTemplate.FileItemTemplate> anyFile(long user) {
@@ -353,50 +393,78 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
         return super.applicationContext.getBean(NotifierTemplate.class);
     }
 
-    public long createInstrumentAndExperiment(long user, long lab, long project, List<MetaFactorTemplate> noFactors, List<ExperimentManagementTemplate.FileItemTemplate> fileItems) {
-        final Optional<Long> lab3Instrument = createInstrumentAndApproveIfNeeded(user, lab, anyInstrumentModelByVendor(anyVendor()), instrumentDetails());
+    public long createInstrumentAndExperiment(long user,
+                                              long lab,
+                                              long project,
+                                              List<MetaFactorTemplate> noFactors,
+                                              List<ExperimentManagementTemplate.FileItemTemplate> fileItems) {
+        final Optional<Long> lab3Instrument =
+            createInstrumentAndApproveIfNeeded(user, lab, anyInstrumentModelByVendor(anyVendor()), instrumentDetails());
         //todo[tymchenko]: refactor later
         if (lab == uc.getLab3()) {
             uc.onLab3InstrumentCreated(lab3Instrument.get());
         }
         final ExperimentInfoTemplateBuilder builder = experimentInfo().project(project).lab(lab)
-                .is2Dlc(false).restriction(restriction(user, fileItems.get(0).id)).factors(noFactors).files(fileItems);
+            .is2Dlc(false).restriction(restriction(user, fileItems.get(0).id)).factors(noFactors).files(fileItems);
         return experimentManagement.createExperiment(user, builder.build());
     }
 
     public long createInstrumentAndExperimentWithOneFile(long user, long lab, long project) {
-        final Optional<Long> lab3Instrument = uc.getLab3Instrument().or(createInstrumentAndApproveIfNeeded(user, lab, anyInstrumentModelByVendor(anyVendor()), instrumentDetails()));
+        final Optional<Long> lab3Instrument = uc.getLab3Instrument()
+            .or(createInstrumentAndApproveIfNeeded(
+                user,
+                lab,
+                anyInstrumentModelByVendor(anyVendor()),
+                instrumentDetails()
+            ));
         long file;
         //todo[tymchenko]: refactor later
         if (lab == uc.getLab3()) {
             uc.onLab3InstrumentCreated(lab3Instrument.get());
             file = uc.saveFile(user, lab3Instrument.get());
         } else {
-            final Optional<Long> labInstrument = createInstrumentAndApproveIfNeeded(user, lab, anyInstrumentModelByVendor(anyVendor()), instrumentDetails());
+            final Optional<Long> labInstrument = createInstrumentAndApproveIfNeeded(user,
+                lab,
+                anyInstrumentModelByVendor(anyVendor()),
+                instrumentDetails()
+            );
             file = uc.saveFile(user, labInstrument.get());
         }
         final ExperimentInfoTemplateBuilder builder = experimentInfo()
-                .project(project).lab(lab).is2Dlc(false)
-                .restriction(restriction(user, file)).factors(Data.NO_FACTORS)
-                .files(noFactoredFile(file));
+            .project(project).lab(lab).is2Dlc(false)
+            .restriction(restriction(user, file)).factors(Data.NO_FACTORS)
+            .files(noFactoredFile(file));
 
         return experimentManagement.createExperiment(user, builder.build());
     }
 
-    public long createExperiment(long user, long project, Long lab, List<ExperimentManagementTemplate.FileItemTemplate> fileItems) {
+    public long createExperiment(long user,
+                                 long project,
+                                 Long lab,
+                                 List<ExperimentManagementTemplate.FileItemTemplate> fileItems) {
 
         final ExperimentInfoTemplateBuilder builder = experimentInfo()
-                .project(project)
-                .lab(lab)
-                .is2Dlc(false)
-                .restriction(restriction(user))
-                .factors(Data.NO_FACTORS).files(fileItems);
+            .project(project)
+            .lab(lab)
+            .is2Dlc(false)
+            .restriction(restriction(user))
+            .factors(Data.NO_FACTORS).files(fileItems);
         return experimentManagement.createExperiment(user, builder.build());
     }
 
-    public long createExperiment(long user, long project, long model, Long lab, List<ExperimentManagementTemplate.FileItemTemplate> fileItems) {
 
-        final ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate> builder = experimentInfo()
+    public long createExperiment(long user, long project) {
+        return createExperiment(user, project, uc.getLab3());
+    }
+
+    public long createExperiment(long user,
+                                 long project,
+                                 long model,
+                                 Long lab,
+                                 List<ExperimentManagementTemplate.FileItemTemplate> fileItems) {
+
+        final ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate> builder =
+            experimentInfo()
                 .project(project)
                 .lab(lab)
                 .is2Dlc(false)
@@ -406,47 +474,44 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
         return experimentManagement.createExperiment(user, builder.build());
     }
 
-    public Restriction newRestriction(long model) {
-        return new Restriction(model, Optional.absent());
-    }
-
-    public long createExperiment(long user, long project) {
-        return createExperiment(user, project, uc.getLab3());
-    }
-
     public long createExperiment(long user, long project, Long lab) {
 
         final long file = uc.saveFile(user);
         final ExperimentInfoTemplateBuilder builder = experimentInfo()
-                .project(project)
-                .lab(lab)
-                .is2Dlc(false)
-                .restriction(restriction(user, file))
-                .factors(Data.NO_FACTORS)
-                .files(noFactoredFile(file));
+            .project(project)
+            .lab(lab)
+            .is2Dlc(false)
+            .restriction(restriction(user, file))
+            .factors(Data.NO_FACTORS)
+            .files(noFactoredFile(file));
         return experimentManagement.createExperiment(user, builder.build());
     }
 
+
     public long createExperiment(long user, long project, long file, long lab) {
         final ExperimentInfoTemplateBuilder builder = experimentInfo()
-                .project(project)
-                .lab(lab)
-                .is2Dlc(false)
-                .restriction(restriction(user, file)).factors(Data.NO_FACTORS)
-                .files(noFactoredFile(file));
+            .project(project)
+            .lab(lab)
+            .is2Dlc(false)
+            .restriction(restriction(user, file)).factors(Data.NO_FACTORS)
+            .files(noFactoredFile(file));
         return experimentManagement.createExperiment(user, builder.build());
+    }
+
+    public Restriction newRestriction(long model) {
+        return new Restriction(model, Optional.absent());
     }
 
     public long createExperimentWithName(long user, long project, String name) {
         final long file = uc.saveFile(user);
         final Long lab = uc.getLab3();
         final ExperimentInfoTemplateBuilder builder = experimentInfo(name)
-                .project(project)
-                .lab(lab)
-                .is2Dlc(false)
-                .restriction(restriction(user, file))
-                .factors(Data.NO_FACTORS)
-                .files(noFactoredFile(file));
+            .project(project)
+            .lab(lab)
+            .is2Dlc(false)
+            .restriction(restriction(user, file))
+            .factors(Data.NO_FACTORS)
+            .files(noFactoredFile(file));
         return experimentManagement.createExperiment(user, builder.build());
     }
 
@@ -464,28 +529,37 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
         return detailsReader.readInstrument(user, fileItem.instrumentId).modelId;
     }
 
-    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate> experimentInfo() {
+    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate>
+        experimentInfo() {
+
         return experimentInfo(unspecified());
     }
 
-    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate> experimentInfo(String name) {
+    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate>
+        experimentInfo(String name) {
+
         return experimentInfo(name, unspecified());
     }
 
-    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate> experimentInfo(long species) {
+    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate>
+        experimentInfo(long species) {
+
         return experimentInfo(generateString(), species);
     }
 
-    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate> experimentInfo(String name, long species) {
+    public ExperimentInfoTemplateBuilder<MetaFactorTemplate, ExperimentManagementTemplate.FileItemTemplate>
+        experimentInfo(String name, long species) {
+
         return new ExperimentInfoTemplateBuilder<>()
-                .name(name)
-                .description(generateString())
-                .experimentType(anyExperimentType())
-                .species(species);
+            .name(name)
+            .description(generateString())
+            .experimentType(anyExperimentType())
+            .species(species);
     }
 
     public long anySpecies() {
-        Collection<DictionaryItem> filtered = Collections2.filter(experimentCreationHelper.species(), not(DictionaryItem.UNSPECIFIED));
+        Collection<DictionaryItem> filtered =
+            Collections2.filter(experimentCreationHelper.species(), not(DictionaryItem.UNSPECIFIED));
         return randElement(filtered).id;
     }
 
@@ -503,25 +577,21 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
 
     public void updateExperimentFiles(long user, long experiment, long file) {
         final ImmutableList.Builder<ExperimentManagementTemplate.FileItemTemplate> builder = ImmutableList.builder();
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(user, experiment);
-        builder.addAll(transform(experimentItem.files, new Function<FileItemTemplate, ExperimentManagementTemplate.FileItemTemplate>() {
-            @Override
-            public ExperimentManagementTemplate.FileItemTemplate apply(FileItemTemplate input) {
-                return factoredFile(input.id, Data.NO_FACTOR_VALUES);
-            }
-        }));
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(user, experiment);
+        builder.addAll(transform(experimentItem.files, input -> factoredFile(input.id, Data.NO_FACTOR_VALUES)));
         builder.addAll(noFactoredFile(file));
 
         final ExperimentInfoTemplateBuilder build = experimentInfo()
-                .name(generateString())
-                .description(generateString())
-                .experimentType(anyExperimentType())
-                .species(unspecified())
-                .project(experimentItem.project)
-                .is2Dlc(false)
-                .restriction(restriction(user, file))
-                .factors(Data.NO_FACTORS)
-                .files(builder.build());
+            .name(generateString())
+            .description(generateString())
+            .experimentType(anyExperimentType())
+            .species(unspecified())
+            .project(experimentItem.project)
+            .is2Dlc(false)
+            .restriction(restriction(user, file))
+            .factors(Data.NO_FACTORS)
+            .files(builder.build());
 
         experimentManagement.updateExperiment(user, experiment, build.build());
     }
@@ -531,34 +601,44 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
         updateExperimentFiles(user, experiment, file);
     }
 
-    public void addFilesToExperiment(long user, long experiment, final List<MetaFactorTemplate> factors, ImmutableList<ExperimentManagementTemplate.FileItemTemplate> fileItems, final List<String> factorValuesForOldFiles) {
+    public void addFilesToExperiment(long user,
+                                     long experiment,
+                                     final List<MetaFactorTemplate> factors,
+                                     ImmutableList<ExperimentManagementTemplate.FileItemTemplate> fileItems,
+                                     final List<String> factorValuesForOldFiles) {
         final ImmutableList.Builder<ExperimentManagementTemplate.FileItemTemplate> builder = ImmutableList.builder();
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(user, experiment);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(user, experiment);
         builder.addAll(fileItems);
-        builder.addAll(transform(experimentItem.files, new Function<FileItemTemplate, ExperimentManagementTemplate.FileItemTemplate>() {
-            @Override
-            public ExperimentManagementTemplate.FileItemTemplate apply(FileItemTemplate input) {
+        builder.addAll(transform(
+            experimentItem.files,
+            input -> {
                 final long id = input.id;
                 return factoredFile(id, factorValuesForOldFiles);
             }
-        }));
+        ));
 
         final ExperimentInfoTemplateBuilder<?, ?> infoBuilder = experimentInfo()
-                .name(generateString())
-                .description(generateString())
-                .experimentType(anyExperimentType())
-                .species(unspecified())
-                .project(experimentItem.project)
-                .is2Dlc(false)
-                .restriction(restriction(user, experimentItem.files.get(0).id))
-                .factors(factors)
-                .files(builder.build());
+            .name(generateString())
+            .description(generateString())
+            .experimentType(anyExperimentType())
+            .species(unspecified())
+            .project(experimentItem.project)
+            .is2Dlc(false)
+            .restriction(restriction(user, experimentItem.files.get(0).id))
+            .factors(factors)
+            .files(builder.build());
 
         experimentManagement.updateExperiment(user, experiment, infoBuilder.build());
     }
 
     public ExperimentManagementTemplate.FileItemTemplate factoredFile(long id, List<String> factorValuesForOldFiles) {
-        return new ExperimentManagementTemplate.FileItemTemplate(id, factorValuesForOldFiles, ImmutableList.<AnnotationTemplate>of(), false);
+        return new ExperimentManagementTemplate.FileItemTemplate(
+            id,
+            factorValuesForOldFiles,
+            ImmutableList.<AnnotationTemplate>of(),
+            false
+        );
     }
 
     /**
@@ -571,23 +651,71 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
             try {
                 Preconditions.checkState(repo.count() == 0, repo.findAll());
             } catch (RuntimeException ex) {
-                log.error("Failed on deletion {}", repo);
+                LOGGER.error("Failed on deletion {}", repo);
                 throw Throwables.propagate(ex);
             }
         }
         adminId = predefinedDataCreator.admin("Mark", "Thomson", Data.ADMIN_EMAIL, "123");
         secondAdminId = predefinedDataCreator.admin("Mark2", "Thomson2", Data.ADMIN_EMAIL_2, "1234");
 
-        final HashSet<FileExtensionItem> extensions = newHashSet(new FileExtensionItem(".raw", "", Collections.<String, AdditionalExtensionImportance>emptyMap()));
-        predefinedDataCreator.instrumentModel(Data.vendor1, Data.instrumentType11, Data.studyType1, Data.instrumentModel111, false, false, extensions);
-        predefinedDataCreator.instrumentModel(Data.vendor1, Data.instrumentType12, Data.studyType1, Data.instrumentModel121, false, false, extensions);
-        predefinedDataCreator.instrumentModel(Data.vendor1, Data.instrumentType12, Data.studyType1, Data.instrumentModel122, false, false, extensions);
+        final HashSet<FileExtensionItem> extensions = newHashSet(new FileExtensionItem(".raw",
+            "",
+            Collections.emptyMap()
+        ));
+        predefinedDataCreator.instrumentModel(Data.vendor1,
+            instrumentType11,
+            studyType1,
+            Data.instrumentModel111,
+            false,
+            false,
+            extensions
+        );
+        predefinedDataCreator.instrumentModel(Data.vendor1,
+            Data.instrumentType12,
+            studyType1,
+            Data.instrumentModel121,
+            false,
+            false,
+            extensions
+        );
+        predefinedDataCreator.instrumentModel(Data.vendor1,
+            Data.instrumentType12,
+            studyType1,
+            Data.instrumentModel122,
+            false,
+            false,
+            extensions
+        );
 
-        predefinedDataCreator.instrumentModel(Data.vendor2, Data.instrumentType21, Data.studyType1, Data.instrumentModel211, false, false, extensions);
-        predefinedDataCreator.instrumentModel(Data.vendor2, Data.instrumentType21, Data.studyType1, Data.instrumentModel212, false, false, extensions);
+        predefinedDataCreator.instrumentModel(Data.vendor2,
+            Data.instrumentType21,
+            studyType1,
+            Data.instrumentModel211,
+            false,
+            false,
+            extensions
+        );
+        predefinedDataCreator.instrumentModel(Data.vendor2,
+            Data.instrumentType21,
+            studyType1,
+            Data.instrumentModel212,
+            false,
+            false,
+            extensions
+        );
 
-        final HashSet<FileExtensionItem> extensions3 = newHashSet(new FileExtensionItem(".raw", ".raw", Collections.<String, AdditionalExtensionImportance>emptyMap()));
-        predefinedDataCreator.instrumentModel(Data.vendor3, Data.instrumentType21, Data.studyType1, Data.instrumentModel212, true, false, extensions3);
+        final HashSet<FileExtensionItem> extensions3 = newHashSet(new FileExtensionItem(".raw",
+            ".raw",
+            Collections.<String, AdditionalExtensionImportance>emptyMap()
+        ));
+        predefinedDataCreator.instrumentModel(Data.vendor3,
+            Data.instrumentType21,
+            studyType1,
+            Data.instrumentModel212,
+            true,
+            false,
+            extensions3
+        );
 
         predefinedDataCreator.experimentType("Unspecified", false, false);
 
@@ -612,7 +740,7 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
                 try {
                     repo.delete(e);
                 } catch (RuntimeException ex) {
-                    log.error("Failed on deletion {}", e);
+                    LOGGER.error("Failed on deletion {}", e);
                     throw Throwables.propagate(ex);
                 }
             }
@@ -625,7 +753,8 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
     }
 
     public long createPublicProject(long user, Long lab) {
-        final long project = projectManagement.createProject(user, new ProjectInfoTemplate(lab, "public project", "", "area"));
+        final long project =
+            projectManagement.createProject(user, new ProjectInfoTemplate(lab, "public project", "", "area"));
         sharingManagement.makeProjectPublic(user, project);
         return project;
     }
@@ -635,21 +764,17 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
     }
 
     protected long getSpecie(final String specieName) {
-        return find(experimentCreationHelper.species(), new Predicate<DictionaryItem>() {
-            @Override
-            public boolean apply(@Nullable DictionaryItem input) {
-                return input.name.equals(specieName);
-            }
-        }).id;
+        return find(experimentCreationHelper.species(), input -> input.name.equals(specieName)).id;
     }
 
     //TODO: Code smell. Consider replacing direct repository usage to test specific service .
-    protected UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> getUserLabMemebershipRequestRepository() {
+    protected UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate>
+        getUserLabMemebershipRequestRepository() {
         return repos.userLabMembershipRequestRepository;
     }
 
     public static class ExperimentInfoTemplateBuilder<META_FACTOR extends MetaFactorTemplate,
-            FILE_ITEM extends ExperimentManagementTemplate.FileItemTemplate> {
+        FILE_ITEM extends ExperimentManagementTemplate.FileItemTemplate> {
         private Long lab;
         private String name;
         private String description;
@@ -712,7 +837,18 @@ public class AbstractTestTemplate extends AbstractTestNGSpringContextTests {
         }
 
         public ExperimentManagementTemplate.ExperimentInfoTemplate<META_FACTOR, FILE_ITEM> build() {
-            return new ExperimentManagementTemplate.ExperimentInfoTemplate<>(lab, name, description, project, factors, files, specie, is2dLc, restriction, experimentType);
+            return new ExperimentManagementTemplate.ExperimentInfoTemplate<>(
+                lab,
+                name,
+                description,
+                project,
+                factors,
+                files,
+                specie,
+                is2dLc,
+                restriction,
+                experimentType
+            );
         }
     }
 }

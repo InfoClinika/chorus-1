@@ -10,7 +10,6 @@ import com.infoclinika.mssharing.model.helper.SecurityHelper.UserDetails;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.SharedPerson;
 import com.infoclinika.mssharing.platform.model.read.LabReaderTemplate.LabLineTemplate;
 import com.infoclinika.mssharing.platform.model.read.RequestsReaderTemplate;
-import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -25,28 +24,32 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
-import static org.junit.Assert.*;
+import static com.infoclinika.mssharing.platform.model.write.UserManagementTemplate.LabMembershipConfirmationUrlProvider;
+import static com.infoclinika.mssharing.platform.model.write.UserManagementTemplate.PersonInfo;
+import static org.testng.AssertJUnit.*;
 
 /**
  * @author Ruslan Duboveckij
  */
 public class UserManagementImplTest extends AbstractTest {
 
-    private UserManagementTemplate.LabMembershipConfirmationUrlProvider DEFAULT_URL_PROVIDER = new UserManagementTemplate.LabMembershipConfirmationUrlProvider() {
-        @Override
-        public String getUrl(long user, long lab, long requestId, UserManagementTemplate.LabMembershipRequestActions action) throws URISyntaxException {
-            return "";
-        }
-    };
+    private static final LabMembershipConfirmationUrlProvider DEFAULT_URL_PROVIDER =
+        (user, lab, requestId, action) -> "";
 
-    private class DefaultUserInfo {
+    private static class DefaultUserInfo {
         public final String firstName;
         public final String lastName;
         public final String email;
         public final String password;
         public final String verificationUrl;
 
-        public DefaultUserInfo(String firstName, String lastName, String email, String password, String verificationUrl) {
+        public DefaultUserInfo(
+            String firstName,
+            String lastName,
+            String email,
+            String password,
+            String verificationUrl
+        ) {
             this.firstName = firstName;
             this.lastName = lastName;
             this.email = email;
@@ -54,8 +57,8 @@ public class UserManagementImplTest extends AbstractTest {
             this.verificationUrl = verificationUrl;
         }
 
-        public UserManagementTemplate.PersonInfo toPersonInfo() {
-            return new UserManagementTemplate.PersonInfo(firstName, lastName, email);
+        public PersonInfo toPersonInfo() {
+            return new PersonInfo(firstName, lastName, email);
         }
     }
 
@@ -70,25 +73,31 @@ public class UserManagementImplTest extends AbstractTest {
         final long lab3Live = uc.getLab3();
         final long lab4Deleted = uc.getLab4();
         userManagement.updatePersonAndSendEmail(kate, Data.KATE_INFO, newHashSet(lab3Live), DEFAULT_URL_PROVIDER);
-        List<Long> checkLabs = newArrayList(Collections2.transform(dashboardReader.readUserLabs(kate),
-                new Function<LabLineTemplate, Long>() {
-                    @Nullable
-                    @Override
-                    public Long apply(@Nullable LabLineTemplate labLine) {
-                        return labLine.id;
-                    }
-                }));
+        List<Long> checkLabs = newArrayList(Collections2.transform(
+            dashboardReader.readUserLabs(kate),
+            new Function<LabLineTemplate, Long>() {
+                @Nullable
+                @Override
+                public Long apply(@Nullable LabLineTemplate labLine) {
+                    return labLine.id;
+                }
+            }
+        ));
 
         Assert.assertTrue(checkLabs.contains(lab2Head) && checkLabs.contains(lab3Live)
-                && !checkLabs.contains(lab4Deleted), "Could not remove user from lab");
+            && !checkLabs.contains(lab4Deleted), "Could not remove user from lab");
     }
 
     @Test
     public void testCreateUser() {
-        Long createdPerson = userManagement.createPerson(janos.toPersonInfo(), janos.password, new HashSet<Long>(), janos.verificationUrl);
-        ;
+        Long createdPerson = userManagement.createPerson(
+            janos.toPersonInfo(),
+            janos.password,
+            new HashSet<>(),
+            janos.verificationUrl
+        );
 
-        UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(createdPerson);
+        PersonInfo personInfo = userReader.readPersonInfo(createdPerson);
         Assert.assertEquals(janos.toPersonInfo(), personInfo);
     }
 
@@ -96,21 +105,22 @@ public class UserManagementImplTest extends AbstractTest {
     public void testCreateUserAndSendEmail() throws URISyntaxException {
         uc.createLab2();
         Long lab2 = uc.getLab2();
-        Long createdPerson = userManagement.createPersonAndSendEmail(janos.toPersonInfo(), generateString(), newHashSet(lab2), janos.verificationUrl, new UserManagementTemplate.LabMembershipConfirmationUrlProvider() {
-            @Override
-            public String getUrl(long user, long lab, long requestId, UserManagementTemplate.LabMembershipRequestActions action) throws URISyntaxException {
-                return "";
-            }
-        });
+        Long createdPerson = userManagement.createPersonAndSendEmail(
+            janos.toPersonInfo(),
+            generateString(),
+            newHashSet(lab2),
+            janos.verificationUrl,
+            (user, lab, requestId, action) -> ""
+        );
 
-        UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(createdPerson);
+        PersonInfo personInfo = userReader.readPersonInfo(createdPerson);
         Assert.assertEquals(janos.toPersonInfo(), personInfo);
     }
 
     @Test
     public void testCreateUserWithGeneratedPassword() {
         long createdUser = userManagement.createUserWithGeneratedPassword(janos.toPersonInfo(), janos.verificationUrl);
-        UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(createdUser);
+        PersonInfo personInfo = userReader.readPersonInfo(createdUser);
         Assert.assertEquals(janos.toPersonInfo(), personInfo);
     }
 
@@ -121,14 +131,14 @@ public class UserManagementImplTest extends AbstractTest {
         Long lab2 = uc.getLab2();
         userManagement.updatePerson(john, janos.toPersonInfo(), newHashSet(lab2));
 
-        UserManagementTemplate.PersonInfo johnInfoAfterUpdate = userReader.readPersonInfo(john);
+        PersonInfo johnInfoAfterUpdate = userReader.readPersonInfo(john);
         Assert.assertEquals(janos.toPersonInfo(), johnInfoAfterUpdate);
     }
 
     @Test
     public void testUserCreationWhenInviteUser() {
         String invitationLink = userManagement.inviteUser(admin(), janos.email);
-        UserManagementTemplate.PersonInfo personInfo = securityHelper.getUserDetailsByInvitationLink(invitationLink);
+        PersonInfo personInfo = securityHelper.getUserDetailsByInvitationLink(invitationLink);
         Assert.assertEquals(personInfo.email, janos.email);
     }
 
@@ -160,9 +170,15 @@ public class UserManagementImplTest extends AbstractTest {
         uc.createLab2();
         Long lab2 = uc.getLab2();
         userManagement.inviteUser(admin(), janos.email);
-        Long savedUser = userManagement.saveInvited(janos.toPersonInfo(), passwordHash, newHashSet(lab2), janos.verificationUrl, DEFAULT_URL_PROVIDER);
+        Long savedUser = userManagement.saveInvited(
+            janos.toPersonInfo(),
+            passwordHash,
+            newHashSet(lab2),
+            janos.verificationUrl,
+            DEFAULT_URL_PROVIDER
+        );
 
-        UserManagementTemplate.PersonInfo savedUserInfo = userReader.readPersonInfo(savedUser);
+        PersonInfo savedUserInfo = userReader.readPersonInfo(savedUser);
         assertEquals(savedUserInfo, janos.toPersonInfo());
     }
 
@@ -172,7 +188,13 @@ public class UserManagementImplTest extends AbstractTest {
         uc.createLab2();
         Long lab2 = uc.getLab2();
         String invitationLink = userManagement.inviteUser(admin(), janos.email);
-        Long savedUser = userManagement.saveInvited(janos.toPersonInfo(), passwordHash, newHashSet(lab2), janos.verificationUrl, DEFAULT_URL_PROVIDER);
+        Long savedUser = userManagement.saveInvited(
+            janos.toPersonInfo(),
+            passwordHash,
+            newHashSet(lab2),
+            janos.verificationUrl,
+            DEFAULT_URL_PROVIDER
+        );
 
         UserDetails userByLink = securityHelper.getUserDetailsByInvitationLink(invitationLink);
         assertEquals(userByLink, null);
@@ -182,8 +204,10 @@ public class UserManagementImplTest extends AbstractTest {
     public void testUserHasLabAfterMembershipRequestHasBeenApproved() {
         long kate = uc.createKateAndLab2();
         Long lab2 = uc.getLab2();
-        Long user = userManagement.createPerson(janos.toPersonInfo(), janos.password, newHashSet(lab2), janos.verificationUrl);
-        ImmutableSortedSet<RequestsReaderTemplate.LabMembershipRequest> lab2MembershipRequests = requestsReader.myLabMembershipInbox(kate);
+        Long user =
+            userManagement.createPerson(janos.toPersonInfo(), janos.password, newHashSet(lab2), janos.verificationUrl);
+        ImmutableSortedSet<RequestsReaderTemplate.LabMembershipRequest> lab2MembershipRequests =
+            requestsReader.myLabMembershipInbox(kate);
 
         userManagement.approveLabMembershipRequest(kate, newArrayList(lab2MembershipRequests).get(0).requestId);
         Set<Long> labIds = getUserLabIds(user);
@@ -195,10 +219,16 @@ public class UserManagementImplTest extends AbstractTest {
     public void testUserDoesNotHaveLabAfterMembershipRequestHasBeenRejected() {
         long kate = uc.createKateAndLab2();
         Long lab2 = uc.getLab2();
-        Long user = userManagement.createPerson(janos.toPersonInfo(), janos.password, newHashSet(lab2), janos.verificationUrl);
-        ImmutableSortedSet<RequestsReaderTemplate.LabMembershipRequest> lab2MembershipRequests = requestsReader.myLabMembershipInbox(kate);
+        Long user =
+            userManagement.createPerson(janos.toPersonInfo(), janos.password, newHashSet(lab2), janos.verificationUrl);
+        ImmutableSortedSet<RequestsReaderTemplate.LabMembershipRequest> lab2MembershipRequests =
+            requestsReader.myLabMembershipInbox(kate);
 
-        userManagement.rejectLabMembershipRequest(kate, newArrayList(lab2MembershipRequests).get(0).requestId, "Because I said so!");
+        userManagement.rejectLabMembershipRequest(
+            kate,
+            newArrayList(lab2MembershipRequests).get(0).requestId,
+            "Because I said so!"
+        );
         Set<Long> labIds = getUserLabIds(user);
 
         assertTrue(!labIds.contains(lab2));

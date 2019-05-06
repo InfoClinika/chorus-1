@@ -16,10 +16,10 @@ import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.read.ExperimentReaderHelper;
 import com.infoclinika.mssharing.platform.model.helper.read.FileReaderHelper;
 import com.infoclinika.mssharing.platform.model.helper.read.ProjectReaderHelper;
-import com.infoclinika.mssharing.platform.model.read.ExperimentReaderTemplate;
-import com.infoclinika.mssharing.platform.model.read.FileReaderTemplate;
+import com.infoclinika.mssharing.platform.model.read.ExperimentReaderTemplate.ExperimentLineTemplate;
+import com.infoclinika.mssharing.platform.model.read.FileReaderTemplate.FileLineTemplate;
 import com.infoclinika.mssharing.platform.model.read.Filter;
-import com.infoclinika.mssharing.platform.model.read.ProjectReaderTemplate;
+import com.infoclinika.mssharing.platform.model.read.ProjectReaderTemplate.ProjectLineTemplate;
 import com.infoclinika.mssharing.platform.model.write.InstrumentManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.LabHeadManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.*;
@@ -30,8 +30,6 @@ import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 
-import static com.google.common.collect.Collections2.transform;
-import static com.google.common.collect.Lists.newArrayList;
 import static com.infoclinika.mssharing.platform.entity.EntityUtil.ENTITY_TO_ID;
 
 /**
@@ -72,17 +70,20 @@ public class DefaultLabHeadManagement implements LabHeadManagementTemplate {
 
     @Override
     public Collection<Long> findLabsForLabHead(long actor) {
-        return Collections2.transform(labRepository.findByHeadEmail(userRepository.findOne(actor).getEmail()), EntityUtil.ENTITY_TO_ID);
+        return Collections2.transform(
+            labRepository.findByHeadEmail(userRepository.findOne(actor).getEmail()),
+            EntityUtil.ENTITY_TO_ID
+        );
     }
 
     @Override
     public void removeUserFromLab(long labHead, long labId, long userId) {
-        if (!ruleValidator.userHasPermissionsToRemoveUserFromLab(labHead, labId, userId))
+        if (!ruleValidator.userHasPermissionsToRemoveUserFromLab(labHead, labId, userId)) {
             throw new AccessDenied("User isn't permitted to removed user from laboratory");
+        }
 
         final LabTemplate lab = labRepository.findOne(labId);
         final UserTemplate user = userRepository.findOne(userId);
-        removeUserFromInstrumentOperators(labHead, lab, userId);
 
         lab.removeUser(user);
         labRepository.save(lab);
@@ -100,34 +101,13 @@ public class DefaultLabHeadManagement implements LabHeadManagementTemplate {
 
     }
 
-    private void removeUserFromInstrumentOperators(long labHead, LabTemplate lab, long userId) {
-        List<InstrumentTemplate> instruments = instrumentRepository.findByLab(lab.getId());
-        for (InstrumentTemplate instrument : instruments) {
-            List<Long> newOperators = newArrayList(transform(instrument.getOperators(), EntityUtil.ENTITY_TO_ID));
-            if (newOperators.contains(userId)) {
-                newOperators.remove(userId);
-                instrumentManagement.setInstrumentOperators(labHead, instrument.getId(), newOperators);
-            }
-        }
-    }
-
     private Iterable<Long> getFileIdsToChangeOwner(long userId, final LabTemplate lab) {
         List<InstrumentTemplate> byLab = instrumentRepository.findByLab(lab.getId());
         final List<Long> instrumentIds = FluentIterable.from(byLab).transform(ENTITY_TO_ID).toList();
         return fileReaderHelper.filesByFilter(userId, Filter.MY)
-                .transform()
-                .filter(new Predicate<FileReaderTemplate.FileLineTemplate>() {
-                    @Override
-                    public boolean apply(FileReaderTemplate.FileLineTemplate input) {
-                        return instrumentIds.contains(input.instrumentId);
-                    }
-                })
-                .transform(new Function<FileReaderTemplate.FileLineTemplate, Long>() {
-                    @Override
-                    public Long apply(FileReaderTemplate.FileLineTemplate input) {
-                        return input.id;
-                    }
-                });
+            .transform()
+            .filter((Predicate<FileLineTemplate>) input -> instrumentIds.contains(input.instrumentId))
+            .transform((Function<FileLineTemplate, Long>) input -> input.id);
     }
 
     private void changeFilesOwnerToLabHead(LabTemplate lab, Iterable<Long> fileIds) {
@@ -148,18 +128,8 @@ public class DefaultLabHeadManagement implements LabHeadManagementTemplate {
 
     private Iterable<Long> getExperimentIdsToChangeOwner(long userId, final LabTemplate lab) {
         return experimentReaderHelper.byFilter(userId, Filter.MY).transform()
-                .filter(new Predicate<ExperimentReaderTemplate.ExperimentLineTemplate>() {
-                    @Override
-                    public boolean apply(ExperimentReaderTemplate.ExperimentLineTemplate input) {
-                        return input.lab != null && lab.getId().equals(input.lab.id);
-                    }
-                })
-                .transform(new Function<ExperimentReaderTemplate.ExperimentLineTemplate, Long>() {
-                    @Override
-                    public Long apply(ExperimentReaderTemplate.ExperimentLineTemplate input) {
-                        return input.id;
-                    }
-                });
+            .filter((Predicate<ExperimentLineTemplate>) input -> input.lab != null && lab.getId().equals(input.lab.id))
+            .transform((Function<ExperimentLineTemplate, Long>) input -> input.id);
     }
 
     private void changeProjectsOwnerToLabHead(final LabTemplate lab, Iterable<Long> projectIds) {
@@ -173,19 +143,9 @@ public class DefaultLabHeadManagement implements LabHeadManagementTemplate {
     private Iterable<Long> getProjectIdsToChangeOwner(long userId, final LabTemplate lab) {
 
         return projectReaderHelper.readProjectsFiltered(userId, Filter.MY)
-                .transform()
-                .filter(new Predicate<ProjectReaderTemplate.ProjectLineTemplate>() {
-                    @Override
-                    public boolean apply(ProjectReaderTemplate.ProjectLineTemplate input) {
-                        return input.lab != null && lab.getId().equals(input.lab.id);
-                    }
-                })
-                .transform(new Function<ProjectReaderTemplate.ProjectLineTemplate, Long>() {
-                    @Override
-                    public Long apply(ProjectReaderTemplate.ProjectLineTemplate input) {
-                        return input.id;
-                    }
-                });
+            .transform()
+            .filter((Predicate<ProjectLineTemplate>) input -> input.lab != null && lab.getId().equals(input.lab.id))
+            .transform((Function<ProjectLineTemplate, Long>) input -> input.id);
     }
 
 }

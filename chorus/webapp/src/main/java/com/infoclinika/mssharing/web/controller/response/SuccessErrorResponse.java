@@ -10,6 +10,14 @@ public class SuccessErrorResponse {
         this.successMessage = successMessage;
     }
 
+    public static SuccessErrorResponse success() {
+        return new SuccessErrorResponse(null, "OK");
+    }
+
+    public static SuccessErrorResponse error(String errorMessage) {
+        return new SuccessErrorResponse(errorMessage, null);
+    }
+
     public String getErrorMessage() {
         return errorMessage;
     }

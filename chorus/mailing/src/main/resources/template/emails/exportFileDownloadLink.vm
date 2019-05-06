@@ -1,7 +1,7 @@
-Chorus: DataCube Download Link for #${proteinSearchId} ${proteinSearchName}
+Chorus: DataCube Download Link for ${dataCubeName}
 Hello, ${user}!
 
 DateCube export is ready and could be downloaded <a href="${fileDownloadLink}" target="_blank">here</a>
-Please note, that it is temporary link - it could be removed next day.
+Please note, that it is temporary link - it will work only for 7 days.
 
 Thank you!

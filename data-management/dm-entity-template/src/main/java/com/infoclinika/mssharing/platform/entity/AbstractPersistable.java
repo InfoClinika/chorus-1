@@ -10,12 +10,12 @@ public abstract class AbstractPersistable {
 
     @Id
     @TableGenerator(
-            name = "sequence_generator",
-            table = "hibernate_sequences",
-            pkColumnName = "sequence_name",
-            valueColumnName = "sequence_next_hi_value",
-            initialValue = 1,
-            allocationSize = 1
+        name = "sequence_generator",
+        table = "hibernate_sequences",
+        pkColumnName = "sequence_name",
+        valueColumnName = "sequence_next_hi_value",
+        initialValue = 1,
+        allocationSize = 1
     )
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "sequence_generator")
     private Long id;
@@ -61,9 +61,7 @@ public abstract class AbstractPersistable {
      */
     @Override
     public String toString() {
-
-        return String.format("Entity of type %s with id: %s", this.getClass()
-                .getName(), getId());
+        return String.format("Entity of type %s with id: %s", this.getClass().getName(), getId());
     }
 
 

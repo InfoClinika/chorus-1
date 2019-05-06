@@ -1,184 +1,97 @@
+"use strict";
+
 function isBrowserUnsupported() {
     var parsed = detect.parse(navigator.userAgent);
     var unsupported = true;
 
-    if (!parsed.browser.family) {       // undetected browser case
-        // manually check for IE 11
+    if (!parsed.browser.family) { // undetected browser case manually check for IE 11
         var userAgent = navigator.userAgent;
         var regExp = new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})");
         if (regExp.exec(userAgent) != null) {
             unsupported = false;
         }
-
     } else {
-        if (parsed.browser.family.toLowerCase() === "chrome" && parseFloat(parsed.browser.version) >= 18) unsupported = false;
-        if (parsed.browser.family.toLowerCase() === "ie" && parseFloat(parsed.browser.version) >= 10) unsupported = false;
-        if (parsed.browser.family.toLowerCase() === "firefox" && parseFloat(parsed.browser.version) >= 12) unsupported = false;
-        if (parsed.browser.family.toLowerCase() === "safari" && parseFloat(parsed.browser.version) >= 5.1) unsupported = false;
-        if (parsed.browser.family.toLowerCase() === "chromium" && parseFloat(parsed.browser.version) >= 28) unsupported = false;
+        if (parsed.browser.family.toLowerCase() === "chrome" && parseFloat(parsed.browser.version) >= 18) {
+            unsupported = false;
+        }
+        // if (parsed.browser.family.toLowerCase() === "ie" && parseFloat(parsed.browser.version) >= 10) unsupported = false;
+        // if (parsed.browser.family.toLowerCase() === "firefox" && parseFloat(parsed.browser.version) >= 12) unsupported = false;
+        // if (parsed.browser.family.toLowerCase() === "safari" && parseFloat(parsed.browser.version) >= 5.1) unsupported = false;
+        // if (parsed.browser.family.toLowerCase() === "chromium" && parseFloat(parsed.browser.version) >= 28) unsupported = false;
     }
 
     var cookie = $.cookie("unsupported-browser-not-remind");
-    var remind = (cookie === "false" || cookie === undefined);
+    var remind = cookie === "false" || cookie === undefined;
     var cookieWithSession = $.cookie("unsupported-browser-not-remind-in-session");
-    var sessionIdEqualsToSaved = (cookieWithSession === $.cookie("JSESSIONID"));
-    return unsupported && remind && !sessionIdEqualsToSaved;
+    var sessionIdEqualsToSaved = cookieWithSession === $.cookie("JSESSIONID");
+
+    return unsupported && (remind || !sessionIdEqualsToSaved);
 }
 
 if (isBrowserUnsupported()) {
     location.href = "unsupported-browser.html";
 }
 
-angular.module("security-front", ["security-back", "features-back", "header", "error-catcher", "enums"])
-    .controller("security", function ($scope, $rootScope, Security, Features, LabFeatures, BillingFeatures) {
-        
-        var ADMIN_ROLE = "ROLE_admin";
-        var admin;
-
+angular.module("security-front",
+    ["security-back", "features-back", "header", "footer", "error-catcher",
+        "enums", "feature-service", "user-details-service"])
+    .controller("security", function ($scope, $rootScope, Security, Features, LabFeatures,
+                                      BillingFeatures, FeatureProvider, UserDetailsProvider) {
         $scope.ssoProperties = {};
         $scope.showBilling = false;
         $scope.showAdminBilling = false;
-        $rootScope.labBillingFeatures = {};
-        $rootScope.labFeatures = {};
+
         $rootScope.LabFeatures = LabFeatures;
         $rootScope.BillingFeatures = BillingFeatures;
-        
-        $rootScope.isLabMember = isLabMember;
-        $rootScope.isAdmin = isAdmin;
-        $rootScope.getUserId = getUserId;
-        $rootScope.getLoggedUserName = getLoggedUserName;
-        $rootScope.isUserLoggedIn = isUserLoggedIn;
-        $rootScope.getLoggedUserLabs = getLoggedUserLabs;
-        $rootScope.isFeatureAvailable = isFeatureAvailable;
-        $rootScope.isBillingFeatureAvailable = isBillingFeatureAvailable;
-        $rootScope.isUserLab = isUserLab;
-        
-        init();
-        
-        function init() {
+        $rootScope.getSsoProperties = getSsoProperties;
 
+        init();
+
+        function init() {
             Features.getSsoProperties(function (response) {
                 $scope.ssoProperties = response;
             });
 
             $scope.$on("userChanged", function () {
-                updateLoggedInUser();
+                UserDetailsProvider.updateLoggedInUser($scope);
             });
 
             $scope.$on("$locationChangeStart", function () {
-                updateLoggedInUser();
+                UserDetailsProvider.updateLoggedInUser($scope);
             });
 
-            updateLoggedInUser(function() {
-                if(!$rootScope.isFeatureAvailable(LabFeatures.BILLING)) {
+            UserDetailsProvider.updateLoggedInUser($scope, function (isAdmin) {
+                if (!FeatureProvider.isFeatureAvailable(LabFeatures.BILLING)) {
                     $scope.showBilling = false;
                     $scope.showAdminBilling = false;
                 } else {
-                    if ($rootScope.loggedInUser != null) {
+                    if (UserDetailsProvider.isUserLoggedIn()) {
                         Security.showBilling(function (result) {
                             $scope.showBilling = result.value;
                         });
                     }
-                    $scope.showAdminBilling = admin;
+                    $scope.showAdminBilling = isAdmin;
                 }
+                handleUserConsentToPrivacyPolicy();
             });
-            
-        }
 
-        function updateLoggedInUser(onsucces) {
-
-            Security.get({path: ""}, function (user) {
-
-                if (user.id != null) {
-
-                    $rootScope.loggedInUser = user;
-                    
-                    admin = $.grep(user.authorities, function (role) {
-                        return role.authority == ADMIN_ROLE;
-                    }).length > 0;
-                    var billingFeaturesLoaded = false;
-                    var featuresLoaded = false;
-
-                    Security.enabledBillingFeatures({labIds: user.labs}, function (features) {
-                        $rootScope.labBillingFeatures = features;
-                        billingFeaturesLoaded = true;
-                        tryResolve();
-                    });
-                    
-                    Security.enabledFeatures({labIds: user.labs}, function (features) {
-                        $rootScope.labFeatures = features;
-                        featuresLoaded = true;
-                        tryResolve();
-                    });
-                    
-                    function tryResolve() {
-                        if(billingFeaturesLoaded && featuresLoaded) {
-                            onsucces && onsucces(user);
+            function handleUserConsentToPrivacyPolicy() {
+                if (UserDetailsProvider.isUserLoggedIn() && $scope.showConsent) {
+                    Security.getConsentToPrivacyPolicyDate({}, function (response) {
+                        var consentToPrivacyPolicyDate = response.value;
+                        if (!consentToPrivacyPolicyDate) {
+                            showConsentToPrivacyPolicyDialog(function onOk() {
+                                Security.setConsentToPrivacyPolicyDate();
+                            });
                         }
-                    }
-                    
-                } else {
-                    $rootScope.loggedInUser = null;
-                    admin = undefined;
+                    });
                 }
-                
-                $scope.$emit("security.userInfoUpdated");
-            });
+
+            }
         }
 
-        function isAdmin() {
-            return admin;
-        }
-
-        
-        function getUserId() {
-            return $rootScope.loggedInUser.id;
-        }
-        
-        function getLoggedUserName() {
-            return $rootScope.loggedInUser.username;
-        }
-        
-        function isUserLoggedIn() {
-            return $rootScope.loggedInUser != null;
-        }
-        
-        function getLoggedUserLabs() {
-            return $rootScope.loggedInUser && $rootScope.loggedInUser.labs || [];
-        }
-        
-        function isFeatureAvailable(feature, labId) {
-            if(labId) {
-                return $rootScope.labFeatures[labId] && $rootScope.labFeatures[labId].indexOf(feature) >= 0;
-            }
-            for (var laboratoryId in $rootScope.labFeatures) {
-                if ($rootScope.labFeatures.hasOwnProperty(laboratoryId) 
-                    && $rootScope.labFeatures[laboratoryId].indexOf(feature) >= 0) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        
-        function isBillingFeatureAvailable(feature, labId) {
-            if(labId) {
-                return $rootScope.labBillingFeatures[labId] && $rootScope.labBillingFeatures[labId].indexOf(feature) >= 0;
-            }
-            for (var laboratoryId in $rootScope.labBillingFeatures) {
-                if ($rootScope.labBillingFeatures.hasOwnProperty(laboratoryId)
-                    && $rootScope.labBillingFeatures[laboratoryId].indexOf(feature) >= 0) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function isUserLab(labId) {
-            return $rootScope.labFeatures.hasOwnProperty(labId);
-        }
-
-        function isLabMember() {
-            return $rootScope.getLoggedUserLabs().length > 0;
+        function getSsoProperties() {
+            return $scope.ssoProperties;
         }
 
     })
@@ -211,8 +124,8 @@ angular.module("security-front", ["security-back", "features-back", "header", "e
     .directive("forumUrl", ["Features", function (Features) {
         return {
             restrict: "E",
-            transclude: true,
-            template: "<a ng-show=\"forumProperties.enabled\" href=\"{{forumProperties.url}}\" ng-transclude></a>",
+            replace: true,
+            template: "<li ng-show=\"forumProperties.enabled\"><a href=\"{{forumProperties.url}}\"></a></li>",
             scope: true,
             controller: function ($scope) {
                 $scope.forumProperties = {};
@@ -220,26 +133,53 @@ angular.module("security-front", ["security-back", "features-back", "header", "e
                     $scope.forumProperties = response;
                 });
             }
-        }
+        };
     }])
-    .directive("hideWhenPrivateInstallation", ["Features", function (Features) {
-        return {
-            link: function (scope, element, attrs) {
-                var expression = attrs.hideWhenPrivateInstallation || "true";
-                if (angular.isDefined(attrs.hideByDefault)) {
-                    element.hide();
-                }
+    .factory("DoIfPrivateInstallationDirectiveFactory", function (Features) {
+        return function (onInit, onEnabled, onDisabled) {
+            return {
+                link: function (scope, element, attrs) {
+                    onInit(scope, element, attrs);
 
-                Features.getPrivateInstallProperties(function (properties) {
-                    if (properties.enabled === scope.$eval(expression)) {
-                        element.hide();
-                    } else {
-                        element.show();
-                    }
-                });
-            }
-        }
-    }])
+                    Features.getPrivateInstallProperties(function (properties) {
+                        if (properties.enabled) {
+                            onEnabled(scope, element, attrs);
+                        } else {
+                            onDisabled(scope, element, attrs);
+                        }
+                    });
+                }
+            };
+        };
+    })
+    .directive("hideIfPrivateInstallation", function (DoIfPrivateInstallationDirectiveFactory) {
+        return DoIfPrivateInstallationDirectiveFactory(
+            (scope, element) => element.hide(),
+            (scope, element) => element.hide(),
+            (scope, element) => element.show()
+        );
+    })
+    .directive("showIfPrivateInstallation", function (DoIfPrivateInstallationDirectiveFactory) {
+        return DoIfPrivateInstallationDirectiveFactory(
+            (scope, element) => element.hide(),
+            (scope, element) => element.show(),
+            (scope, element) => element.hide()
+        );
+    })
+    .directive("setClassIfPrivateInstallation", function (DoIfPrivateInstallationDirectiveFactory) {
+        return DoIfPrivateInstallationDirectiveFactory(
+            () => null,
+            (scope, element, attrs) => element.addClass(attrs.setClassIfPrivateInstallation),
+            (scope, element, attrs) => element.removeClass(attrs.setClassIfPrivateInstallation)
+        );
+    })
+    .directive("removeClassIfPrivateInstallation", function (DoIfPrivateInstallationDirectiveFactory) {
+        return DoIfPrivateInstallationDirectiveFactory(
+            () => null,
+            (scope, element, attrs) => element.removeClass(attrs.removeClassIfPrivateInstallation),
+            (scope, element, attrs) => element.addClass(attrs.removeClassIfPrivateInstallation)
+        );
+    })
     .directive("autoimporterUrl", ["Features", function (Features) {
         return {
             link: function (scope, element) {
@@ -247,19 +187,27 @@ angular.module("security-front", ["security-back", "features-back", "header", "e
                     element.attr("href", response.url);
                 });
             }
-        }
+        };
     }])
     .directive("desktopUploaderUrl", ["Features", function (Features) {
         return {
+            restrict: "A",
+            scope: {
+                desktopUploaderUrl: "@"
+            },
             link: function (scope, element) {
-                Features.getDesktopUploaderProperties(function (response) {
-                    element.attr("href", response.url);
+                Features.getDesktopUploaderProperties(function (urls) {
+                    if (urls[scope.desktopUploaderUrl]) {
+                        element.attr("href", urls[scope.desktopUploaderUrl]);
+                        console.log("Uploader", scope.desktopUploaderUrl, urls[scope.desktopUploaderUrl]);
+                    } else {
+                        element.css("display", "none");
+                        console.log("Uploader", scope.desktopUploaderUrl, "Not found");
+                    }
                 });
             }
-        }
+        };
     }]);
-
-angular.module("header", ["issues-back"])
 
 
 function laboratorySelection(arg) {
@@ -279,10 +227,12 @@ function laboratorySelection(arg) {
                     if (!$scope.undeletableLaboratories) {
                         return true;
                     }
-                    var labs = jQuery.grep($scope.undeletableLaboratories.concat($scope.pendingLabs),
+                    var labs = jQuery.grep(
+                        $scope.undeletableLaboratories.concat($scope.pendingLabs),
                         function (elem, index) {
                             return $scope.identify(elem) == text;
-                        });
+                        }
+                    );
                     return labs.length == 0;
                 };
 
@@ -310,7 +260,7 @@ function laboratorySelection(arg) {
             selectedFn: function ($scope) {
                 return function () {
                     return $scope.pendingLabs.concat($scope.selectedLaboratories);
-                }
+                };
             },
             getAllItems: function ($scope) {
                 return $scope.laboratories;
@@ -318,12 +268,12 @@ function laboratorySelection(arg) {
             showInAutoCompleteFn: function ($scope) {
                 return function (item) {
                     return $scope.laboratoryName(item);
-                }
+                };
             },
             identifyFn: function ($scope) {
                 return function (item) {
                     return item.name;
-                }
+                };
             },
             addSelectedItem: function ($scope, item) {
                 item.isAdded = true;
@@ -343,6 +293,7 @@ function laboratorySelection(arg) {
         });
     };
 }
+
 function selectLabWithAutoCompleteFn() {
     return function (scope, iElement, iAttrs) {
         scope.$watch(iAttrs, function (values) {
@@ -354,7 +305,7 @@ function selectLabWithAutoCompleteFn() {
                             "value": scope.identify(item),
                             "orig": item,
                             "type": "laboratory"
-                        }
+                        };
                     });
 
                     var filteredValuesByTerm = $.ui.autocomplete.filter(mappedItems, request.term);
@@ -371,9 +322,13 @@ function selectLabWithAutoCompleteFn() {
                 }
             });
         }, true);
-    }
+    };
 }
-angular.module("user-profile-front", ["security-front", "security-back", "features-back", "validators", "general-requests", "ui.bootstrap"])
+
+angular.module(
+    "user-profile-front",
+    ["security-front", "security-back", "features-back", "validators", "general-requests", "ui.bootstrap"]
+)
     .controller("profile", function ($rootScope, $scope, Security, Features,
                                      userChangedNotificationService, requestsUpdatedNotificationService,
                                      NotInstitutionalEmailProviders,
@@ -417,6 +372,14 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
                     $scope.pendingLabs = labRequests;
                 });
             });
+            Security.getAccountRemovalRequestDate({}, function (response) {
+                var accountRemovalRequestDate = response.value ?
+                    new Date(response.value) :
+                    null;
+                $scope.accountRemoval = {
+                    date: accountRemovalRequestDate
+                };
+            });
         });
 
         $scope.buttonPressed = false;
@@ -431,47 +394,60 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
         });
 
         $scope.$watch("changePass.oldPassword", function () {
-            if ($scope.changePasswordError) delete $scope.changePasswordError;
+            if ($scope.changePasswordError) {
+                delete $scope.changePasswordError;
+            }
         });
         $scope.$watch("changePass.newPassword", validateNewPassword);
         $scope.$watch("confirmPassword", validateNewPassword);
+
         function validateNewPassword() {
-            if ($scope.changePasswordError) delete $scope.changePasswordError;
-            $scope.newPasswordInvalid = $scope.confirmPassword != $scope.changePass.newPassword;
+            if ($scope.changePasswordError) {
+                delete $scope.changePasswordError;
+            }
+            $scope.newPasswordInvalid = $scope.confirmPassword !== $scope.changePass.newPassword;
         }
 
         function isNameChanged() {
-            return ($scope.firstName != $scope.account.firstName || $scope.lastName != $scope.account.lastName);
+            return $scope.firstName != $scope.account.firstName || $scope.lastName != $scope.account.lastName;
         }
 
         function isOldAndNewPasswordsEquals() {
-            return !$scope.newPasswordInvalid && ($scope.changePass.oldPassword == $scope.changePass.newPassword);
+            return !$scope.newPasswordInvalid && $scope.changePass.oldPassword == $scope.changePass.newPassword;
         }
 
         $("#firstName").focus();
 
         $scope.save = function (isInvalid) {
             $scope.buttonPressed = true;
-            if (isInvalid) return;
+            if (isInvalid) {
+                return;
+            }
             var account = jQuery.extend(true, {}, $scope.account);
             account.laboratories = [];
-            var isRemoveLaboratory = account.removalLaboratories.length != 0;
+            var isRemoveLaboratory = account.removalLaboratories.length !== 0;
             account.addedLaboratories = $.grep(account.selectedLaboratories, function (item) {
                 return !item.isRemove && item.isAdded;
             });
-            var isAddLaboratory = account.addedLaboratories.length != 0;
+            var isAddLaboratory = account.addedLaboratories.length !== 0;
 
             function preDataForSave() {
                 angular.forEach(account.selectedLaboratories, function (lab) {
                     var isRemove = false;
                     var isNew = false;
                     angular.forEach(account.removalLaboratories, function (removalLab) {
-                        if (removalLab.id == lab.id) isRemove = true;
+                        if (removalLab.id == lab.id) {
+                            isRemove = true;
+                        }
                     });
                     angular.forEach(account.addedLaboratories, function (removalLab) {
-                        if (removalLab.id == lab.id) isNew = true;
+                        if (removalLab.id == lab.id) {
+                            isNew = true;
+                        }
                     });
-                    if (!isRemove && (isNew && isAddLaboratory || !isNew)) account.laboratories.push(lab.id);
+                    if (!isRemove && (isNew && isAddLaboratory || !isNew)) {
+                        account.laboratories.push(lab.id);
+                    }
                 });
             }
 
@@ -526,7 +502,9 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
 
         $scope.changePassword = function (isValid) {
             $scope.changePassButtonPressed = true;
-            if (!isValid) return;
+            if (!isValid) {
+                return;
+            }
 
             Security.changePassword($scope.changePass, function (response) {
                 if (response.errorMessage == "New and old password are equals") {
@@ -547,12 +525,12 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
         $scope.isEmail = isEmail;
 
         $scope.isEmailInstitutional = function (email) {
-            if(!email) {
+            if (!email) {
                 return true;
             }
             return $.grep(NotInstitutionalEmailProviders, function (provider) {
-                    return email.lastIndexOf("@" + provider) >= 0;
-                }).length == 0;
+                return email.lastIndexOf("@" + provider) >= 0;
+            }).length == 0;
         };
 
         $scope.isEmailAvailable = true;
@@ -590,7 +568,8 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
                 }
                 setTimeout(function () {
                     $(".modal").modal("hide");
-                    showUserChangedDialog("Confirmation email sent to " + $scope.changeEmail.email + ". Please follow the link from the email to complete the email changing procedure.");
+                    showUserChangedDialog("Confirmation email sent to " + $scope.changeEmail.email +
+                        ". Please follow the link from the email to complete the email changing procedure.");
                 }, 0);
             });
         };
@@ -605,9 +584,10 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
                 sendConfirmationButtonPressed = false;
                 setTimeout(function () {
                     $(".modal").modal("hide");
-                    showUserChangedDialog("Confirmation email sent to " + $scope.emailRequest.newEmail + ". Please follow the link from the email to complete the email changing procedure.");
+                    showUserChangedDialog("Confirmation email sent to " + $scope.emailRequest.newEmail +
+                        ". Please follow the link from the email to complete the email changing procedure.");
                 }, 0);
-            })
+            });
         };
 
         $scope.cancelEmailRequest = function () {
@@ -616,7 +596,7 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
                     $(".modal").modal("hide");
                     showUserChangedDialog("Email changing procedure has been canceled.");
                 }, 0);
-            })
+            });
         };
         var emailFormDirty = false;
         $scope.initDirtyChecking = function () {
@@ -627,6 +607,8 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
         $scope.isEmailFormDirty = function () {
             return emailFormDirty;
         };
+        $scope.requestAccountRemoval = requestAccountRemoval;
+        $scope.revokeAccountRemovalRequest = revokeAccountRemovalRequest;
 
         var Subscriptions = $resource("../paypal/:action", {}, {
             pending: {method: "POST", params: {action: "pending"}}
@@ -644,6 +626,18 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
                 $scope.subscription = Subscriptions.pending();
             }
         }
+
+        function requestAccountRemoval() {
+            Security.requestAccountRemoval({}, function () {
+                $scope.accountRemoval.date = new Date();
+            });
+        }
+
+        function revokeAccountRemovalRequest() {
+            Security.revokeAccountRemoval({}, function () {
+                $scope.accountRemoval.date = null;
+            });
+        }
     })
     .directive("laboratorySelector", laboratorySelection({
         "emptyTableMessage": "There are no laboratories",
@@ -651,23 +645,31 @@ angular.module("user-profile-front", ["security-front", "security-back", "featur
         "addPlaceHolderText": "Enter laboratory's title"
     }))
     .directive("selectLabWithAutoComplete", function () {
-        return selectLabWithAutoCompleteFn();
-    }
-);
+            return selectLabWithAutoCompleteFn();
+        }
+    );
 
-angular.module("login", ["security-front", "security-back", "features-back", "validators", "ui", "current-year", "header"],
-    function ($locationProvider) {
+angular
+    .module(
+        "login",
+        ["security-front", "security-back", "features-back", "validators", "ui", "template-components", "header", "footer"],
+        function ($locationProvider) {
 //        $locationProvider.html5Mode(true);
-    }).config(function ($routeProvider) {
+        }
+    )
+    .config(function ($routeProvider) {
         $routeProvider
             .when("/registerInvited/:userId", {controller: "register", templateUrl: "../pages/user/form.html"})
             .when("/forgot-password", {controller: "forgotPassword", templateUrl: "../pages/user/forgot-password.html"})
-            .when("/emailVerification", {controller: "emailVerification", templateUrl: "../pages/user/email-verification.html"})
+            .when(
+                "/emailVerification",
+                {controller: "emailVerification", templateUrl: "../pages/user/email-verification.html"}
+            )
             .when("/login/:redirect", {controller: "login", templateUrl: "../pages/user/login.html"})
             .when("/login", {controller: "login", templateUrl: "../pages/user/login.html"})
             .when("/", {controller: "register", templateUrl: "../pages/user/form.html"});
-    }).
-    controller("login", function ($scope, $routeParams, Security, Features) {
+    })
+    .controller("login", function ($scope, $routeParams, Security, Features) {
         CommonLogger.setTags(["LOGIN", "LOGIN-CONTROLLER"]);
         $scope.showUnsupported = isBrowserUnsupported();
 
@@ -677,130 +679,136 @@ angular.module("login", ["security-front", "security-back", "features-back", "va
         });
 
         $scope.loginResult = Security.loginResult();
-        $scope.redirectAfterLogin = $routeParams.redirect || null;
+        $scope.redirectAfterLogin = "/pages/dashboard.html";
         $("#email").focus();
 
 
-    }).
-    controller("register", function ($scope, $routeParams, Security, Features, NotInstitutionalEmailProviders, $window) {
-        CommonLogger.setTags(["LOGIN", "REGISTER-CONTROLLER"]);
-        $scope.account = {};
-        $scope.accountHelper = {};
-        $scope.account.selectedLaboratories = [];
-        $scope.allLabs = [];
-        $scope.account.alreadyAddedLaboratories = [];
-        Security.labs(function (labs) {
-            $scope.allLabs = labs;
-        });
-        $scope.pendingLabs = [];
-        $scope.page = {};
-        $scope.page.form = {
-            title: "Create Account",
-            editProfileMode: false,
-            saveButtonTitle: "Create"
-        };
-        $scope.emailValid = false;
-        $scope.buttonPressed = false;
-        $scope.accountFormInvalid = false;
-        $scope.isEmailAvailable = true;
-        $scope.isEmailActivated = true;
+    })
+    .controller("register", function ($scope, $routeParams, Security, Features, NotInstitutionalEmailProviders,
+                                      $window) {
 
-        Features.getSsoProperties(function (properties) {
-            if (properties.enabled) {
-                $window.location.href = "index.html";
-            }
-        });
-
-        if ($routeParams.userId != null) {
-            Security.findInvited({link: location.pathname + location.hash}, function (user) {
-                $scope.account.email = user.email;
-                $scope.accountHelper.confirmEmail = user.email;
-                $scope.accountHelper.invited = true;
+            CommonLogger.setTags(["LOGIN", "REGISTER-CONTROLLER"]);
+            $scope.account = {};
+            $scope.accountHelper = {};
+            $scope.account.selectedLaboratories = [];
+            $scope.allLabs = [];
+            $scope.account.alreadyAddedLaboratories = [];
+            Security.labs(function (labs) {
+                $scope.allLabs = labs;
             });
-        }
+            $scope.pendingLabs = [];
+            $scope.page = {};
+            $scope.page.form = {
+                title: "Create Account",
+                editProfileMode: false,
+                saveButtonTitle: "Create"
+            };
+            $scope.emailValid = false;
+            $scope.buttonPressed = false;
+            $scope.accountFormInvalid = false;
+            $scope.isEmailAvailable = true;
+            $scope.isEmailActivated = true;
 
-        $("#firstName").focus();
-
-        $scope.save = function (isValid) {
-            $scope.buttonPressed = true;
-            if (!isValid || $scope.accountFormInvalid) return;
-            var account = jQuery.extend(true, {}, $scope.account);
-            account.laboratories = [];
-            angular.forEach(account.selectedLaboratories, function (lab) {
-                account.laboratories.push(lab.id);
+            Features.getSsoProperties(function (properties) {
+                if (properties.enabled) {
+                    $window.location.href = "index.html";
+                }
             });
-            delete account.selectedLaboratories;
-            delete account.alreadyAddedLaboratories;
-            function saveCallback() {
-                $window.location.href = "authentication.html#/emailVerification";
+
+            if ($routeParams.userId != null) {
+                Security.findInvited({link: location.pathname + location.hash}, function (user) {
+                    $scope.account.email = user.email;
+                    $scope.accountHelper.confirmEmail = user.email;
+                    $scope.accountHelper.invited = true;
+                });
             }
 
-            if (!$scope.accountHelper.invited) {
-                Security.save(account, saveCallback);
-            } else {
-                Security.saveInvited(account, saveCallback);
-            }
-        };
+            $("#firstName").focus();
 
-        $scope.isEmail = isEmail;
+            $scope.save = function (isValid) {
+                $scope.buttonPressed = true;
+                if (!isValid || $scope.accountFormInvalid) {
+                    return;
+                }
+                var account = jQuery.extend(true, {}, $scope.account);
+                account.laboratories = [];
+                angular.forEach(account.selectedLaboratories, function (lab) {
+                    account.laboratories.push(lab.id);
+                });
+                delete account.selectedLaboratories;
+                delete account.alreadyAddedLaboratories;
 
-        $scope.isEmailInstitutional = function (email) {
-            if(!email) {
-                return true;
-            }
-            return $.grep(NotInstitutionalEmailProviders, function (provider) {
+                function saveCallback() {
+                    $window.location.href = "authentication.html#/emailVerification";
+                }
+
+                if (!$scope.accountHelper.invited) {
+                    Security.save(account, saveCallback);
+                } else {
+                    Security.saveInvited(account, saveCallback);
+                }
+            };
+
+            $scope.isEmail = isEmail;
+
+            $scope.isEmailInstitutional = function (email) {
+                if (!email) {
+                    return true;
+                }
+                return $.grep(NotInstitutionalEmailProviders, function (provider) {
                     return email.lastIndexOf("@" + provider) >= 0;
                 }).length == 0;
-        };
+            };
 
-        $scope.$watch("account.email", function () {
-            if (isEmail($scope.account.email) && !$scope.accountHelper.invited) {
-                Security.emailAvailable({email: $scope.account.email}, function (result) {
-                    $scope.isEmailAvailable = result[0] == "t";
-                });
-            } else {
-                $scope.isEmailAvailable = true;
-            }
-        });
-
-        $scope.$watch("isEmailAvailable", checkIsEmailConfirmed);
-        $scope.$watch("accountHelper.confirmEmail", validateForm);
-        $scope.$watch("account.password", validateForm);
-        $scope.$watch("accountHelper.confirmPassword", validateForm);
-
-        $scope.confirmActivationEmailResend = function () {
-            $("#email-not-activated-dialog").modal("show");
-        };
-
-        $scope.resendEmail = function () {
-            Security.resendActivationEmail({email: $scope.account.email}, function () {
-                $window.location.href = "authentication.html#/emailVerification"; //TODO:2016-05-31:andrii.loboda: duplicated
+            $scope.$watch("account.email", function () {
+                if (isEmail($scope.account.email) && !$scope.accountHelper.invited) {
+                    Security.emailAvailable({email: $scope.account.email}, function (result) {
+                        $scope.isEmailAvailable = result[0] == "t";
+                    });
+                } else {
+                    $scope.isEmailAvailable = true;
+                }
             });
-        };
 
-        function checkIsEmailConfirmed() {
-            if (!$scope.isEmailAvailable) {
-                Security.emailActivated({email: $scope.account.email}, function (result) {
-                    $scope.isEmailActivated = result[0] == "t";
-                })
-            } else {
-                $scope.isEmailActivated = true;
+            $scope.$watch("isEmailAvailable", checkIsEmailConfirmed);
+            $scope.$watch("accountHelper.confirmEmail", validateForm);
+            $scope.$watch("account.password", validateForm);
+            $scope.$watch("accountHelper.confirmPassword", validateForm);
+
+            $scope.confirmActivationEmailResend = function () {
+                $("#email-not-activated-dialog").modal("show");
+            };
+
+            $scope.resendEmail = function () {
+                Security.resendActivationEmail({email: $scope.account.email}, function () {
+                    $window.location.href = "authentication.html#/emailVerification"; //TODO:2016-05-31:andrii.loboda: duplicated
+                });
+            };
+
+            function checkIsEmailConfirmed() {
+                if (!$scope.isEmailAvailable) {
+                    Security.emailActivated({email: $scope.account.email}, function (result) {
+                        $scope.isEmailActivated = result[0] == "t";
+                    });
+                } else {
+                    $scope.isEmailActivated = true;
+                }
+            }
+
+            function validateForm() {
+                if ($scope.accountHelper.confirmPassword != $scope.account.password
+                    || $scope.accountHelper.confirmEmail != $scope.account.email) {
+                    $scope.accountFormInvalid = true;
+                } else {
+                    $scope.accountFormInvalid = false;
+                }
             }
         }
+    )
+    .controller("unsupported-browser", function ($scope) {
 
-        function validateForm() {
-            if (($scope.accountHelper.confirmPassword != $scope.account.password)
-                || ($scope.accountHelper.confirmEmail != $scope.account.email)) {
-                $scope.accountFormInvalid = true;
-            } else {
-                $scope.accountFormInvalid = false;
-            }
-        }
-    }).
-    controller("unsupported-browser", function ($scope) {
-
-    }).
-    controller("forgotPassword", function ($scope, $window, Security) {
+    })
+    .controller("forgotPassword", function ($scope, $window, Security) {
         $scope.vm = {
             sendInstructions: function ($event) {
                 Security.sendInstructions({email: $("#forgotPasswordEmail").val()}, function (result) {
@@ -813,13 +821,13 @@ angular.module("login", ["security-front", "security-back", "features-back", "va
                 $event.preventDefault();
                 return false;
             },
-            redirectToLoginPage: function redirectToLoginPage(){ //TODO:2016-05-31:andrii.loboda: duplicated
+            redirectToLoginPage: function redirectToLoginPage() { //TODO:2016-05-31:andrii.loboda: duplicated
                 $window.location.href = "dashboard.html";
             }
 
         };
-    }).
-    controller("emailVerification", function ($scope, $window, Security) {
+    })
+    .controller("emailVerification", function ($scope, $window, Security) {
         $scope.vm = {
             redirectToLoginPage: function redirectToLoginPage() {
                 $window.location.href = "dashboard.html";
@@ -840,18 +848,17 @@ angular.module("login", ["security-front", "security-back", "features-back", "va
             $scope.vm.emailVerified = data.verified;
         });
 
-    }).
-    directive("emailAvailable", function (Security) {
+    })
+    .directive("emailAvailable", function (Security) {
         return {
             require: "ngModel",
             link: function (scope, elm, attrs, ctrl) {
                 ctrl.$parsers.unshift(function (viewValue) {
                     if (ctrl.$error.required || ctrl.$error.email) {
                         ctrl.$setValidity("emailAvailable", true);
-                    }
-                    else {
+                    } else {
                         Security.emailAvailable({email: viewValue}, function (result) {
-                            ctrl.$setValidity("emailAvailable", result[0] == "t");
+                            ctrl.$setValidity("emailAvailable", result[0] === "t");
                         });
                     }
                     return viewValue;
@@ -860,11 +867,11 @@ angular.module("login", ["security-front", "security-back", "features-back", "va
         };
     })
     .directive("laboratorySelector", laboratorySelection({
-        "emptyTableMessage": "There are no laboratories",
-        "addActionText": "Add laboratories",
-        "addPlaceHolderText": "Enter laboratory's title"
-    })
-)
+            "emptyTableMessage": "There are no laboratories",
+            "addActionText": "Add laboratories",
+            "addPlaceHolderText": "Enter laboratory's title"
+        })
+    )
     .directive("selectLabWithAutoComplete", function ($timeout) {
         return selectLabWithAutoCompleteFn();
     })
@@ -889,6 +896,33 @@ angular.module("login", ["security-front", "security-back", "features-back", "va
     })
 ;
 
+function showConsentToPrivacyPolicyDialog(onOk) {
+
+    var message = "<p>Users of Chorus must acknowledge consent to the <a class=\"consent-to-privacy-policy-link\" href=\"privacy-policy.html\" target=\"_blank\">Chorus Privacy Policy</a> so that we may continue to communicate with you and to provide services to you.</p>";
+    var elementId = "userConsentToPrivacyPolicyDialog";
+    var elementIdSelector = "#" + elementId;
+
+    if (!$(elementIdSelector).length) {
+        var container = $("<div>", {class: "hidden"}).appendTo("body");
+        $("<div>", {class: "hidden", id: elementId}).appendTo(container);
+    }
+
+    $(elementIdSelector).html(message).dialog({
+        title: "Consent to Privacy Policy",
+        draggable: false,
+        dialogClass: "message-dialog",
+        modal: true,
+        resizable: false,
+        width: 650,
+        buttons: {
+            "I Consent To The Chorus Privacy Policy": function () {
+                $(this).dialog("close");
+                onOk && onOk();
+            }
+        }
+    });
+}
+
 function showUserChangedDialog(message, onOk) {
     $("#userChangedDialog").html(message).dialog({
         title: "Notification",
@@ -900,7 +934,9 @@ function showUserChangedDialog(message, onOk) {
         buttons: {
             "OK": function () {
                 $(this).dialog("close");
-                if (onOk) onOk();
+                if (onOk) {
+                    onOk();
+                }
             }
         }
     });
@@ -917,18 +953,24 @@ function showUserConfirmDialog(message, onOk, onCancel) {
         buttons: {
             "OK": function () {
                 $(this).dialog("close");
-                if (onOk) onOk();
+                if (onOk) {
+                    onOk();
+                }
             },
             "Cancel": function () {
                 $(this).dialog("close");
-                if (onCancel) onCancel();
+                if (onCancel) {
+                    onCancel();
+                }
             }
         }
     });
 }
 
 function isEmail(text) {
-    if (!text) return false;
+    if (!text) {
+        return false;
+    }
     return /^.+@.+\..{2,4}/.test(text.trim());
 }
 

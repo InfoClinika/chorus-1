@@ -1,14 +1,13 @@
 package com.infoclinika.mssharing.platform.model.read;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * @author Herman Zamula
  */
 public interface RequestsDetailsReaderTemplate<
-        INSTRUMENT_CREATION extends RequestsDetailsReaderTemplate.InstrumentCreationItemTemplate,
-        LAB_CREATION extends DetailsReaderTemplate.LabItemTemplate> {
+    INSTRUMENT_CREATION extends RequestsDetailsReaderTemplate.InstrumentCreationItemTemplate,
+    LAB_CREATION extends DetailsReaderTemplate.LabItemTemplate> {
 
     INSTRUMENT_CREATION readInstrumentCreation(long actor, long request);
 
@@ -26,7 +25,6 @@ public interface RequestsDetailsReaderTemplate<
         public final long vendor;
         public final UserItem requester;
         public final Date sent;
-        public final List<UserItem> operators;
 
         public InstrumentCreationItemTemplate(long id,
                                               String name,
@@ -37,8 +35,7 @@ public interface RequestsDetailsReaderTemplate<
                                               long model,
                                               long vendor,
                                               UserItem requester,
-                                              Date sent,
-                                              List<UserItem> operators) {
+                                              Date sent) {
             this.id = id;
             this.name = name;
             this.serialNumber = serialNumber;
@@ -49,7 +46,6 @@ public interface RequestsDetailsReaderTemplate<
             this.vendor = vendor;
             this.requester = requester;
             this.sent = sent;
-            this.operators = operators;
         }
 
         public InstrumentCreationItemTemplate(InstrumentCreationItemTemplate other) {
@@ -63,10 +59,7 @@ public interface RequestsDetailsReaderTemplate<
             this.vendor = other.vendor;
             this.requester = other.requester;
             this.sent = other.sent;
-            this.operators = other.operators;
         }
-
-
     }
 
     class UserItem {
@@ -83,13 +76,21 @@ public interface RequestsDetailsReaderTemplate<
         @Override
         @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             UserItem userItem = (UserItem) o;
 
-            if (id != userItem.id) return false;
-            if (email != null ? !email.equals(userItem.email) : userItem.email != null) return false;
+            if (id != userItem.id) {
+                return false;
+            }
+            if (email != null ? !email.equals(userItem.email) : userItem.email != null) {
+                return false;
+            }
             return !(name != null ? !name.equals(userItem.name) : userItem.name != null);
 
         }

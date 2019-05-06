@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
-
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -39,8 +38,12 @@ public class PanoramaAttributesPopulator implements AuthenticationMetaDataPopula
     @Override
     public void populateAttributes(AuthenticationBuilder builder, Credential credential) {
         final UserCredentialInForm userCredentials = (UserCredentialInForm) credential;
-        final Optional<UserDetails> details = userDetailsReader.getDetails(userCredentials.getApplicationType(), userCredentials.getUsername());
-        checkState(details.isPresent(), "User is not present in the system, applicationType: %s, username: %s", userCredentials.getApplicationType(), userCredentials.getUsername());
+        final Optional<UserDetails> details =
+            userDetailsReader.getDetails(userCredentials.getApplicationType(), userCredentials.getUsername());
+        checkState(
+            details.isPresent(), "User is not present in the system, applicationType: %s, username: %s",
+            userCredentials.getApplicationType(), userCredentials.getUsername()
+        );
 
         final UserDetails userDetails = details.get();
         /*Prepares attributes only when user account is fully linked(it is redundant while they are not linked). */
@@ -59,14 +62,17 @@ public class PanoramaAttributesPopulator implements AuthenticationMetaDataPopula
         try {
             final ApplicationCredential panoramaCredential = findPanoramaCredential(userDetails);
 
-            final AuthenticateUserRequest request = new AuthenticateUserRequest(panoramaCredential.username, panoramaCredential.secretToken);
-            final AuthenticateUserResponse response = panoramaAuthenticationService.authenticateUser(request);//replace it with get attributes method call once it available
+            final AuthenticateUserRequest request =
+                new AuthenticateUserRequest(panoramaCredential.username, panoramaCredential.secretToken);
+            final AuthenticateUserResponse response = panoramaAuthenticationService
+                .authenticateUser(request);//replace it with get attributes method call once it available
 
             for (Map.Entry<String, Object> attributeToAdd : response.user.entrySet()) {
                 builder.addAttribute(attributeToAdd.getKey(), String.valueOf(attributeToAdd.getValue()));
             }
         } catch (RuntimeException e) {
-            LOG.error("Exception occurred while retrieving attributes from Panorama endpoint, message: " + e.getMessage(), e);
+            LOG.error(
+                "Exception occurred while retrieving attributes from Panorama endpoint, message: " + e.getMessage(), e);
             builder.getSuccesses().clear();
             builder.addFailure(this.getClass().getName(), e.getClass());
         }

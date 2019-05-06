@@ -1,8 +1,8 @@
 package com.infoclinika.mssharing.model.read;
 
 /**
-* @author Herman Zamula
-*/
+ * @author Herman Zamula
+ */
 public class FileUserFunctionInfoItem {
 
     public final long lab;

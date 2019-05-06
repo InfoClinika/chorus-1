@@ -3,6 +3,7 @@ package com.infoclinika.mssharing.platform.model.impl.read;
 import com.google.common.base.Function;
 import com.infoclinika.mssharing.platform.entity.Attachment;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.read.AttachmentsReaderHelper;
 import com.infoclinika.mssharing.platform.model.helper.read.ResultBuilder;
@@ -20,7 +21,8 @@ import java.util.List;
  * @author Herman Zamula
  */
 @Transactional(readOnly = true)
-public abstract class DefaultAttachmentsReader<ENTITY extends Attachment, ITEM extends AttachmentItem> implements AttachmentsReaderTemplate<ITEM>, DefaultTransformingTemplate<ENTITY, ITEM> {
+public abstract class DefaultAttachmentsReader<ENTITY extends Attachment, ITEM extends AttachmentItem>
+    implements AttachmentsReaderTemplate<ITEM>, DefaultTransformingTemplate<ENTITY, ITEM> {
 
     @Inject
     protected AttachmentsReaderHelper<ENTITY, ITEM> attachmentsReaderHelper;
@@ -29,21 +31,13 @@ public abstract class DefaultAttachmentsReader<ENTITY extends Attachment, ITEM e
 
     @PostConstruct
     private void init() {
-        attachmentsReaderHelper.setTransformer(new Function<ENTITY, ITEM>() {
-            @Nullable
-            @Override
-            public ITEM apply(ENTITY input) {
-                return transform(input);
-            }
-        });
+        attachmentsReaderHelper.setTransformer(this::transform);
     }
 
     @Override
     public ITEM readAttachment(long actor, long attachment) {
 
-        return attachmentsReaderHelper
-                .readAttachment(attachment)
-                .transform();
+        return attachmentsReaderHelper.readAttachment(attachment).transform();
     }
 
     @Override
@@ -51,25 +45,29 @@ public abstract class DefaultAttachmentsReader<ENTITY extends Attachment, ITEM e
 
         beforeReadAttachments(type, actor, itemId);
 
-        return read(type, itemId)
-                .transform()
-                .toList();
+        return read(type, itemId).transform().toList();
     }
 
     protected void beforeReadAttachments(AttachmentType type, long actor, long item) {
+
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
 
         switch (type) {
 
             case PROJECT:
 
-                if (!ruleValidator.hasReadAccessOnProject(actor, item))
+                if (!ruleValidator.hasReadAccessOnProject(actor, item)) {
                     throw new AccessDenied("Project read restricted");
+                }
                 break;
 
             case EXPERIMENT:
 
-                if (!ruleValidator.isUserCanReadExperiment(actor, item))
+                if (!ruleValidator.isUserCanReadExperiment(actor, item)) {
                     throw new AccessDenied("Can't read experiment");
+                }
                 break;
 
             default:
@@ -82,17 +80,13 @@ public abstract class DefaultAttachmentsReader<ENTITY extends Attachment, ITEM e
     private ResultBuilder<ENTITY, ITEM> read(AttachmentType type, long item) {
 
         switch (type) {
-
             case PROJECT:
-
                 return attachmentsReaderHelper.readProjectAttachments(item);
-
             case EXPERIMENT:
-
                 return attachmentsReaderHelper.readExperimentAttachments(item);
-
+            default:
+                throw new AssertionError(type);
         }
 
-        throw new AssertionError(type);
     }
 }

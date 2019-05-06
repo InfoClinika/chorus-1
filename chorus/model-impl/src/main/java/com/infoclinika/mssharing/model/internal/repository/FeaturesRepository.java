@@ -3,104 +3,39 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.repository;
 
-import com.google.common.base.Predicate;
 import com.infoclinika.mssharing.model.internal.entity.Feature;
-import com.infoclinika.mssharing.model.internal.entity.Lab;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import static com.google.common.collect.FluentIterable.from;
-
+import static com.infoclinika.mssharing.model.internal.repository.ChorusQueries.FEATURE_ENABLED_PER_LAB_STATE;
+import static com.infoclinika.mssharing.model.internal.repository.ChorusQueries.FEATURE_ENABLED_STATE;
 
 /**
- * @author pavel.kaplin, andrii.loboda, herman.zamula
+ * @author pavel.kaplin, andrii.loboda, herman.zamula, timofei.kasianov
  */
-@Repository
-@Transactional(readOnly = true)
-public class FeaturesRepository {
+public interface FeaturesRepository extends CrudRepository<Feature, String> {
 
-    private static final int DISABLED_STATED = Feature.FeatureState.DISABLED.ordinal();
+    @Query("select distinct f from Feature f " +
+        " where f.enabledState = " + FEATURE_ENABLED_STATE +
+        " or (f.enabledState = " + FEATURE_ENABLED_PER_LAB_STATE +
+        " and (select count(ff) from Feature ff join ff.enabledLabs l " +
+        " where ff.name = f.name and l.id = :labId) > 0)")
+    Set<Feature> enabledForLab(@Param("labId") long labId);
 
-    @PersistenceContext(unitName = "mssharing")
-    protected EntityManager em;
+    @Query("select (count(f) > 0) from Feature f " +
+        " where (f.name = :name and f.enabledState = " + FEATURE_ENABLED_STATE + ") " +
+        " or (f.enabledState = " + FEATURE_ENABLED_PER_LAB_STATE + " and (select count(ff) from Feature ff " +
+        " join ff.enabledLabs l where ff.name = f.name and l.id = :labId) > 0)")
+    boolean isEnabledForLab(@Param("name") String name, @Param("labId") long labId);
 
-    public Map<String, Feature> get() {
-        List<Feature> features = em.createQuery("from Feature", Feature.class).getResultList();
-        Map<String, Feature> result = new HashMap<>();
-        for (Feature feature : features) {
-            result.put(feature.getName(), feature);
-        }
-        return result;
-    }
-
-    public Set<String> allEnabledForLab(long lab) {
-        return get().values()
-                .stream()
-                .filter(f -> {
-                    final Feature.FeatureState enabledState = f.getEnabledState();
-                    return enabledState == Feature.FeatureState.ENABLED ||
-                            enabledState == Feature.FeatureState.ENABLED_PER_LAB && f.getEnabledLabs().contains(new Lab(lab));
-                })
-                .map(Feature::getName)
-                .collect(Collectors.toSet());
-    }
-
-    public boolean enabledForLab(String name, final long lab) {
-        final Feature feature = get().get(name);
-        switch (feature.getEnabledState()) {
-            case ENABLED:
-                return true;
-            case ENABLED_PER_LAB:
-                return from(feature.getEnabledLabs()).anyMatch(new Predicate<Lab>() {
-                    @Override
-                    public boolean apply(Lab input) {
-                        return input.getId().equals(lab);
-                    }
-                });
-            case DISABLED:
-            default:
-                return false;
-        }
-    }
-
-    @Transactional
-    public void set(String name, Feature.FeatureState enabled) {
-        Feature feature = em.find(Feature.class, name);
-        if (feature == null) {
-            feature = new Feature(name);
-        }
-        feature.setEnabledState(enabled);
-        feature.getEnabledLabs().clear();
-        em.persist(feature);
-    }
-
-    @Transactional
-    public void set(String name, Feature.FeatureState enabled, Set<Lab> labs) {
-        Feature feature = em.find(Feature.class, name);
-        if (feature == null) {
-            feature = new Feature(name);
-        }
-        feature.setEnabledState(enabled);
-        feature.getEnabledLabs().clear();
-        feature.getEnabledLabs().addAll(labs);
-        em.persist(feature);
-    }
-
-    @Transactional
-    public void delete(String name) {
-        em.remove(em.find(Feature.class, name));
-    }
 }

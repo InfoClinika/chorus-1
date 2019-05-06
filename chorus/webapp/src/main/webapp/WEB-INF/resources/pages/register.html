@@ -24,15 +24,19 @@
     <script type="text/javascript" src="../script/error-catcher.js"></script>
     <script type="text/javascript" src="../script/service/security-back.js"></script>
     <script type="text/javascript" src="../script/service/features-back.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/feature.service.js"></script>
+    <script type="text/javascript" src="../script/service/user-details.service.js"></script>
     <script type="text/javascript" src="../script/controller/security-front.js"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js"></script>
     <script type="text/javascript" src="../script/validators.js"></script>
     <script type="text/javascript" src="../script/selection.js"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/appearance/appearance.js"></script>
     <script type="text/javascript" src="../script/appearance/appearance.service.js"></script>
     <script type="text/javascript" src="../script/header/header.js"></script>
     <script type="text/javascript" src="../script/header/header.controller.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.controller.js"></script>
     <link rel="stylesheet" href="../css/validation.css">
 
 	<!-- Custom Fonts -->
@@ -42,17 +46,10 @@
     <link rel="stylesheet" href="../css/dialogs.css">
     <link rel="stylesheet" href="../css/login-register-common.css">
 
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 
-    <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-        ga('create', 'UA-41329240-1', 'chorusproject.org');
-        ga('send', 'pageview');
-
-    </script>
 </head>
 
 <body class='registerBody'>

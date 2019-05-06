@@ -2,12 +2,13 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:task="http://www.springframework.org/schema/task" xmlns:s="http://www.springframework.org/schema/security"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans-3.1.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
          http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.1.xsd
              http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
-             http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+             http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <mvc:resources mapping="pages/**" location="/WEB-INF/resources/pages/"/>
     <mvc:resources mapping="lib/**" location="/WEB-INF/resources/lib/"/>
@@ -61,10 +62,12 @@
     <mvc:view-controller path="/pages/" view-name="redirect:/"/>
     <mvc:view-controller path="/favicon.ico" view-name="redirect:/img/favicon.ico"/>
 
+    <util:properties id="chorusWebappApplicationProperties"
+                     location="classpath*:platform-storage.properties,
+                     file:${user.home}/application.properties"
+                     ignore-resource-not-found="true"/>
     <context:property-placeholder ignore-resource-not-found="true"
-                                  location="classpath*:application.properties,
-                                  file:${user.home}/messaging.properties,
-                    file:${user.home}/application.properties"/>
+                                  properties-ref="chorusWebappApplicationProperties"/>
 
     <!-- Enable asyncronous processing -->
     <task:executor id="taskExecutor" pool-size="50"/>

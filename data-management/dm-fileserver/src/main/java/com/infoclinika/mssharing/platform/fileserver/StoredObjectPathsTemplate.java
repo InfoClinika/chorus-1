@@ -24,7 +24,8 @@ public class StoredObjectPathsTemplate {
     }
 
     public NodePath rawFilePath(long user, long instrumentId, String fileName) {
-        return new NodePath(Joiner.on(DELIMITER).join(rawFilesPrefix, user, instrumentId, checkHasNowDelimiter(fileName)));
+        return new NodePath(Joiner.on(DELIMITER)
+            .join(rawFilesPrefix, user, instrumentId, checkHasNowDelimiter(fileName)));
     }
 
     public NodePath experimentAttachmentPath(long user, long attachmentId) {

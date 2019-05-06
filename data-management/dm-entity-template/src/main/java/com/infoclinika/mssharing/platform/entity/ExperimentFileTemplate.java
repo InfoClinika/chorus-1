@@ -9,26 +9,30 @@ import java.util.List;
 import java.util.Set;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static javax.persistence.CascadeType.*;
 
 /**
  * @author Herman Zamula
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class ExperimentFileTemplate<F extends FileMetaDataTemplate<?, ?>, E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>, ANNOTATION extends AnnotationTemplate
-        > extends AbstractPersistable {
+public abstract class ExperimentFileTemplate<F extends FileMetaDataTemplate<?, ?>, E extends ExperimentTemplate<?, ?,
+    ?, ?, ?, ?>, ANNOTATION extends AnnotationTemplate
+    > extends AbstractPersistable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     private F fileMetaData;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = ALL, orphanRemoval = true)
     @JoinColumn(name = "e_file_id")
     private List<ANNOTATION> annotationList = Lists.newArrayList();
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> factorValues = Lists.newArrayList();
-    @ManyToMany(mappedBy = "files", cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+
+    @ManyToMany(mappedBy = "files", cascade = {REFRESH, DETACH, PERSIST, MERGE, REMOVE})
     private Set<Condition> conditions = newHashSet();
+
     @Column
     private boolean isCopy;
 

@@ -42,7 +42,8 @@ public class PanoramaManagement implements ApplicationTypeManagement {
              * When user logs in first, he specifies Chorus and Panorama account.
              * The application restricts linking for other user with the same email of one application type(i.e. Chorus)
              * */
-            final String errorMessage = "The Panorama user{email: " + username + " was already created, and override is not supported";
+            final String errorMessage =
+                "The Panorama user email: " + username + " was already created, and override is not supported";
             throw new AccountIsAlreadyLinkedException(errorMessage);
         }
 

@@ -1,9 +1,10 @@
+"use strict";
+
 $(document).ready(function () {
     setScrollAreaHeight();
     initInterface();
+    $(window).resize(setScrollAreaHeight);
 });
-
-$(window).resize(setScrollAreaHeight);
 
 function setScrollAreaHeight() {
     var scrollArea = $("#scroll-area");
@@ -15,20 +16,17 @@ function setScrollAreaHeight() {
         scrollArea.css("height", newHeight + "px");
     }
     var footerOuterHeight = $("#footer").outerHeight();
-    sideBar.css("height", (newHeight - footerOuterHeight) + "px");
+    sideBar.css("height", newHeight - footerOuterHeight + "px");
     var paginationHeight = $(".pagination-box").outerHeight();
-    mainViewHolder.css("height", (newHeight - footerOuterHeight - paginationHeight) + "px");
+    mainViewHolder.css("height", newHeight - footerOuterHeight - paginationHeight + "px");
 }
 
-function updateScrollAreaMinHeight() {
-    //CommonLogger.log($(".sidebar").height());
-    //$(".table-shadow").css("min-height",parseInt($(".sidebar").height())+10+"px");
-}
 function initInterface() {
     //updateScrollAreaMinHeight();
     //bindExpandAnimation();
     bindScrollEvents();
 }
+
 function bindExpandAnimation() {
     $(".expand-switcher").bind("click", function () {
         $(this).unbind("click");
@@ -44,13 +42,14 @@ function bindExpandAnimation() {
 
 function bindScrollEvents() {
     var objectToWatch = $(".table-shadow");
-    if(!objectToWatch.offset()) return;
+    if (!objectToWatch.offset()) {
+        return;
+    }
     var initialVertOffset = objectToWatch.offset().top;
     $("#scroll-area").scroll(function (e) {
         if (objectToWatch.offset().top < initialVertOffset) {
             $(".fixed-area").addClass("drop-shadow");
-        }
-        else {
+        } else {
 
             $(".fixed-area").removeClass("drop-shadow");
         }
@@ -60,17 +59,15 @@ function bindScrollEvents() {
 function loading($http) {
     return {
         restrict: "A",
-        link: function (scope, elm, attrs)
-        {
+        link: function (scope, elm, attrs) {
             scope.isLoading = function () {
                 return $http.pendingRequests.length > 0;
             };
 
-            scope.$watch(scope.isLoading, function (v)
-            {
-                if(v){
+            scope.$watch(scope.isLoading, function (v) {
+                if (v) {
                     elm.show();
-                }else{
+                } else {
                     elm.hide();
                 }
             });
@@ -78,12 +75,14 @@ function loading($http) {
     };
 }
 
-angular.module('front-end', ['error-catcher', 'enums'])
-    .directive('loading', loading)
-    .directive('ellipsize', function () {
+angular.module("front-end", ["error-catcher"])
+    .directive("loading", loading)
+    .directive("ellipsize", function () {
         return function (scope, element, attr) {
             var elementHeight = scope.$eval(attr.ellipsize);
-            if (!elementHeight && attr.ellipsize !== "auto") elementHeight = $(element).height();
+            if (!elementHeight && attr.ellipsize !== "auto") {
+                elementHeight = $(element).height();
+            }
             $(element).dotdotdot({
                 wrap: "letter",
                 watch: true,
@@ -92,7 +91,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
             setTimeout(function () {
                 $(element).trigger("update");
             }, 0);
-        }
+        };
     })
     .filter("truncate", function () {
         return function (input, symbols) {
@@ -100,7 +99,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 return input.substring(0, symbols) + "...";
             }
             return input;
-        }
+        };
     })
     .filter("nullToEmptyString", function () {
         return function (input) {
@@ -108,14 +107,14 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 return "";
             }
             return input;
-        }
+        };
     })
     .factory("formatInstrument", function () {
         return function (item) {
             var text = item.text;
-            var title = item.element[0]["title"];
+            var title = item.element[0].title;
             return "<span class='select2-results'>" + text + "</span><span class='instrument-sn'>" + title + "</span>";
-        }
+        };
     })
     .factory("hideContextMenus", function () {
         return function () {
@@ -163,7 +162,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
             var child = "first-child";
             var arrowClass = "context-menu-arrow-up";
 
-            if ((height + event.pageY + offset) > $(window).height()) {
+            if (height + event.pageY + offset > $(window).height()) {
                 arrowClass = "context-menu-arrow-down";
                 child = "last-child";
                 contextMenu.addClass("context-menu-top");
@@ -179,8 +178,8 @@ angular.module('front-end', ['error-catcher', 'enums'])
 
                     var arrowHeight = $(".context-menu.open-context-menu .arrow").height();
 
-                    var top = (relativePos + heigh) || event.pageY;
-                    if ((height + event.pageY + offset) > $(window).height()) {
+                    var top = relativePos + heigh || event.pageY;
+                    if (height + event.pageY + offset > $(window).height()) {
                         top = (relativePos ? relativePos : event.pageY) - height - 2 * arrowHeight;
                         child = "last-child";
                         contextMenu.addClass("context-menu-top");
@@ -193,8 +192,8 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     var width = $(".context-menu.open-context-menu .arrow").width();
                     return left - width / 2;
                 }
-            }
-        }
+            };
+        };
     })
     .factory("contentTypes", function () {
         return [
@@ -209,7 +208,8 @@ angular.module('front-end', ['error-catcher', 'enums'])
             "translation",
             "file-access-log",
             "scripts",
-            "instrument-models"
+            "instrument-models",
+            "issues"
         ];
     })
     .factory("currentContentType", function ($location, contentTypes) {
@@ -224,12 +224,12 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 }
             }
             return type;
-        }
+        };
     })
     .factory("currentContentTypeParams", function (contentRequestParameters, currentContentType) {
         return function () {
             return contentRequestParameters.getParameters(currentContentType());
-        }
+        };
     })
     .factory("contentRequestParameters", function (contentTypes, $route, $location) {
 
@@ -264,16 +264,23 @@ angular.module('front-end', ['error-catcher', 'enums'])
             groups: {},
             laboratories: {},
             labInvoices: {items: 1000},
-            translation: {},
-            "file-access-log" : {
+            translation: {
+                sortingField: "modified",
+                asc: false
+            },
+            "file-access-log": {
                 sortingField: "operationDate",
                 asc: false
             },
-            "scripts" : {
+            "scripts": {
                 sortingField: "creationDate",
                 asc: false
             },
-            "instrument-models": {}
+            "instrument-models": {},
+            "issues": {
+                sortingField: "id",
+                asc: false
+            }
         };
 
         var parametersHolder = {
@@ -288,7 +295,8 @@ angular.module('front-end', ['error-catcher', 'enums'])
             laboratories: {},
             translation: {},
             "file-access-log": {},
-            "scripts" : {}
+            "scripts": {},
+            "issues": {}
         };
 
         function toDefault() {
@@ -329,10 +337,10 @@ angular.module('front-end', ['error-catcher', 'enums'])
 
                 // restore filter query
                 var query = $location.search().q;
-                if(query != undefined && query != null) {
+                if (query != undefined && query != null) {
                     params.filterQuery = query;
                 } else {
-                    params.filterQuery = ""
+                    params.filterQuery = "";
                 }
                 return params;
             },
@@ -342,249 +350,248 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     typeParamObject[prop] = params[prop];
                 }
             }
-        }
+        };
     })
     .factory("columnsEditor", function () {
-        return function ($scope, Columns){
-        function ColumnsManager() {
-            //visible columns default set
-            this._defaultColumns = [];
+        return function ($scope, Columns) {
+            function ColumnsManager() {
+                //visible columns default set
+                this._defaultColumns = [];
 
-            //visible columns saved set
-            this._savedColumns = [];
+                //visible columns saved set
+                this._savedColumns = [];
 
-            //all possible columns list
-            this._availableColumns = [];
+                //all possible columns list
+                this._availableColumns = [];
 
-            //initial order/visibility of all columns
-            this._initialColumns = [];
+                //initial order/visibility of all columns
+                this._initialColumns = [];
 
-            //current order/visibility of all columns
-            //ngModel
-            this.currentColumns = [];
+                //current order/visibility of all columns
+                //ngModel
+                this.currentColumns = [];
 
-            this._defaultColumnsLoaded = false;
-            this._savedColumnsLoaded = false;
-            this._initialColumnsLoaded = false;
-            this._availableColumnsLoaded = false;
+                this._defaultColumnsLoaded = false;
+                this._savedColumnsLoaded = false;
+                this._initialColumnsLoaded = false;
+                this._availableColumnsLoaded = false;
 
-            ColumnsManager.prototype.loadDefaultColumns = function (callback) {
-                return this.__loadResource("defaultColumns", "_defaultColumnsLoaded", "_defaultColumns", callback)
-            }
+                ColumnsManager.prototype.loadDefaultColumns = function (callback) {
+                    return this.__loadResource("defaultColumns", "_defaultColumnsLoaded", "_defaultColumns", callback);
+                };
 
-            ColumnsManager.prototype.loadCurrentColumns = function (callback) {
-                return this.__loadResource("selectedColumnSet", "_savedColumnsLoaded", "_savedColumns", callback)
-            }
+                ColumnsManager.prototype.loadCurrentColumns = function (callback) {
+                    return this.__loadResource("selectedColumnSet", "_savedColumnsLoaded", "_savedColumns", callback);
+                };
 
-            ColumnsManager.prototype.loadAvailableColumns = function (callback) {
-                return this.__loadResource("available", "_availableColumnsLoaded", "_availableColumns", callback)
-            }
+                ColumnsManager.prototype.loadAvailableColumns = function (callback) {
+                    return this.__loadResource("available", "_availableColumnsLoaded", "_availableColumns", callback);
+                };
 
-            ColumnsManager.prototype.setInitialColumns = function (columns) {
-                this._initialColumns = columns
-                this._initialColumnsLoaded = true
-            }
+                ColumnsManager.prototype.setInitialColumns = function (columns) {
+                    this._initialColumns = columns;
+                    this._initialColumnsLoaded = true;
+                };
 
-            ColumnsManager.prototype.isDefaultColumnsLoaded = function () {
-                return this._defaultColumnsLoaded
-            }
+                ColumnsManager.prototype.isDefaultColumnsLoaded = function () {
+                    return this._defaultColumnsLoaded;
+                };
 
-            ColumnsManager.prototype.isSavedColumnsLoaded = function () {
-                return this._savedColumnsLoaded
-            }
+                ColumnsManager.prototype.isSavedColumnsLoaded = function () {
+                    return this._savedColumnsLoaded;
+                };
 
-            ColumnsManager.prototype.isAvailableColumnsLoaded = function () {
-                return this._availableColumnsLoaded
-            }
+                ColumnsManager.prototype.isAvailableColumnsLoaded = function () {
+                    return this._availableColumnsLoaded;
+                };
 
-            ColumnsManager.prototype.isInitialColumnsLoaded = function () {
-                return this._initialColumnsLoaded
-            }
+                ColumnsManager.prototype.isInitialColumnsLoaded = function () {
+                    return this._initialColumnsLoaded;
+                };
 
-            ColumnsManager.prototype.getDefaultColumns = function () {
-                return this._defaultColumns
-            }
+                ColumnsManager.prototype.getDefaultColumns = function () {
+                    return this._defaultColumns;
+                };
 
-            ColumnsManager.prototype.getAvailableColumns = function () {
-                return this._availableColumns
-            }
+                ColumnsManager.prototype.getAvailableColumns = function () {
+                    return this._availableColumns;
+                };
 
-            ColumnsManager.prototype.getInitialColumns = function () {
-                return this._initialColumns
-            }
+                ColumnsManager.prototype.getInitialColumns = function () {
+                    return this._initialColumns;
+                };
 
-            ColumnsManager.prototype.getSavedColumns = function () {
-                return this._savedColumns
-            }
+                ColumnsManager.prototype.getSavedColumns = function () {
+                    return this._savedColumns;
+                };
 
-            ColumnsManager.prototype.isAllLoaded = function () {
-                return this.isDefaultColumnsLoaded() && this.isSavedColumnsLoaded() && this.isAvailableColumnsLoaded() && this.isInitialColumnsLoaded()
-            }
+                ColumnsManager.prototype.isAllLoaded = function () {
+                    return this.isDefaultColumnsLoaded() && this.isSavedColumnsLoaded() &&
+                        this.isAvailableColumnsLoaded() && this.isInitialColumnsLoaded();
+                };
 
-            ColumnsManager.prototype.isDirty = function () {
-                var initiallySelected = $.grep(this.getInitialColumns(), function (col) {
-                    return col.visible;
-                });
-                var currentlySelected = $.grep(this.currentColumns, function (col) {
-                    return col.visible;
-                });
+                ColumnsManager.prototype.isDirty = function () {
+                    var initiallySelected = $.grep(this.getInitialColumns(), function (col) {
+                        return col.visible;
+                    });
+                    var currentlySelected = $.grep(this.currentColumns, function (col) {
+                        return col.visible;
+                    });
 
-                var toArray = function (cols) {
-                    var names = [];
-                    for (var idx in cols) {
-                        names.push(cols[idx].name);
-                    }
-                    return names;
-                }
+                    var toArray = function (cols) {
+                        var names = [];
+                        for (var idx in cols) {
+                            names.push(cols[idx].name);
+                        }
+                        return names;
+                    };
 
-                if (initiallySelected.length != currentlySelected.length) {
-                    return true;
-                }
-                for (var idx in initiallySelected) {
-                    var c1 = initiallySelected[idx];
-                    var c2 = currentlySelected[idx];
-                    if (c1.name != c2.name) {
+                    if (initiallySelected.length != currentlySelected.length) {
                         return true;
                     }
-                }
-                return false;
-            }
-
-            ColumnsManager.prototype.isDefault = function () {
-                var idx = 0;
-                //Column set is similar to Default when
-                //its first defaultColumns.length columns are checked and have similar order as in the Default set
-                for (; idx < this.getDefaultColumns().length; idx++) {
-                    var c1 = this.getDefaultColumns()[idx];
-                    var c2 = this.currentColumns[idx];
-                    if (c1.name != c2.name || !c2.visible) {
-                        return false;
+                    for (var idx in initiallySelected) {
+                        var c1 = initiallySelected[idx];
+                        var c2 = currentlySelected[idx];
+                        if (c1.name != c2.name) {
+                            return true;
+                        }
                     }
-                }
-                //...and when none other column is checked.
-                for (; idx < this.currentColumns.length; idx++) {
-                    if (this.currentColumns[idx].visible) {
-                        return false;
+                    return false;
+                };
+
+                ColumnsManager.prototype.isDefault = function () {
+                    var idx = 0;
+                    //Column set is similar to Default when
+                    //its first defaultColumns.length columns are checked and have similar order as in the Default set
+                    for (; idx < this.getDefaultColumns().length; idx++) {
+                        var c1 = this.getDefaultColumns()[idx];
+                        var c2 = this.currentColumns[idx];
+                        if (c1.name != c2.name || !c2.visible) {
+                            return false;
+                        }
                     }
-                }
-                return true;
-            }
-
-            ColumnsManager.prototype.restoreDefault = function () {
-                this.composeColumnsList(this.getDefaultColumns())
-            }
-
-            ColumnsManager.prototype.save = function () {
-                var selected = $.grep(this.currentColumns, function (col) {
-                    return col.visible;
-                });
-                var counter = 0;
-                var columns = $.map(selected, function (item) {
-                    return {
-                        columnId: item.id,
-                        order: counter++
+                    //...and when none other column is checked.
+                    for (; idx < this.currentColumns.length; idx++) {
+                        if (this.currentColumns[idx].visible) {
+                            return false;
+                        }
                     }
-                });
-                Columns.save({name: "primary", isPrimary: true, columns: columns}, function () {
-                    hideModal();
-                });
-            }
+                    return true;
+                };
 
-            /**
-             * Creates ordered list of all available columns and stores it in this.currentColumns.
-             * Specifies which of these columns are visible
-             *
-             * The columns list is composed in the following way:
-             * 1. process "visible" columns (which are passed through @checkedColumns parameter)
-             * 2. add not "hideable" visible columns to the list first
-             * 3. add the rest of visible columns
-             * 4. set "visible" property for all added columns to "true"
-             * 5  add columns, which are not yet added, to this list.
-             *
-             * @param checkedColumns an ordered list of columns which should be visible
-             */
-            ColumnsManager.prototype.composeColumnsList = function (checkedColumns) {
-                var columnsList = [];
-                var nonHideableColumns = $.grep(checkedColumns, function (column) {
-                    return column.hideable == false;
-                });
-                columnsList = columnsList.concat(nonHideableColumns);
+                ColumnsManager.prototype.restoreDefault = function () {
+                    this.composeColumnsList(this.getDefaultColumns());
+                };
 
-                var hideableColumns = $.grep(checkedColumns, function (column) {
-                    return column.hideable != false;
-                });
-                columnsList = columnsList.concat(hideableColumns);
-                $.each(columnsList, function (idx, col) {
-                    col.visible = true;
-                    if (col.id == undefined) {
-                        //for some reason "id" field is mapped to "originalColumn" when we retrieve columns list from a server,
-                        //but when we perform POST-requests, the server expects it to be called "id"
-                        col.id = col.originalColumn;
-                    }
-                });
+                ColumnsManager.prototype.save = function () {
+                    var selected = $.grep(this.currentColumns, function (col) {
+                        return col.visible;
+                    });
+                    var counter = 0;
+                    var columns = $.map(selected, function (item) {
+                        return {
+                            columnId: item.id,
+                            order: counter++
+                        };
+                    });
+                    Columns.save({name: "primary", isPrimary: true, columns: columns}, function () {
+                        hideModal();
+                    });
+                };
 
-                var notPresentInAvailableColumns = $.grep(this.getAvailableColumns(), function (column) {
-                    var matchingColumns = $.grep(columnsList, function (presentColumn) {
-                        return presentColumn.name === column.name
-                    })
-                    return matchingColumns.length == 0
-                });
-                $.each(notPresentInAvailableColumns, function (idx, col) {
-                    col.visible = false;
-                });
+                /**
+                 * Creates ordered list of all available columns and stores it in this.currentColumns.
+                 * Specifies which of these columns are visible
+                 *
+                 * The columns list is composed in the following way:
+                 * 1. process "visible" columns (which are passed through @checkedColumns parameter)
+                 * 2. add not "hideable" visible columns to the list first
+                 * 3. add the rest of visible columns
+                 * 4. set "visible" property for all added columns to "true"
+                 * 5  add columns, which are not yet added, to this list.
+                 *
+                 * @param checkedColumns an ordered list of columns which should be visible
+                 */
+                ColumnsManager.prototype.composeColumnsList = function (checkedColumns) {
+                    var columnsList = [];
+                    var nonHideableColumns = $.grep(checkedColumns, function (column) {
+                        return column.hideable == false;
+                    });
+                    columnsList = columnsList.concat(nonHideableColumns);
 
-                columnsList = columnsList.concat(notPresentInAvailableColumns);
-                this.currentColumns = columnsList;
-            };
-
-            ColumnsManager.prototype.__loadResource = function (resourceUrl, resourceLoadedFlagName, resourceReferenceName, callback) {
-                var self = this;
-                if (!self[resourceLoadedFlagName]) {
-                    Columns[resourceUrl](function (columns) {
-                        self[resourceReferenceName] = columns;
-                        self[resourceLoadedFlagName] = true;
-                        if (callback) {
-                            callback(self[resourceReferenceName])
+                    var hideableColumns = $.grep(checkedColumns, function (column) {
+                        return column.hideable != false;
+                    });
+                    columnsList = columnsList.concat(hideableColumns);
+                    $.each(columnsList, function (idx, col) {
+                        col.visible = true;
+                        if (col.id == undefined) {
+                            //for some reason "id" field is mapped to "originalColumn" when we retrieve columns list from a server,
+                            //but when we perform POST-requests, the server expects it to be called "id"
+                            col.id = col.originalColumn;
                         }
                     });
-                } else {
-                    if (callback) {
-                        callback(self[resourceReferenceName])
-                    }
-                }
-            }
-        }
 
-        //init ColumnsManager
-        var columnsManager = new ColumnsManager();
-        columnsManager.loadDefaultColumns(function () {
-            columnsManager.loadAvailableColumns(function () {
-                columnsManager.loadCurrentColumns(function () {
-                    columnsManager.composeColumnsList(columnsManager.getSavedColumns());
-                    //copy availableColumns names/visibility for futher verification on "dirtyness"
-                    var initialColumns = [];
-                    for (var idx in columnsManager.currentColumns) {
-                        initialColumns.push({
-                            name: columnsManager.currentColumns[idx].name,
-                            visible: columnsManager.currentColumns[idx].visible
+                    var notPresentInAvailableColumns = $.grep(this.getAvailableColumns(), function (column) {
+                        var matchingColumns = $.grep(columnsList, function (presentColumn) {
+                            return presentColumn.name === column.name;
                         });
-                    }
-                    columnsManager.setInitialColumns(initialColumns)
+                        return matchingColumns.length == 0;
+                    });
+                    $.each(notPresentInAvailableColumns, function (idx, col) {
+                        col.visible = false;
+                    });
+
+                    columnsList = columnsList.concat(notPresentInAvailableColumns);
+                    this.currentColumns = columnsList;
+                };
+
+                ColumnsManager.prototype.__loadResource =
+                    function (resourceUrl, resourceLoadedFlagName, resourceReferenceName, callback) {
+                        var self = this;
+                        if (!self[resourceLoadedFlagName]) {
+                            Columns[resourceUrl](function (columns) {
+                                self[resourceReferenceName] = columns;
+                                self[resourceLoadedFlagName] = true;
+                                if (callback) {
+                                    callback(self[resourceReferenceName]);
+                                }
+                            });
+                        } else if (callback) {
+                            callback(self[resourceReferenceName]);
+                        }
+                    };
+            }
+
+            //init ColumnsManager
+            var columnsManager = new ColumnsManager();
+            columnsManager.loadDefaultColumns(function () {
+                columnsManager.loadAvailableColumns(function () {
+                    columnsManager.loadCurrentColumns(function () {
+                        columnsManager.composeColumnsList(columnsManager.getSavedColumns());
+                        //copy availableColumns names/visibility for futher verification on "dirtyness"
+                        var initialColumns = [];
+                        for (var idx in columnsManager.currentColumns) {
+                            initialColumns.push({
+                                name: columnsManager.currentColumns[idx].name,
+                                visible: columnsManager.currentColumns[idx].visible
+                            });
+                        }
+                        columnsManager.setInitialColumns(initialColumns);
+                    });
                 });
             });
-        });
-        $scope.cm = columnsManager;
+            $scope.cm = columnsManager;
 
-        $scope.sortableOptions = {
-            items: "li:not(.ui-state-disabled)"
+            $scope.sortableOptions = {
+                items: "li:not(.ui-state-disabled)"
+            };
         };
-    }})
+    })
     .factory("changeableColumnsHelper", function () {
 
         var scrollBoardUnits = 100;
-        var defaultColumnStyle = {
-
-        };
+        var defaultColumnStyle = {};
 
         return function ($scope, Columns) {
 
@@ -592,7 +599,9 @@ angular.module('front-end', ['error-catcher', 'enums'])
             var defaultViewWidth = 1130;//px
 
             $scope.$on("mainViewChanged", function (e, val) {
-                if (totalUnits <= scrollBoardUnits) return;
+                if (totalUnits <= scrollBoardUnits) {
+                    return;
+                }
                 var newWidth = parseInt(val) * totalUnits / scrollBoardUnits;
                 $scope.viewStyle = {
                     width: newWidth + "px"
@@ -606,25 +615,26 @@ angular.module('front-end', ['error-catcher', 'enums'])
 
             $scope.displayedColumnNames = [];
             $scope.hidableColumns = [];
-            $scope.viewStyle = {
-            };
+            $scope.viewStyle = {};
             $scope.viewStyleContent = {};
 
 
             $scope.getStyle = function (index) {
                 var item = $scope.displayedColumnNames[index];
-                if (!item) return defaultColumnStyle;
+                if (!item) {
+                    return defaultColumnStyle;
+                }
                 return item.style;
             };
 
             $scope.compoundColumnStyles = function (styles) {
                 var width = 0;
                 $.each(styles, function (i, val) {
-                    width += parseFloat(val.width)
+                    width += parseFloat(val.width);
                 });
                 return {
                     width: width + "%"
-                }
+                };
             };
 
             function checkUnits(columns) {
@@ -657,7 +667,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 $.each(columns, function (i, col) {
                     col.style = {
                         width: col.units + "%"
-                    }
+                    };
                 });
             }
 
@@ -670,37 +680,40 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 $scope.displayedColumnNames = columns;
                 $scope.hidableColumns = $.grep(columns, function (col) {
                     return col.hideable;
-                })
+                });
             }
 
             Columns.selectedColumnSet(processColumns);
 
             $scope.getCellValue = function (columnIndex, item) {
                 var value = item.columns[$scope.hidableColumns[columnIndex].modelViewName];
-                return  value || "";
+                return value || "";
             };
 
             $scope.getCellTitle = function (columnIndex, item) {
                 return $scope.getCellValue(columnIndex, item);
-            }
-        }
+            };
+        };
     })
     .directive("rightClickContextMenu", ["$parse", "hideContextMenus", "contextMenuHelper",
         function ($parse, hideContextMenus, contextMenuHelper) {
 
             var contextScope;
+
             //Hide context menu on click.
             function bindHideContextMenu() {
                 var hideContext = function () {
                     $(".context-menu").css("display", "none");
-                    if (contextScope)
+                    if (contextScope) {
                         contextScope.contextOpened = false;
+                    }
                 };
                 var menuHolder = $("body").addClass("context-menu-holder");
                 menuHolder.bind("click", hideContext);
                 menuHolder.bind("contextmenu", hideContext);
                 $(".scroll-area").scroll(hideContext);
             }
+
             bindHideContextMenu();
 
             return function (scope, element, attrs) {
@@ -729,45 +742,57 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 }
 
                 element.on("contextmenu", showContext);
-            }
+            };
         }])
     .directive("buttonClickContextMenu", ["$parse", "hideContextMenus", "contextMenuHelper",
         function ($parse, hideContextMenus, contextMenuHelper) {
             return function (scope, element, attrs) {
+                var contextMenuShift = {top: 0, left: 0};
+                if (attrs.contextMenuShift) {
+                    contextMenuShift = $parse(attrs.contextMenuShift)();
+                }
+
                 element.bind("click", function (event) {
                     event.stopPropagation();
                     event.preventDefault();
                     hideContextMenus();
                     var buttonElement = $(element);
                     var helper = contextMenuHelper($(element).siblings(".context-menu"), event);
-                    var top = helper.topPosition(buttonElement.offset().top, buttonElement.height());
+                    var top = helper.topPosition(
+                        buttonElement.offset().top,
+                        buttonElement.height()
+                    ) + contextMenuShift.top;
                     if (top < 0) {
                         top = 0;
                     }
+                    var left = buttonElement.offset().left + contextMenuShift.left;
                     $(element).siblings(".context-menu")
                         .css("position", "fixed")
                         .css("top", top)
-                        .css("left", buttonElement.offset().left)
+                        .css("left", left)
                         .css("display", "block");
-                })
-            }
+                });
+            };
         }])
     .directive("dblClickContextMenu", ["$parse", "hideContextMenus", "contextMenuHelper",
         function ($parse, hideContextMenus, contextMenuHelper) {
 
             var contextScope;
+
             //Hide context menu on click.
             function bindHideContextMenu() {
                 var hideContext = function () {
                     $(".context-menu").css("display", "none");
-                    if (contextScope)
+                    if (contextScope) {
                         contextScope.contextOpened = false;
+                    }
                 };
                 var menuHolder = $("body").addClass("context-menu-holder");
                 menuHolder.bind("click", hideContext);
                 menuHolder.bind("contextmenu", hideContext);
                 $(".scroll-area").scroll(hideContext);
             }
+
             bindHideContextMenu();
 
             return function (scope, element, attrs) {
@@ -794,12 +819,12 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 }
 
                 element.on("dblclick", showContext);
-            }
+            };
         }])
     .factory("animatedScroll", function () {
         return function () {
-            $(".dashboard-box").animate({scrollTop: 0 }, "fast");
-        }
+            $(".dashboard-box").animate({scrollTop: 0}, "fast");
+        };
     })
     .factory("applyPaging", function ($route, contentRequestParameters, currentContentType) {
         return function ($scope, page) {
@@ -818,7 +843,10 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 "sortingField": currentParams.sortingField,
                 "asc": currentParams.asc,
                 "filterQuery": $scope.pageFilter,
-                "advancedFilter": ($scope.composedFilter && $scope.composedFilter.predicates && $scope.composedFilter.predicates.length > 0) ? $scope.composedFilter : null
+                "advancedFilter": $scope.composedFilter && $scope.composedFilter.predicates &&
+                    $scope.composedFilter.predicates.length > 0 ?
+                    $scope.composedFilter :
+                    null
             };
             if ($scope.sorting) {
                 query.sortingField = $scope.sorting.field;
@@ -827,17 +855,20 @@ angular.module('front-end', ['error-catcher', 'enums'])
 
             contentRequestParameters.setParameters(currentType, query);
             $route.reload();
-        }
+        };
     })
-    .filter("advancedFilter", function($filter) {
-        return function(list, scope) {
-            if (!scope) return list;
+    .filter("advancedFilter", function ($filter) {
+        return function (list, scope) {
+            if (!scope) {
+                return list;
+            }
 
-            if (scope.advancedFilter && scope.advancedFilter.composedFilter.predicates && scope.advancedFilter.composedFilter.predicates.length != 0) {
+            if (scope.advancedFilter && scope.advancedFilter.composedFilter.predicates &&
+                scope.advancedFilter.composedFilter.predicates.length != 0) {
                 scope.filter = "";
                 var filtered = [];
                 angular.forEach(list, function (item) {
-                    var itemInFilteredArr = (scope.advancedFilter.composedFilter.conjunction);
+                    var itemInFilteredArr = scope.advancedFilter.composedFilter.conjunction;
                     angular.forEach(scope.advancedFilter.composedFilter.predicates, function (predicate) {
                         if (scope.advancedFilter.composedFilter.conjunction) {
                             if (!scope.advancedFilter.composedFilter.applyToItem(item, predicate)) {
@@ -854,35 +885,39 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     }
                 });
                 return filtered;
-            } else {
-                if (!scope.filter || scope.filter.trim().length == 0) {
-                    return list;
-                }
-                var arrSearch = scope.filter.split(" "),
-                    lookup = "",
-                    result = [];
-
-                arrSearch.forEach(function (item) {
-                    lookup = $filter("filter")(list, item);
-                    console.log(lookup);
-                    if (lookup.length > 0) result = result.concat(lookup);
-                });
-                return result;
             }
+            if (!scope.filter || scope.filter.trim().length == 0) {
+                return list;
+            }
+            var arrSearch = scope.filter.split(" ");
+            var lookup = "";
+            var result = [];
+
+            arrSearch.forEach(function (item) {
+                lookup = $filter("filter")(list, item);
+                console.log(lookup);
+                if (lookup.length > 0) {
+                    result = result.concat(lookup);
+                }
+            });
+            return result;
+
 
         };
     })
     .directive("setValue", function () {
         return function ($scope, element, attr) {
             $scope.$eval(attr.setValue);
-        }
+        };
     })
     .directive("contenteditable", function () {
         return {
             restrict: "A",
             require: "?ngModel",
             link: function (scope, element, attrs, ngModel) {
-                if (!ngModel) return;
+                if (!ngModel) {
+                    return;
+                }
                 element.text(scope.$eval(attrs.ngModel) || "");
 
                 ngModel.$render = function () {
@@ -895,51 +930,61 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     }, 0);
                 });
                 read();
+
                 function read() {
                     ngModel.$setViewValue(element.text() ? element.text() : ""); // to remove redundant tag <br> when content is erased
                 }
             }
         };
     })
-    .directive("unrouteSorting", function ($location, contentRequestParameters, currentContentTypeParams, currentContentType) {
-        return {
-            restrict: "A",
-            priority: -1,
-            link: function (scope, element, attrs) {
-                if (!scope.sorting) return;
-
-                element.addClass("sortable");
-
-                scope.$watch("sorting.reverse", function (n, o) {
-                    if (scope.sorting.field === attrs.unrouteSorting) {
-                        element.find("i").remove();
-                        element.prepend(n === false || n === "false" ? "<i class=\"icon icon-chevron-up\">" : "<i class=\"icon icon-chevron-down\">");
+    .directive(
+        "unrouteSorting",
+        function ($location, contentRequestParameters, currentContentTypeParams, currentContentType) {
+            return {
+                restrict: "A",
+                priority: -1,
+                link: function (scope, element, attrs) {
+                    if (!scope.sorting) {
+                        return;
                     }
-                });
 
-                scope.$watch("sorting.field", function (n, o) {
-                    if (n === attrs.unrouteSorting) {
-                        element.addClass("active");
-                    } else {
-                        element.find("i").remove();
-                        element.removeClass("active");
-                    }
-                });
+                    element.addClass("sortable");
 
-                element.bind("click", function () {
-                    var IsCurrentStateFalse = scope.sorting.reverse === false || scope.sorting.reverse === "false";
-                    scope.sorting.field = attrs.unrouteSorting;
-                    scope.sorting.reverse = IsCurrentStateFalse;
-                    contentRequestParameters.setParameters(currentContentType(),
-                        {
-                            sortingField: scope.sorting.field,
-                            asc: !IsCurrentStateFalse
-                        });
-                    scope.$apply();
-                });
-            }
+                    scope.$watch("sorting.reverse", function (n, o) {
+                        if (scope.sorting.field === attrs.unrouteSorting) {
+                            element.find("i").remove();
+                            element.prepend(n === false || n === "false" ?
+                                "<i class=\"icon icon-chevron-up\">" :
+                                "<i class=\"icon icon-chevron-down\">");
+                        }
+                    });
+
+                    scope.$watch("sorting.field", function (n, o) {
+                        if (n === attrs.unrouteSorting) {
+                            element.addClass("active");
+                        } else {
+                            element.find("i").remove();
+                            element.removeClass("active");
+                        }
+                    });
+
+                    element.bind("click", function () {
+                        var IsCurrentStateFalse = scope.sorting.reverse === false || scope.sorting.reverse === "false";
+                        scope.sorting.field = attrs.unrouteSorting;
+                        scope.sorting.reverse = IsCurrentStateFalse;
+                        contentRequestParameters.setParameters(
+                            currentContentType(),
+                            {
+                                sortingField: scope.sorting.field,
+                                asc: !IsCurrentStateFalse
+                            }
+                        );
+                        scope.$apply();
+                    });
+                }
+            };
         }
-    })
+    )
     .directive("routeSorting", function (applyPaging, currentContentTypeParams) {
         return function ($scope, element, attrs) {
             setTimeout(function () {
@@ -964,7 +1009,10 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 $(element).addClass("sortable");
 
                 function apply() {
-                    $(element).prepend(state == "asc" ? "<i class=\"icon icon-chevron-up\">" : "<i class=\"icon icon-chevron-down\">");
+                    $(element)
+                        .prepend(state == "asc" ?
+                            "<i class=\"icon icon-chevron-up\">" :
+                            "<i class=\"icon icon-chevron-down\">");
                     $(element).addClass("active");
                     $scope.$apply();
                 }
@@ -982,16 +1030,15 @@ angular.module('front-end', ['error-catcher', 'enums'])
 
                     $(element).find("i").remove();
                     $(element).prepend(icons[state]);
-                    if (state == "none") {
+                    if (state === "none") {
                         $(element).removeClass("active");
-                    }
-                    else {
+                    } else {
                         $(element).addClass("active");
                     }
                     $scope.sorting.field = attrs.routeSorting;
-                    $scope.sorting.asc = state == "asc";
+                    $scope.sorting.asc = state === "asc";
 
-                    if (state != "none") {
+                    if (state !== "none") {
                         applyPaging($scope);
                     }
 
@@ -999,118 +1046,124 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 }
 
                 element.bind("click", function () {
-                    applyState(state == "asc" ? "desc" : "asc");
+                    applyState(state === "asc" ? "desc" : "asc");
                 });
             });
         };
     })
-    .directive("routePagination", function ($routeParams, applyPaging, animatedScroll, currentContentTypeParams, mainViewResizeService) {
-        return {
-            restrict: "E",
-            replace: true,
-            templateUrl: "../pages/component/pagination.html",
-            compile: function (elem, attr) {
-                return function ($scope, element, attrs, cntrl) {
+    .directive(
+        "routePagination",
+        function ($routeParams, applyPaging, animatedScroll, currentContentTypeParams, mainViewResizeService) {
+            return {
+                restrict: "E",
+                replace: true,
+                templateUrl: "../pages/component/pagination.html",
+                compile: function (elem, attr) {
+                    return function ($scope, element, attrs, cntrl) {
 
-                    function eval(what) {
-                        return $scope.$eval(what);
-                    }
-
-                    $scope.$watch(attrs.totalItems, function (value) {
-                        if (value) {
-                            setup();
-                            setTimeout(function () {
-                                setScrollAreaHeight();
-                            }, 1);
+                        function evaluate(what) {
+                            return $scope.$eval(what);
                         }
-                    });
 
-                    function setup() {
-                        var params = currentContentTypeParams();
-                        $scope.sorting = {
-                            asc: params.asc || false,
-                            field: params.sortingField
-                        };
-                        $scope.totalItems = eval(attrs.totalItems);
-                        $scope.maxItems = params.items ? params.items : eval(attrs.maxItems);
-                        $scope.maxPages = Math.ceil($scope.totalItems / $scope.maxItems);
-                        $scope.currentPage = $scope.pageNumber = params.page ? Number(params.page) : eval(attrs.defaultPage);
-                        var maxShown = eval(attrs.maxShown);
-                        $scope.items = eval(attrs.items);
-                        $scope.scrollTop = animatedScroll;
-
-                        $scope.showCount = eval(attrs.maxItems);
-                        $scope.range = function (start, end) {
-                            var ret = [];
-                            if (!end) {
-                                end = start;
-                                start = 0;
+                        $scope.$watch(attrs.totalItems, function (value) {
+                            if (value) {
+                                setup();
+                                setTimeout(function () {
+                                    setScrollAreaHeight();
+                                }, 1);
                             }
-                            for (var i = start; i < end; i++) {
-                                ret.push(i);
-                            }
-                            return ret;
-                        };
-                        $scope.setCurrentPage = function (page) {
-                            if (!isNumber(page) || page <= 0) {
-                                return;
-                            }
-                            if (page > $scope.maxPages) {
-                                page = $scope.maxPages;
-                            }
-                            $scope.pageNumber = page;
-                            $scope.currentPage = page;
-                        };
-                        $scope.setMaxItems = function (value) {
-                            if ($scope.maxItems != value) {
-                                $scope.maxItems = value;
-                                $scope.currentPage = undefined;
-                            }
-                        };
-
-                        $scope.$watch("currentPage", function (neVal, oldVal) {
-                            setTimeout(function () {
-                                $scope.pageNumber = neVal;
-                            });
-                            if (neVal != oldVal) applyPaging($scope, neVal);
                         });
-                        $scope.back = function () {
-                            if ($scope.currentPage > 1) {
-                                $scope.currentPage--;
-                            }
-                        };
-                        $scope.next = function () {
-                            if ($scope.currentPage < $scope.maxPages) {
-                                $scope.currentPage++;
-                            }
-                        };
-                        $scope.setPage = function () {
-                            $scope.currentPage = this.n + 1;
-                        };
-                        $scope.getMaxShown = function () {
-                            if ($scope.currentPage > Math.floor(maxShown / 2)) {
-                                var lastPage = $scope.currentPage + Math.floor(maxShown / 2);
-                                return  lastPage > $scope.maxPages ? $scope.maxPages : lastPage;
-                            }
-                            return maxShown > $scope.maxPages ? $scope.maxPages : maxShown;
-                        };
-                        $scope.getMinShown = function () {
-                            var current = $scope.currentPage - 1;
-                            var floor = Math.floor(maxShown / 2);
-                            var mod = current - current % maxShown;
-                            if ($scope.currentPage <= $scope.maxPages - floor) {
-                                return current > floor ? current - floor : mod;
-                            } else {
-                                return $scope.maxPages - maxShown >= 0 ? $scope.maxPages - maxShown : 0;
-                            }
-                        };
-                    }
 
-                    mainViewResizeService.checkWidth();
+                        function setup() {
+                            var params = currentContentTypeParams();
+                            $scope.sorting = {
+                                asc: params.asc || false,
+                                field: params.sortingField
+                            };
+                            $scope.totalItems = evaluate(attrs.totalItems);
+                            $scope.maxItems = params.items ? params.items : evaluate(attrs.maxItems);
+                            $scope.maxPages = Math.ceil($scope.totalItems / $scope.maxItems);
+                            $scope.currentPage =
+                                $scope.pageNumber = params.page ? Number(params.page) : evaluate(attrs.defaultPage);
+                            var maxShown = evaluate(attrs.maxShown);
+                            $scope.items = evaluate(attrs.items);
+                            $scope.scrollTop = animatedScroll;
+
+                            $scope.showCount = evaluate(attrs.maxItems);
+                            $scope.range = function (start, end) {
+                                var ret = [];
+                                if (!end) {
+                                    end = start;
+                                    start = 0;
+                                }
+                                for (var i = start; i < end; i++) {
+                                    ret.push(i);
+                                }
+                                return ret;
+                            };
+                            $scope.setCurrentPage = function (page) {
+                                if (!isNumber(page) || page <= 0) {
+                                    return;
+                                }
+                                if (page > $scope.maxPages) {
+                                    page = $scope.maxPages;
+                                }
+                                $scope.pageNumber = page;
+                                $scope.currentPage = page;
+                            };
+                            $scope.setMaxItems = function (value) {
+                                if ($scope.maxItems != value) {
+                                    $scope.maxItems = value;
+                                    $scope.currentPage = undefined;
+                                }
+                            };
+
+                            $scope.$watch("currentPage", function (neVal, oldVal) {
+                                setTimeout(function () {
+                                    $scope.pageNumber = neVal;
+                                });
+                                if (neVal != oldVal) {
+                                    applyPaging($scope, neVal);
+                                }
+                            });
+                            $scope.back = function () {
+                                if ($scope.currentPage > 1) {
+                                    $scope.currentPage--;
+                                }
+                            };
+                            $scope.next = function () {
+                                if ($scope.currentPage < $scope.maxPages) {
+                                    $scope.currentPage++;
+                                }
+                            };
+                            $scope.setPage = function () {
+                                $scope.currentPage = this.n + 1;
+                            };
+                            $scope.getMaxShown = function () {
+                                if ($scope.currentPage > Math.floor(maxShown / 2)) {
+                                    var lastPage = $scope.currentPage + Math.floor(maxShown / 2);
+                                    return lastPage > $scope.maxPages ? $scope.maxPages : lastPage;
+                                }
+                                return maxShown > $scope.maxPages ? $scope.maxPages : maxShown;
+                            };
+                            $scope.getMinShown = function () {
+                                var current = $scope.currentPage - 1;
+                                var floor = Math.floor(maxShown / 2);
+                                var mod = current - current % maxShown;
+                                if ($scope.currentPage <= $scope.maxPages - floor) {
+                                    return current > floor ? current - floor : mod;
+                                }
+                                return $scope.maxPages - maxShown >= 0 ? $scope.maxPages - maxShown : 0;
+
+                            };
+                        }
+
+                        mainViewResizeService.checkWidth();
+                    };
                 }
-            }
+            };
         }
-    })
+    )
     .directive("paginationFilter", function (applyPaging, $location) {
         return {
             template: "<div class=\"filter-container pull-right\">\
@@ -1128,14 +1181,17 @@ angular.module('front-end', ['error-catcher', 'enums'])
             controller: function ($scope) {
                 var lastUrl = $location.url();
                 $scope.$watch("filterScope", function (scope, old) {
-                    if (!scope) return;
+                    if (!scope) {
+                        return;
+                    }
                     scope.pageFilter = $scope.pageFilter;
                 });
 
                 $scope.$watch("pageFilter", function (filter, old) {
                     if (filter != old && !filter.length) {
-                        if ($scope.filterScope)
+                        if ($scope.filterScope) {
                             doFilter();
+                        }
                     }
                 });
 
@@ -1144,7 +1200,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                         lastUrl = "";
                     }
 
-                    if($location.search().q != $scope.pageFilter) {
+                    if ($location.search().q != $scope.pageFilter) {
                         $scope.pageFilter = "";
                     }
                 });
@@ -1153,7 +1209,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     var query = $scope.pageFilter;
                     $scope.filterScope.pageFilter = query;
                     applyPaging($scope.filterScope);
-                    if(query != undefined && query != "") {
+                    if (query != undefined && query != "") {
                         $location.search("q", query).replace();
                     } else {
                         $location.search("q", null);
@@ -1164,9 +1220,9 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     onFilterEnter: function () {
                         doFilter();
                     }
-                }
+                };
             }
-        }
+        };
     })
     .directive("switchClassAnimated", function () {
         return {
@@ -1197,7 +1253,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
         return function ($scope, elem, attrs) {
             var attr = $scope.$eval(attrs.setAttribute);
             $(elem).attr(attr);
-        }
+        };
     })
     .factory("lockMzCommons", function () {
 
@@ -1212,7 +1268,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 var charge = parseInt(value.charge);
                 var item = {lockMass: lockMass, charge: charge};
                 var isHasBeenAdded = $scope.values.filter(function (item) {
-                    return item.lockMass == lockMass && item.charge == charge
+                    return item.lockMass == lockMass && item.charge == charge;
                 }).length > 0;
                 if (lockMass != undefined
                     && !isNaN(lockMass)
@@ -1221,7 +1277,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     && charge != undefined
                     && charge != 0
                     && (charge >= -3 || charge <= 3)
-                    ) {
+                ) {
                     $scope.values.push(item);
                     $scope.values.sort($scope.sortMasses);
                 }
@@ -1231,7 +1287,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                 return a.lockMass - b.lockMass;
             };
             return $scope;
-        }
+        };
     })
     .directive("lockMasses", function (lockMzCommons) {
         return {
@@ -1248,7 +1304,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
                     scope.values.sort(scope.sortMasses);
                 }
             }
-        }
+        };
     })
     .directive("lockMassesSelector", function (lockMzCommons) {
         return {
@@ -1260,7 +1316,7 @@ angular.module('front-end', ['error-catcher', 'enums'])
             controller: function ($scope) {
                 lockMzCommons($scope);
             }
-        }
+        };
     })
     .directive("setFocus", function () {
         return {
@@ -1274,10 +1330,10 @@ angular.module('front-end', ['error-catcher', 'enums'])
             }
         };
     })
-    .directive("onContentLoad", function() {
-        return function(scope, elem, attrs) {
+    .directive("onContentLoad", function () {
+        return function (scope, elem, attrs) {
             scope.$eval(attrs.onContentLoad);
-        }
+        };
     })
     .directive("syncOperationControl", function () {
         return {
@@ -1297,15 +1353,17 @@ angular.module('front-end', ['error-catcher', 'enums'])
                         $scope.eventHandler(successHandler, failHandler);
                     }
                 });
-                function successHandler (response) {
+
+                function successHandler(response) {
                     $element.attr("disabled", false);
-                    if($scope.successHandler){
+                    if ($scope.successHandler) {
                         $scope.successHandler(response);
                     }
                 }
-                function failHandler (error) {
+
+                function failHandler(error) {
                     $element.attr("disabled", false);
-                    if($scope.errorHandler){
+                    if ($scope.errorHandler) {
                         $scope.errorHandler(error);
                     }
                 }
@@ -1316,34 +1374,34 @@ angular.module('front-end', ['error-catcher', 'enums'])
         var experimentIconDetails = {};
 
         experimentIconDetails.getDownloadTitle = function (experiment) {
-            if (experiment.downloadAvailable){
+            if (experiment.downloadAvailable) {
                 return "Experiment is ready to download";
-            } else {
-                if (experiment.hasUnArchiveDownloadOnlyRequest) {
-                    return "Experiment download request is in progress. Currently, Experiment download is unavailable";
-                } else if (experiment.hasUnArchiveRequest) {
-                    return "Experiment unArchiving request is in progress. Currently, Experiment download is unavailable";
-                } else {
-                    return "Experiment download is unavailable";
-                }
             }
+            if (experiment.hasUnArchiveDownloadOnlyRequest) {
+                return "Experiment download request is in progress. Currently, Experiment download is unavailable";
+            } else if (experiment.hasUnArchiveRequest) {
+                return "Experiment unArchiving request is in progress. Currently, Experiment download is unavailable";
+            }
+            return "Experiment download is unavailable";
+
+
         };
 
         experimentIconDetails.getAnalyzesTitle = function (experiment) {
             return experiment.analyzesCount > 0 ? "Processing Runs" : "No Processing Runs";
         };
-        experimentIconDetails.getIconStyleClass = function(experiment){
-            if (experiment.downloadAvailable){
+        experimentIconDetails.getIconStyleClass = function (experiment) {
+            if (experiment.downloadAvailable) {
                 return "quickDownload";
-            }else{
-                if (experiment.hasUnArchiveDownloadOnlyRequest) {
-                    return "download-in-progress";
-                } else if (experiment.hasUnArchiveRequest){
-                    return "download-in-time";
-                } else{
-                    return "slowDownload";
-                }
             }
+            if (experiment.hasUnArchiveDownloadOnlyRequest) {
+                return "download-in-progress";
+            } else if (experiment.hasUnArchiveRequest) {
+                return "download-in-time";
+            }
+            return "slowDownload";
+
+
         };
 
         return experimentIconDetails;
@@ -1371,82 +1429,6 @@ angular.module('front-end', ['error-catcher', 'enums'])
 
             return bytes.toFixed(2) + " " + units[unit];
         };
-    })
-    .directive("chorusStartDatepicker", function () {
-        return {
-            restrict: "A",
-            require: "ngModel",
-            link: function (scope, element, attrs, ngModelCtrl) {
-                var startFromToday = true;
-                if(attrs.chorusStartDatepickerFromToday == "false"){
-                    startFromToday = false;
-                }
-                var endDate;
-                scope.$watch(attrs.chorusStartDatepicker, function (value) {
-                    endDate = value;
-                    if (endDate) {
-                        endDate = $.datepicker.parseDate("mm/dd/yy", endDate)
-                    }
-                    element.datepicker("destroy");
-                    $(function () {
-                        element.datepicker({
-                            dateFormat: "mm/dd/yy",
-                            minDate: startFromToday ? new Date() : null,
-                            maxDate: endDate,
-                            onSelect: function (date) {
-                                scope.$apply(function () {
-                                    ngModelCtrl.$setViewValue(date);
-                                });
-                            }
-                        });
-                    });
-                });
-            }
-        }
-    })
-    .directive("chorusEndDatepicker", function () {
-        return {
-            restrict: "A",
-            require: "ngModel",
-            link: function (scope, element, attrs, ngModelCtrl) {
-                var startFromToday = true;
-                if(attrs.chorusStartDatepickerFromToday == "false"){
-                    startFromToday = false;
-                }
-                var startDate;
-                scope.$watch(attrs.chorusEndDatepicker, function (value) {
-                    startDate = value;
-                    if (startDate) {
-                        startDate = $.datepicker.parseDate("mm/dd/yy", startDate)
-                    } else if(startFromToday){
-                        startDate = new Date();
-                    }
-                    element.datepicker("destroy");
-                    $(function () {
-                        element.datepicker({
-                            dateFormat: "mm/dd/yy",
-                            minDate: startDate,
-                            onSelect: function (date) {
-                                scope.$apply(function () {
-                                    ngModelCtrl.$setViewValue(date);
-                                });
-                            }
-                        });
-                    });
-                });
-            }
-        }
-    })
-    .factory('UserLabProvider', function ($rootScope, BillingFeatures, LabFeatures) {
-        return {
-            getLabsWithTranslationEnabled: function () {
-                return $.grep($rootScope.laboratories, function (lab) {
-                    var labId = lab.id;
-                    return $rootScope.isFeatureAvailable(LabFeatures.TRANSLATION, labId)
-                        && $rootScope.isBillingFeatureAvailable(BillingFeatures.TRANSLATION, labId);
-                });
-            }
-        }
     });
 
 //TODO: [stanislav.kurilin] I'm not sure that it belongs here. I believe if there will be more such stuff we should extract it.
@@ -1467,19 +1449,19 @@ function detailsLink(arg) {
                 $scope.showDetails = function (id) {
                     $rootScope.dialogReturnUrl = $location.url();
                     $location.url($location.path() + "/" + id + urlParam);
-                }
+                };
             },
             restrict: "E",
             replace: true,
-            template: '\
+            template: "\
             <a\
-                ng-click="showDetails(eid)"\
-                class=""\
-                data-toggle="modal" data-target="' + dataTarget + '"\
-                title="' + title + '"><i class="' + icon + '"></i><span class="details-link-name" set-text="text || \'Edit\'"></span>\
-            </a>'
-        }
-    }
+                ng-click=\"showDetails(eid)\"\
+                class=\"\"\
+                data-toggle=\"modal\" data-target=\"" + dataTarget + "\"\
+                title=\"" + title + "\"><i class=\"" + icon + "\"></i><span class=\"details-link-name\" set-text=\"text || 'Edit'\"></span>\
+            </a>"
+        };
+    };
 }
 
 
@@ -1496,39 +1478,40 @@ function detailsDirective(arg) {
                     $rootScope.dialogReturnUrl = $location.url();
                     var url = $location.path().substring(0, $location.path().lastIndexOf("/"));
                     $location.url(url);
-                }
+                };
             },
             restrict: "E",
-            template: '\
+            template: "\
             <button\
-                ng-show="show" \
-                ng-click="showDetails(eid)"\
-                class="table-button btn btn-success"\
-                data-toggle="modal" data-target="' + dataTarget + '"\
-                title="' + title + '">\
-            <i class="icon details" ng-hide="canEdit"></i>\
-            <i class="icon-edit" ng-show="canEdit"></i>\
-            </button>'
-        }
-    }
+                ng-show=\"show\" \
+                ng-click=\"showDetails(eid)\"\
+                class=\"table-button btn btn-success\"\
+                data-toggle=\"modal\" data-target=\"" + dataTarget + "\"\
+                title=\"" + title + "\">\
+            <i class=\"icon details\" ng-hide=\"canEdit\"></i>\
+            <i class=\"icon-edit\" ng-show=\"canEdit\"></i>\
+            </button>"
+        };
+    };
 }
+
 //helper for creating directives for linked names. arg.sub should be specified.
 //todo generalize to entities without linked names
 function linkedName(arg) {
     return function ($location) {
         return {
-            restrict: 'E',
+            restrict: "E",
             controller: function ($rootScope, $scope, $attrs) {
                 var sub = angular.isDefined(arg.sub) ? arg.sub : $scope.$eval($attrs.sub);
                 $scope.linkLabel = $scope.$eval($attrs.name);
-                $scope.linkUrl = '#' + $location.path() + '/' + $scope.$eval($attrs.eid) + '/' + sub;
-                $scope.saveLocation = function(){
+                $scope.linkUrl = "#" + $location.path() + "/" + $scope.$eval($attrs.eid) + "/" + sub;
+                $scope.saveLocation = function () {
                     $rootScope.dialogReturnUrl = $location.url();
-                }
+                };
             },
-            template: '<a ng-click="saveLocation()" href="{{linkUrl}}" class="table-link" ng-bind="linkLabel"></a>'
-        }
-    }
+            template: "<a ng-click=\"saveLocation()\" href=\"{{linkUrl}}\" class=\"table-link\" ng-bind=\"linkLabel\"></a>"
+        };
+    };
 }
 
 //Helper for creating Expand Menu factories
@@ -1545,11 +1528,11 @@ function initExpandMenu(openMenuFn) {
         };
         $scope.onOpenExpandMenu = function (event, item, open) {
             if (open) {
-                openMenuFn(item, $scope)
+                openMenuFn(item, $scope);
             }
             //
         };
-    }
+    };
 }
 
 
@@ -1597,7 +1580,7 @@ function userOrGroupSelection(arg) {
                     return filteredUsers.length > 0 || selectedUsers.length > 0;
                 };
                 $scope.isGroup = function (item) {
-                    return $scope.groups && $.grep($scope.groups,function (group) {
+                    return $scope.groups && $.grep($scope.groups, function (group) {
                         return item.name && group.name == item.name;
                     }).length > 0;
                 };
@@ -1642,13 +1625,15 @@ function userOrGroupSelection(arg) {
             },
             selectedFn: function ($scope) {
                 return function () {
-                    return groupSelectionAvailable ? $scope.selectedUsers.concat($scope.selectedGroups) : $scope.selectedUsers;
-                }
+                    return groupSelectionAvailable ?
+                        $scope.selectedUsers.concat($scope.selectedGroups) :
+                        $scope.selectedUsers;
+                };
             },
             selectedToCreate: function ($scope) {
                 return function () {
                     return $scope.invitedUsers;
-                }
+                };
             },
             getAllItems: function ($scope) {
                 if ($scope.excludeEmails) {
@@ -1659,18 +1644,20 @@ function userOrGroupSelection(arg) {
             },
             showInAutoCompleteFn: function ($scope) {
                 return function (item) {
-                    return $scope.isUser(item) ? ($scope.userName(item) + "<" + $scope.userEmail(item) + ">") : $scope.groupName(item);
-                }
+                    return $scope.isUser(item) ?
+                        $scope.userName(item) + "<" + $scope.userEmail(item) + ">" :
+                        $scope.groupName(item);
+                };
             },
             identifyFn: function ($scope) {
                 return function (item) {
                     var res = $scope.isUser(item) ? $scope.userEmail(item) : $scope.groupName(item);
                     if (!res && item.email) {
                         return item.email;
-                    } else {
-                        return res;
                     }
-                }
+                    return res;
+
+                };
             },
             addSelectedItem: function ($scope, item) {
                 if ($scope.isUser(item)) {
@@ -1680,26 +1667,30 @@ function userOrGroupSelection(arg) {
                     $scope.invitedUsers.push(item);
                 } else if ($scope.isGroup(item) && groupSelectionAvailable) {
                     $scope.selectedGroups.push(item);
-                } else throw "could not dispatch on " + item;
+                } else {
+                    throw "could not dispatch on " + item;
+                }
             },
             removeSelectedItem: function ($scope, item, id) {
                 if ($scope.isUser(item)) {
                     $scope.selectedUsers = jQuery.grep($scope.selectedUsers, function (elem, index) {
                         return $scope.identify(elem) != id;
-                    })
+                    });
                 } else if ($scope.isInvited(item)) {
                     $scope.invitedUsers = jQuery.grep($scope.invitedUsers, function (elem, index) {
                         return $scope.identify(elem) != id;
-                    })
+                    });
                 } else if ($scope.isGroup(item) && groupSelectionAvailable) {
                     $scope.selectedGroups = jQuery.grep($scope.selectedGroups, function (elem, index) {
                         return $scope.identify(elem) != id;
-                    })
-                } else throw "could not dispatch on " + item;
+                    });
+                } else {
+                    throw "could not dispatch on " + item;
+                }
             },
             templateUrl: "../pages/component/user-group-selection.html"
         });
-    }
+    };
 }
 
 
@@ -1747,9 +1738,18 @@ function showAlerts(elem, fadeInTime, $scope) {
     });
 }
 
-function setupAttachments(dialogSelector, $scope, Attachment, attachmentTypeFromName, allowedExtensionsFn, maxAttachmentSize, fileChooserId, isSingleFileUpload, displayDragAndDropAreaOnlyIfAreaPresented, allowAllFileTypesOption) {
+function setupAttachments(dialogSelector,
+                          $scope,
+                          Attachment,
+                          attachmentTypeFromName,
+                          allowedExtensionsFn,
+                          maxAttachmentSize,
+                          fileChooserId,
+                          isSingleFileUpload,
+                          displayDragAndDropAreaOnlyIfAreaPresented,
+                          allowAllFileTypesOption) {
     $scope.alerts = [];
-    var allowAllFileTypes = (allowAllFileTypesOption === undefined) ? true : allowAllFileTypesOption;
+    var allowAllFileTypes = allowAllFileTypesOption === undefined ? true : allowAllFileTypesOption;
     var dragNDropHelper = new DragNDropHelper({
             containerSelector: dialogSelector,
             dropOverlaySelector: ".attachment-drop-area",
@@ -1760,7 +1760,7 @@ function setupAttachments(dialogSelector, $scope, Attachment, attachmentTypeFrom
             fileChooserId: fileChooserId,
             isSingleFileUpload: isSingleFileUpload,
             getAllFilesFunction: function () {
-                return $scope.uploadingAttachments
+                return $scope.uploadingAttachments;
             },
             setAllFilesFunction: function (files) {
                 $scope.uploadingAttachments = files;
@@ -1774,10 +1774,10 @@ function setupAttachments(dialogSelector, $scope, Attachment, attachmentTypeFrom
                 CommonLogger.log("These files have been dropped: " + JSON.stringify(changedFiles));
             },
             onNotAllowedSizeCallback: function (changedFiles) {
-                $scope.alerts.push("The attachment size exceeds " + maxAttachmentSize/1048576 + " MB" );
+                $scope.alerts.push("The attachment size exceeds " + maxAttachmentSize / 1048576 + " MB");
                 CommonLogger.log("These files have been dropped: " + JSON.stringify(changedFiles));
             },
-            onEmptyFolderCallback: function(){
+            onEmptyFolderCallback: function () {
                 $scope.alerts.push(DragNDropMessages.EMPTY_FOLDERS_FILTERED);
             },
             onFilesDroppedCallback: function (files) {
@@ -1787,10 +1787,12 @@ function setupAttachments(dialogSelector, $scope, Attachment, attachmentTypeFrom
                         showDuplicated = true;
                         $scope.uploadingAttachments = $.grep($scope.uploadingAttachments, function (item) {
                             return item.name != file.name;
-                        })
+                        });
                     }
                 });
-                if (showDuplicated)  $scope.alerts.push(DragNDropMessages.DUPLICATES_REMOVED);
+                if (showDuplicated) {
+                    $scope.alerts.push(DragNDropMessages.DUPLICATES_REMOVED);
+                }
 
                 setTimeout(function () {
                     showAlerts($(".unsupported-files-alert"), 500, $scope);

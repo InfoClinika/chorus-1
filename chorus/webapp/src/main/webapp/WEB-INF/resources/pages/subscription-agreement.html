@@ -6,7 +6,7 @@
 	<!-- FavIcon -->
 	<link rel="icon" href="../img/favicon.ico" type="image/x-icon"/>
 
-    <script type="text/javascript" src="../script/util/logging.js"></script>
+    <script type="text/javascript" src="../script/util/logging.js?_version=${static.resources.version}"></script>
 
     <!-- Twitter Bootstrap -->
     <script src="../lib/jquery/jquery-1.8.2.min.js"></script>
@@ -19,15 +19,27 @@
     <script type="text/javascript" src="../lib/angularjs/angular.min.js"></script>
     <script type="text/javascript" src="../lib/angularjs/angular-resource-patched.js"></script>
     <script type="text/javascript" src="../lib/angular-ui/angular-ui.min.js"></script>
-    <script type="text/javascript" src="../script/error-catcher.js"></script>
-    <script type="text/javascript" src="../script/enums.js"></script>
+    <script type="text/javascript" src="../script/error-catcher.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/enums.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/security-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/features-back.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/feature.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/user-details.service.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/security-front.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js"></script>
+    <script type="text/javascript" src="../script/header/header.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/header/header.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/footer/footer.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/footer/footer.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/appearance/appearance.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/appearance/appearance.service.js?_version=${static.resources.version}"></script>
 
-    <script type="text/javascript" src="../script/static-common.js"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript" src="../script/static-common.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
 
     <link rel="stylesheet" href="../lib/bootstrap/css/bootstrap.min.css">
     <!-- Custom Fonts -->
@@ -41,18 +53,28 @@
         }
       </style>
     <![endif]-->
+    <link rel="stylesheet" href="../lib/jquery-ui/jquery-ui.css"/>
     <link rel="stylesheet" href="../css/dialogs.css">
     <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 </head>
 <body class="static-page privacy-page">
     <div class="fixed-area">
-        <div ng-init="activePage = ''" class="ng-include: 'header.html'"></div>
+        <div ng-init="activePage = ''; showConsent = true" class="ng-include: 'header.html'"></div>
     </div>
     <div class="main-content">
         <div class="content-box clearfix">
             <div class="center-frame">
                 <h2>Subscription Agreement</h2>
-                <p><em>This subscription agreement ("Agreement") governs the access and use of the Stratus biosciences' ("Stratus") service. By using the service or any part thereof, (A) you are representing and warranting that you have the authority to bind the use of the service (“Customer”) and (B) customer is consenting to be bound by, and is becoming a party, to this agreement. If you or customer do not agree to (or cannot comply with) all of the terms and conditions of this agreement then neither you nor customer may use the service</em>.</p>
+                <p><em>This subscription agreement ("Agreement") governs the access and use of the Infoclinika'
+                    ("Chorus") service. By using the service or any part thereof, (A) you are representing and
+                    warranting that you have the authority to bind the use of the service (“Customer”) and (B) customer
+                    is consenting to be bound by, and is becoming a party, to this agreement. If you or customer do not
+                    agree to (or cannot comply with) all of the terms and conditions of this agreement then neither you
+                    nor customer may use the service.</em></p>
                 <ol>
                     <li>
                         <h3>Definitions</h3>
@@ -60,48 +82,126 @@
                         <ul>
                             <li><span>“Content”</span> means the data, information, documents, software, products, and services contained or made available to Customer in the course of using the Service (excluding Customer Data).</li>
                             <li><span>“Customer Data”</span> means any data, information, or material provided or submitted by Customer to the Service in the course of using the Service.</li>
-                            <li><span>“Stratus Technology”</span> means all of Stratus’ proprietary technology including, but not limited to, software and all other Intellectual Property Rights made available to Customer by Stratus in providing the Service.</li>
+                            <li><span>“Chorus Technology”</span> means all of Chorus’ proprietary technology including,
+                                but not limited to, software and all other Intellectual Property Rights made available
+                                to Customer by Chorus in providing the Service.
+                            </li>
                             <li><span>“End User”</span> means a person that accesses and uses the Service for their own use.</li>
                             <li><span>“Intellectual Property Rights”</span> means any and all (by whatever term known or designated) tangible and intangible, now known or hereafter existing: (a) rights associated with works of authorship throughout the world, including but not limited to all exclusive and non-exclusive exploitation rights, copyrights and moral rights; (b) trademark and trade name rights and similar rights; (c) trade secret rights; (d) patents, designs, algorithms and other industrial property rights; (e) all other proprietary rights of every kind and nature throughout the world, however designated, whether arising by operation of law, contract, license or otherwise; and (f) all registrations, applications, renewals, extensions, continuations, divisions or reissues thereof now or hereafter in force throughout the universe.</li>
-                            <li><span>“Service”</span> means the Stratus’ online service operated and maintained by Stratus and accessible via http://chorusproject.org or another designated website or IP address which is accessed and used by third parties to, among other things, aggregate, process, share, and store information related to Mass Spectrometry.</li>
+                            <li><span>“Service”</span> means the Chorus’ online service operated and maintained by
+                                Chorus and accessible via http://chorusproject.org or another designated website or IP
+                                address which is accessed and used by third parties to, among other things, aggregate,
+                                process, share, and store information related to Mass Spectrometry.
+                            </li>
                             <li><span>“Third Party Data”</span> means any data, information, or material provided or submitted by a third party to the Service in the course of using the Service.</li>
                         </ul>
                     </li>
                     <li>
                         <h3>License Grant and Restrictions</h3>
-                        <ol>
-                            <li>Stratus hereby grants Customer a limited, nonexclusive, nontransferable, right to access and use the Service, solely for Customer’s own internal business purposes as follows: (a) to upload, manipulate, process, share, and store Customer Data on the Service; and (b) to do such other things as expressly permitted by Stratus in writing.  All rights not expressly granted to Customer in this Agreement are reserved by Stratus and its licensors.</li>
-                            <li>Customer shall not (a) license, sublicense, sell, resell, transfer, assign, distribute, or otherwise commercially exploit or make available to any third party the Service or the Content (excluding Customer Data) in any way; (b) modify or make derivative works based upon the Service or the Content (excluding Customer Data); (c) create Internet “links” to the Service or “frame” or “mirror” any Content on any other server or wireless or Internet-based device. </li>
+                        <ul>
+                            <li>Chorus hereby grants Customer a limited, nonexclusive, nontransferable, right to access
+                                and use the Service, solely for Customer’s own internal business purposes as follows:
+                                (a) to upload, manipulate, process, share, and store Customer Data on the Service; and
+                                (b) to do such other things as expressly permitted by Chorus in writing. All rights not
+                                expressly granted to Customer in this Agreement are reserved by Chorus and its
+                                licensors.
+                            </li>
+                            <li>Customer shall not (a) license, sublicense, sell, resell, transfer, assign, distribute,
+                                or otherwise commercially exploit or make available to any third party the Service or
+                                the Content (excluding Customer Data) in any way; (b) modify or make derivative works
+                                based upon the Service or the Content (excluding Customer Data); (c) create Internet
+                                “links” to the Service or “frame” or “mirror” any Content on any other server or
+                                wireless or Internet-based device.
+                            </li>
                             <li>Customer may not use the Service to: (a) send or publish any infringing, obscene, threatening, libelous, or otherwise unlawful or tortious material; (b) send or store material containing software viruses, worms, Trojan horses, or other harmful computer code, files, scripts, agents, or programs; (c) interfere with or disrupt the integrity or performance of the Service or the data contained therein; or (d) attempt to gain unauthorized access to the Service or its related systems or networks.</li>
-                        </ol>
+                        </ul>
                     </li>
                     <li>
                         <h3>Customer Responsibilities</h3>
-                        <p>Customer is responsible for all activity occurring under Customer’s account and shall abide by all applicable laws and regulations in connection with Customer’s use of the Service, including those related to data privacy and the transmission of technical or personal data.  Customer shall: (a) notify Stratus immediately of any unauthorized use of any password or account or any other known or suspected breach of security; (b) immediately report to Stratus and use reasonable efforts to promptly stop any copying or distribution of Content (excluding Third Party Content which is approved for general release and use) that is known or suspected by Customer; and (c) not impersonate another Stratus’ user or provide false identity information to gain access to or use the Service.</p>
+                        <p>Customer is responsible for all activity occurring under Customer’s account and shall abide
+                            by all applicable laws and regulations in connection with Customer’s use of the Service,
+                            including those related to data privacy and the transmission of technical or personal data.
+                            Customer shall: (a) notify Chorus immediately of any unauthorized use of any password or
+                            account or any other known or suspected breach of security; (b) immediately report to Chorus
+                            and use reasonable efforts to promptly stop any copying or distribution of Content
+                            (excluding Third Party Content which is approved for general release and use) that is known
+                            or suspected by Customer; and (c) not impersonate another Chorus’ user or provide false
+                            identity information to gain access to or use the Service.</p>
                     </li>
                     <li>
                         <h3>Account Information and Data</h3>
-                        <p>Stratus does not own any Customer Data or Third Party Data.  Customer and Status’ customers, not Stratus, shall have sole responsibility for the accuracy, quality, integrity, legality, reliability, appropriateness, and intellectual property ownership or right to use of all Customer Data and Third Party Data, respectively, and Stratus shall not be responsible or liable for the deletion, correction, destruction, damage, loss or failure to store any Customer Data or Third Party Data. In the event this Agreement is terminated (other than by reason of Customer’s breach), Stratus will make available to Customer a file of the Customer Data within thirty (30) days of termination if Customer so requests at the time of termination.  Stratus reserves the right to withhold, remove, and/or discard Customer Data without notice for any actual or perceived breach, including, without limitation, Customer’s non-payment of Service Fees (as defined below).  Upon termination of this Agreement for cause, Customer’s right to access or use Customer Data immediately ceases, and Stratus shall have no obligation to maintain or forward any Customer Data.</p>
+                        <p>Chorus does not own any Customer Data or Third Party Data. Customer and Status’ customers,
+                            not Chorus, shall have sole responsibility for the accuracy, quality, integrity, legality,
+                            reliability, appropriateness, and intellectual property ownership or right to use of all
+                            Customer Data and Third Party Data, respectively, and Chorus shall not be responsible or
+                            liable for the deletion, correction, destruction, damage, loss or failure to store any
+                            Customer Data or Third Party Data. In the event this Agreement is terminated (other than by
+                            reason of Customer’s breach), Chorus will make available to Customer a file of the Customer
+                            Data within thirty (30) days of termination if Customer so requests at the time of
+                            termination. Chorus reserves the right to withhold, remove, and/or discard Customer Data
+                            without notice for any actual or perceived breach, including, without limitation, Customer’s
+                            non-payment of Service Fees (as defined below). Upon termination of this Agreement for
+                            cause, Customer’s right to access or use Customer Data immediately ceases, and Chorus shall
+                            have no obligation to maintain or forward any Customer Data.</p>
                     </li>
                     <li>
                         <h3>Intellectual Property Ownership</h3>
-                        <p>Stratus and its licensors shall exclusively own all right, title, and interest, including all related Intellectual Property Rights, in and to the Stratus Technology, the Content and the Service and any suggestions, ideas, enhancement requests, feedback, recommendations, or other information provided by Customer or any other party relating to the Service.  This Agreement is not a sale and does not convey to Customer any rights of ownership in or related to the Service, the Stratus Technology or the Intellectual Property Rights owned by Stratus.  Stratus’ name, Stratus’ logo, and the product names associated with the Service are trademarks of Stratus or third parties, and no right or license is granted to Customer to use them.</p>
+                        <p>Chorus and its licensors shall exclusively own all right, title, and interest, including all
+                            related Intellectual Property Rights, in and to the Chorus Technology, the Content and the
+                            Service and any suggestions, ideas, enhancement requests, feedback, recommendations, or
+                            other information provided by Customer or any other party relating to the Service. This
+                            Agreement is not a sale and does not convey to Customer any rights of ownership in or
+                            related to the Service, the Chorus Technology or the Intellectual Property Rights owned by
+                            Chorus. Chorus’ name, Chorus’ logo, and the product names associated with the Service are
+                            trademarks of Chorus or third parties, and no right or license is granted to Customer to use
+                            them.</p>
                     </li>
                     <li>
                         <h3>Open-Source Licenses</h3>
-                        <p>The Service includes open source components licensed under the Apache 2.0 License (“Open Source Components”), a copy of which can be found at http://www.apache.org/licenses/LICENSE-2.0.html (“Apache License”).  Any use of the Open Source Components by Customer shall be governed by, and subject to, the terms and conditions of the Apache License.  On written request to Stratus, Stratus shall provide Customer with a complete, machine-readable copy of the source code for such Open Source Components in accordance with the terms of the Apache License at no cost to Customer.</p>
+                        <p>The Service includes open source components licensed under the Apache 2.0 License (“Open
+                            Source Components”), a copy of which can be found at
+                            http://www.apache.org/licenses/LICENSE-2.0.html (“Apache License”). Any use of the Open
+                            Source Components by Customer shall be governed by, and subject to, the terms and conditions
+                            of the Apache License. On written request to Chorus, Chorus shall provide Customer with a
+                            complete, machine-readable copy of the source code for such Open Source Components in
+                            accordance with the terms of the Apache License at no cost to Customer.</p>
                     </li>
                     <li>
                         <h3>Privacy</h3>
-                        <p>Stratus’ policy with respect to the handling of personal information and other information that Stratus may collect or which Customer may submit to Stratus shall be governed in all respects under Stratus’ privacy policy located at <a href="privacy-policy.html">www.chorusproject.org/privacy-policy.html</a>.</p>
+                        <p>Chorus’ policy with respect to the handling of personal information and other information
+                            that Chorus may collect or which Customer may submit to Chorus shall be governed in all
+                            respects under Chorus’ privacy policy located at <a href="privacy-policy.html"
+                                                                                ng-bind="'/pages/privacy-policy.html' | currentHostPrefix"></a>.
+                        </p>
                     </li>
                     <li>
                         <h3>Fees and Billings</h3>
-                        <p>Customer shall pay all fees or charges to Customer’s account in accordance with the fees, charges, and billing terms in effect at the time a fee or charge is due and payable (collectively, “Service Fee”).  The initial charges for use of the Service will be equal the Service Fee currently in effect at the time Customer agrees to the terms of this Agreement (“Effective Date”).  Payments must be made annually in advance unless otherwise mutually agreed upon by the parties.  All payment obligations are non-cancelable and all amounts paid are nonrefundable.  Customer must provide Stratus with valid credit card or other billing information as a condition to signing up for the Service.  Stratus reserves the right to modify the Service Fees and to introduce new charges at any time, upon at least thirty (30) days notice to Customer, and any such change will be effective upon renewal and thereafter.  Stratus’ fees are exclusive of all taxes, levies, or duties imposed by taxing authorities, and Customer shall be responsible for payment of all such taxes, levies, or duties, excluding only U.S. (federal or state) taxes based solely on Stratus’ income.  All pricing terms are confidential, and Customer agrees not to disclose them to any third party.</p>
+                        <p>Customer shall pay all fees or charges to Customer’s account in accordance with the fees,
+                            charges, and billing terms in effect at the time a fee or charge is due and payable
+                            (collectively, “Service Fee”). The initial charges for use of the Service will be equal the
+                            Service Fee currently in effect at the time Customer agrees to the terms of this Agreement
+                            (“Effective Date”). Payments must be made annually in advance unless otherwise mutually
+                            agreed upon by the parties. All payment obligations are non-cancelable and all amounts paid
+                            are nonrefundable. Customer must provide Chorus with valid credit card or other billing
+                            information as a condition to signing up for the Service. Chorus reserves the right to
+                            modify the Service Fees and to introduce new charges at any time, upon at least thirty (30)
+                            days notice to Customer, and any such change will be effective upon renewal and thereafter.
+                            Chorus’ fees are exclusive of all taxes, levies, or duties imposed by taxing authorities,
+                            and Customer shall be responsible for payment of all such taxes, levies, or duties,
+                            excluding only U.S. (federal or state) taxes based solely on Chorus’ income. All pricing
+                            terms are confidential, and Customer agrees not to disclose them to any third party.</p>
                     </li>
                     <li>
                         <h3>Excess Private Data Storage Fee</h3>
-                        <p>Data stored in Chorus can be separated into both private and public data.  Data made fully public will have no charge associated with the data storage.  The maximum storage space provided to Customer for private data at no additional charge is 200 GBs.  If the amount of private storage required by Customer exceeds this limit, Stratus has the right to charge Customer the then-current storage fees.  Stratus will use reasonable efforts to notify Customer when the storage used by Customer reaches approximately ninety percent (90%) of the maximum; however, any failure by Stratus to so notify Customer shall not affect Customer’s responsibility for such additional storage charges.  Stratus reserves the right to establish or modify its general practices and limits relating to storage of Customer Data.</p>
+                        <p>Data stored in Chorus can be separated into both private and public data. Data made fully
+                            public will have no charge associated with the data storage. The maximum storage space
+                            provided to Customer for private data at no additional charge is 200 GBs. If the amount of
+                            private storage required by Customer exceeds this limit, Chorus has the right to charge
+                            Customer the then-current storage fees. Chorus will use reasonable efforts to notify
+                            Customer when the storage used by Customer reaches approximately ninety percent (90%) of the
+                            maximum; however, any failure by Chorus to so notify Customer shall not affect Customer’s
+                            responsibility for such additional storage charges. Chorus reserves the right to establish
+                            or modify its general practices and limits relating to storage of Customer Data.</p>
                     </li>
                     <li>
                         <h3>Past due Accounts</h3>
@@ -109,55 +209,123 @@
                     </li>
                     <li>
                         <h3>Term</h3>
-                        <p>Unless earlier terminated pursuant to Section 12, this Agreement shall commence on the Effective Date and continue in effect for a period of one (1) year.  Thereafter, this Agreement shall automatically renew for successive one (1) year periods unless either party gives the other party notice of its intent not to renew the Agreement at least thirty (30) days prior to the expiration of the then-current term.</p>
+                        <p>Unless earlier terminated pursuant to Section 12, this Agreement shall commence on the
+                            Effective Date and continue in effect for a period of one (1) year. Thereafter, this
+                            Agreement shall automatically renew for successive one (1) year periods unless either party
+                            gives the other party notice of its intent not to renew the Agreement at least thirty (30)
+                            days prior to the expiration of the then-current term.</p>
                     </li>
                     <li>
                         <h3>Termination for Cause</h3>
-                        <p>Any breach of Customer’s payment obligations or unauthorized use by Customer of the Stratus Technology or Service will be deemed a material breach of this Agreement and Stratus may, in its sole discretion, terminate Customer’s account or use of the Service by providing notice to Customer.  Notwithstanding the foregoing, if Customer cures its failure to pay amounts due under this Agreement within ten (10) days of the date of the notice of such breach, Stratus shall not terminate Customer’s account or this Agreement.</p>
+                        <p>Any breach of Customer’s payment obligations or unauthorized use by Customer of the Chorus
+                            Technology or Service will be deemed a material breach of this Agreement and Chorus may, in
+                            its sole discretion, terminate Customer’s account or use of the Service by providing notice
+                            to Customer. Notwithstanding the foregoing, if Customer cures its failure to pay amounts due
+                            under this Agreement within ten (10) days of the date of the notice of such breach, Chorus
+                            shall not terminate Customer’s account or this Agreement.</p>
                     </li>
                     <li>
                         <h3>Indemnification</h3>
-                        <p>Customer shall indemnify, defend, and hold Stratus and its officers, directors, and employees harmless from and against any and all claims, costs, damages, losses, liabilities, and expenses (including attorneys’ fees and costs) arising out of or in connection with: (a) a claim alleging that use of the Customer Data infringes or misappropriates the rights of, or has caused harm to, a third party or (b) a claim arising from a breach of this Agreement by Customer, provided in any such case that Stratus (i) gives written notice of the claim promptly to Customer; (ii) gives Customer sole control of the defense and settlement of the claim (provided that Customer may not settle or defend any claim unless Customer unconditionally releases Stratus of all liability and such settlement does not affect Stratus’ business or the Service); (iii) provides to Customer all available information and assistance; and (iv) has not materially compromised or settled such claim.</p>
+                        <p>Customer shall indemnify, defend, and hold Chorus and its officers, directors, and employees
+                            harmless from and against any and all claims, costs, damages, losses, liabilities, and
+                            expenses (including attorneys’ fees and costs) arising out of or in connection with: (a) a
+                            claim alleging that use of the Customer Data infringes or misappropriates the rights of, or
+                            has caused harm to, a third party or (b) a claim arising from a breach of this Agreement by
+                            Customer, provided in any such case that Chorus (i) gives written notice of the claim
+                            promptly to Customer; (ii) gives Customer sole control of the defense and settlement of the
+                            claim (provided that Customer may not settle or defend any claim unless Customer
+                            unconditionally releases Chorus of all liability and such settlement does not affect Chorus’
+                            business or the Service); (iii) provides to Customer all available information and
+                            assistance; and (iv) has not materially compromised or settled such claim.</p>
                     </li>
                     <li>
                         <h3>Disclaimer of Warranties</h3>
-                        <p><em>Except as explicitly set forth in this agreement, Stratus makes no representation, warranty, or guaranty as to the reliability, timeliness, quality, suitability, truth, availability, accuracy, or completeness of the service or any content. Stratus does not represent or warrant that (A) the use of the service will be secure, timely, uninterrupted, or error-free or operate in combination with any other hardware, software, system, or data; (B) the service will meet customer's requirements or expectations; (C) any stored data will be accurate or reliable; (D) errors or defects will be corrected; or (E) the service or the servers that make the service available are free of viruses or other harmful components. The service and all content is provided to customer strictly on an "as is" and "as available" basis. All conditions, representations and warranties, whether express, implied, statutory or otherwise, including, without limitation, any implied warranty of merchantability, fitness for a particular purpose, or non-infringement of third party rights, are hereby disclaimed to the maximum extent permitted by applicable law by Stratus.</em></p>
+                        <p><em>Except as explicitly set forth in this agreement, Chorus makes no representation,
+                            warranty, or guaranty as to the reliability, timeliness, quality, suitability, truth,
+                            availability, accuracy, or completeness of the service or any content. Chorus does not
+                            represent or warrant that (A) the use of the service will be secure, timely, uninterrupted,
+                            or error-free or operate in combination with any other hardware, software, system, or data;
+                            (B) the service will meet customer's requirements or expectations; (C) any stored data will
+                            be accurate or reliable; (D) errors or defects will be corrected; or (E) the service or the
+                            servers that make the service available are free of viruses or other harmful components. The
+                            service and all content is provided to customer strictly on an "as is" and "as available"
+                            basis. All conditions, representations and warranties, whether express, implied, statutory
+                            or otherwise, including, without limitation, any implied warranty of merchantability,
+                            fitness for a particular purpose, or non-infringement of third party rights, are hereby
+                            disclaimed to the maximum extent permitted by applicable law by Chorus.</em></p>
                     </li>
                     <li>
                         <h3>Internet Delays</h3>
-                        <p><em>Stratus' services may be subject to limitations, delays, and other problems inherent in the use of internet and electronic communications. Stratus is not responsible for any delays, delivery failures, or other damage resulting from such problems.</em></p>
+                        <p><em>Chorus' services may be subject to limitations, delays, and other problems inherent in
+                            the use of internet and electronic communications. Chorus is not responsible for any delays,
+                            delivery failures, or other damage resulting from such problems.</em></p>
                     </li>
                     <li>
                         <h3>Limitation of Liability</h3>
-                        <p><em>In no event shall Stratus' aggregate liability under this agreement exceed the amounts paid by customer to Stratus under this agreement during the twelve (12) month period immediately preceding the event giving rise to such claim. In no event shall Stratus and/or its licensors be liable for any indirect, punitive, special, exemplary, incidental, consequential, or other damages of any type or kind (including loss of data, revenue, profits, use, or other economic advantage) arising out of, or in any way connected with this agreement and the service including, but not limited to, the use or inability to use the service, or for any content obtained from or through the service, any interruption, inaccuracy, error, or omisssion, regardless of cause in the content, even if the party from which damages are being sought or such party's licensors have been previously advised of the possibility of such damages or the exclusive remedies stated herein fail of their essential purpose.</em></p>
+                        <p><em>In no event shall Chorus' aggregate liability under this agreement exceed the amounts
+                            paid by customer to Chorus under this agreement during the twelve (12) month period
+                            immediately preceding the event giving rise to such claim. In no event shall Chorus and/or
+                            its licensors be liable for any indirect, punitive, special, exemplary, incidental,
+                            consequential, or other damages of any type or kind (including loss of data, revenue,
+                            profits, use, or other economic advantage) arising out of, or in any way connected with this
+                            agreement and the service including, but not limited to, the use or inability to use the
+                            service, or for any content obtained from or through the service, any interruption,
+                            inaccuracy, error, or omisssion, regardless of cause in the content, even if the party from
+                            which damages are being sought or such party's licensors have been previously advised of the
+                            possibility of such damages or the exclusive remedies stated herein fail of their essential
+                            purpose.</em></p>
                     </li>
                     <li>
                         <h3>Notices</h3>
-                        <p>Any notice required or permitted by this Agreement will be in writing and will be delivered as follows, with notice deemed given as indicated:  (a) by personal delivery, when actually delivered; (b) by overnight courier, upon written verification of receipt; (c) by facsimile transmission, upon acknowledgment of receipt of electronic transmission; (d) by email, upon acknowledgment of receipt; or (e) by certified or registered mail, return receipt requested, upon verification of receipt.  Customer shall send notices to Stratus using the contact information listed on the “contact us” page of the Service.  Stratus shall send notices to Customer using the information in its files as provided to Stratus by Customer from time to time.</p>
+                        <p>Any notice required or permitted by this Agreement will be in writing and will be delivered
+                            as follows, with notice deemed given as indicated: (a) by personal delivery, when actually
+                            delivered; (b) by overnight courier, upon written verification of receipt; (c) by facsimile
+                            transmission, upon acknowledgment of receipt of electronic transmission; (d) by email, upon
+                            acknowledgment of receipt; or (e) by certified or registered mail, return receipt requested,
+                            upon verification of receipt. Customer shall send notices to Chorus using the contact
+                            information listed on the “contact us” page of the Service. Chorus shall send notices to
+                            Customer using the information in its files as provided to Chorus by Customer from time to
+                            time.</p>
                     </li>
                     <li>
                         <h3>Assignment</h3>
-                        <p>Neither this Agreement nor any rights granted herein may be assigned or transferred by Customer, whether voluntarily or by operation of law, without the express written permission of Stratus, and any attempt to do so shall be null and void.  This Agreement or any rights or obligations hereunder may be assigned by Stratus without the consent of Customer.</p>
+                        <p>Neither this Agreement nor any rights granted herein may be assigned or transferred by
+                            Customer, whether voluntarily or by operation of law, without the express written permission
+                            of Chorus, and any attempt to do so shall be null and void. This Agreement or any rights or
+                            obligations hereunder may be assigned by Chorus without the consent of Customer.</p>
                     </li>
                     <li>
                         <h3>General</h3>
-                        <ol>
-                            <li>
-                                <span>Entire Agreement and Amendments</span>. This Agreement constitutes the entire agreement between the parties with regard to the subject matter hereof.  This Agreement supersedes all other agreements, representations or understandings (whether oral or written and whether express or implied) relating to the subject matter hereof.  No amendment or modification of this Agreement shall be binding unless in writing and duly executed by both parties.
+                        <ul>
+                            <li><span>Entire Agreement and Amendments</span>. This Agreement constitutes the entire
+                                agreement between the parties with regard to the subject matter hereof. This Agreement
+                                supersedes all other agreements, representations or understandings (whether oral or
+                                written and whether express or implied) relating to the subject matter hereof. No
+                                amendment or modification of this Agreement shall be binding unless in writing and duly
+                                executed by both parties.
                             </li>
-                            <li>
-                                <span>Governing Law</span>. This Agreement shall be governed by the laws of the state of Washington and controlling U.S. federal law, without regard to the choice or conflicts of law provisions of any jurisdiction, and any disputes, actions, claims, or causes of action arising out of or in connection with this Agreement or the Service shall be subject to the exclusive jurisdiction of the state and federal courts located in King County, WA.
+                            <li><span>Governing Law</span>. This Agreement shall be governed by the laws of the state of
+                                Washington and controlling U.S. federal law, without regard to the choice or conflicts
+                                of law provisions of any jurisdiction, and any disputes, actions, claims, or causes of
+                                action arising out of or in connection with this Agreement or the Service shall be
+                                subject to the exclusive jurisdiction of the state and federal courts located in King
+                                County, WA.
                             </li>
-                            <li>
-                                <span>Waiver</span>. The waiver by either party of any breach or failure to enforce any of the terms and conditions of this Agreement shall not in any way affect, limit or waive either party’s rights thereafter to enforce and compel strict compliance with every term and condition of this Agreement.
+                            <li><span>Waiver</span>. The waiver by either party of any breach or failure to enforce any
+                                of the terms and conditions of this Agreement shall not in any way affect, limit or
+                                waive either party’s rights thereafter to enforce and compel strict compliance with
+                                every term and condition of this Agreement.
                             </li>
-                            <li>
-                                <span>Severability</span>. If one or more provisions of this Agreement are held to be unenforceable under applicable law, such provision shall be excluded from this Agreement and the balance of the Agreement shall be interpreted as if such provision were so excluded and shall be enforceable in accordance with its terms.
+                            <li><span>Severability</span>. If one or more provisions of this Agreement are held to be
+                                unenforceable under applicable law, such provision shall be excluded from this Agreement
+                                and the balance of the Agreement shall be interpreted as if such provision were so
+                                excluded and shall be enforceable in accordance with its terms.
                             </li>
-                            <li>
-                                <span>Survival</span>. The parties agree that all provisions of this Agreement which may reasonably be interpreted or construed as surviving the expiration or termination of this Agreement shall survive the expiration or termination of this Agreement.
+                            <li><span>Survival</span>. The parties agree that all provisions of this Agreement which may
+                                reasonably be interpreted or construed as surviving the expiration or termination of
+                                this Agreement shall survive the expiration or termination of this Agreement.
                             </li>
-                        </ol>
+                        </ul>
                     </li>
                 </ol>
             </div>

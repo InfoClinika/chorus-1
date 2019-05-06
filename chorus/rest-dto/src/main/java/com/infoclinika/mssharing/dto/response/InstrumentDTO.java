@@ -87,13 +87,21 @@ public class InstrumentDTO implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         InstrumentDTO that = (InstrumentDTO) o;
 
-        if (id != that.id) return false;
-        if (vendor != null ? !vendor.equals(that.vendor) : that.vendor != null) return false;
+        if (id != that.id) {
+            return false;
+        }
+        if (vendor != null ? !vendor.equals(that.vendor) : that.vendor != null) {
+            return false;
+        }
 
         return true;
     }
@@ -108,12 +116,12 @@ public class InstrumentDTO implements Serializable {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("name", name)
-                .add("vendor", vendor)
-                .add("lab", lab)
-                .add("serial", serial)
-                .add("creator", creator)
-                .toString();
+            .add("id", id)
+            .add("name", name)
+            .add("vendor", vendor)
+            .add("lab", lab)
+            .add("serial", serial)
+            .add("creator", creator)
+            .toString();
     }
 }

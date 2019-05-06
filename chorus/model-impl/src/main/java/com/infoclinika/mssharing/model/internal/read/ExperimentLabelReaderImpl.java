@@ -28,11 +28,15 @@ public class ExperimentLabelReaderImpl implements ExperimentLabelReader {
     public List<ExperimentLabelItem> readLabels(long type) {
         final ExperimentLabelType experimentLabelType = experimentLabelTypeRepository.findOne(type);
         checkNotNull(experimentLabelType);
-        return newArrayList(transform(experimentLabelRepository.findByType(experimentLabelType), new Function<ExperimentLabel, ExperimentLabelItem>() {
-            @Override
-            public ExperimentLabelItem apply(ExperimentLabel label) {
-                return new ExperimentLabelItem(label.getId(), label.getAcid(), label.getName());
+
+        return newArrayList(transform(
+            experimentLabelRepository.findByType(experimentLabelType),
+            new Function<ExperimentLabel, ExperimentLabelItem>() {
+                @Override
+                public ExperimentLabelItem apply(ExperimentLabel label) {
+                    return new ExperimentLabelItem(label.getId(), label.getAcid(), label.getName());
+                }
             }
-        }));
+        ));
     }
 }

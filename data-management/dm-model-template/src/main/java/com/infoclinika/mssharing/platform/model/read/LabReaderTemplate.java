@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.infoclinika.mssharing.platform.model.common.items.LabItem;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.SortedSet;
 
 /**
@@ -30,7 +31,12 @@ public interface LabReaderTemplate<LAB_LINE extends LabReaderTemplate.LabLineTem
         public final String laboratoryHeadName;
         public final Date modified;
 
-        public LabLineTemplate(long id, String name, long labHead, String institutionUrl, String laboratoryHeadName, Date modified) {
+        public LabLineTemplate(long id,
+                               String name,
+                               long labHead,
+                               String institutionUrl,
+                               String laboratoryHeadName,
+                               Date modified) {
             this.id = id;
             this.name = name;
             this.labHead = labHead;
@@ -41,32 +47,24 @@ public interface LabReaderTemplate<LAB_LINE extends LabReaderTemplate.LabLineTem
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof LabLineTemplate)) {
+                return false;
+            }
             LabLineTemplate that = (LabLineTemplate) o;
-
-            if (id != that.id) return false;
-            if (labHead != that.labHead) return false;
-            if (institutionUrl != null ? !institutionUrl.equals(that.institutionUrl) : that.institutionUrl != null)
-                return false;
-            if (laboratoryHeadName != null ? !laboratoryHeadName.equals(that.laboratoryHeadName) : that.laboratoryHeadName != null)
-                return false;
-            if (modified != null ? !modified.equals(that.modified) : that.modified != null) return false;
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-
-            return true;
+            return id == that.id &&
+                labHead == that.labHead &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(institutionUrl, that.institutionUrl) &&
+                Objects.equals(laboratoryHeadName, that.laboratoryHeadName) &&
+                Objects.equals(modified, that.modified);
         }
 
         @Override
         public int hashCode() {
-            int result = (int) (id ^ (id >>> 32));
-            result = 31 * result + (name != null ? name.hashCode() : 0);
-            result = 31 * result + (int) (labHead ^ (labHead >>> 32));
-            result = 31 * result + (institutionUrl != null ? institutionUrl.hashCode() : 0);
-            result = 31 * result + (laboratoryHeadName != null ? laboratoryHeadName.hashCode() : 0);
-            result = 31 * result + (modified != null ? modified.hashCode() : 0);
-            return result;
+            return Objects.hash(id, name, labHead, institutionUrl, laboratoryHeadName, modified);
         }
     }
 }

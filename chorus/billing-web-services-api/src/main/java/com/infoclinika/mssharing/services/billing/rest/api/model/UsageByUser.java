@@ -30,7 +30,7 @@ public class UsageByUser {
         this.balance = balance;
     }
 
-    public static abstract class UsageLine {
+    public abstract static class UsageLine {
         public long usedFeatureValue;
         public long price;
         public long loggedPrice;
@@ -53,7 +53,8 @@ public class UsageByUser {
         public long experimentId;
         public String experimentName;
 
-        public ExperimentUsageLine(long usedFeatureValue, long price, long loggedPrice, long balance, long experimentId, String experimentName, Date date) {
+        public ExperimentUsageLine(long usedFeatureValue, long price, long loggedPrice, long balance, long experimentId,
+                                   String experimentName, Date date) {
             super(usedFeatureValue, price, loggedPrice, balance, date);
             this.experimentId = experimentId;
             this.experimentName = experimentName;
@@ -70,7 +71,8 @@ public class UsageByUser {
         public int hours;
 
         public FileUsageLine(long fileId, long usedFeatureValue,
-                             String instrument, long price, long loggedPrice, long balance, int days, String fileName, Date date) {
+                             String instrument, long price, long loggedPrice, long balance, int days, String fileName,
+                             Date date) {
             super(usedFeatureValue, price, loggedPrice, balance, date);
             this.fileId = fileId;
             this.instrument = instrument;

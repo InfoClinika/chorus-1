@@ -15,11 +15,11 @@ import static com.google.common.collect.Lists.newArrayList;
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class ExperimentTemplate<U extends UserTemplate<L>,
-        L extends LabTemplate<U>,
-        P extends ProjectTemplate<U, L, ?, P>,
-        I extends InstrumentTemplate<U, L>,
-        F extends FactorTemplate<?, ?>,
-        EF extends ExperimentFileTemplate<?, ?, ?>> extends AbstractRestorable {
+    L extends LabTemplate<U>,
+    P extends ProjectTemplate<U, L, ?, P>,
+    I extends InstrumentTemplate<U, L>,
+    F extends FactorTemplate<?, ?>,
+    EF extends ExperimentFileTemplate<?, ?, ?>> extends AbstractRestorable {
 
     @Embedded
     public RawFiles<F, EF> rawFiles = new RawFiles<>();
@@ -40,6 +40,9 @@ public abstract class ExperimentTemplate<U extends UserTemplate<L>,
     private Species specie;
     @Embedded
     private ExperimentData experiment;
+    @Basic
+    private boolean failed = false;
+
     private InstrumentRestriction<I> instrumentRestriction;
 
     public String getName() {
@@ -125,5 +128,13 @@ public abstract class ExperimentTemplate<U extends UserTemplate<L>,
 
     public void setExperimentType(ExperimentType experimentType) {
         this.experimentType = experimentType;
+    }
+
+    public boolean isFailed() {
+        return failed;
+    }
+
+    public void setFailed(boolean failed) {
+        this.failed = failed;
     }
 }

@@ -10,6 +10,7 @@ import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.Instr
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.InstrumentItemTemplate;
 import com.infoclinika.mssharing.platform.repository.InstrumentRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.InstrumentRepositoryTemplate.AccessedInstrument;
+import com.infoclinika.mssharing.platform.repository.UserRepositoryTemplate;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,8 @@ import javax.inject.Inject;
 
 import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.platform.model.helper.read.SingleResultBuilder.builder;
+import static com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.InstrumentAccess.NO_ACCESS;
+import static com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.InstrumentAccess.OPERATOR;
 
 /**
  * @author Herman Zamula
@@ -24,7 +27,7 @@ import static com.infoclinika.mssharing.platform.model.helper.read.SingleResultB
 @Component
 @Scope(value = "prototype")
 public class InstrumentDetailsReaderHelper<INSTRUMENT extends InstrumentTemplate, ITEM extends InstrumentItemTemplate>
-        extends AbstractReaderHelper<AccessedInstrument<INSTRUMENT>, ITEM, InstrumentItemTemplate> {
+    extends AbstractReaderHelper<AccessedInstrument<INSTRUMENT>, ITEM, InstrumentItemTemplate> {
 
     @Inject
     private InstrumentRepositoryTemplate<INSTRUMENT> instrumentRepository;
@@ -33,41 +36,41 @@ public class InstrumentDetailsReaderHelper<INSTRUMENT extends InstrumentTemplate
     @Inject
     private EntityFactories entityFactories;
 
+    @Inject
+    UserRepositoryTemplate<?> userRepositoryTemplate;
+
     @Override
     public Function<AccessedInstrument<INSTRUMENT>, InstrumentItemTemplate> getDefaultTransformer() {
-        return new Function<AccessedInstrument<INSTRUMENT>, InstrumentItemTemplate>() {
-            @Override
-            public InstrumentItemTemplate apply(AccessedInstrument<INSTRUMENT> accessedInstrument) {
+        return accessedInstrument -> {
 
-                final INSTRUMENT instrument = accessedInstrument.instrument;
+            final INSTRUMENT instrument = accessedInstrument.instrument;
 
-                final String vendor = instrument.getModel().getVendor().getName();
-                final String studyType = instrument.getModel().getStudyType().getName();
-                final String type = instrument.getModel().getType().getName();
+            final String vendor = instrument.getModel().getVendor().getName();
+            final String studyType = instrument.getModel().getStudyType().getName();
+            final String type = instrument.getModel().getType().getName();
 
-                final UserTemplate user = entityFactories.userFromId.apply(accessedInstrument.accessedUser);
-                //noinspection unchecked
-                final InstrumentAccess access = instrument.isOperator(user) ? InstrumentAccess.OPERATOR
-                        : instrument.isPending(user) ? InstrumentAccess.PENDING
-                        : InstrumentAccess.NO_ACCESS;
+            UserTemplate user = userRepositoryTemplate.findOne(accessedInstrument.accessedUser);
+            //noinspection unchecked
+            final boolean containsLab = user.getLabs().contains(instrument.getLab());
+            final InstrumentAccess access = containsLab ? OPERATOR : NO_ACCESS;
 
-                //noinspection unchecked
-                return new InstrumentItemTemplate(
-                        instrument.getId(),
-                        instrument.getName(),
-                        vendor,
-                        instrument.getModel().getName(),
-                        instrument.getModel().getId(),
-                        instrument.getSerialNumber(),
-                        instrument.getCreator().getEmail(),
-                        instrument.getPeripherals(),
-                        from(instrument.getOperators())
-                                .transform(detailsTransformers.sharedPersonTransformer())
-                                .toSortedSet(detailsTransformers.namedItemComparator()),
-                        detailsTransformers.labItemTransformer().apply(instrument.getLab()),
-                        type,
-                        access, studyType);
-            }
+            //noinspection unchecked
+            return new InstrumentItemTemplate(
+                instrument.getId(),
+                instrument.getName(),
+                vendor,
+                instrument.getModel().getName(),
+                instrument.getModel().getId(),
+                instrument.getSerialNumber(),
+                instrument.getCreator().getEmail(),
+                instrument.getPeripherals(),
+                from(instrument.getLab().getUsers())
+                    .transform(detailsTransformers.sharedPersonTransformer())
+                    .toSortedSet(detailsTransformers.namedItemComparator()),
+                detailsTransformers.labItemTransformer().apply(instrument.getLab()),
+                type,
+                access, studyType
+            );
         };
     }
 

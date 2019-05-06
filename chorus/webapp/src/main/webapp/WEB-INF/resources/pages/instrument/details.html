@@ -20,7 +20,6 @@
                         <li class="active"><a href="#general" data-toggle="tab">General
                             <span data-ng-class="{'tab-error': form.name.$error.inputValidator || isNameDuplicated()}"></span></a>
                         </li>
-                        <li ng-switch-when='false'><a href="#operators" data-toggle="tab">Operators</a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade active in" id="general">
@@ -72,6 +71,13 @@
                                         <div class="dialog-text" ng-bind="instrument.lab.name"></div>
                                     </div>
                                 </div>
+                                <div class="control-group clearfix">
+                                    <label>Workflow</label>
+
+                                    <div class="item">
+                                        <div class="dialog-text" ng-bind="instrument.workflow"></div>
+                                    </div>
+                                </div>
                                 <div class="control-group clearfix"
                                      data-ng-class="{error: form.serialNumber.$error.inputValidator || saveInstrumentError}"
                                      ng-hide="viewMode">
@@ -112,7 +118,7 @@
                                         <i class="icon {{optionalOpened && 'up' || 'down'}}"
                                            ng-bind="optionalOpened && 'Close' || 'Open'"></i>
                                         Optional Fields
-                                        <small ng-show="isFeatureAvailable(LabFeatures.BILLING)" class="optional-string">(Auto Translate, Lock Masses, HPLC, Peripherals)</small>
+                                        <small ng-show="isFeatureAvailable(LabFeatures.BILLING)" class="optional-string">(Lock Masses, HPLC, Peripherals)</small>
                                         <small ng-hide="isFeatureAvailable(LabFeatures.BILLING)" class="optional-string">(Lock Masses, HPLC, Peripherals)</small>
                                     </label>
                                 </div>
@@ -156,13 +162,6 @@
                                     </div>
                                 </section>
                             </div>
-                        </div>
-                        <div class="tab-pane fade" id="operators" ng-hide='viewMode'>
-                            <operator-selector users="users"
-                                               invite-handler="inviteHandler"
-                                               selected-users="instrument.operators"
-                                               exclude-emails="excludeEmails"
-                                               user-description="userDescription"></operator-selector>
                         </div>
                     </div>
                 </div>

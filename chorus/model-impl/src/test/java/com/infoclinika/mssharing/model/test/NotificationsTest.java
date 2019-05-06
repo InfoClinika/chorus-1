@@ -11,7 +11,7 @@ import java.util.Set;
 import static com.google.common.collect.ImmutableSet.of;
 import static com.infoclinika.mssharing.model.helper.Data.KATE_EMAIL;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -33,7 +33,13 @@ public class NotificationsTest extends AbstractTest {
 
         uc.createKateAndLab2();
 
-        final Set<Long> failedEmails = failedMailsHelper.handleFailedEmails("test", "example", "timestamp", of(new FailedEmailItem(KATE_EMAIL, "some reason")), "some raw data");
+        final Set<Long> failedEmails = failedMailsHelper.handleFailedEmails(
+            "test",
+            "example",
+            "timestamp",
+            of(new FailedEmailItem(KATE_EMAIL, "some reason")),
+            "some raw data"
+        );
 
         assertThat(failedEmails.size(), is(1));
 

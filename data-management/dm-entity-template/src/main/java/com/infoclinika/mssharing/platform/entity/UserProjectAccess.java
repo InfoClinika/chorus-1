@@ -9,7 +9,8 @@ import javax.persistence.*;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-@Table(name = "user_project_access", uniqueConstraints = {@UniqueConstraint(name = "user_project", columnNames = {"user_id", "project_id"})})
+@Table(name = "user_project_access",
+    uniqueConstraints = {@UniqueConstraint(name = "user_project", columnNames = {"user_id", "project_id"})})
 public class UserProjectAccess<USER extends UserTemplate, PROJECT extends ProjectTemplate> extends AbstractPersistable {
 
     @ManyToOne(optional = false, targetEntity = UserTemplate.class)

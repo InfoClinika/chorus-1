@@ -5,6 +5,7 @@ import com.infoclinika.mssharing.platform.model.PagedItemInfo;
 import com.infoclinika.mssharing.platform.model.common.items.FileItem;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -15,25 +16,25 @@ public interface FileReaderTemplate<FILE_LINE extends FileReaderTemplate.FileLin
 
     Set<FILE_LINE> readFiles(long actor, Filter genericFilter);
 
+    PagedItem<FILE_LINE> readFiles(long actor, Filter genericFilter, PagedItemInfo pagedItemInfo);
+
     Set<FILE_LINE> readUnfinishedFiles(long user);
 
     Set<FILE_LINE> readFilesByInstrument(long actor, long instrument);
+
+    PagedItem<FILE_LINE> readFilesByInstrument(long actor, long instrument, PagedItemInfo pagedInfo);
 
     Set<FILE_LINE> readByNameForInstrument(long actor, long instrument, String fileName);
 
     Set<FILE_LINE> readFilesByLab(long actor, long lab);
 
-    Set<FILE_LINE> readFilesByExperiment(long actor, long experiment);
-
-    SortedSet<FileItem> readFileItemsByExperiment(long actor, long experiment);
-
-    PagedItem<FILE_LINE> readFiles(long actor, Filter genericFilter, PagedItemInfo pagedItemInfo);
-
     PagedItem<FILE_LINE> readFilesByLab(long actor, long lab, PagedItemInfo pagedInfo);
 
-    PagedItem<FILE_LINE> readFilesByInstrument(long actor, long instrument, PagedItemInfo pagedInfo);
+    Set<FILE_LINE> readFilesByExperiment(long actor, long experiment);
 
     PagedItem<FILE_LINE> readFilesByExperiment(long actor, long experiment, PagedItemInfo pagedInfo);
+
+    SortedSet<FileItem> readFileItemsByExperiment(long actor, long experiment);
 
     class FileLineTemplate {
 
@@ -59,7 +60,27 @@ public interface FileReaderTemplate<FILE_LINE extends FileReaderTemplate.FileLin
         public final long sizeInBytes;
         public final Date uploadDate;
 
-        public FileLineTemplate(long id, String name, String contentId, String uploadId, String destinationPath, long instrumentId, long labId, String instrumentName, long modelId, String labName, long owner, long labHead, boolean invalid, String vendorName, String instrumentModel, Long specieId, AccessLevel accessLevel, boolean usedInExperiments, String labels, long sizeInBytes, Date uploadDate) {
+        public FileLineTemplate(long id,
+                                String name,
+                                String contentId,
+                                String uploadId,
+                                String destinationPath,
+                                long instrumentId,
+                                long labId,
+                                String instrumentName,
+                                long modelId,
+                                String labName,
+                                long owner,
+                                long labHead,
+                                boolean invalid,
+                                String vendorName,
+                                String instrumentModel,
+                                Long specieId,
+                                AccessLevel accessLevel,
+                                boolean usedInExperiments,
+                                String labels,
+                                long sizeInBytes,
+                                Date uploadDate) {
             this.id = id;
             this.name = name;
             this.contentId = contentId;
@@ -108,53 +129,62 @@ public interface FileReaderTemplate<FILE_LINE extends FileReaderTemplate.FileLin
         }
 
         @Override
-        @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof FileLineTemplate)) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof FileLineTemplate)) {
+                return false;
+            }
             FileLineTemplate that = (FileLineTemplate) o;
-
-            if (id != that.id) return false;
-            if (instrumentId != that.instrumentId) return false;
-            if (invalid != that.invalid) return false;
-            if (labHead != that.labHead) return false;
-            if (labId != that.labId) return false;
-            if (modelId != that.modelId) return false;
-            if (owner != that.owner) return false;
-            if (contentId != null ? !contentId.equals(that.contentId) : that.contentId != null) return false;
-            if (destinationPath != null ? !destinationPath.equals(that.destinationPath) : that.destinationPath != null)
-                return false;
-            if (instrumentModel != null ? !instrumentModel.equals(that.instrumentModel) : that.instrumentModel != null)
-                return false;
-            if (instrumentName != null ? !instrumentName.equals(that.instrumentName) : that.instrumentName != null)
-                return false;
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-            if (specieId != null ? !specieId.equals(that.specieId) : that.specieId != null) return false;
-            if (uploadId != null ? !uploadId.equals(that.uploadId) : that.uploadId != null) return false;
-            if (vendorName != null ? !vendorName.equals(that.vendorName) : that.vendorName != null) return false;
-
-            return true;
+            return id == that.id &&
+                instrumentId == that.instrumentId &&
+                modelId == that.modelId &&
+                labId == that.labId &&
+                labHead == that.labHead &&
+                owner == that.owner &&
+                invalid == that.invalid &&
+                usedInExperiments == that.usedInExperiments &&
+                sizeInBytes == that.sizeInBytes &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(contentId, that.contentId) &&
+                Objects.equals(uploadId, that.uploadId) &&
+                Objects.equals(destinationPath, that.destinationPath) &&
+                Objects.equals(instrumentName, that.instrumentName) &&
+                Objects.equals(instrumentModel, that.instrumentModel) &&
+                Objects.equals(labName, that.labName) &&
+                Objects.equals(specieId, that.specieId) &&
+                Objects.equals(vendorName, that.vendorName) &&
+                accessLevel == that.accessLevel &&
+                Objects.equals(labels, that.labels) &&
+                Objects.equals(uploadDate, that.uploadDate);
         }
 
         @Override
         public int hashCode() {
-            int result = (int) (id ^ (id >>> 32));
-            result = 31 * result + (name != null ? name.hashCode() : 0);
-            result = 31 * result + (contentId != null ? contentId.hashCode() : 0);
-            result = 31 * result + (uploadId != null ? uploadId.hashCode() : 0);
-            result = 31 * result + (destinationPath != null ? destinationPath.hashCode() : 0);
-            result = 31 * result + (int) (instrumentId ^ (instrumentId >>> 32));
-            result = 31 * result + (instrumentName != null ? instrumentName.hashCode() : 0);
-            result = 31 * result + (int) (modelId ^ (modelId >>> 32));
-            result = 31 * result + (instrumentModel != null ? instrumentModel.hashCode() : 0);
-            result = 31 * result + (int) (labId ^ (labId >>> 32));
-            result = 31 * result + (int) (labHead ^ (labHead >>> 32));
-            result = 31 * result + (specieId != null ? specieId.hashCode() : 0);
-            result = 31 * result + (int) (owner ^ (owner >>> 32));
-            result = 31 * result + (invalid ? 1 : 0);
-            result = 31 * result + (vendorName != null ? vendorName.hashCode() : 0);
-            return result;
+            return Objects.hash(
+                id,
+                name,
+                contentId,
+                uploadId,
+                destinationPath,
+                instrumentId,
+                instrumentName,
+                modelId,
+                instrumentModel,
+                labName,
+                labId,
+                labHead,
+                specieId,
+                owner,
+                invalid,
+                vendorName,
+                accessLevel,
+                usedInExperiments,
+                labels,
+                sizeInBytes,
+                uploadDate
+            );
         }
     }
 

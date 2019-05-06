@@ -21,140 +21,31 @@ import static com.google.common.base.Optional.fromNullable;
 public final class EntityFactories {
 
 
-    public final Supplier<InstrumentCreationRequestTemplate> defaultInstrumentRequest = new Supplier<InstrumentCreationRequestTemplate>() {
-        @Override
-        public InstrumentCreationRequestTemplate get() {
-            return new InstrumentCreationRequestDefault();
-        }
-    };
-    public final Supplier<ProjectTemplate> defaultProject = new Supplier<ProjectTemplate>() {
-        @Override
-        public ProjectTemplate get() {
-            return new ProjectDefault();
-        }
-    };
-    public final Supplier<ExperimentTemplate> defaultExperiment = new Supplier<ExperimentTemplate>() {
-        @Override
-        public ExperimentTemplate get() {
-            return new ExperimentDefault();
-        }
-    };
-    public final Supplier<FileMetaDataTemplate> defaultFileMetaData = new Supplier<FileMetaDataTemplate>() {
-        @Override
-        public FileMetaDataTemplate get() {
-            return new FileMetaDataDefault();
-        }
-    };
-    public final Supplier<ExperimentFileTemplate> defaultRawFile = new Supplier<ExperimentFileTemplate>() {
-        @Override
-        public ExperimentFileTemplate get() {
-            return new ExperimentFileDefault();
-        }
-    };
-    public final Supplier<InstrumentTemplate> defaultInstrument = new Supplier<InstrumentTemplate>() {
-        @Override
-        public InstrumentTemplate get() {
-            return new InstrumentDefault();
-        }
-    };
-    public final Supplier<FactorTemplate> defaultFactor = new Supplier<FactorTemplate>() {
-        @Override
-        public FactorTemplate get() {
-            return new FactorDefault();
-        }
-    };
-    public final Supplier<LevelTemplate> defaultLevel = new Supplier<LevelTemplate>() {
-        @Override
-        public LevelTemplate get() {
-            return new LevelDefault();
-        }
-    };
-    public final Supplier<UserTemplate> defaultUser = new Supplier<UserTemplate>() {
-        @Override
-        public UserTemplate get() {
-            return new UserDefault();
-        }
-    };
-    public final Supplier<ProjectSharingRequestTemplate> defaultProjectSharingRequest = new Supplier<ProjectSharingRequestTemplate>() {
-        @Override
-        public ProjectSharingRequestTemplate get() {
-            return new ProjectSharingRequestTemplate();
-        }
-    };
-    public final Supplier<GroupTemplate> defaultGroup = new Supplier<GroupTemplate>() {
-        @Override
-        public GroupTemplate get() {
-            return new GroupDefault();
-        }
-    };
-    public final Supplier<LabTemplate> defaultLab = new Supplier<LabTemplate>() {
-        @Override
-        public LabTemplate get() {
-            return new LabDefault();
-        }
-    };
-    public final Supplier<InboxMessageTemplate> defaultInboxMessage = new Supplier<InboxMessageTemplate>() {
-        @Override
-        public InboxMessageTemplate get() {
-            return new InboxMessageTemplate();
-        }
-    };
-    public final Supplier<OutboxMessageTemplate> defaultOutboxMessage = new Supplier<OutboxMessageTemplate>() {
-        @Override
-        public OutboxMessageTemplate get() {
-            return new OutboxMessageTemplate();
-        }
-    };
-    public final Supplier<Attachment> defaultAttachment = new Supplier<Attachment>() {
-        @Override
-        public Attachment get() {
-            return new Attachment();
-        }
-    };
-    public final Supplier<Species> defaultSpecies = new Supplier<Species>() {
-        @Override
-        public Species get() {
-            return new Species();
-        }
-    };
-    public final Supplier<ExperimentType> defaultExperimentType = new Supplier<ExperimentType>() {
-        @Override
-        public ExperimentType get() {
-            return new ExperimentType();
-        }
-    };
-    public final Supplier<WorkflowType> defaultWorkflowType = new Supplier<WorkflowType>() {
-        @Override
-        public WorkflowType get() {
-            return new WorkflowType();
-        }
-    };
-    public final Supplier<InstrumentModel> defaultInstrumentModel = new Supplier<InstrumentModel>() {
-        @Override
-        public InstrumentModel get() {
-            return new InstrumentModel();
-        }
-    };
-    public final Supplier<InstrumentType> defaultInstrumentType = new Supplier<InstrumentType>() {
-        @Override
-        public InstrumentType get() {
-            return new InstrumentType();
-        }
-    };
+    public final Supplier<InstrumentCreationRequestTemplate> defaultInstrumentRequest =
+        () -> new InstrumentCreationRequestDefault();
+    public final Supplier<ProjectTemplate> defaultProject = () -> new ProjectDefault();
+    public final Supplier<ExperimentTemplate> defaultExperiment = () -> new ExperimentDefault();
+    public final Supplier<FileMetaDataTemplate> defaultFileMetaData = () -> new FileMetaDataDefault();
+    public final Supplier<ExperimentFileTemplate> defaultRawFile = () -> new ExperimentFileDefault();
+    public final Supplier<InstrumentTemplate> defaultInstrument = () -> new InstrumentDefault();
+    public final Supplier<FactorTemplate> defaultFactor = () -> new FactorDefault();
+    public final Supplier<LevelTemplate> defaultLevel = () -> new LevelDefault();
+    public final Supplier<UserTemplate> defaultUser = () -> new UserDefault();
+    public final Supplier<ProjectSharingRequestTemplate> defaultProjectSharingRequest =
+        () -> new ProjectSharingRequestTemplate();
+    public final Supplier<GroupTemplate> defaultGroup = () -> new GroupDefault();
+    public final Supplier<LabTemplate> defaultLab = () -> new LabDefault();
+    public final Supplier<InboxMessageTemplate> defaultInboxMessage = () -> new InboxMessageTemplate();
+    public final Supplier<OutboxMessageTemplate> defaultOutboxMessage = () -> new OutboxMessageTemplate();
+    public final Supplier<Attachment> defaultAttachment = () -> new Attachment();
+    public final Supplier<Species> defaultSpecies = () -> new Species();
+    public final Supplier<ExperimentType> defaultExperimentType = () -> new ExperimentType();
+    public final Supplier<InstrumentModel> defaultInstrumentModel = () -> new InstrumentModel();
+    public final Supplier<InstrumentType> defaultInstrumentType = () -> new InstrumentType();
     public final Supplier<InstrumentStudyType> defaultInstrumentStudyType = InstrumentStudyType::new;
     public final Supplier<VendorExtension> defaultVendorExtension = VendorExtension::new;
-    public final Supplier<Vendor> defaultVendor = new Supplier<Vendor>() {
-        @Override
-        public Vendor get() {
-            return new Vendor();
-        }
-    };
-    public final Supplier<AnnotationTemplate> defaultAnnotation = new Supplier<AnnotationTemplate>() {
-        @Override
-        public AnnotationTemplate get() {
-            return new AnnotationDefault();
-        }
-    };
+    public final Supplier<Vendor> defaultVendor = () -> new Vendor();
+    public final Supplier<AnnotationTemplate> defaultAnnotation = () -> new AnnotationDefault();
 
     public final Supplier<InstrumentCreationRequestTemplate> instrumentRequest;
     public final Supplier<ProjectTemplate> project;
@@ -173,7 +64,6 @@ public final class EntityFactories {
     public final Supplier<Attachment> attachment;
     public final Supplier<Species> species;
     public final Supplier<ExperimentType> experimentType;
-    public final Supplier<WorkflowType> workflowType;
     public final Supplier<InstrumentModel> instrumentModel;
     public final Supplier<InstrumentType> instrumentType;
     public final Supplier<InstrumentStudyType> instrumentStudyType;
@@ -246,28 +136,28 @@ public final class EntityFactories {
     };
 
     public EntityFactories(
-            Supplier<UserTemplate> user,
-            Supplier<InstrumentCreationRequestTemplate> instrumentRequest,
-            Supplier<ProjectTemplate> project,
-            Supplier<ExperimentTemplate> experiment,
-            Supplier<FileMetaDataTemplate> fileMetaData,
-            Supplier<ExperimentFileTemplate> rawFile,
-            Supplier<InstrumentTemplate> instrument,
-            Supplier<FactorTemplate> factor,
-            Supplier<LevelTemplate> level,
-            Supplier<ProjectSharingRequestTemplate> projectSharingRequest,
-            Supplier<GroupTemplate> group,
-            Supplier<LabTemplate> lab,
-            Supplier<InboxMessageTemplate> inboxMessage,
-            Supplier<OutboxMessageTemplate> outboxMessage,
-            Supplier<Attachment> attachment, Supplier<Species> species,
-            Supplier<ExperimentType> experimentType,
-            Supplier<WorkflowType> workflowType, Supplier<InstrumentModel> instrumentModel,
-            Supplier<InstrumentType> instrumentType,
-            Supplier<InstrumentStudyType> instrumentStudyType,
-            Supplier<VendorExtension> vendorExtension,
-            Supplier<Vendor> vendor,
-            Supplier<AnnotationTemplate> annotation) {
+        Supplier<UserTemplate> user,
+        Supplier<InstrumentCreationRequestTemplate> instrumentRequest,
+        Supplier<ProjectTemplate> project,
+        Supplier<ExperimentTemplate> experiment,
+        Supplier<FileMetaDataTemplate> fileMetaData,
+        Supplier<ExperimentFileTemplate> rawFile,
+        Supplier<InstrumentTemplate> instrument,
+        Supplier<FactorTemplate> factor,
+        Supplier<LevelTemplate> level,
+        Supplier<ProjectSharingRequestTemplate> projectSharingRequest,
+        Supplier<GroupTemplate> group,
+        Supplier<LabTemplate> lab,
+        Supplier<InboxMessageTemplate> inboxMessage,
+        Supplier<OutboxMessageTemplate> outboxMessage,
+        Supplier<Attachment> attachment, Supplier<Species> species,
+        Supplier<ExperimentType> experimentType,
+        Supplier<InstrumentModel> instrumentModel,
+        Supplier<InstrumentType> instrumentType,
+        Supplier<InstrumentStudyType> instrumentStudyType,
+        Supplier<VendorExtension> vendorExtension,
+        Supplier<Vendor> vendor,
+        Supplier<AnnotationTemplate> annotation) {
 
         this.annotation = fromNullable(annotation).or(defaultAnnotation);
 
@@ -276,8 +166,6 @@ public final class EntityFactories {
         this.instrumentStudyType = fromNullable(instrumentStudyType).or(defaultInstrumentStudyType);
         this.vendorExtension = Optional.ofNullable(vendorExtension).orElse(defaultVendorExtension);
         this.vendor = fromNullable(vendor).or(defaultVendor);
-
-        this.workflowType = fromNullable(workflowType).or(defaultWorkflowType);
 
         this.experimentType = fromNullable(experimentType).or(defaultExperimentType);
 
@@ -326,7 +214,6 @@ public final class EntityFactories {
         private Supplier<Attachment> attachment;
         private Supplier<Species> species;
         private Supplier<ExperimentType> experimentType;
-        private Supplier<WorkflowType> workflowType;
         private Supplier<InstrumentModel> instrumentModel;
         private Supplier<InstrumentType> instrumentType;
         private Supplier<InstrumentStudyType> instrumentStudyType;
@@ -420,11 +307,6 @@ public final class EntityFactories {
             return this;
         }
 
-        public Builder workflowType(Supplier<WorkflowType> workflowType) {
-            this.workflowType = workflowType;
-            return this;
-        }
-
         public Builder vendor(Supplier<Vendor> vendor) {
             this.vendor = vendor;
             return this;
@@ -456,30 +338,31 @@ public final class EntityFactories {
         }
 
         public EntityFactories build() {
-            return new EntityFactories(user,
-                    instrumentRequest,
-                    project,
-                    experiment,
-                    fileMetaData,
-                    rawFile,
-                    instrument,
-                    factor,
-                    level,
-                    projectSharingRequest,
-                    group,
-                    lab,
-                    inboxMessage,
-                    outboxMessage,
-                    attachment,
-                    species,
-                    experimentType,
-                    workflowType,
-                    instrumentModel,
-                    instrumentType,
-                    instrumentStudyType,
-                    vendorExtension,
-                    vendor,
-                    annotation);
+            return new EntityFactories(
+                user,
+                instrumentRequest,
+                project,
+                experiment,
+                fileMetaData,
+                rawFile,
+                instrument,
+                factor,
+                level,
+                projectSharingRequest,
+                group,
+                lab,
+                inboxMessage,
+                outboxMessage,
+                attachment,
+                species,
+                experimentType,
+                instrumentModel,
+                instrumentType,
+                instrumentStudyType,
+                vendorExtension,
+                vendor,
+                annotation
+            );
 
         }
 

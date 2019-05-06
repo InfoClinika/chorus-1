@@ -24,7 +24,7 @@ import static com.google.common.collect.FluentIterable.from;
 @Component
 @Scope(value = "prototype")
 public class ProjectReaderHelper<PROJECT extends ProjectTemplate, PROJECT_LINE extends ProjectLineTemplate>
-        extends AbstractReaderHelper<PROJECT, PROJECT_LINE, ProjectLineTemplate> {
+    extends AbstractReaderHelper<PROJECT, PROJECT_LINE, ProjectLineTemplate> {
 
     @Inject
     private ProjectRepositoryTemplate<PROJECT> projectRepository;
@@ -41,7 +41,8 @@ public class ProjectReaderHelper<PROJECT extends ProjectTemplate, PROJECT_LINE e
     }
 
 
-    public PagedResultBuilder<PROJECT, PROJECT_LINE> readProjects(long actor, Filter genericFilter, PageRequest pageRequest, String s) {
+    public PagedResultBuilder<PROJECT, PROJECT_LINE> readProjects(long actor, Filter genericFilter,
+                                                                  PageRequest pageRequest, String s) {
 
         final Page<PROJECT> pagedProjectsByFilter = getPagedProjectsByFilter(actor, genericFilter, pageRequest, s);
 
@@ -49,7 +50,8 @@ public class ProjectReaderHelper<PROJECT extends ProjectTemplate, PROJECT_LINE e
 
     }
 
-    public PagedResultBuilder<PROJECT, PROJECT_LINE> readProjectsByLab(long actor, long lab, Pageable pageable, String filter) {
+    public PagedResultBuilder<PROJECT, PROJECT_LINE> readProjectsByLab(long actor, long lab, Pageable pageable,
+                                                                       String filter) {
         Page<PROJECT> projects = projectRepository.findByLabAndName(lab, filter, pageable);
         return PagedResultBuilder.builder(projects, activeTransformer);
     }
@@ -92,21 +94,16 @@ public class ProjectReaderHelper<PROJECT extends ProjectTemplate, PROJECT_LINE e
     @Override
     public Function<PROJECT, ProjectLineTemplate> getDefaultTransformer() {
 
-        return new Function<PROJECT, ProjectLineTemplate>() {
-            @Override
-            public ProjectLineTemplate apply(PROJECT input) {
-
-                return new ProjectLineTemplate(input.getId(),
-                        input.getName(),
-                        input.getLastModification(),
-                        input.getAreaOfResearch(),
-                        input.getCreator().getEmail(),
-                        DefaultTransformers.fromSharingType(input.getSharing().getType()),
-                        DefaultTransformers.labLineTemplateTransformer().apply(input.getLab()),
-                        input.getCreator().getFullName()
-                );
-            }
-        };
+        return input -> new ProjectLineTemplate(
+            input.getId(),
+            input.getName(),
+            input.getLastModification(),
+            input.getAreaOfResearch(),
+            input.getCreator().getEmail(),
+            DefaultTransformers.fromSharingType(input.getSharing().getType()),
+            DefaultTransformers.labLineTemplateTransformer().apply(input.getLab()),
+            input.getCreator().getFullName()
+        );
 
     }
 

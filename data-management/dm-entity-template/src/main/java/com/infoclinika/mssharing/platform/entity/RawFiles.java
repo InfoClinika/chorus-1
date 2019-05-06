@@ -12,6 +12,8 @@ import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
+import static javax.persistence.CascadeType.ALL;
+import static javax.persistence.FetchType.EAGER;
 
 /**
  * @author Herman Zamula
@@ -22,12 +24,17 @@ public class RawFiles<FACTOR extends FactorTemplate<?, ?>, EXPERIMENT_FILE exten
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     @Fetch(value = FetchMode.SELECT)
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = ALL, orphanRemoval = true)
     @JoinColumn(name = "experiment_id")
     private List<EXPERIMENT_FILE> data = newArrayList();
 
     @Fetch(value = FetchMode.SELECT)
-    @OneToMany(mappedBy = "experiment", orphanRemoval = true, fetch = FetchType.EAGER, cascade = CascadeType.ALL, targetEntity = FactorTemplate.class)
+    @OneToMany(mappedBy = "experiment",
+        orphanRemoval = true,
+        fetch = EAGER,
+        cascade = ALL,
+        targetEntity = FactorTemplate.class)
+    @OrderBy("id asc")
     private List<FACTOR> factors = newArrayList();
 
     public RawFiles() {

@@ -17,7 +17,8 @@ public abstract class AbstractReaderHelper<ENTITY, ENTITY_LINE extends ENTITY_LI
     }
 
     /**
-     * Returns DTO template implementation transformer function or {@code defaultTransformer} ({@link #getDefaultTransformer()} method)
+     * Returns DTO template implementation transformer function or {@code defaultTransformer}
+     * ({@link #getDefaultTransformer()} method)
      * if new transformer function wasn't set (via {@link #setTransformer(com.google.common.base.Function)} method)
      *
      * @return current active DTO transformer function
@@ -37,7 +38,8 @@ public abstract class AbstractReaderHelper<ENTITY, ENTITY_LINE extends ENTITY_LI
     }
 
     /**
-     * Default implementation of DTO transformer function. Doesn't support any additional parameters except {@link ENTITY} object.
+     * Default implementation of DTO transformer function. Doesn't support any additional parameters except
+     * {@link ENTITY} object.
      * Fields that required some additional parameters will be set to {@code null} or empty (for collections)
      *
      * @return default transformer function of template DTO

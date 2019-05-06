@@ -8,6 +8,7 @@ import com.infoclinika.mssharing.platform.entity.FactorTemplate;
 import com.infoclinika.mssharing.platform.entity.RawFiles;
 import com.infoclinika.mssharing.platform.entity.restorable.ExperimentTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.write.ExperimentManager;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
@@ -17,7 +18,6 @@ import com.infoclinika.mssharing.platform.repository.ProjectRepositoryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
@@ -37,8 +37,9 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
  */
 @Component
 @Transactional
-public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, EXPERIMENT_INFO extends ExperimentManagementTemplate.ExperimentInfoTemplate>
-        implements ExperimentManagementTemplate<EXPERIMENT_INFO> {
+public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate,
+    EXPERIMENT_INFO extends ExperimentManagementTemplate.ExperimentInfoTemplate>
+    implements ExperimentManagementTemplate<EXPERIMENT_INFO> {
 
     public static final Function<FileItemTemplate, Long> FILE_ITEM_TO_ID = new Function<FileItemTemplate, Long>() {
         @Override
@@ -65,7 +66,8 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
 
         Function<ExperimentFileTemplate, ExperimentFileTemplate> setFilePropsFn = createSetRawFilesPropsFn();
         Function<FactorTemplate, FactorTemplate> setFactorPropsFn = createSetFactorsPropsFn();
-        EXPERIMENT experimentAfterFilesUpdate = updateExperimentFilesOnCreateExperiment(experimentInfo, experiment, setFilePropsFn, setFactorPropsFn);
+        EXPERIMENT experimentAfterFilesUpdate =
+            updateExperimentFilesOnCreateExperiment(experimentInfo, experiment, setFilePropsFn, setFactorPropsFn);
 
         EXPERIMENT finalExperiment = afterCreateExperiment(experimentAfterFilesUpdate, experimentInfo);
 
@@ -76,29 +78,22 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
         return experimentManager.createAndSave(actor, experimentInfo);
     }
 
-    protected EXPERIMENT updateExperimentFilesOnCreateExperiment(EXPERIMENT_INFO experimentInfo, EXPERIMENT experiment, Function<ExperimentFileTemplate, ExperimentFileTemplate> setFilePropsFn, Function<FactorTemplate, FactorTemplate> setFactorPropsFn) {
+    protected EXPERIMENT updateExperimentFilesOnCreateExperiment(
+        EXPERIMENT_INFO experimentInfo,
+        EXPERIMENT experiment,
+        Function<ExperimentFileTemplate, ExperimentFileTemplate> setFilePropsFn,
+        Function<FactorTemplate, FactorTemplate> setFactorPropsFn) {
+
         experimentManager.updateExperimentFiles(experimentInfo, experiment, setFilePropsFn, setFactorPropsFn);
         return experiment;
     }
 
     private Function<FactorTemplate, FactorTemplate> createSetFactorsPropsFn() {
-        return new Function<FactorTemplate, FactorTemplate>() {
-            @Nullable
-            @Override
-            public FactorTemplate apply(@Nullable FactorTemplate input) {
-                return input;
-            }
-        };
+        return input -> input;
     }
 
     private Function<ExperimentFileTemplate, ExperimentFileTemplate> createSetRawFilesPropsFn() {
-        return new Function<ExperimentFileTemplate, ExperimentFileTemplate>() {
-            @Nullable
-            @Override
-            public ExperimentFileTemplate apply(@Nullable ExperimentFileTemplate input) {
-                return input;
-            }
-        };
+        return input -> input;
     }
 
 
@@ -108,14 +103,38 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
 
     @SuppressWarnings("unchecked")
     protected void beforeCreateExperiment(long actor, EXPERIMENT_INFO experimentInfo) {
-        checkArgument(experimentInfo.files != null && !experimentInfo.files.isEmpty(), "Can't create experiment without files");
-        checkNotNull(experimentTypeRepository.findOne(experimentInfo.experimentType), "Can't create experiment without experiment type");
+
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+
+        checkArgument(
+            experimentInfo.files != null && !experimentInfo.files.isEmpty(), "Can't create experiment without files");
+        checkNotNull(
+            experimentTypeRepository.findOne(experimentInfo.experimentType),
+            "Can't create experiment without experiment type"
+        );
         final ImmutableSet<Long> fileIds = from(experimentInfo.files).transform(FILE_ITEM_TO_ID).toSet();
-        checkArgument(ruleValidator.canUserCreateExperimentWithTitle(actor, experimentInfo.name), "User already has experiment with this name: \"" + experimentInfo.name + "\"");
-        checkArgument(ruleValidator.canSaveExperimentWithFiles(transform(experimentInfo.files, FILE_ITEM_TO_ID)), "Can't create experiment with files specified");
-        checkState(ruleValidator.canSaveExperimentWithModel(experimentInfo.restriction.instrumentModel, fileIds), "Can't create experiment with selected files and instrument model");
-        checkState(ruleValidator.canSaveExperimentWithSpecies(experimentInfo.specie, fileIds), "Can't create experiment with selected files and species");
-        checkAccess(ruleValidator.isUserCanCreateExperimentsInProject(actor, experimentInfo.project), "User has no permissions to create experiment in this project");
+        checkArgument(
+            ruleValidator.canUserCreateExperimentWithTitle(actor, experimentInfo.name),
+            "User already has experiment with this name: \"" + experimentInfo.name + "\""
+        );
+        checkArgument(
+            ruleValidator.canSaveExperimentWithFiles(transform(experimentInfo.files, FILE_ITEM_TO_ID)),
+            "Can't create experiment with files specified"
+        );
+        checkState(
+            ruleValidator.canSaveExperimentWithModel(experimentInfo.restriction.instrumentModel, fileIds),
+            "Can't create experiment with selected files and instrument model"
+        );
+        checkState(
+            ruleValidator.canSaveExperimentWithSpecies(experimentInfo.specie, fileIds),
+            "Can't create experiment with selected files and species"
+        );
+        checkAccess(
+            ruleValidator.canUserCreateExperimentsInProject(actor, experimentInfo.project),
+            "User has no permissions to create experiment in this project"
+        );
     }
 
     @Override
@@ -126,9 +145,10 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
     }
 
     protected void beforeDeleteExperiment(long actor, long experiment) {
-
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         checkAccess(ruleValidator.canRemoveExperiment(actor, experiment), "Couldn't remove experiment: " + experiment);
-
     }
 
     @Override
@@ -137,7 +157,10 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
         beforeUpdateExperiment(actor, experimentId, experimentInfo);
 
         //noinspection unchecked
-        final boolean filesChanged = wereExperimentFilesChanged(experimentId, experimentInfo.project, experimentInfo.restriction, experimentInfo.factors, experimentInfo.files);
+        final boolean filesChanged =
+            wereExperimentFilesChanged(experimentId, experimentInfo.project, experimentInfo.restriction,
+                experimentInfo.factors, experimentInfo.files
+            );
 
         EXPERIMENT experiment = onUpdateExperiment(experimentId, experimentInfo);
 
@@ -154,7 +177,11 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
 
     }
 
-    protected void updateExperimentFilesOnUpdateExperiment(EXPERIMENT_INFO experimentInfo, EXPERIMENT experiment, Function<FactorTemplate, FactorTemplate> setFactorsPropsFn, Function<ExperimentFileTemplate, ExperimentFileTemplate> setRawFilesPropsFn) {
+    protected void updateExperimentFilesOnUpdateExperiment(
+        EXPERIMENT_INFO experimentInfo,
+        EXPERIMENT experiment,
+        Function<FactorTemplate, FactorTemplate> setFactorsPropsFn,
+        Function<ExperimentFileTemplate, ExperimentFileTemplate> setRawFilesPropsFn) {
         experimentManager.updateExperimentFiles(experimentInfo, experiment, setRawFilesPropsFn, setFactorsPropsFn);
     }
 
@@ -164,23 +191,41 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
 
     @SuppressWarnings("unchecked")
     protected void beforeUpdateExperiment(long actor, long experimentId, EXPERIMENT_INFO experimentInfo) {
+
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+
         final ImmutableSet<Long> fileIds = from(experimentInfo.files).transform(FILE_ITEM_TO_ID).toSet();
 
         checkPresence(projectRepository.findOne(experimentInfo.project), "Project not found");
-        checkNotNull(experimentTypeRepository.findOne(experimentInfo.experimentType), "Can't update experiment with experiment type not specified %s", experimentInfo.experimentType);
-        checkState(ruleValidator.canSaveExperimentWithModel(experimentInfo.restriction.instrumentModel, fileIds),
-                "Can't update experiment with selected files and instrument model");
-        checkState(ruleValidator.canSaveExperimentWithSpecies(experimentInfo.specie, fileIds),
-                "Can't update experiment with selected files and species");
+        checkNotNull(
+            experimentTypeRepository.findOne(experimentInfo.experimentType),
+            "Can't update experiment with experiment type not specified %s", experimentInfo.experimentType
+        );
+        checkState(
+            ruleValidator.canSaveExperimentWithModel(experimentInfo.restriction.instrumentModel, fileIds),
+            "Can't update experiment with selected files and instrument model"
+        );
+        checkState(
+            ruleValidator.canSaveExperimentWithSpecies(experimentInfo.specie, fileIds),
+            "Can't update experiment with selected files and species"
+        );
 
         ImmutableCollection<FileItemTemplate> immutableFiles = copyOf(experimentInfo.files);
         checkArgument(!experimentInfo.files.isEmpty(), "Can't save experiment without files");
         if (!ruleValidator.userHasEditPermissionsOnExperiment(actor, experimentId)
-                || !ruleValidator.userHasReadPermissionsOnFiles(actor, getFileMetaDataIds(immutableFiles))) {
+            || !ruleValidator.userHasReadPermissionsOnFiles(actor, getFileMetaDataIds(immutableFiles))) {
             throw new AccessDenied("User isn't permitted to edit experiment");
         }
-        checkArgument(ruleValidator.canUserUpdateExperimentWithTitle(actor, experimentId, experimentInfo.name), "User already has experiment with this name: \"" + experimentInfo.name + "\"");
-        checkArgument(ruleValidator.canSaveExperimentWithFiles(transform(experimentInfo.files, FILE_ITEM_TO_ID)), "Can't update experiment with files specified");
+        checkArgument(
+            ruleValidator.canUserUpdateExperimentWithTitle(actor, experimentId, experimentInfo.name),
+            "User already has experiment with this name: \"" + experimentInfo.name + "\""
+        );
+        checkArgument(
+            ruleValidator.canSaveExperimentWithFiles(transform(experimentInfo.files, FILE_ITEM_TO_ID)),
+            "Can't update experiment with files specified"
+        );
     }
 
     private Iterable<Long> getFileMetaDataIds(ImmutableCollection<FileItemTemplate> files) {
@@ -192,10 +237,12 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
         });
     }
 
-    protected boolean wereExperimentFilesChanged(long experimentId, long newProject, Restriction restriction, List<MetaFactorTemplate> newFactors, List<FileItemTemplate> newFiles) {
+    protected boolean wereExperimentFilesChanged(long experimentId, long newProject, Restriction restriction,
+                                                 List<MetaFactorTemplate> newFactors, List<FileItemTemplate> newFiles) {
         final EXPERIMENT experiment = experimentRepository.findOne(experimentId);
 
-        final Long oldInstrumentId = experiment.getInstrumentRestriction().getInstrument() == null ? null : experiment.getInstrumentRestriction().getInstrument().getId();
+        final Long oldInstrumentId = experiment.getInstrumentRestriction().getInstrument() == null ? null :
+            experiment.getInstrumentRestriction().getInstrument().getId();
         Long newInstrumentId = (restriction.instrument.isPresent()) ? restriction.instrument.get() : null;
         //check instrument and model match
         if (!Objects.equals(oldInstrumentId, newInstrumentId)) {
@@ -216,12 +263,8 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
             return true;
         }
         //check factors names
-        final Map<String, MetaFactorTemplate> newFactorsMap = Maps.uniqueIndex(newFactors, new Function<MetaFactorTemplate, String>() {
-            @Override
-            public String apply(MetaFactorTemplate f) {
-                return f.name;
-            }
-        });
+        final Map<String, MetaFactorTemplate> newFactorsMap =
+            Maps.uniqueIndex(newFactors, f -> f.name);
 
         for (FactorTemplate f : oldFactors) {
             if (!newFactorsMap.containsKey(f.getName())) {
@@ -229,12 +272,8 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
             }
         }
         //checking all raw files match new files
-        final Map<Long, FileItemTemplate> newFilesMap = Maps.uniqueIndex(newFiles, new Function<FileItemTemplate, Long>() {
-            @Override
-            public Long apply(FileItemTemplate f) {
-                return f.id;
-            }
-        });
+        final Map<Long, FileItemTemplate> newFilesMap =
+            Maps.uniqueIndex(newFiles, f -> f.id);
 
         for (ExperimentFileTemplate oldRawFile : oldRawFileList) {
             final long fileMetaDataId = oldRawFile.getFileMetaData().getId();
@@ -243,7 +282,8 @@ public class DefaultExperimentManagement<EXPERIMENT extends ExperimentTemplate, 
             }
             final FileItemTemplate newFileItem = newFilesMap.get(fileMetaDataId);
             final HashSet<String> setOfFactorValues = newHashSet(newFileItem.factorValues);
-            if (Sets.intersection(setOfFactorValues, newHashSet(oldRawFile.getFactorValues())).size() != setOfFactorValues.size()) {
+            if (Sets.intersection(setOfFactorValues, newHashSet(oldRawFile.getFactorValues())).size() !=
+                setOfFactorValues.size()) {
                 return true;
             }
         }

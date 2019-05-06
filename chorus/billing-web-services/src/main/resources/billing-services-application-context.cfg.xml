@@ -2,55 +2,51 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd">
 
+    <import resource="classpath*:mysql.cfg.xml"/>
+    <import resource="classpath*:persistence.cfg.xml"/>
+    <import resource="classpath*:billing-mysql.cfg.xml"/>
+    <import resource="classpath:billing-persistence.cfg.xml"/>
 
+    <util:properties id="billingApplicationProperties" location="classpath*:platform-storage.properties,
+                                                                 file:${user.home}/application.properties"
+                     ignore-resource-not-found="true"/>
+    <context:property-placeholder ignore-resource-not-found="true"
+                                  properties-ref="billingApplicationProperties"/>
 
     <context:component-scan base-package="com.infoclinika.mssharing.model.internal.repository"/>
     <context:component-scan base-package="com.infoclinika.mssharing.model.internal.helper.billing"/>
     <context:component-scan base-package="com.infoclinika.mssharing.model.internal.write.billing"/>
     <context:component-scan base-package="com.infoclinika.mssharing.services.billing.persistence"/>
     <context:component-scan base-package="com.infoclinika.mssharing.platform.model.helper.read"/>
+    <context:component-scan base-package="com.infoclinika.mssharing.propertiesprovider"/>
 
-    <bean class="com.infoclinika.mssharing.model.internal.features.FeaturesReader"/>
     <bean class="com.infoclinika.mssharing.model.internal.helper.FeaturesHelperImpl"/>
     <bean class="com.infoclinika.mssharing.model.internal.read.Transformers"/>
     <bean class="com.infoclinika.mssharing.model.internal.read.BillingInfoReaderImpl"/>
     <bean class="com.infoclinika.mssharing.model.internal.RuleValidatorImpl"/>
     <bean class="com.infoclinika.mssharing.model.helper.StoredObjectPaths"/>
+    <bean class="com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider"/>
     <bean id="billingService" class="com.infoclinika.mssharing.services.billing.rest.BillingServiceImpl"/>
     <bean id="current" class="java.util.Date" scope="prototype"/>
 
-
-    <!---->
     <bean class="com.infoclinika.mssharing.platform.model.impl.ValidatorPredicates"/>
     <bean class="com.infoclinika.mssharing.model.internal.FactoriesCfg"/>
-    <!---->
-    <import resource="classpath*:mysql.cfg.xml"/>
-    <import resource="classpath*:persistence.cfg.xml"/>
-    <import resource="classpath*:billing-mysql.cfg.xml"/>
-    <import resource="classpath:billing-persistence.cfg.xml"/>
 
-    <bean id="analysableStorageUsageLoggerJob"
-          class="com.infoclinika.mssharing.services.billing.jobs.StorageUsageLoggerJob">
-        <constructor-arg index="0" ref="cachedFeaturesRepository"/>
-        <constructor-arg index="1" ref="hourlyAnalyseStorageUsageRepository"/>
-        <constructor-arg index="2" ref="analysableStorageLogHelper"/>
-        <constructor-arg index="3" type="java.lang.String" value="${billing.server.timezone}"/>
-    </bean>
-    <bean id="storageUsageLoggerJob" class="com.infoclinika.mssharing.services.billing.jobs.StorageUsageLoggerJob">
-        <constructor-arg index="0" ref="cachedFeaturesRepository"/>
-        <constructor-arg index="1" ref="hourlyArchiveStorageUsageRepository"/>
-        <constructor-arg index="2" ref="archiveStorageLogHelper"/>
-        <constructor-arg index="3" type="java.lang.String" value="${billing.server.timezone}"/>
-    </bean>
+    <bean id="storageUsageLoggerJob" class="com.infoclinika.mssharing.services.billing.jobs.StorageUsageLoggerJob"/>
     <bean id="accountantJob" class="com.infoclinika.mssharing.services.billing.jobs.AccountantJob">
         <constructor-arg index="0" ref="storageAndProcessingFeaturesUsageAnalyser"/>
         <constructor-arg index="1" value="${billing.server.timezone}"/>
     </bean>
-    <bean id="monthlySummaryJobs" class="com.infoclinika.mssharing.services.billing.jobs.MonthlySummaryJobs">
-        <constructor-arg value="${billing.server.timezone}"/>
-    </bean>
+    <bean id="dailySummaryJob" class="com.infoclinika.mssharing.services.billing.jobs.DailySummaryJob"/>
+    <bean id="monthlySummaryJobs" class="com.infoclinika.mssharing.services.billing.jobs.MonthlySummaryJobs"/>
 
     <bean id="serverTimezone" class="java.util.TimeZone" factory-method="getTimeZone">
         <constructor-arg value="${billing.server.timezone}"/>
@@ -59,10 +55,4 @@
     <bean id="billingDateForman" class="java.text.SimpleDateFormat">
         <property name="timeZone" ref="serverTimezone"/>
     </bean>
-
-
-    <context:property-placeholder ignore-resource-not-found="true"
-                                  location="classpath*:application.properties,
-                    file:${user.home}/application.properties"/>
-
 </beans>

@@ -21,7 +21,8 @@ public class ExperimentLabelToExperimentReaderImpl implements ExperimentLabelToE
 
     @Override
     public ExperimentLabelsItem readLabels(long experiment) {
-        final List<ExperimentLabelToExperiment> labels = experimentLabelToExperimentRepository.findLabelsById(experiment);
+        final List<ExperimentLabelToExperiment> labels =
+            experimentLabelToExperimentRepository.findLabelsById(experiment);
         final List<Long> lightLabels = newLinkedList();
         final List<Long> mediumLabels = newLinkedList();
         final List<Long> heavyLabels = newLinkedList();
@@ -30,7 +31,7 @@ public class ExperimentLabelToExperimentReaderImpl implements ExperimentLabelToE
         for (ExperimentLabelToExperiment label : labels) {
             final ExperimentSampleType mixType = label.getExperimentLabelMixType();
 
-            switch (mixType){
+            switch (mixType) {
                 case LIGHT:
                     lightLabels.add(label.getExperimentLabel().getId());
                     break;
@@ -44,7 +45,9 @@ public class ExperimentLabelToExperimentReaderImpl implements ExperimentLabelToE
                     specialLabels.add(label.getExperimentLabel().getId());
                     break;
                 default:
-                    throw new IllegalStateException("Undefined experiment labels type: " + mixType + " for experiment: " + experiment);
+                    throw new IllegalStateException(
+                        "Undefined experiment labels type: " + mixType + " for experiment: " + experiment
+                    );
             }
         }
 
@@ -53,7 +56,8 @@ public class ExperimentLabelToExperimentReaderImpl implements ExperimentLabelToE
 
     @Override
     public ExperimentLabelsDetails readLabelsDetails(long experiment) {
-        final List<ExperimentLabelToExperiment> labels = experimentLabelToExperimentRepository.findLabelsById(experiment);
+        final List<ExperimentLabelToExperiment> labels =
+            experimentLabelToExperimentRepository.findLabelsById(experiment);
         final List<ExperimentLabelItem> lightLabels = newLinkedList();
         final List<ExperimentLabelItem> mediumLabels = newLinkedList();
         final List<ExperimentLabelItem> heavyLabels = newLinkedList();
@@ -62,7 +66,7 @@ public class ExperimentLabelToExperimentReaderImpl implements ExperimentLabelToE
         for (ExperimentLabelToExperiment label : labels) {
             final ExperimentSampleType mixType = label.getExperimentLabelMixType();
 
-            switch (mixType){
+            switch (mixType) {
                 case LIGHT:
                     lightLabels.add(asLabelItem(label));
                     break;
@@ -76,7 +80,9 @@ public class ExperimentLabelToExperimentReaderImpl implements ExperimentLabelToE
                     specialLabels.add(asLabelItem(label));
                     break;
                 default:
-                    throw new IllegalStateException("Undefined experiment labels type: " + mixType + " for experiment: " + experiment);
+                    throw new IllegalStateException(
+                        "Undefined experiment labels type: " + mixType + " for experiment: " + experiment
+                    );
             }
         }
 

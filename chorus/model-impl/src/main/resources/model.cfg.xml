@@ -4,17 +4,20 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:task="http://www.springframework.org/schema/task"
        xmlns:http="http://cxf.apache.org/transports/http/configuration" xmlns:cxf="http://cxf.apache.org/core"
-       xmlns:jaxrs="http://cxf.apache.org/jaxrs-client"
+       xmlns:jaxrs="http://cxf.apache.org/jaxrs-client" xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.1.xsd
-       http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd">
-    <context:component-scan base-package="com.infoclinika.mssharing.model"/>
+       http://cxf.apache.org/transports/http/configuration http://cxf.apache.org/schemas/configuration/http-conf.xsd http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <context:component-scan base-package="com.infoclinika.mssharing.model,com.infoclinika.mssharing.propertiesprovider"/>
+
     <bean id="encoder" class="org.springframework.security.crypto.password.StandardPasswordEncoder"/>
     <bean id="ruleValidator" name="validator, ruleValidator" class="com.infoclinika.mssharing.model.internal.RuleValidatorImpl"/>
 
     <import resource="persistence.cfg.xml"/>
+    <import resource="workflow.cfg.xml"/>
     <import resource="classpath*:platform.cfg.xml"/>
     <import resource="classpath*:fileserver.cfg.xml"/>
 
@@ -36,17 +39,18 @@
 
     <task:executor id="defaultExecutor" pool-size="50"/>
 
-    <task:executor id="fileTranslatorExecutor" keep-alive="360000" pool-size="50"/>
-
     <task:executor id="fileAccessLogExecutor" keep-alive="60" pool-size="50"/>
 
     <task:annotation-driven executor="defaultExecutor"/>
 
+    <util:properties id="modelImplApplicationProperties"
+                     location="classpath*:platform-storage.properties,
+                               file:${user.home}/application.properties"
+                     ignore-resource-not-found="true"/>
+
     <context:property-placeholder ignore-resource-not-found="true"
                                   ignore-unresolvable="true"
-                                  location="classpath*:application.properties,
-                                  file:${user.home}/messaging.properties,
-                    file:${user.home}/application.properties"/>
+                                  properties-ref="modelImplApplicationProperties"/>
 
     <!-- todo[tymchenko]: does not work now. See Translator class for manual setting of the timeout -->
     <http:conduit name="*.http-conduit">
@@ -54,7 +58,7 @@
     </http:conduit>
 
 
-    <jaxrs:client id="billingRestService"
+    <jaxrs:client id="billingService"
                   address="${billing.service.url}"
                   serviceClass="com.infoclinika.mssharing.services.billing.rest.api.BillingService"
                   inheritHeaders="true">

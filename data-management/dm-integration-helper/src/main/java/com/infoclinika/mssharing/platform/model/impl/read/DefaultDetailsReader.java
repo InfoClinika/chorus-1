@@ -7,10 +7,12 @@ import com.infoclinika.mssharing.platform.entity.restorable.ExperimentTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.ProjectTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.read.SingleResultBuilder;
 import com.infoclinika.mssharing.platform.model.helper.read.details.*;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
+import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.FileItemTemplate;
 import com.infoclinika.mssharing.platform.repository.*;
 import com.infoclinika.mssharing.platform.repository.InstrumentRepositoryTemplate.AccessedInstrument;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.util.List;
 import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditions.checkAccess;
 import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditions.checkPresence;
+import static com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.*;
 
 
 /**
@@ -29,20 +32,20 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
  */
 @Transactional(readOnly = true)
 public abstract class DefaultDetailsReader<
-        FILE extends FileMetaDataTemplate,
-        PROJECT extends ProjectTemplate,
-        EXPERIMENT extends ExperimentTemplate,
-        INSTRUMENT extends InstrumentTemplate,
-        LAB extends LabTemplate,
-        GROUP extends GroupTemplate,
-        FILE_ITEM extends DetailsReaderTemplate.FileItemTemplate,
-        EXPERIMENT_ITEM extends DetailsReaderTemplate.ExperimentItemTemplate,
-        PROJECT_ITEM extends DetailsReaderTemplate.ProjectItemTemplate,
-        INSTRUMENT_ITEM extends DetailsReaderTemplate.InstrumentItemTemplate,
-        LAB_ITEM extends DetailsReaderTemplate.LabItemTemplateDetailed,
-        GROUP_ITEM extends DetailsReaderTemplate.GroupItemTemplate>
+    FILE extends FileMetaDataTemplate,
+    PROJECT extends ProjectTemplate,
+    EXPERIMENT extends ExperimentTemplate,
+    INSTRUMENT extends InstrumentTemplate,
+    LAB extends LabTemplate,
+    GROUP extends GroupTemplate,
+    FILE_ITEM extends FileItemTemplate,
+    EXPERIMENT_ITEM extends ExperimentItemTemplate,
+    PROJECT_ITEM extends ProjectItemTemplate,
+    INSTRUMENT_ITEM extends InstrumentItemTemplate,
+    LAB_ITEM extends LabItemTemplateDetailed,
+    GROUP_ITEM extends GroupItemTemplate>
 
-        implements DetailsReaderTemplate<FILE_ITEM, EXPERIMENT_ITEM, PROJECT_ITEM, INSTRUMENT_ITEM, LAB_ITEM, GROUP_ITEM> {
+    implements DetailsReaderTemplate<FILE_ITEM, EXPERIMENT_ITEM, PROJECT_ITEM, INSTRUMENT_ITEM, LAB_ITEM, GROUP_ITEM> {
 
     @Inject
     protected RuleValidator ruleValidator;
@@ -128,7 +131,8 @@ public abstract class DefaultDetailsReader<
     public EXPERIMENT_ITEM readExperiment(long actor, long experiment) {
 
         beforeReadExperiment(actor, experiment);
-        final SingleResultBuilder<EXPERIMENT, EXPERIMENT_ITEM> resultBuilder = experimentHelper.readExperiment(experiment);
+        final SingleResultBuilder<EXPERIMENT, EXPERIMENT_ITEM> resultBuilder =
+            experimentHelper.readExperiment(experiment);
         return afterReadExperiment(actor, resultBuilder);
 
     }
@@ -146,7 +150,8 @@ public abstract class DefaultDetailsReader<
     public INSTRUMENT_ITEM readInstrument(long actor, long instrument) {
 
         beforeReadInstrument(actor, instrument);
-        final SingleResultBuilder<AccessedInstrument<INSTRUMENT>, INSTRUMENT_ITEM> builder = instrumentHelper.readInstrument(actor, instrument);
+        final SingleResultBuilder<AccessedInstrument<INSTRUMENT>, INSTRUMENT_ITEM> builder =
+            instrumentHelper.readInstrument(actor, instrument);
         return afterReadInstrument(actor, builder);
 
     }
@@ -176,42 +181,50 @@ public abstract class DefaultDetailsReader<
         final EXPERIMENT experiment = experimentRepository.findOne(experimentId);
 
         //noinspection unchecked
-        final List<ShortExperimentFileItem> files = from(experiment.getRawFiles().getData()).transform(shortInfoFileTransformer(experiment)).toList();
+        final List<ShortExperimentFileItem> files =
+            from(experiment.getRawFiles().getData()).transform(shortInfoFileTransformer(experiment)).toList();
 
         //noinspection unchecked
-        final List<AttachmentItem> attachments = from(experiment.attachments).transform(detailsTransformers.attachmentTransformer()).toList();
+        final List<AttachmentItem> attachments =
+            from(experiment.attachments).transform(detailsTransformers.attachmentTransformer()).toList();
 
         final LabTemplate lab = experiment.getLab();
 
-        return new ExperimentShortInfo(experimentId,
-                lab == null ? null : lab.getName(),
-                experiment.getName(),
-                experiment.getExperiment().getDescription(),
-                experiment.getProject().getName(),
-                experiment.getSpecie().getName(),
-                files,
-                attachments,
-                experiment.getCreator().getEmail());
+        return new ExperimentShortInfo(
+            experimentId,
+            lab == null ? null : lab.getName(),
+            experiment.getName(),
+            experiment.getExperiment().getDescription(),
+            experiment.getProject().getName(),
+            experiment.getSpecie().getName(),
+            files,
+            attachments,
+            experiment.getCreator().getEmail()
+        );
     }
 
-    protected Function<ExperimentFileTemplate, ? extends ShortExperimentFileItem> shortInfoFileTransformer(final EXPERIMENT experiment) {
+    protected Function<ExperimentFileTemplate, ? extends ShortExperimentFileItem> shortInfoFileTransformer(
+        final EXPERIMENT experiment) {
         return new Function<ExperimentFileTemplate, ShortExperimentFileItem>() {
             @Override
             public ShortExperimentFileItem apply(ExperimentFileTemplate input) {
 
                 //noinspection unchecked
-                final ImmutableList<ConditionItem> conditions = from(input.getConditions()).transform(shortInfoConditionTransformer(experiment)).toList();
+                final ImmutableList<ConditionItem> conditions =
+                    from(input.getConditions()).transform(shortInfoConditionTransformer(experiment)).toList();
 
                 //noinspection unchecked
-                final ImmutableList<DetailsReaderTemplate.AnnotationItem> annotations = from(input.getAnnotationList())
-                        .transform(detailsTransformers.annotationsTransformer()).toList();
+                final ImmutableList<AnnotationItem> annotations = from(input.getAnnotationList())
+                    .transform(detailsTransformers.annotationsTransformer()).toList();
 
                 final FileMetaDataTemplate fileMetaData = input.getFileMetaData();
 
-                return new ShortExperimentFileItem(fileMetaData.getId(),
-                        fileMetaData.getName(),
-                        conditions,
-                        annotations);
+                return new ShortExperimentFileItem(
+                    fileMetaData.getId(),
+                    fileMetaData.getName(),
+                    conditions,
+                    annotations
+                );
             }
         };
     }
@@ -229,6 +242,10 @@ public abstract class DefaultDetailsReader<
 
     protected void beforeReadFile(long actor, long file) {
 
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+
         checkPresence(fileMetaDataRepository.findOne(file));
 
         if (!ruleValidator.userHasReadPermissionsOnFile(actor, file)) {
@@ -239,6 +256,10 @@ public abstract class DefaultDetailsReader<
 
     protected void beforeReadProject(long actor, long project) {
 
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+
         checkPresence(projectRepository.findOne(project));
 
         if (!ruleValidator.hasReadAccessOnProject(actor, project)) {
@@ -248,12 +269,22 @@ public abstract class DefaultDetailsReader<
 
     protected void beforeReadGroup(long actor, long group) {
 
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+
         checkPresence(groupRepository.findOne(group), "Group not found");
 
-        if (!ruleValidator.canReadGroupDetails(actor, group)) throw new AccessDenied("Can't read group");
+        if (!ruleValidator.canReadGroupDetails(actor, group)) {
+            throw new AccessDenied("Can't read group");
+        }
     }
 
     protected void beforeReadInstrument(long actor, long instrument) {
+
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
 
         checkPresence(instrumentRepository.findOne(instrument), "Instrument not found");
 
@@ -265,11 +296,19 @@ public abstract class DefaultDetailsReader<
 
     protected void beforeReadExperiment(long actor, long experiment) {
 
-        checkPresence(experimentRepository.findOne(experiment),
-                "Experiment not found. Id=" + experiment + ". User=" + actor);
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
 
-        checkAccess(ruleValidator.isUserCanReadExperiment(actor, experiment),
-                "Can't read experiment. Id=" + experiment + ". User=" + actor);
+        checkPresence(
+            experimentRepository.findOne(experiment),
+            "Experiment not found. Id=" + experiment + ". User=" + actor
+        );
+
+        checkAccess(
+            ruleValidator.isUserCanReadExperiment(actor, experiment),
+            "Can't read experiment. Id=" + experiment + ". User=" + actor
+        );
 
     }
 
@@ -279,11 +318,17 @@ public abstract class DefaultDetailsReader<
         return labBuilder.transform();
     }
 
-    protected EXPERIMENT_ITEM afterReadExperiment(long actor, SingleResultBuilder<EXPERIMENT, EXPERIMENT_ITEM> resultBuilder) {
+    protected EXPERIMENT_ITEM afterReadExperiment(long actor,
+                                                  SingleResultBuilder<EXPERIMENT, EXPERIMENT_ITEM> resultBuilder) {
         return resultBuilder.transform();
     }
 
     protected void beforeReadLab(long actor, long lab) {
+
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+
         if (!ruleValidator.canReadLabs(actor)) {
             throw new AccessDenied("User should be admin to read lab details");
         }
@@ -297,7 +342,9 @@ public abstract class DefaultDetailsReader<
         return projectItemBuilder.transform();
     }
 
-    protected INSTRUMENT_ITEM afterReadInstrument(long actor, SingleResultBuilder<AccessedInstrument<INSTRUMENT>, INSTRUMENT_ITEM> instrumentItemBuilder) {
+    protected INSTRUMENT_ITEM afterReadInstrument(long actor,
+                                                  SingleResultBuilder<AccessedInstrument<INSTRUMENT>,
+                                                      INSTRUMENT_ITEM> instrumentItemBuilder) {
         return instrumentItemBuilder.transform();
     }
 

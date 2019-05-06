@@ -1,0 +1,8 @@
+<div ng-show="releaseNotes.length > 0">
+    <ul>
+        <li ng-repeat="note in releaseNotes" class="release-note-item">
+            <label ng-bind="note"></label>
+        </li>
+    </ul>
+</div>
+<h3 ng-show="releaseNotes.length == 0" class="message">No release notes</h3>

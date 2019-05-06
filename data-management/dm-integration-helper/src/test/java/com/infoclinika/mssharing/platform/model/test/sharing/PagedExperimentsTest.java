@@ -4,8 +4,7 @@ package com.infoclinika.mssharing.platform.model.test.sharing;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import org.testng.annotations.Test;
 
-import static com.infoclinika.mssharing.platform.model.read.Filter.ALL;
-import static com.infoclinika.mssharing.platform.model.read.Filter.MY;
+import static com.infoclinika.mssharing.platform.model.read.Filter.*;
 import static org.testng.Assert.assertSame;
 
 public class PagedExperimentsTest extends AbstractPagedItemTest {
@@ -62,9 +61,12 @@ public class PagedExperimentsTest extends AbstractPagedItemTest {
         createData(kate, bob, poll);
 
         //Max items in PagedItemInfo has been set to 25
-        assertSame(experimentReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(), 0);
-        assertSame(experimentReader.readExperiments(kate, Filter.SHARED_WITH_ME, getPagedItemRequest("name")).items.size(), 10);
-        assertSame(experimentReader.readExperiments(poll, Filter.SHARED_WITH_ME, getPagedItemRequest()).items.size(), 0);
+        assertSame(experimentReader.readExperiments(poll, SHARED_WITH_ME, getPagedItemRequest()).items.size(), 0);
+        assertSame(
+            experimentReader.readExperiments(kate, SHARED_WITH_ME, getPagedItemRequest("name")).items.size(),
+            10
+        );
+        assertSame(experimentReader.readExperiments(poll, SHARED_WITH_ME, getPagedItemRequest()).items.size(), 0);
     }
 
     private void createData(long kate, long bob, long poll) {

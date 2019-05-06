@@ -1,152 +1,67 @@
 package com.infoclinika.mssharing.services.billing.jobs;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.infoclinika.mssharing.model.internal.repository.FeaturesRepository;
-import com.infoclinika.mssharing.services.billing.persistence.helper.DailySummaryUsageLogger;
-import com.infoclinika.mssharing.services.billing.persistence.helper.StorageLogHelper;
-import com.infoclinika.mssharing.services.billing.persistence.repository.StorageFeatureUsageRepository;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
+import com.infoclinika.mssharing.propertiesprovider.BillingPropertiesProvider;
+import com.infoclinika.mssharing.services.billing.persistence.helper.AnalysableStorageLogHelper;
+import com.infoclinika.mssharing.services.billing.persistence.helper.ArchiveStorageLogHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
-
-import static com.google.common.collect.FluentIterable.from;
-import static java.lang.String.format;
-import static org.joda.time.DateTimeZone.forTimeZone;
-import static org.joda.time.Days.daysBetween;
 
 /**
  * @author Herman Zamula
  */
 public class StorageUsageLoggerJob {
 
-    public static final String LOG_CRON_EXPRESSION = "1 0 * * * *"; //Every hour starting after one second delay
-    public static final String SUM_LOGS_CRON_EXPRESSION = "0 30 4 * * *";//Every day at 4:30 AM
-    public static final String DAILY_LOGS_CRON_EXPRESSION = "0 55 4 * * *";//Every day at 4:55 AM
-    public static final String MISSED_SUM_LOGS_CRON_EXPRESSION = "0 30 5 * * *";//Every day at 5:30 AM
+    private static final String LOG_ANALYSABLE_STORAGE_USAGE_CRON_EXPRESSION = "0 30 1 * * *"; //Every day at 1:30 AM
+    private static final String LOG_ARCHIVE_STORAGE_USAGE_CRON_EXPRESSION = "0 0 1 * * *"; //Every day at 1:00 AM
+    private static final int LOG_INTERVAL = 60 * 60 * 1000; //1h
+    private static final Logger LOGGER = LoggerFactory.getLogger(StorageUsageLoggerJob.class);
 
-    public static final int MISSED_LOGS_HANDLING_DAYS_LIMIT = 3;
-
-    public static final int LOG_INTERVAL = 60 * 60 * 1000; //1h
-    private static final Logger LOGGER = Logger.getLogger(StorageUsageLoggerJob.class);
-
-    @SuppressWarnings("all")
-    private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-    @SuppressWarnings("all")
-    private final TimeZone timeZone;
-
-    private FeaturesRepository featuresRepository;
-    private final StorageFeatureUsageRepository<?> usageRepository;
-    private StorageLogHelper storageLogHelper;
     @Inject
-    private DailySummaryUsageLogger dailySummaryUsageLogger;
+    private AnalysableStorageLogHelper analysableStorageLogHelper;
 
+    @Inject
+    private ArchiveStorageLogHelper archiveStorageLogHelper;
 
-    private final Function<Date, String> dateToString = new Function<Date, String>() {
+    @Inject
+    private BillingPropertiesProvider billingPropertiesProvider;
 
-        private final SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-
-        @Override
-        public String apply(Date input) {
-            return dateFormat.format(input);
-        }
-
-    };
-
-    protected StorageUsageLoggerJob(FeaturesRepository featuresRepository,
-                                    StorageFeatureUsageRepository usageRepository,
-                                    StorageLogHelper storageLogHelper,
-                                    String timeZoneID) {
-
-        this.featuresRepository = featuresRepository;
-        this.usageRepository = usageRepository;
-        this.storageLogHelper = storageLogHelper;
-        this.timeZone = TimeZone.getTimeZone(timeZoneID);
-
+    @PostConstruct
+    @SuppressWarnings("FutureReturnValueIgnored")
+    private void init() {
+        final TimeZone timeZone = TimeZone.getTimeZone(billingPropertiesProvider.getTimeZoneId());
+        final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setThreadFactory(new DaemonThreadFactory());
         scheduler.initialize();
-
-        scheduler.schedule(this::log, new CronTrigger(LOG_CRON_EXPRESSION, this.timeZone));
-        scheduler.schedule(this::sumLogs, new CronTrigger(SUM_LOGS_CRON_EXPRESSION, this.timeZone));
-        scheduler.schedule(this::saveDailyUsages, new CronTrigger(DAILY_LOGS_CRON_EXPRESSION, this.timeZone));
-        scheduler.schedule(this::handleMissedLogsCompressing, new CronTrigger(MISSED_SUM_LOGS_CRON_EXPRESSION, this.timeZone));
-
+        scheduler.schedule(this::logAnalysableStorageUsage,
+            new CronTrigger(LOG_ANALYSABLE_STORAGE_USAGE_CRON_EXPRESSION, timeZone)
+        );
+        scheduler.schedule(this::logArchiveStorageUsage,
+            new CronTrigger(LOG_ARCHIVE_STORAGE_USAGE_CRON_EXPRESSION, timeZone)
+        );
     }
 
-    public void log() {
+    private void logAnalysableStorageUsage() {
         try {
-            LOGGER.info("*** Start logging storage feature usage.");
-            storageLogHelper.log(LOG_INTERVAL);
-            LOGGER.info("Logging storage usage were completed.");
+            LOGGER.info("*** Start logging analysable storage usage.");
+            analysableStorageLogHelper.log(LOG_INTERVAL);
         } catch (Exception e) {
-            LOGGER.error("*** Error occurred when log storage usage: " + e.getMessage(), e);
+            LOGGER.error("*** Error occurred while logging analysable storage usage", e);
         }
     }
 
-    public void saveDailyUsages() {
-        final Date dayToLog = new DateTime().minusDays(1).toDate();
-        saveDailyUsages(dayToLog);
-    }
-
-    private void saveDailyUsages(Date dayToLog) {
+    private void logArchiveStorageUsage() {
         try {
-            dailySummaryUsageLogger.saveDay(dayToLog);
+            LOGGER.info("*** Start logging archive storage usage.");
+            archiveStorageLogHelper.log(LOG_INTERVAL);
         } catch (Exception e) {
-            LOGGER.error("*** Error occurred when saving daily usages: " + e.getMessage(), e);
+            LOGGER.error("*** Error occurred while logging archive storage usage", e);
         }
     }
-
-    public void sumLogs() {
-        try {
-            final Date dayToLog = getYesterday();
-            doLogsCompressing(dayToLog);
-        } catch (Exception e) {
-            LOGGER.error("*** Error occurred when sum storage usage logs: " + e.getMessage(), e);
-        }
-    }
-
-    protected Date getYesterday() {
-        return new DateTime(new Date()).withZone(forTimeZone(timeZone)).minusDays(1).toDate();
-    }
-
-    public void handleMissedLogsCompressing() {
-        LOGGER.debug("** Start handle missed logs compressing.");
-        final List<Date> dates = usageRepository.datesWhereSumLogsWereMissed(daysSinceEpoch(getYesterday()));
-        LOGGER.debug("** Count of days have missed logs compressing: " + dates.size());
-        LOGGER.debug("** Next days have missed logs compressing: " + from(dates).transform(dateToString));
-
-        final FluentIterable<Date> datesToHandle = from(dates).limit(MISSED_LOGS_HANDLING_DAYS_LIMIT);
-        LOGGER.debug("** Next days with missed logs compressing will be handle: " + datesToHandle.transform(dateToString));
-
-        for (Date date : datesToHandle) {
-            doLogsCompressing(date);
-            saveDailyUsages(date);
-        }
-
-        LOGGER.debug("** Missed logs compressing has been completed for dates: " + from(datesToHandle).transform(dateToString));
-    }
-
-    protected void doLogsCompressing(Date dayToLog) {
-        try {
-            LOGGER.info(format("*** Start sum logged storage feature usage for day %s.", dayToLog));
-            storageLogHelper.sumLogs(dayToLog);
-            LOGGER.info(format("Sum log storage table was completed for day %s.", dayToLog));
-
-        } catch (Exception e) {
-            LOGGER.error("*** Error occurred when sum storage usage logs for day + " + dayToLog + " : " + e.getMessage(), e);
-        }
-    }
-
-    protected int daysSinceEpoch(Date timestamp) {
-        return daysBetween(new DateTime(0).withZone(forTimeZone(timeZone)), new DateTime(timestamp)).getDays();
-    }
-
 
 }

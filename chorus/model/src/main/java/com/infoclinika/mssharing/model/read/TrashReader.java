@@ -4,7 +4,6 @@ package com.infoclinika.mssharing.model.read;
 import com.google.common.collect.ImmutableSet;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 

@@ -1,45 +1,47 @@
 <div class="relative" data-ng-class="{'main-view-holder': total>25}">
-<div class="dashboard-box files-box" resizable-table-columns="files-list">
-    <div class="heading clearfix" ng-style="viewStyle">
-        <div class="cell cell-number not-resizable">
-            <span>&nbsp;</span>
+    <div class="dashboard-box files-box" resizable-table-columns="files-list">
+        <div class="heading clearfix" ng-style="viewStyle">
+            <div class="cell cell-number not-resizable">
+                <span>&nbsp;</span>
+            </div>
+            <div class="cell cell-check not-resizable"><input type="checkbox" ng-model="allItemsSelected"
+                                                              ng-click="selectAll(files, asc = !asc)"/></div>
+            <!--todo: use single-style for sorting. (Perhaps, make 'ng-attribute' directive)-->
+            <div ng-repeat="column in displayedColumnNames" ng-switch="column.sortable" class="cell column-head-cell"
+                 ng-class="'cell-' + column.modelViewName" ng-style="column.style">
+                <div ng-switch-when="true" set-text="column.title" class="ellipsize"
+                     route-sorting="{{column.modelViewName}}"></div>
+                <div ng-switch-when="false" class="ellipsize" set-text="column.title"></div>
+            </div>
         </div>
-        <div class="cell cell-check not-resizable"><input type="checkbox" ng-model="allItemsSelected"
-                                            ng-click="selectAll(files, asc = !asc)"/></div>
-        <!--todo: use single-style for sorting. (Perhaps, make 'ng-attribute' directive)-->
-        <div ng-repeat="column in displayedColumnNames" ng-switch="column.sortable" class="cell column-head-cell"
-             ng-style="column.style">
-            <div ng-switch-when="true" set-text="column.title" class="ellipsize"
-                 route-sorting="{{column.modelViewName}}"></div>
-            <div ng-switch-when="false" class="ellipsize" set-text="column.title"></div>
-        </div>
-    </div>
-    <div class="content clearfix" ng-style="viewStyleContent">
-        <div class="row clearfix graf-icons" ng-repeat="file in (selectedFiles = files)"
-             ng-mouseenter="$scope.showDetailsButton = file"
-             ng-mouseleave="$scope.showDetailsButton = null;"
-             right-click-context-menu=""
-             set-title="file.storageStatus != 'UNARCHIVED' && 'File is on archive storage' || ''"
-             data-ng-class="{'active': opened == file,
-                     'row-with-details-button': $scope.showDetailsButton && (file.contentId != null || file.archiveId != null),
+        <div class="content clearfix" ng-style="viewStyleContent">
+            <div class="row clearfix graf-icons"
+                 ng-repeat="file in (selectedFiles = files)"
+                 ng-mouseenter="$scope.showDetailsButton = validators.displayDetailsButton(file)"
+                 ng-mouseleave="$scope.showDetailsButton = false"
+                 right-click-context-menu=""
+                 set-title="file.storageStatus != 'UNARCHIVED' && 'File is on archive storage' || ''"
+                 data-ng-class="{'active': opened == file,
+                     'row-with-details-button': $scope.showDetailsButton,
                      'row-with-icons': file.contentId || file.archiveId,
                      'archived': file.storageStatus != 'UNARCHIVED'
                  }">
 
-            <div class="row-holder relative clearfix not-select"
-                 ng-dblclick="toggleExpandMenu(file);"
-                 ng-click="selectItem(file, $event)"
-                 switch-class-animated="opened == file && 'opened' || ''">
-                <i class="icon collapsible"></i>
+                <div class="row-holder relative clearfix not-select"
+                     ng-class="{'disabled': validators.fileCannotBeSelected(file)}"
+                     ng-dblclick="toggleExpandMenu(file);"
+                     ng-click="selectItem(file, $event)"
+                     switch-class-animated="opened == file && 'opened' || ''">
+                    <i class="icon collapsible"></i>
 
-                <div class="cell cell-number not-resizable">
-                    <span set-text="$index + 1 + (pageSize * (pageNumber - 1))"></span>
-                </div>
+                    <div class="cell cell-number not-resizable">
+                        <span set-text="$index + 1 + (pageSize * (pageNumber - 1))"></span>
+                    </div>
                     <span class="not-resizable">
                         <div ng-hide="file.invalid" class="cell cell-check" ng-click="selectItem(file, $event)">
                             <input type="checkbox" ng-model="file.selected"
                                    ng-click="!contextOpened && $event.stopPropagation()"
-                                   ng-disabled="file.contentId == null && file.archiveId == null"/>
+                                   ng-disabled="validators.fileCannotBeSelected(file)"/>
                         </div>
                         <div ng-show="file.invalid" class="cell cell-check" tooltip-placement="right"
                              tooltip="This file seems to be corrupted: headers cannot be read. Please contact support.">
@@ -47,14 +49,14 @@
                         </div>
                     </span>
 
-                <div class="cell cell-id" ng-style="getStyle(0)">
-                    <div class="ellipsize" set-text="file.id" set-title="file.id"></div>
-                </div>
+                    <div class="cell cell-id" ng-style="getStyle(0)">
+                        <div class="ellipsize" set-text="file.id" set-title="file.id"></div>
+                    </div>
 
-                <div class="cell cell-name" ng-style="getStyle(1)">
-                    <div class="dropdown context">
-                        <a ng-show="$scope.showDetailsButton" title="More" button-click-context-menu=""
-                           class="btn table-button"><span class="arrow"></span></a>
+                    <div class="cell cell-name" ng-style="getStyle(1)">
+                        <div class="dropdown context">
+                            <a ng-show="$scope.showDetailsButton" title="More" button-click-context-menu=""
+                               class="btn table-button"><span class="arrow"></span></a>
 
                         <div class="dropdown-menu context-menu hide">
                             <span class="arrow"></span>
@@ -70,167 +72,279 @@
                                             class="icon download"></i>Download</a>
                                 </li>
                                 <li ng-show="validators.isAvailableForArchive(file)"
-                                    ng-click="popups.showArchiveFilePopup(file)">
-                                    <a  title="Archive file" class=" " non-clickable="!validators.isAvailableForArchive(file)">
+                                    ng-click="popups.showArchiveFilePopup(file)"
+                                    ng-class="{'disabled': isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)}">
+                                    <a  title="Archive file"
+                                        non-clickable="isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)">
                                         <i class="icon archive"></i>
                                         Archive
-                                        <i ng-show="isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)" title="Lab that the file belongs to is not Enterprise. Should be changed in subscription settings." class="icon blocked"></i>
+                                        <i ng-show="isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)"
+                                           title="Lab that the file belongs to is not Enterprise. Should be changed in subscription settings."
+                                           class="icon blocked"></i>
                                     </a>
                                 </li>
                                 <li ng-show="validators.isAvailableForUnarchive(file)">
-                                    <a title="Unarchive file" class=" "
+                                    <a title="Unarchive file"
                                        ng-click="popups.showUnarchiveFilePopup(file)"><i
                                             class="icon unarchive"></i>Unarchive</a>
                                 </li>
                                 <li set-if="validators.canEdit(file)">
-                                    <a title="Edit file" class=" " ng-click="popups.showEditPopup(file)"><i
-                                            class="icon edit"></i>Edit</a>
+                                    <a title="Edit file"
+                                       ng-click="popups.showEditPopup(file)">
+                                        <i class="icon edit"></i>Edit
+                                    </a>
                                 </li>
                                 <li class="delete-item"
                                     set-if="file.accessLevel == 'PRIVATE' && !file.usedInExperiments">
                                     <a title="Delete File" class="" ng-click="displayConfirmation(file, $event)"><i
                                             class="icon delete"></i>Delete</a>
                                 </li>
+                                <li class="delete-item"
+                                    ng-show="validators.haveCompounds(file)">
+                                    <a title="Compounds" class="" ng-click="downloadCompounds(file)"><i
+                                            class="icon download"></i>Compounds</a>
+                                </li>
                             </ul>
                         </div>
                     </div>
                     <div class="name ellipsize"
                          ng-class="{'no-context': !(file.accessLevel == 'PRIVATE')}">
+                            <div class="dropdown-menu context-menu hide">
+                                <span class="arrow"></span>
+                                <ul>
+                                    <li class="delete-item" ng-show="validators.canDownload(file)">
+                                        <a set-if="file.storageStatus == 'UNARCHIVED'" class=""
+                                           ng-click="$event.stopPropagation(); download(file)"
+                                           title="{{getDownloadTitle(file.storageStatus)}}"><i
+                                                class="icon download"></i>Download</a>
+                                        <a set-if="file.storageStatus != 'UNARCHIVED'" class=""
+                                           ng-click="$event.stopPropagation(); requestDownload(file)"
+                                           title="{{getDownloadTitle(file.storageStatus)}}"><i
+                                                class="icon download"></i>Download</a>
+                                    </li>
+                                    <li ng-show="validators.isAvailableForArchive(file)"
+                                        ng-click="popups.showArchiveFilePopup(file)"
+                                        ng-class="{'disabled': isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)}">
+                                        <a title="Archive file"
+                                           non-clickable="isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)">
+                                            <i class="icon archive"></i>
+                                            Archive
+                                            <i ng-show="isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)"
+                                               title="Lab that the file belongs to is not Enterprise. Should be changed in subscription settings."
+                                               class="icon blocked"></i>
+                                        </a>
+                                    </li>
+                                    <li ng-show="validators.isAvailableForUnarchive(file)">
+                                        <a title="Unarchive file"
+                                           ng-click="popups.showUnarchiveFilePopup(file)"><i
+                                                class="icon unarchive"></i>Unarchive</a>
+                                    </li>
+                                    <li set-if="validators.canEdit(file)">
+                                        <a title="Edit file"
+                                           ng-click="popups.showEditPopup(file)">
+                                            <i class="icon edit"></i>Edit
+                                        </a>
+                                    </li>
+                                    <li ng-hide="haveNGStudyType([file]) || file.corrupted"
+                                        ng-class="{'disabled': !isBillingFeatureAvailable(BillingFeatures.TRANSLATION)}"
+                                        ng-click="popups.showFileTranslationPopup(file)">
+                                        <a title="Translation"
+                                           non-clickable="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)">
+                                            <i class="icon status"></i>
+                                            Translation
+                                            <i ng-show="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)"
+                                               title="Processing feature is not enalbed for the lab."
+                                               class="icon blocked"></i>
+                                        </a>
+                                    </li>
+                                    <li ng-hide="haveNGStudyType([file]) || file.corrupted"
+                                        ng-class="{'disabled': !isBillingFeatureAvailable(BillingFeatures.TRANSLATION)}"
+                                        ng-click="popups.showFileHeatmapDetailsPopup(file)">
+                                        <a title="Heatmap"
+                                           non-clickable="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)">
+                                            <i class="icon status"></i>
+                                            Heatmap
+                                            <i ng-show="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)"
+                                               title="Processing feature is not enalbed for the lab."
+                                               class="icon blocked"></i>
+                                        </a>
+                                    </li>
+                                    <li class="delete-item"
+                                        set-if="validators.canDeleteFile(file)">
+                                        <a title="Delete File" class="" ng-click="displayConfirmation(file, $event)"><i
+                                                class="icon delete"></i>Delete</a>
+                                    </li>
+                                    <li class="delete-item"
+                                        ng-show="validators.haveCompounds(file)">
+                                        <a title="Compounds" class="" ng-click="downloadCompounds(file)"><i
+                                                class="icon download"></i>Compounds</a>
+                                    </li>
+                                    <li class="delete-item"
+                                        ng-show="validators.haveQcResult(file) && file.processingResult.qcStatus == 'COMPLETE'">
+                                        <a title="Mark as failed" class=""
+                                           ng-click="popups.showSetFileQcValidationConfirmation(file, false)"><i
+                                                class="icon delete"></i>Mark as Invalid</a>
+                                    </li>
+                                    <li class="delete-item"
+                                        ng-show="validators.haveQcResult(file) && file.processingResult.qcStatus == 'FAILED'">
+                                        <a title="Clear as failed" class=""
+                                           ng-click="popups.showSetFileQcValidationConfirmation(file, true)"><i
+                                                class="icon saved"></i>Mark as Valid</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="name ellipsize" ng-class="{'no-context': !(file.accessLevel == 'PRIVATE')}">
                             <span>
                                 <i set-if="file.accessLevel == 'PUBLIC'" class="icon public" title="Public File"></i>
                                 <i set-if="file.accessLevel == 'PRIVATE'" class="icon private" title="Private File"></i>
                                 <i set-if="file.accessLevel == 'SHARED'" class="icon shared" title="Shared File"></i>
-                                <span ng-switch="file.accessLevel == 'PUBLIC' || isBillingFeatureAvailable(BillingFeatures.DOWNLOAD)">
-                                    <span ng-switch-when="false">
-                                        <i class="icon slowDownload"
-                                           title="File download is not available"></i>
+
+                                <span ng-switch="file.corrupted">
+                                    <span ng-switch-when="true">
+                                        <i class="corrupted-file"
+                                           title="File is corrupted, try to reload it"></i>
                                     </span>
-                                    <span ng-switch-default="">
-                                        <i set-if="file.storageStatus == 'UNARCHIVED'" class="icon {{getDownloadIcon(file.storageStatus)}}"
-                                           ng-click="$event.stopPropagation(); download(file)"
-                                           title="{{getDownloadTitle(file.storageStatus)}}"></i>
-                                        <i set-if="file.storageStatus != 'UNARCHIVED'" class="icon {{getDownloadIcon(file.storageStatus)}}"
-                                           ng-click="$event.stopPropagation(); requestDownload(file)"
-                                           title="{{getDownloadTitle(file.storageStatus)}}"></i>
+                                    <span ng-switch-when="false">
+                                        <i ng-hide="haveNGStudyType([file])"
+                                           class="icon translation-status {{ file.statusObject.class }}"
+                                           title="{{ file.statusObject.title }}"
+                                           ng-click="$event.stopPropagation(); file.statusObject.action(file)"></i>
+                                        <span class="file-processing-result-icons">
+                                            <i ng-show="validators.canViewHeatmap(file)"
+                                               class="generate-mipmap-result"
+                                               ng-click="$event.stopPropagation(); heatmapDetailsPopupConfiguration.api.openHeatmapViewer(file)"
+                                               title="View Heatmap"></i>
+
+                                            <i ng-show="validators.haveQcResult(file)"
+                                               class="icon file-processing-result-qc"
+                                               ng-class="{'success': file.processingResult.qcStatus == 'COMPLETE',
+                                                          'failed': file.processingResult.qcStatus == 'FAILED',
+                                                          'in-progress': file.processingResult.qcStatus == 'IN_PROGRESS'}"
+                                               ng-click="$event.stopPropagation(); popups.showQCResultPopup(file)"
+                                               title="{{ getQcTitle(file.processingResult.qcStatus) }}"></i>
+                                        </span>
+
+                                        <span class="file-download-icons"
+                                              ng-hide="file.contentId == null && file.archiveId == null"
+                                              ng-switch="file.accessLevel == 'PUBLIC' || isBillingFeatureAvailable(BillingFeatures.DOWNLOAD)">
+                                            <span ng-switch-when="false">
+                                                <i class="icon slowDownload"
+                                                   title="File download is not available"></i>
+                                            </span>
+                                            <span ng-switch-default="">
+                                                <i set-if="file.storageStatus == 'UNARCHIVED'"
+                                                   class="icon {{getDownloadIcon(file.storageStatus)}}"
+                                                   ng-click="$event.stopPropagation(); download(file)"
+                                                   title="{{getDownloadTitle(file.storageStatus)}}"></i>
+                                                <i set-if="file.storageStatus != 'UNARCHIVED'"
+                                                   class="icon {{getDownloadIcon(file.storageStatus)}}"
+                                                   ng-click="$event.stopPropagation(); requestDownload(file)"
+                                                   title="{{getDownloadTitle(file.storageStatus)}}"></i>
+                                            </span>
+                                        </span>
                                     </span>
                                 </span>
                             </span>
-                        <span set-text="file.columns.name" set-title="file.columns.name"></span>
+
+                            <span set-text="file.columns.name" set-title="file.columns.name"></span>
+                        </div>
                     </div>
-                </div>
 
-                <cell-column ng-repeat="column in hidableColumns"
-                             type="column.dataType"
-                             value="getCellValue($index, file)"
-                             cell-title="getCellTitle($index, file)"
-                             cell-style="getStyle($index + 2)"
-                             cell-class="res = (column.name | spaceToUnderscore) + '_gen'">
-                </cell-column>
+                    <cell-column ng-repeat="column in hidableColumns"
+                                 type="column.dataType"
+                                 value="getCellValue($index, file)"
+                                 cell-title="getCellTitle($index, file)"
+                                 cell-style="getStyle($index + 2)"
+                                 cell-class="res = 'cell-' + (column.modelViewName | spaceToUnderscore)">
+                    </cell-column>
+
+                </div>
+                <div class="info-expand clearfix">
+                    <div class="cell cell-species" ng-style="getStyle(0)">
+                        <h3>Species</h3>
+
+                        <p ng-bind="file.details.specieName"></p>
+
+                        <p class="none" ng-show="file.details.specieName.length == 0">No species</p>
+                    </div>
+                    <!--TODO: check if columns < 4-->
+                    <div class="cell cell-owner" ng-style="compoundColumnStyles([getStyle(1)])">
+                        <h3>Owner</h3>
+
+                        <p ng-bind="file.details.owner"></p>
+                    </div>
+                    <div class="cell cell-owner" ng-style="compoundColumnStyles([getStyle(2)])">
+                        <h3>Owner Email</h3>
+
+                        <p ng-bind="file.details.ownerEmail"></p>
+                    </div>
+                    <div class="cell cell-conditions" ng-style="getStyle(3)">
+                        <h3>Archived</h3>
+
+                        <p ng-bind="file.details.conditions"></p>
+
+                        <p class="none" ng-show="file.storageStatus == 'UNARCHIVED'">No</p>
+
+                        <p class="none" ng-show="file.storageStatus != 'UNARCHIVED'">Yes</p>
+                    </div>
+                    <div class="cell cell-conditions" ng-show="file.showConditions" ng-style="getStyle(4)">
+                        <h3>Conditions</h3>
+
+                        <p ng-bind="file.details.conditions"></p>
+
+                        <p class="none" ng-show="file.details.conditions.length == 0">No conditions</p>
+                    </div>
+                    <div class="cell cell-conditions" ng-show="file.processingResult" ng-style="getStyle(3)">
+                        <h3>Processing results</h3>
+
+                        <p ng-bind="'Detected IGs: ' + file.processingResult.detectedIsotopeGroups"></p>
+                        <p ng-bind="'Annotated IGs: ' + file.processingResult.annotatedIsotopeGroups"></p>
+                        <p ng-bind="'Unique Compounds: ' + file.processingResult.uniqueCompounds"></p>
+
+                    </div>
+
+                </div>
             </div>
-            <div class="info-expand clearfix">
-                <div class="cell cell-species" ng-style="getStyle(0)">
-                    <h3>Species</h3>
+        </div>
+        <span ng-show="isTableEmpty()" class="empty-table">{{getEmptyTableMessage()}}</span>
+    </div>
 
-                    <p ng-bind="file.details.specieName"></p>
-
-                    <p class="none" ng-show="file.details.specieName.length == 0">No species</p>
+    <div id="retranslate-selected-confirmation" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Retranslate Selected Files?</h3>
                 </div>
-                <!--TODO: check if columns < 4-->
-                <div class="cell cell-owner" ng-style="compoundColumnStyles([getStyle(1)])">
-                    <h3>Owner</h3>
-
-                    <p ng-bind="file.details.owner"></p>
+                <div class="modal-body">
+                    <p>Are you sure? You want to retranslate selected files?</p>
                 </div>
-                <div class="cell cell-owner" ng-style="compoundColumnStyles([getStyle(2)])">
-                    <h3>Owner Email</h3>
-
-                    <p ng-bind="file.details.ownerEmail"></p>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
+                            ng-click="retranslateSelectedPopup.cancel()">Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action" ng-click="retranslateSelectedPopup.ok()">
+                        Retranslate
+                    </button>
                 </div>
-                <div class="cell cell-conditions" ng-style="getStyle(3)">
-                    <h3>Archived</h3>
-
-                    <p ng-bind="file.details.conditions"></p>
-
-                    <p class="none" ng-show="file.storageStatus == 'UNARCHIVED'">No</p>
-
-                    <p class="none" ng-show="file.storageStatus != 'UNARCHIVED'">Yes</p>
-                </div>
-                <div class="cell cell-conditions" ng-show="file.showConditions" ng-style="getStyle(4)">
-                    <h3>Conditions</h3>
-
-                    <p ng-bind="file.details.conditions"></p>
-
-                    <p class="none" ng-show="file.details.conditions.length == 0">No conditions</p>
-                </div>
-
             </div>
         </div>
     </div>
-    <span ng-show="isTableEmpty()" class="empty-table">{{getEmptyTableMessage()}}</span>
-</div>
 
-<div id="remove-file-confirmation" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Remove File?</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to remove "{{confirmation.getName()}}" File?</p>
-
-                <div class="control-group clearfix">
-                    <label for="remove-permanently-file" style="float: left; width: 140px">Remove permanently</label>
-                    <input type="checkbox" class="dont-hide" ng-model="confirmation.removePermanently"
-                           style="width: 15px; height: 15px;" id="remove-permanently-file">
+    <div id="translate-file-popup" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Translate the Selected File?</h3>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                        ng-click="confirmation.hidePopup()">Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="confirmation.removeItem()">
-                    Remove
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="retranslate-selected-confirmation" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Retranslate Selected Files?</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure? You want to retranslate selected files?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                        ng-click="retranslateSelectedPopup.cancel()">Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="retranslateSelectedPopup.ok()">
-                    Retranslate
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="translate-file-popup" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Translate the Selected File?</h3>
-            </div>
-            <div class="modal-body">
-                <p ng-switch="translateFilePopup.item.file.storageStatus">
-                    <span ng-switch-when="UNARCHIVED"> Are you sure you want to translate selected file?</span>
-                    <span ng-switch-default="">Are you sure you want to translate the selected archived file?
+                <div class="modal-body">
+                    <p ng-switch="translateFilePopup.item.file.storageStatus">
+                        <span ng-switch-when="UNARCHIVED"> Are you sure you want to translate selected file?</span>
+                        <span ng-switch-default="">Are you sure you want to translate the selected archived file?
                         Translation of archived file takes up to 6 hours.</span>
-                </p>
-                <p>
-                    <label for="labSelector">Translation content will be available and charged for Lab:</label>
+                    </p>
+                    <p>
+                        <label for="labSelector">Translation content will be available and charged for Lab:</label>
                     <div ng-show="translateFilePopup.item.availableLabs.length>1">
                         <select ui-select2 ng-model="translateFilePopup.item.selectedLab"
                                 ng-disabled="translateFilePopup.item.availableLabs.length==1"
@@ -240,241 +354,323 @@
                             </option>
                         </select>
                     </div>
-                    <div ng-show="translateFilePopup.item.availableLabs.length==1" class="static-value" style="clear:both; padding: 0"
+                    <div ng-show="translateFilePopup.item.availableLabs.length==1" class="static-value"
+                         style="clear:both; padding: 0"
                          ng-bind="translateFilePopup.item.availableLabs[0].name"></div>
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                        ng-click="translateFilePopup.cancel()">Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="translateFilePopup.ok()"
-                        ng-bind="translateFilePopup.item.file.status == 'NOT_STARTED' && 'Translate' || 'Re-Translate' ">
-                    Translate
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="archive-file-confirmation" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Archive File <span ng-bind="popups.archiveFilePopup.fileName"></span>?</h3>
-            </div>
-            <div class="modal-body">
-                <div class="dialog-container">
-                    <p>The selected file will be put into the archive. It allows to reduce the storage costs. However,
-                        the file download are not immediate in this case,
-                        since it takes several hours to get the data from archive.</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="popups.archiveFilePopup.ok()">
-                    Archive
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<div id="unarchive-file-confirmation" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Unarchive File <span ng-bind="popups.unarchiveFilePopup.fileName"></span>?</h3>
-            </div>
-            <div class="modal-body">
-                <div class="dialog-container">
-                    <p>The selected file will be put into the analyzable storage. That would allow to translate the
-                        file and use
-                        them for plotting and various types of data processing. Also the file downloads are immediate
-                        for this type of storage.
                     </p>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="popups.unarchiveFilePopup.ok()">
-                    Unarchive
-                </button>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
+                            ng-click="translateFilePopup.cancel()">Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action" ng-click="translateFilePopup.ok()"
+                            ng-bind="translateFilePopup.item.file.status == 'NOT_STARTED' && 'Translate' || 'Re-Translate' ">
+                        Translate
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<div id="edit-file-popup" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder" id="bulk-update-labels-dialog">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Edit File <span ng-bind="popups.editFilePopup.fileName"></span></h3>
-            </div>
-            <div class="modal-body">
-                <div class="body">
 
-                    <p><label style="display: inline-table">
-                        <input type="checkbox" ng-model="popups.editFilePopup.editLabels"
-                               ng-disabled="!popups.editFilePopup.canEditLabels">
-                        Edit Labels
-                    </label>
-                        <span ng-show="!popups.editFilePopup.canEditLabels">(can't edit labels of the file &ndash; you aren't an operator of instrument of it)</span>
-                    </p>
-
-                    <div class="edit-labels-content">
-                        <p>Please choose a way to update file labels:</p>
-                        <ul>
-                            <li>
-                                <label for="labels-single-append-radio">
-                                    <input id="labels-single-append-radio" type="radio"
-                                           ng-model="popups.editFilePopup.appendLabels" value="true"
-                                           ng-disabled="!popups.editFilePopup.editLabels">
-                                    Append existing labels
-                                </label>
-                            </li>
-                            <li>
-                                <label for="labels-single-replace-radio">
-                                    <input id="labels-single-replace-radio" type="radio"
-                                           ng-disabled="!popups.editFilePopup.editLabels"
-                                           ng-model="popups.editFilePopup.appendLabels" value="false">
-                                    Replace labels</label>
-                            </li>
-                        </ul>
-                        <label for="edit-single-labels-area">Enter new labels</label>
-                        <textarea id="edit-single-labels-area" ng-disabled="!popups.editFilePopup.editLabels"
-                                  ng-model="popups.editFilePopup.newLabels"></textarea>
+    <div id="archive-file-confirmation" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Archive File <span ng-bind="popups.archiveFilePopup.fileName"></span>?</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container">
+                        <p>The selected file will be put into the archive. It allows to reduce the storage costs.
+                            However,
+                            the file download are not immediate in this case,
+                            since it takes several hours to get the data from archive.</p>
                     </div>
-                    <div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action" ng-click="popups.archiveFilePopup.ok()">
+                        Archive
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="unarchive-file-confirmation" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Unarchive File <span ng-bind="popups.unarchiveFilePopup.fileName"></span>?</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container">
+                        <p>The selected file will be put into the analyzable storage. That would allow to translate the
+                            file and use
+                            them for plotting and various types of data processing. Also the file downloads are
+                            immediate
+                            for this type of storage.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action" ng-click="popups.unarchiveFilePopup.ok()">
+                        Unarchive
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="edit-file-popup" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder" id="bulk-update-labels-dialog">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Edit File <span ng-bind="popups.editFilePopup.fileName"></span></h3>
+                </div>
+                <div class="modal-body">
+                    <div class="body">
+
                         <p><label style="display: inline-table">
-                            <input type="checkbox" ng-disabled="popups.editFilePopup.disableEditSpecies"
-                                   ng-model="popups.editFilePopup.editSpecies">
-                            Edit Species
+                            <input type="checkbox" ng-model="popups.editFilePopup.editLabels"
+                                   ng-disabled="!popups.editFilePopup.canEditLabels">
+                            Edit Labels
                         </label>
-                            <span ng-show="popups.editFilePopup.disableEditSpecies">(can't be edited - the selected file is used in experiments or you aren't an operator of instrument of it)</span>
+                            <span ng-show="!popups.editFilePopup.canEditLabels">(can't edit labels of the file &ndash; you aren't an operator of instrument of it)</span>
                         </p>
-                    </div>
-                    <div class="edit-species-content">
-                        <label for="species-single">Set New Value</label>
-                        <select ui-select2 ng-model="popups.editFilePopup.newSpecie"
-                                ng-disabled="!popups.editFilePopup.editSpecies"
-                                id="species-single" class="dialog-select">
-                            <option value="{{specie.id}}" ng-repeat="specie in popups.editFilePopup.species">
-                                {{specie.name}}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                        >Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="popups.editFilePopup.ok()">
-                    Save
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div id="removes-selected-confirmation" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Remove Files?</h3>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to remove selected files?</p>
-
-                <p>Your files will be moved to Trash or you can remove the selected files permanently.</p>
-
-                <div class="control-group clearfix">
-                    <label for="remove-permanently" style="float: left; width: 140px">Remove permanently</label>
-                    <input type="checkbox" class="dont-hide" ng-model="removesSelectedPopup.removePermanently"
-                           style="width: 15px; height: 15px;" id="remove-permanently">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                        ng-click="removesSelectedPopup.cancel()">Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="removesSelectedPopup.ok()">
-                    Remove
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<route-pagination max-items="25" max-shown="7" default-page="1" items="[25, 50, 100, 200]"
-                  total-items="total"></route-pagination>
-
-
-<div id="download-shared-files-popup" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Select Laboratory to Send Billing for Shared Files Download</h3>
-            </div>
-            <div class="modal-body">
-                <div class="dialog-container" ng-switch="labs.length">
-                    <div ng-switch-when="0">
-                        You must be a member at least one lab to download files shared with you
-                    </div>
-                    <div class="control-group clearfix" ng-switch-default="">
-                        <p>
-                            Please select laboratory to send billing for download of shared with you files.
-                        </p>
-                        <p>
-                            <label class="control-group clearfix" for="labs">Select Laboratory</label>
-                            <select id="labs" ui-select2="" ng-model="$parent.downloadSharedFilesPopup.selectedLab"
-                                    class="dialog-select" data-placeholder="-- Select Lab --">
-                                <option value=""></option>
-                                <option value="{{lab.id}}" ng-repeat="lab in labs"
-                                        ng-bind="lab.name"></option>
+                        <div class="edit-labels-content">
+                            <p>Please choose a way to update file labels:</p>
+                            <ul>
+                                <li>
+                                    <label for="labels-single-append-radio">
+                                        <input id="labels-single-append-radio" type="radio"
+                                               ng-model="popups.editFilePopup.appendLabels" value="true"
+                                               ng-disabled="!popups.editFilePopup.editLabels">
+                                        Append existing labels
+                                    </label>
+                                </li>
+                                <li>
+                                    <label for="labels-single-replace-radio">
+                                        <input id="labels-single-replace-radio" type="radio"
+                                               ng-disabled="!popups.editFilePopup.editLabels"
+                                               ng-model="popups.editFilePopup.appendLabels" value="false">
+                                        Replace labels</label>
+                                </li>
+                            </ul>
+                            <label for="edit-single-labels-area">Enter new labels</label>
+                            <textarea id="edit-single-labels-area" ng-disabled="!popups.editFilePopup.editLabels"
+                                      ng-model="popups.editFilePopup.newLabels"></textarea>
+                        </div>
+                        <div>
+                            <p><label style="display: inline-table">
+                                <input type="checkbox" ng-disabled="popups.editFilePopup.disableEditSpecies"
+                                       ng-model="popups.editFilePopup.editSpecies">
+                                Edit Species
+                            </label>
+                                <span ng-show="popups.editFilePopup.disableEditSpecies">(can't be edited - the selected file is used in experiments or you aren't an operator of instrument of it)</span>
+                            </p>
+                        </div>
+                        <div class="edit-species-content">
+                            <label for="species-single">Set New Value</label>
+                            <select ui-select2 ng-model="popups.editFilePopup.newSpecie"
+                                    ng-disabled="!popups.editFilePopup.editSpecies"
+                                    id="species-single" class="dialog-select">
+                                <option value="{{specie.id}}" ng-repeat="specie in popups.editFilePopup.species">
+                                    {{specie.name}}
+                                </option>
                             </select>
-                        </p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                        >Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-disabled="!downloadSharedFilesPopup.selectedLab"
-                        ng-click="downloadSharedFilesPopup.ok()">
-                    Download
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="delete-translation-data-confirmation" class="modal hide" tabindex="-1" role="dialog">
-    <div class="modal-holder">
-        <div class="modal-frame">
-            <div class="modal-header">
-                <h3>Delete Translation Data of File <span ng-bind="popups.removeTranslationDataPopup.item.name"></span>?</h3>
-            </div>
-            <div class="modal-body">
-                <div class="dialog-container">
-                    <p>The translation data of the selected file will be deleted permanently.
-                        After this operation You won't be able to create searches and view charts of the selected file.</p>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
+                    >Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action" ng-click="popups.editFilePopup.ok()">
+                        Save
+                    </button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
-                </button>
-                <button type="submit" class="btn btn-primary main-action" ng-click="popups.removeTranslationDataPopup.ok()">
-                    Delete
-                </button>
+        </div>
+    </div>
+
+    <route-pagination max-items="25" max-shown="7" default-page="1" items="[25, 50, 100, 200]"
+                      total-items="total"></route-pagination>
+
+    <delete-files-popup configuration="deleteFilesPopupConfiguration"></delete-files-popup>
+    <heatmap-details-popup configuration="heatmapDetailsPopupConfiguration"></heatmap-details-popup>
+
+    <div id="download-shared-files-popup" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Select Laboratory to Send Billing for Shared Files Download</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container" ng-switch="labs.length">
+                        <div ng-switch-when="0">
+                            You must be a member at least one lab to download files shared with you
+                        </div>
+                        <div class="control-group clearfix" ng-switch-default="">
+                            <p>
+                                Please select laboratory to send billing for download of shared with you files.
+                            </p>
+                            <p>
+                                <label class="control-group clearfix" for="labs">Select Laboratory</label>
+                                <select id="labs" ui-select2="" ng-model="$parent.downloadSharedFilesPopup.selectedLab"
+                                        class="dialog-select" data-placeholder="-- Select Lab --">
+                                    <option value=""></option>
+                                    <option value="{{lab.id}}" ng-repeat="lab in labs"
+                                            ng-bind="lab.name"></option>
+                                </select>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
+                    >Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action"
+                            ng-disabled="!downloadSharedFilesPopup.selectedLab"
+                            ng-click="downloadSharedFilesPopup.ok()">
+                        Download
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div id="fileTranslationIsInProgressConfirm" title="" class="hidden"></div>
-<div id="fileTranslationFinishedWithErrorsConfirm" title="" class="hidden"></div>
-<div id="fileTranslationResultsIsNotAvailableConfirm" title="" class="hidden"></div>
+    <div id="delete-translation-data-confirmation" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Delete Translation Data of File <span
+                            ng-bind="popups.removeTranslationDataPopup.item.name"></span>?</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container">
+                        <p>The translation data of the selected file will be deleted permanently.
+                            After this operation You won't be able to create searches and view charts of the selected
+                            file.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action"
+                            ng-click="popups.removeTranslationDataPopup.ok()">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="file-translation-status" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Translation Status of the File <span ng-bind="popups.translationStatusPopup.item.name"></span>
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container">
+                        <div class="table">
+                            <div class="control-group clearfix">
+                                <label>Status</label>
+                                <div class="item width370">
+                                    <span class="static-value">{{popups.translationStatusPopup.item.statusObject.title}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p ng-show="popups.translationStatusPopup.item.statusObject.errorMessage"><b>ERROR:&nbsp;</b>
+                        {{popups.translationStatusPopup.item.statusObject.errorMessage}}
+                    </p>
+                    <p ng-show="popups.translationStatusPopup.canDelete"><b>NOTE:&nbsp;</b>
+                        The Delete Translation Data operation is available for the selected file.
+                        After performing this operation you won't be able to create searches and view charts of them.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Close</button>
+                    <button type="submit" class="btn secondary-action"
+                            data-dismiss="modal"
+                            ng-show="popups.translationStatusPopup.canDelete"
+                            ng-click="popups.translationStatusPopup.remove()">
+                        Delete
+                    </button>
+                    <button type="submit"
+                            ng-show="popups.translationStatusPopup.canTranslate"
+                            ng-bind="popups.translationStatusPopup.status == 'NOT_STARTED' && 'Translate' || 'Re-Translate'"
+                            data-dismiss="modal"
+                            class="btn btn-primary main-action"
+                            ng-click="popups.translationStatusPopup.translate()">
+                        Translate
+                    </button>
+                    <a class="btn btn-primary main-action" target="_blank"
+                       ng-show="popups.translationStatusPopup.canView"
+                       data-dismiss="modal"
+                       ng-click="openChartWindow(popups.translationStatusPopup.item.msChartsUrl)">
+                        View
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="file-qc-result-modal" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>QC Result of the File <span ng-bind="popups.qcResultPopup.item.name"></span></h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container">
+                        <div class="table">
+                            <div class="control-group clearfix">
+                                <label>QC Result</label>
+                                <div class="item width370">
+                                    <span class="static-value">{{popups.qcResultPopup.item.processingResult.qcStatus}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="set-file-qc-validation-confirmation" class="modal hide" tabindex="-1" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <h3>Set QC Result as {{ popups.setQcValidationPopup.validation }} for file <span
+                            ng-bind="popups.setQcValidationPopup.item.name"></span>?</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container">
+                        <p></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary main-action"
+                            ng-click="popups.setQcValidationPopup.ok()">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="fileTranslationIsInProgressConfirm" title="" class="hidden"></div>
+    <div id="fileTranslationFinishedWithErrorsConfirm" title="" class="hidden"></div>
+    <div id="fileTranslationResultsIsNotAvailableConfirm" title="" class="hidden"></div>
 </div>

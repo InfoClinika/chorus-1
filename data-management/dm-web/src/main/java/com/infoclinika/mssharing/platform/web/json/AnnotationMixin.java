@@ -11,10 +11,10 @@ public abstract class AnnotationMixin {
 
     @JsonCreator
     public AnnotationMixin(
-            @JsonProperty("name") String name,
-            @JsonProperty("value") String value,
-            @JsonProperty("units") String units,
-            @JsonProperty("isNumeric") boolean isNumeric
+        @JsonProperty("name") String name,
+        @JsonProperty("value") String value,
+        @JsonProperty("units") String units,
+        @JsonProperty("isNumeric") boolean isNumeric
     ) {
     }
 }

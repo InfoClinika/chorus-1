@@ -11,9 +11,10 @@ import java.util.Date;
 public interface FileMetaInfoHelper {
 
     void updateFileMeta(long fileId, MetaInfo metaInfo);
+
     void copyFileMetaAnnotation(long to, long from);
 
-    static class MetaInfo {
+    class MetaInfo {
         public Date creationDate;
         public String comment;
         public String instrumentMethod;
@@ -30,14 +31,17 @@ public interface FileMetaInfoHelper {
         public String userLabels;
 
         public String fileCondition;
-        public String translateFlag;
         public String instrumentSerialNumber;
         public String phone;
         public String instrumentName;
 
-        public MetaInfo( ){}
+        public MetaInfo() {
+        }
 
-        public MetaInfo(Date creationDate, String comment, String instrumentMethod, String fileName, String seqRowPosition, String sampleName, String instrument, String userName, String userLabels, String fileCondition, String translateFlag, String instrumentSerialNumber, String phone, String instrumentName) {
+        public MetaInfo(Date creationDate, String comment, String instrumentMethod, String fileName,
+                        String seqRowPosition, String sampleName, String instrument, String userName, String userLabels,
+                        String fileCondition, String instrumentSerialNumber, String phone,
+                        String instrumentName) {
             this.creationDate = creationDate;
             this.comment = comment;
             this.instrumentMethod = instrumentMethod;
@@ -48,7 +52,6 @@ public interface FileMetaInfoHelper {
             this.userName = userName;
             this.userLabels = userLabels;
             this.fileCondition = fileCondition;
-            this.translateFlag = translateFlag;
             this.instrumentSerialNumber = instrumentSerialNumber;
             this.phone = phone;
             this.instrumentName = instrumentName;

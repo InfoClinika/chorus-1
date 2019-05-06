@@ -63,8 +63,8 @@ public class ColumnsView extends AbstractPersistable<Long> {
         return isDefault;
     }
 
-    public void setDefault(boolean aDefault) {
-        isDefault = aDefault;
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     public boolean isPrimary() {
@@ -85,5 +85,4 @@ public class ColumnsView extends AbstractPersistable<Long> {
         PROJECT_META,
         EXPERIMENT_META
     }
-
 }

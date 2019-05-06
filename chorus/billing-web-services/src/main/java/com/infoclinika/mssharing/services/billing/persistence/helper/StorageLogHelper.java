@@ -7,8 +7,8 @@ import java.util.Date;
  */
 public interface StorageLogHelper {
 
-   void log(long logInterval);
+    void log(long logInterval);
 
-   void sumLogs(Date dayToLog);
+    void sumLogs(Date dayToLog);
 
 }

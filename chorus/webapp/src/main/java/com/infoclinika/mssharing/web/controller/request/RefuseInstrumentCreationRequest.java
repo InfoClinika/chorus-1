@@ -2,7 +2,7 @@ package com.infoclinika.mssharing.web.controller.request;
 
 /**
  * @author timofey.kasyanov
- *         date: 13.05.2014
+ *     date: 13.05.2014
  */
 public class RefuseInstrumentCreationRequest {
     private long requestId;

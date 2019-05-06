@@ -14,8 +14,7 @@ public class ChargeableItemBill {
     public BillingChargeType loggedChargeValueType;
     public long totalLoggedChargeValue;
     public Collection<UsageByUser> usageByUsers;
-    public @Nullable
-    Long totalFiles;
+    public Long totalFiles;
     public long totalUsers;
     public long price;
     public long unscaledTotal;
@@ -24,7 +23,8 @@ public class ChargeableItemBill {
     }
 
     public ChargeableItemBill(String name, long total, BillingFeature type, long totalChargeValue,
-                              BillingChargeType loggedChargeValueType, Collection<UsageByUser> usageByUsers,  @Nullable Long totalFiles, long totalUsers, long price, long unscaledTotal) {
+                              BillingChargeType loggedChargeValueType, Collection<UsageByUser> usageByUsers,
+                              @Nullable Long totalFiles, long totalUsers, long price, long unscaledTotal) {
         this.name = name;
         this.total = total;
         this.type = type;

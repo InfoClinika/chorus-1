@@ -13,9 +13,11 @@ public class SkylinePublicFolderStructureResponse {
     public final Set<DashboardReader.ExperimentStructure> publicExperiments;
     public final Set<DashboardReader.UploadedFile> publicFiles;
 
-    public SkylinePublicFolderStructureResponse(Set<DashboardReader.ProjectStructure> publicProjects,
-                                                Set<DashboardReader.ExperimentStructure> publicExperiments,
-                                                Set<DashboardReader.UploadedFile> publicFiles) {
+    public SkylinePublicFolderStructureResponse(
+        Set<DashboardReader.ProjectStructure> publicProjects,
+        Set<DashboardReader.ExperimentStructure> publicExperiments,
+        Set<DashboardReader.UploadedFile> publicFiles
+    ) {
         this.publicProjects = publicProjects;
         this.publicExperiments = publicExperiments;
         this.publicFiles = publicFiles;

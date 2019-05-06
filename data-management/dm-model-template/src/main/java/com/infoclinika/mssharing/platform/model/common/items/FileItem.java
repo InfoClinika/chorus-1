@@ -1,6 +1,7 @@
 package com.infoclinika.mssharing.platform.model.common.items;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * @author Herman Zamula
@@ -18,28 +19,24 @@ public class FileItem extends DictionaryItem {
     }
 
     @Override
-    @SuppressWarnings("all")
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        FileItem fileItem = (FileItem) o;
-
-        if (copy != fileItem.copy) return false;
-        if (labels != null ? !labels.equals(fileItem.labels) : fileItem.labels != null) return false;
-        if (uploadDate != null ? !uploadDate.equals(fileItem.uploadDate) : fileItem.uploadDate != null)
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof FileItem)) {
             return false;
-
-        return true;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        FileItem fileItem = (FileItem) o;
+        return copy == fileItem.copy &&
+            Objects.equals(uploadDate, fileItem.uploadDate) &&
+            Objects.equals(labels, fileItem.labels);
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (uploadDate != null ? uploadDate.hashCode() : 0);
-        result = 31 * result + (labels != null ? labels.hashCode() : 0);
-        result = 31 * result + (copy ? 1 : 0);
-        return result;
+        return Objects.hash(super.hashCode(), uploadDate, labels, copy);
     }
 }

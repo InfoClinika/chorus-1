@@ -5,7 +5,8 @@ import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.entity.FileMetaAnnotations;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -19,13 +20,15 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
 @Service
 public class FileMetaInfoHelperImpl implements FileMetaInfoHelper {
 
-    public static final Logger LOGGER = Logger.getLogger(FileMetaInfoHelperImpl.class);
+    public static final Logger LOGGER = LoggerFactory.getLogger(FileMetaInfoHelperImpl.class);
 
     @Inject
     private FileMetaDataRepository fileMetaDataRepository;
+    @Inject
+    private RuleValidator ruleValidator;
 
     @Override
-         public void updateFileMeta(long fileId, MetaInfo metaInfo) {
+    public void updateFileMeta(long fileId, MetaInfo metaInfo) {
         //todo: validation?
         final ActiveFileMetaData fileMetaData = checkPresence(fileMetaDataRepository.findOne(fileId));
         final FileMetaAnnotations info = new FileMetaAnnotations(fileMetaData.getId());
@@ -33,7 +36,7 @@ public class FileMetaInfoHelperImpl implements FileMetaInfoHelper {
         fileMetaData.setMetaInfo(info);
 
         fileMetaDataRepository.save(fileMetaData);
-        LOGGER.info("Annotations for file with id '" + fileId + "' has been set");
+        LOGGER.info("Annotations for file with id '{}' has been set", fileId);
     }
 
     @Override
@@ -61,7 +64,9 @@ public class FileMetaInfoHelperImpl implements FileMetaInfoHelper {
     }
 
     private FileMetaAnnotations copy(FileMetaAnnotations metaInfo, long fileId) {
-        if(metaInfo == null) return null;
+        if (metaInfo == null) {
+            return null;
+        }
         FileMetaAnnotations copy = new FileMetaAnnotations(fileId);
         copy.setComment(metaInfo.getComment());
         copy.setCreationDate(metaInfo.getCreationDate());

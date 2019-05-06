@@ -35,7 +35,8 @@ public interface RestHelper {
         public final boolean emailVerified;
         public final boolean hasLaboratories;
 
-        public UserDetails(long id, String email, String passwordHash, Token token, boolean emailVerified, boolean hasLaboratories) {
+        public UserDetails(long id, String email, String passwordHash, Token token, boolean emailVerified,
+                           boolean hasLaboratories) {
             this.id = id;
             this.email = email;
             this.passwordHash = passwordHash;
@@ -59,10 +60,10 @@ public interface RestHelper {
         @Override
         public String toString() {
             return "Token{" +
-                    "id=" + id +
-                    ", token='" + token + '\'' +
-                    ", expirationDate=" + expirationDate +
-                    '}';
+                "id=" + id +
+                ", token='" + token + '\'' +
+                ", expirationDate=" + expirationDate +
+                '}';
         }
     }
 

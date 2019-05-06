@@ -1,3 +1,5 @@
+"use strict";
+
 var DRAG_N_DROP_CONSTANTS = {
     SIZE_LIMIT_EXCEED: "SIZE_LIMIT_EXCEED"
 };
@@ -19,19 +21,19 @@ var DragNDropHelper = function (args) {
     this.getAllFiles = args.getAllFilesFunction;
     this.setAllFiles = args.setAllFilesFunction;
     this.wrapFile = args.wrapFileFunction;
-    this.zipFunctions = (args.zipFunctions) ? args.zipFunctions : {};
+    this.zipFunctions = args.zipFunctions ? args.zipFunctions : {};
     this.leaveDropSelector = args.leaveDropSelector;
     this.maxAttachmentSize = args.maxAttachmentSize;
     this.allowAllFileTypes = !!args.allowAllFileTypes;
-    this.isInit = function() {
+    this.isInit = function () {
         return false;
-    }
+    };
 };
 
 /*File API is dynamically changing - Chrome recently added filesystem attribute to fileItem entry which creates cross references. WE should delete these attributes before serializing the object*/
-function deleteRestrictedFolderAttributes(fileEntry){
+function deleteRestrictedFolderAttributes(fileEntry) {
     var restrictedAttributes = ["filesystem", "scope"];
-    $(restrictedAttributes).each(function(i, attr){
+    $(restrictedAttributes).each(function (i, attr) {
         delete fileEntry[attr];
     });
 }
@@ -39,22 +41,24 @@ function deleteRestrictedFolderAttributes(fileEntry){
 DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
     var instance = this;
 
-    this.isInit = function(){
+    this.isInit = function () {
         return overlayDisplayedByDefault;
     };
 
-    function showOverlay(){
+    function showOverlay() {
         $(instance.dropOverlaySelector).fadeIn(0);
         $(instance.previewAreaSelector).fadeOut(0);
     }
 
-    function hideOverlay(){
+    function hideOverlay() {
         $(instance.dropOverlaySelector).fadeOut(0);
         $(instance.previewAreaSelector).fadeIn(0);
     }
 
     function change(event) {
-        if (!event.originalEvent) return;
+        if (!event.originalEvent) {
+            return;
+        }
         var target = event.originalEvent.target;
         if ($(event.target)[0] == $(instance.fileChooserId)[0] && target.files.length != 0) {
             instance.getFiles(target.files, null, processFiles);
@@ -62,38 +66,51 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
     }
 
     function filterFiles(fileItemsList) {
-        return $.grep(fileItemsList, function(item) {
+        return $.grep(fileItemsList, function (item) {
             return item.kind.toLowerCase() === "file";
-        })
+        });
     }
 
     function click(event) {
         var chooser = $(instance.fileChooserId)[0];
-        if ($(event.target)[0] == chooser)
+        if ($(event.target)[0] == chooser) {
             chooser.value = null;
+        }
     }
 
     function dragEnter(event) {
         CommonLogger.log("Overlay - On Drag Enter fired");
         return false;
     }
-    function isDragAreaNotPresented(){
-        return instance.displayDragAndDropAreaOnlyIfAreaPresented && !($(instance.dropOverlaySelector).length > 0 || (instance.fileChooserId && $(instance.fileChooserId).length > 0));
+
+    function isDragAreaNotPresented() {
+        return instance.displayDragAndDropAreaOnlyIfAreaPresented &&
+            !($(instance.dropOverlaySelector).length > 0 || instance.fileChooserId && $(
+                instance.fileChooserId).length > 0);
     }
+
     function dragOver(event) {
-        if (isDragAreaNotPresented()){
+        if (isDragAreaNotPresented()) {
             return;
         }
         CommonLogger.log("Overlay - On Drag Over fired");
         var dt = event.originalEvent.dataTransfer;
-        if (!dt) return;
+        if (!dt) {
+            return;
+        }
         //Verify that only files could be dropped
         //FF
-        if (dt.types.contains && !dt.types.contains("Files")) return;
+        if (dt.types.contains && !dt.types.contains("Files")) {
+            return;
+        }
         //Chrome
-        if (dt.types.indexOf && dt.types.indexOf("Files") == -1) return;
+        if (dt.types.indexOf && dt.types.indexOf("Files") === -1) {
+            return;
+        }
         //does not work in Chrome without next line
-        if ($.browser.webkit) dt.dropEffect = "copy";
+        if ($.browser.webkit) {
+            dt.dropEffect = "copy";
+        }
         showOverlay();
         return false;
     }
@@ -102,26 +119,27 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
         CommonLogger.log("On Drop fired");
         event.stopPropagation();
         event.preventDefault();
-        if (isDragAreaNotPresented()){
+        if (isDragAreaNotPresented()) {
             return;
         }
 
 
         $(instance.dropOverlaySelector).fadeOut(0);
 
-        var items = (event.originalEvent.dataTransfer.items)
+        var items = event.originalEvent.dataTransfer.items
             ? event.originalEvent.dataTransfer.items : event.originalEvent.dataTransfer.files;
         if (items) {
             CommonLogger.log("Files are dropped.");
             //Fix for Chrome version 32
-            if(event.originalEvent.dataTransfer.items) {
+            if (event.originalEvent.dataTransfer.items) {
                 instance.getFiles(filterFiles(items), event.originalEvent.dataTransfer, processFiles);
             } else {
                 instance.getFiles(items, event.originalEvent.dataTransfer, processFiles);
             }
         }
     }
-    if(overlayDisplayedByDefault) {
+
+    if (overlayDisplayedByDefault) {
         $(instance.containerSelector).bind("change", change);
         $(instance.containerSelector).bind("click", click);
         $(instance.leaveDropSelector).bind("mouseover", hideOverlay);
@@ -138,7 +156,7 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
     }
 
     this.getFiles = function (items, dt, completeFn) {
-        var len = (instance.isSingleFileUpload)? 1 : items.length;
+        var len = instance.isSingleFileUpload ? 1 : items.length;
         var unProcessedItemsLeft = len;
         var allFiles = [];
         var entry;
@@ -148,11 +166,12 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
             if (itemEntry.isFile) {
                 readFile(itemEntry, fileCallback);
             } else if (itemEntry.isDirectory) {
-                hasFiles(itemEntry, function(entry, hasAnyFiles){
+                hasFiles(itemEntry, function (entry, hasAnyFiles) {
 
                     itemEntry.isEmpty = !hasAnyFiles;
 
-                    if(instance.zipFunctions.isFolderAllowedToZipFn && instance.zipFunctions.isFolderAllowedToZipFn(itemEntry)){
+                    if (instance.zipFunctions.isFolderAllowedToZipFn && instance.zipFunctions.isFolderAllowedToZipFn(
+                        itemEntry)) {
                         fileCallback(itemEntry);
                     } else {
                         var dirReader = itemEntry.createReader();
@@ -167,7 +186,7 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
                             }
 
                             //happens if there is an empty folder in folder structure
-                            if(unProcessedItemsLeft == 0){
+                            if (unProcessedItemsLeft == 0) {
                                 completeFn(allFiles);
                             }
 
@@ -208,50 +227,53 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
 
     };
 
-    function processFiles(files){
+    function processFiles(files) {
 
         CommonLogger.log("Processing files");
         CommonLogger.log(files);
+
         function endsWith(str, suffix) {
             return str.toLowerCase().indexOf(suffix.toLowerCase(), str.length - suffix.length) !== -1;
         }
 
         var allowedExtensions = instance.allowedExtensions();
-        var dynamicAllowedExtensions = instance.getDynamicAllowedExtensions ? instance.getDynamicAllowedExtensions() : [];
+        var dynamicAllowedExtensions = instance.getDynamicAllowedExtensions ?
+            instance.getDynamicAllowedExtensions() :
+            [];
         instance.droppedFiles = $.map(files, function (item) {
             //wrap the data into own object to avoid explicit dependencies on File API structure in UI
             var isDirectory = item.isDirectory;
 
-            var ext = $.grep(allowedExtensions, function(extension) {
+            var ext = $.grep(allowedExtensions, function (extension) {
                 return endsWith(item.name, extension);
             })[0];
-            if(ext == undefined) {
-                ext = $.grep(dynamicAllowedExtensions, function(extension) {
+            if (ext == undefined) {
+                ext = $.grep(dynamicAllowedExtensions, function (extension) {
                     return isDirectory && endsWith(item.name, extension);
                 })[0];
             }
-            if(ext == undefined){
+            if (ext == undefined) {
                 ext = AttachmentsHelper.unknownExt;
-            }else{
+            } else {
                 //ext = ext.substr(1);
             }
 
             var wrappedFile = instance.wrapFile(item.name, item.lastModifiedDate, item.size, item.type, item, ext);
             wrappedFile.isEmpty = item.isEmpty;
-            return  wrappedFile;
+            return wrappedFile;
         });
 
         //Filter empty folders
         var showEmptyFolderMessage = false;
-        instance.droppedFiles = $.grep(instance.droppedFiles, function(item){
-            if(item.isEmpty){
+        instance.droppedFiles = $.grep(instance.droppedFiles, function (item) {
+            if (item.isEmpty) {
                 showEmptyFolderMessage = true;
             } else {
                 return true;
             }
         });
 
-        if(showEmptyFolderMessage){
+        if (showEmptyFolderMessage) {
             $(instance.onEmptyFolderCallback);
             showEmptyFolderMessage = false;
         }
@@ -259,14 +281,14 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
         //Filter by size
         var showUnsupportedFilesSizeMessage = false;
         instance.droppedFiles = $.grep(instance.droppedFiles, function (item) {
-            if(item.size > instance.maxAttachmentSize) {
+            if (item.size > instance.maxAttachmentSize) {
                 showUnsupportedFilesSizeMessage = true;
             } else {
                 return true;
             }
         });
 
-        if (showUnsupportedFilesSizeMessage){
+        if (showUnsupportedFilesSizeMessage) {
             $(instance.onNotAllowedSizeCallback);
             showUnsupportedFilesSizeMessage = false;
         }
@@ -274,22 +296,22 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
         //Filter by extension
         var showUnsupportedFilesMessage = false;
         instance.droppedFiles = $.grep(instance.droppedFiles, function (item) {
-            if((item.ext == undefined || item.ext === AttachmentsHelper.unknownExt) && !instance.allowAllFileTypes) {
+            if ((item.ext == undefined || item.ext === AttachmentsHelper.unknownExt) && !instance.allowAllFileTypes) {
                 showUnsupportedFilesMessage = true;
             } else {
                 return true;
             }
         });
 
-        if (showUnsupportedFilesMessage){
+        if (showUnsupportedFilesMessage) {
             $(instance.onNotAllowedExtensionCallback);
             showUnsupportedFilesMessage = false;
         }
 
         var allFiles = instance.getAllFiles();
-        if (!instance.isSingleFileUpload){
+        if (!instance.isSingleFileUpload) {
             instance.setAllFiles(allFiles.concat(instance.droppedFiles));
-        }else{
+        } else {
             instance.setAllFiles(instance.droppedFiles);
         }
 
@@ -298,17 +320,16 @@ DragNDropHelper.prototype.init = function (overlayDisplayedByDefault) {
             instance.onFilesDroppedCallback(instance.droppedFiles);
         }
 
-        if (instance.getAllFiles().length > 0){
+        if (instance.getAllFiles().length > 0) {
             hideOverlay();
+        } else if (overlayDisplayedByDefault) {
+            showOverlay();
         } else {
-            if(overlayDisplayedByDefault){
-                showOverlay();
-            } else {
-                hideOverlay();
-            }
+            hideOverlay();
         }
 
     }
+
     return true;
 };
 
@@ -319,7 +340,7 @@ DragNDropHelper.prototype.removeFile = function (index) {
 };
 
 
-var ZipHelper = function(args) {
+var ZipHelper = function (args) {
     var kb = 1024;
     var mb = kb * 1024;
     var gb = mb * 1024;
@@ -327,7 +348,8 @@ var ZipHelper = function(args) {
     this.zipFunctions = args.zipFunctions;
     this.errorHandler = args.onErrorHandler;
     var that = this;
-    function getErrorStatusMessage(errorObj){
+
+    function getErrorStatusMessage(errorObj) {
         var msg = "";
 
         switch (errorObj.code) {
@@ -357,62 +379,67 @@ var ZipHelper = function(args) {
         var tmpFilename = entryName + ".zip";
         var requestedSizeInMb = 4 * 1024;
         CommonLogger.log("Creating temp file: " + tmpFilename + ", size:" + requestedSizeInMb + " mb");
-        requestFileSystem(TEMPORARY, requestedSizeInMb * 1024 * 1024, function(filesystem) {
+        requestFileSystem(TEMPORARY, requestedSizeInMb * 1024 * 1024, function (filesystem) {
             CommonLogger.log("Storage for temporary file " + tmpFilename + " is obtained.");
+
             function create() {
                 CommonLogger.log("invoking getFile: " + tmpFilename);
                 filesystem.root.getFile(tmpFilename, {
-                    create : true
-                }, function(zipFile) {
+                    create: true
+                }, function (zipFile) {
                     CommonLogger.log("Creating Zip File is successfull: " + tmpFilename);
                     callback(zipFile);
-                }, function onError(errorObj){
+                }, function onError(errorObj) {
                     CommonLogger.log("Creating Zip file is failed: " + getErrorStatusMessage(errorObj));
                     CommonLogger.log("Error message object:" + JSON.stringify(errorObj));
-                    logUsageQuota(function(message){
-                        that.errorHandler(message)
+                    logUsageQuota(function (message) {
+                        that.errorHandler(message);
                     });
                 });
             }
-            function logUsageQuota(handler){
-                navigator.webkitTemporaryStorage.queryUsageAndQuota (
-                    function(usedBytes, grantedBytes) {
-                        var errorMessage = "Log usage quota: using " +  usedBytes + " of " + grantedBytes + " bytes";
+
+            function logUsageQuota(handler) {
+                navigator.webkitTemporaryStorage.queryUsageAndQuota(
+                    function (usedBytes, grantedBytes) {
+                        var errorMessage = "Log usage quota: using " + usedBytes + " of " + grantedBytes + " bytes";
                         CommonLogger.log(errorMessage);
-                        if (handler){
+                        if (handler) {
                             handler(errorMessage);
                         }
                     },
                     function (e) {
                         var errorMessage = "Log usage quota failed:" + JSON.stringify(e);
                         CommonLogger.log(errorMessage);
-                        if (handler){
+                        if (handler) {
                             handler(errorMessage);
                         }
                     }
                 );
             }
+
             logUsageQuota();
 
-            filesystem.root.getFile(tmpFilename, {create: false}, function(entry) {
+            filesystem.root.getFile(tmpFilename, {create: false}, function (entry) {
                 CommonLogger.log("Trying to remove " + entry.name + ", full path: " + entry.fullPath);
-                entry.remove(function(){
+                entry.remove(function () {
                     CommonLogger.log("Removed file: " + entry.name + ", full path: " + entry.fullPath);
                     create();
-                }, function(removeError){
+                }, function (removeError) {
                     CommonLogger.log(removeError);
                     CommonLogger.log("Remove is failed:" + entry.name + ", full path: " + entry.fullPath);
                     create();
                 });
-            }, function onError(errorObj){
+            }, function onError(errorObj) {
 
                 CommonLogger.log("root.getFile: Error message status:" + getErrorStatusMessage(errorObj));
                 CommonLogger.log("Error message object:" + JSON.stringify(errorObj));
                 create();
             });
-        }, function(errorObj){
+        }, function (errorObj) {
 
-            CommonLogger.log("Failed request to obtain storage for temporary file: " + tmpFilename + ". Error message: " + JSON.stringify(errorObj));
+            CommonLogger.log("Failed request to obtain storage for temporary file: " + tmpFilename +
+                ". Error message: " + JSON.stringify(
+                    errorObj));
 
             CommonLogger.log("Request file system: error message status:" + getErrorStatusMessage(errorObj));
             that.errorHandler(JSON.stringify(errorObj));
@@ -422,11 +449,11 @@ var ZipHelper = function(args) {
     var obj = window;
     var requestFileSystem = obj.webkitRequestFileSystem || obj.mozRequestFileSystem || obj.requestFileSystem;
 
-    var model = (function() {
+    var model = (function () {
         var zipFileEntry, zipWriter, writer;
 
         return {
-            addFiles : function addFiles(files, oninit, onadd, onprogress, onend, entryName) {
+            addFiles: function addFiles(files, oninit, onadd, onprogress, onend, entryName) {
                 var addIndex = 0;
 
                 CommonLogger.log("Adding to zip file entry with name: " + entryName);
@@ -435,23 +462,24 @@ var ZipHelper = function(args) {
                     var file = files[addIndex];
                     onadd(file);
                     CommonLogger.log("-- Archiving file " + file.name + ". Parent path = " + file.parentPath);
-                    if(!file.parentPath) {
+                    if (!file.parentPath) {
                         file.parentPath = "";
                     }
-                    zipWriter.add(file.parentPath + file.name, new zip.BlobReader(file), function() {
+                    zipWriter.add(file.parentPath + file.name, new zip.BlobReader(file), function () {
                         addIndex++;
-                        if (addIndex < files.length)
+                        if (addIndex < files.length) {
                             nextFile();
-                        else
+                        } else {
                             onend();
-                    }, function onprogressInterceptor(current, total){
+                        }
+                    }, function onprogressInterceptor(current, total) {
 
                         onprogress(current, total, zipFileEntry);
                     });
                 }
 
                 function createZipWriter() {
-                    zip.createWriter(writer, function(writer) {
+                    zip.createWriter(writer, function (writer) {
                         CommonLogger.log("Created zip writer: " + zipFileEntry.name);
                         zipWriter = writer;
                         oninit();
@@ -459,10 +487,10 @@ var ZipHelper = function(args) {
                     }, that.errorHandler);
                 }
 
-                if (zipWriter)
+                if (zipWriter) {
                     nextFile();
-                else {
-                    createTempFile(function(fileEntry) {
+                } else {
+                    createTempFile(function (fileEntry) {
                         zipFileEntry = fileEntry;
                         CommonLogger.log("Creating zip writer: " + fileEntry.name);
                         writer = new zip.FileWriter(zipFileEntry);
@@ -471,19 +499,23 @@ var ZipHelper = function(args) {
                     }, entryName);
                 }
             },
-            getZipFileEntry : function(callback){
-                zipWriter.close(function(blob) {
+            getZipFileEntry: function (callback) {
+                zipWriter.close(function (blob) {
                     callback(zipFileEntry);
                     //onAllCompleted(zipFileEntry);
                     zipWriter = null;
                 });
             },
-            terminate: function(callback){
-                if(!zipWriter) return;
-                zipWriter.terminateWorker(function(blob){
+            terminate: function (callback) {
+                if (!zipWriter) {
+                    return;
+                }
+                zipWriter.terminateWorker(function (blob) {
                     zipWriter = null;
-                    if(callback) callback();
-                })
+                    if (callback) {
+                        callback();
+                    }
+                });
             }
         };
     })();
@@ -531,19 +563,24 @@ var ZipHelper = function(args) {
 
             var allFilesInZipDir = [];
             var unProcessedItemsLeftInZipDir = 1;
-            function getAllFilesInZipDir(completeHandlerFn){
+
+            function getAllFilesInZipDir(completeHandlerFn) {
                 CommonLogger.log("***** getAllFilesInZipDir called. Dir entry = " + archiveName + " *****");
-                function decUnprocessedItemsInZipDir( fileName) {
+
+                function decUnprocessedItemsInZipDir(fileName) {
                     unProcessedItemsLeftInZipDir--;
-                    CommonLogger.log("Decreasing zipped items left: " + unProcessedItemsLeftInZipDir +", fileName:" + fileName);
+                    CommonLogger.log("Decreasing zipped items left: " + unProcessedItemsLeftInZipDir + ", fileName:" +
+                        fileName);
                     if (unProcessedItemsLeftInZipDir == 0) {
                         completeHandlerFn(allFilesInZipDir);
                     }
                 }
+
                 function addFileInZipDir(file) {
                     allFilesInZipDir.push(file);
                     decUnprocessedItemsInZipDir(file.name);
                 }
+
                 function readFileTreeInZipDir(itemEntry, fileCallback) {
                     if (itemEntry.isFile) {
                         readFile(itemEntry, fileCallback);
@@ -558,11 +595,12 @@ var ZipHelper = function(args) {
                                 //set the parent name to preserve folder structure in zip. However, do not supply extra parent path for root contents
                                 if (itemEntry.fullPath != dirEntry.fullPath) {
                                     parentNamePrefix = itemEntry.name + "/";
-                                } else if(addFiles && addFiles.length != 0) {
+                                } else if (addFiles && addFiles.length != 0) {
                                     parentNamePrefix = itemEntry.name + "/";
                                 }
 //                                CommonLogger.log(" * Supplying with the parent path. Target = " + entries[idx].name + ". Parent path = " + parentNamePrefix);
-                                entries[idx].parentPath = itemEntry.parentPath ? itemEntry.parentPath + parentNamePrefix : parentNamePrefix;
+                                entries[idx].parentPath =
+                                    itemEntry.parentPath ? itemEntry.parentPath + parentNamePrefix : parentNamePrefix;
 
                                 //todo[tymchenko]: changed
                                 readFileTreeInZipDir(entries[idx], fileCallback);
@@ -583,14 +621,14 @@ var ZipHelper = function(args) {
             }
 
 
-            getAllFilesInZipDir(function(files){
+            getAllFilesInZipDir(function (files) {
                 var totalSizeInDir = 0;
                 var totalZipped = 0;
                 var fullyZippedFilesSize = 0;
                 var currentFileInProcess = null;
 
                 var zipFiles = $.merge(files, addFiles);
-                angular.forEach(zipFiles, function(file){
+                angular.forEach(zipFiles, function (file) {
                     totalSizeInDir += file.size;
                 });
 
@@ -602,35 +640,38 @@ var ZipHelper = function(args) {
                     CommonLogger.error(errorMessage);
                     return;
                 }
-                model.addFiles(zipFiles, function() {
-                        CommonLogger.log("onInitCalled: " );
+                model.addFiles(zipFiles, function () {
+                        CommonLogger.log("onInitCalled: ");
                     },
-                    function(file) {
-                        if (currentFileInProcess != null){
+                    function (file) {
+                        if (currentFileInProcess != null) {
                             fullyZippedFilesSize += currentFileInProcess.size;
                         }
                         currentFileInProcess = file;
-                    }, function(current, total) {
+                    }, function (current, total) {
                         totalZipped = fullyZippedFilesSize + current;
                         //TODO herman.zamula: Think about API for zipping process
-                        if (instance.zipFunctions.zipProgressCallback){
-                            instance.zipFunctions.zipProgressCallback({name: archiveName}, totalZipped / totalSizeInDir)
+                        if (instance.zipFunctions.zipProgressCallback) {
+                            instance.zipFunctions.zipProgressCallback(
+                                {name: archiveName},
+                                totalZipped / totalSizeInDir
+                            );
                         }
                     },
-                    function() {
+                    function () {
                         currentFileInProcess = null;
-                        if (instance.zipFunctions.zipCompleteCallback){
+                        if (instance.zipFunctions.zipCompleteCallback) {
                             instance.zipFunctions.zipCompleteCallback({name: archiveName});
                         }
-                        model.getZipFileEntry(function(zippedDirEntry){
+                        model.getZipFileEntry(function (zippedDirEntry) {
                             addZippedDirCallback(zippedDirEntry);
                         });
                     }, archiveName
                 );
-            })
+            });
         }
 
-        zipDir(entry, function(zippedFileEntry) {
+        zipDir(entry, function (zippedFileEntry) {
             getZipEntry(zippedFileEntry, onAllCompleted);
         });
 
@@ -642,12 +683,12 @@ var ZipHelper = function(args) {
      * @param filesArray Array of files to zip
      * @param onComplete Complete archiving callback. Parameter - zipped file.
      */
-    this.zipFiles = function(archiveName, filesArray, onComplete, zipFailed) {
+    this.zipFiles = function (archiveName, filesArray, onComplete, zipFailed) {
         var totalSize = 0;
         var totalZipped = 0;
         var fullyZippedFilesSize = 0;
         var currentFileInProcess = null;
-        angular.forEach(filesArray, function(file) {
+        angular.forEach(filesArray, function (file) {
             totalSize += file.size;
         });
 
@@ -661,28 +702,32 @@ var ZipHelper = function(args) {
         }
 
         // check folder and get all file from folder
-        model.addFiles(filesArray, function() {
-                CommonLogger.log("onInitCalled: " );
+        model.addFiles(filesArray, function () {
+                CommonLogger.log("onInitCalled: ");
             },
-            function(file) {
-                if (currentFileInProcess != null){
+            function (file) {
+                if (currentFileInProcess != null) {
                     fullyZippedFilesSize += currentFileInProcess.size;
                 }
                 currentFileInProcess = file;
-            }, function(current, total, getArchivedFileSizeFn) {
+            }, function (current, total, getArchivedFileSizeFn) {
                 totalZipped = fullyZippedFilesSize + current;
 
                 //TODO herman.zamula: Think about API for zipping process
-                if (instance.zipFunctions.zipProgressCallback){
-                    instance.zipFunctions.zipProgressCallback({name: archiveName}, totalZipped / totalSize, getArchivedFileSizeFn)
+                if (instance.zipFunctions.zipProgressCallback) {
+                    instance.zipFunctions.zipProgressCallback(
+                        {name: archiveName},
+                        totalZipped / totalSize,
+                        getArchivedFileSizeFn
+                    );
                 }
             },
-            function() {
+            function () {
                 currentFileInProcess = null;
-                if (instance.zipFunctions.zipCompleteCallback){
+                if (instance.zipFunctions.zipCompleteCallback) {
                     instance.zipFunctions.zipCompleteCallback({name: archiveName});
                 }
-                model.getZipFileEntry(function(zippedEntry){
+                model.getZipFileEntry(function (zippedEntry) {
                     getZipEntry(zippedEntry, onComplete);
                 });
             },
@@ -692,11 +737,9 @@ var ZipHelper = function(args) {
     };
 };
 
-ZipHelper.isZippingSupport = function() {
-    return  !!(window.webkitRequestFileSystem || window.requestFileSystem);
+ZipHelper.isZippingSupport = function () {
+    return !!(window.webkitRequestFileSystem || window.requestFileSystem);
 };
-
-
 
 
 var DroppedFile = {};
@@ -708,20 +751,20 @@ DroppedFile.hasDuplicate = function (fileName, files) {
     return filesWithSameName.length > 0;
 };
 
-DroppedFile.getDuplicateIndex = function(fileName, files) {
-    for(var i = 0; i < files.length; i ++) {
-        if(files[i].name == fileName) {
-             return i;
+DroppedFile.getDuplicateIndex = function (fileName, files) {
+    for (var i = 0; i < files.length; i++) {
+        if (files[i].name == fileName) {
+            return i;
         }
     }
     return -1;
 };
 
 function getEntryFromFile(entry, entryHandler, decUnprocessedItemsFn) {
-    if (entry.getAsEntry) {  //Standard HTML5 API
+    if (entry.getAsEntry) { //Standard HTML5 API
         entry = entry.getAsEntry();
         entryHandler(entry);
-    } else if (entry.webkitGetAsEntry) {  //WebKit implementation of HTML5 API.
+    } else if (entry.webkitGetAsEntry) { //WebKit implementation of HTML5 API.
         entry = entry.webkitGetAsEntry();
         entryHandler(entry);
     } else if (FileReader) { // ignoring folders for other browsers
@@ -754,13 +797,13 @@ function readFile(fileEntry, callback, bZippedDir) {
         CommonLogger.log("Reading file: " + file.name + ". File entry parent path is: " + fileEntry.parentPath);
         file.parentPath = fileEntry.parentPath;
         if (callback) {
-            file.archive = (bZippedDir == true);
+            file.archive = bZippedDir == true;
             callback(file);
         }
     }.bind(this, callback));
 }
 
-function hasFiles(dirEntry, callback){
+function hasFiles(dirEntry, callback) {
     var hasFiles = false;
     var callbackInvoked = false;
     var unprocessed = 1;
@@ -777,13 +820,13 @@ function hasFiles(dirEntry, callback){
                 unprocessed += entries.length - 1;
                 var idx = entries.length;
                 while (idx--) {
-                    if(hasFiles){
+                    if (hasFiles) {
                         break;
                     }
                     readFileTree(entries[idx], false);
                 }
 
-                if(unprocessed == 0 && !callbackInvoked){
+                if (unprocessed == 0 && !callbackInvoked) {
                     callback(dirEntry, hasFiles);
                 }
 

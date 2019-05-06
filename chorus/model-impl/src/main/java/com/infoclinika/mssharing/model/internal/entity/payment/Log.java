@@ -12,7 +12,7 @@ import java.util.Date;
  */
 
 @MappedSuperclass
-public  abstract class Log extends AbstractPersistable<Long> {
+public abstract class Log extends AbstractPersistable<Long> {
 
     @Basic(optional = false)
     private Long lab;

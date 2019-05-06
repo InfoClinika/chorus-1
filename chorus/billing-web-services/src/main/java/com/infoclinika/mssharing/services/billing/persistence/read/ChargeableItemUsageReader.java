@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.services.billing.persistence.read;
 
@@ -18,10 +20,7 @@ import com.infoclinika.mssharing.model.write.billing.BillingManagement.LabPaymen
 import com.infoclinika.mssharing.services.billing.rest.api.model.*;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Sets.newHashSet;
@@ -59,7 +58,7 @@ public interface ChargeableItemUsageReader {
 
     List<BillingFeatureItem> readFeatures();
 
-    java.util.Optional<HistoryForMonthReference> readMonthsReferences(long userId, long lab, Date month);
+    HistoryForMonthReference readMonthReference(long userId, long lab, Date month);
 
     java.util.Optional<DailyUsageLine> readDailyUsageLine(long lab, Date date);
 
@@ -69,13 +68,12 @@ public interface ChargeableItemUsageReader {
 
     class StorageUsage {
         public final long rawFilesSize;
-        public final long translatedFilesSize;
         public final long archivedFilesSize;
         public final long searchResultsFilesSize;
 
-        public StorageUsage(long rawFilesSize, long translatedFilesSize, long archivedFilesSize, long searchResultsFilesSize) {
+        public StorageUsage(long rawFilesSize, long archivedFilesSize,
+                            long searchResultsFilesSize) {
             this.rawFilesSize = rawFilesSize;
-            this.translatedFilesSize = translatedFilesSize;
             this.archivedFilesSize = archivedFilesSize;
             this.searchResultsFilesSize = searchResultsFilesSize;
         }
@@ -89,7 +87,8 @@ public interface ChargeableItemUsageReader {
         public final long charge;
         public final long timestamp;
 
-        public MonthlyCharge(BillingFeature feature, String serverDateFormatted, long featureAmountUsed, long sizeInBytes, long charge, long timestamp) {
+        public MonthlyCharge(BillingFeature feature, String serverDateFormatted, long featureAmountUsed,
+                             long sizeInBytes, long charge, long timestamp) {
             this.feature = feature;
             this.serverDateFormatted = serverDateFormatted;
             this.featureAmountUsed = featureAmountUsed;
@@ -115,13 +114,16 @@ public interface ChargeableItemUsageReader {
             this.storeBalance = storeBalance;
         }
 
-        public static Function<InvoiceLabLine, com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine> WS_TRANSFORM = new Function<InvoiceLabLine, com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine apply(InvoiceLabLine i) {
-                return new com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine(
+        public static Function<InvoiceLabLine, com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine>
+            WS_TRANSFORM =
+            new Function<InvoiceLabLine, com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine>() {
+                @Override
+                public com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine apply(
+                    InvoiceLabLine i) {
+                    return new com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceLabLine(
                         i.labId, i.labName, i.labHead, i.storeBalance);
-            }
-        };
+                }
+            };
     }
 
     class LabInvoiceDetails {
@@ -137,7 +139,9 @@ public interface ChargeableItemUsageReader {
 
         public Set<LabAccountFeatureInfo> labAccountFeatures;
 
-        public LabInvoiceDetails(String headEmail, String labName, String url, int members, FeaturesData featuresData, Date lastUpdated, long storeBalance, LabPaymentAccountType accountType, boolean isFree) {
+        public LabInvoiceDetails(String headEmail, String labName, String url, int members, FeaturesData featuresData,
+                                 Date lastUpdated, long storeBalance, LabPaymentAccountType accountType,
+                                 boolean isFree) {
             this.headEmail = headEmail;
             this.labName = labName;
             this.url = url;
@@ -157,17 +161,19 @@ public interface ChargeableItemUsageReader {
             this.labAccountFeatures = labAccountFeatures;
         }
 
-        public static Function<LabInvoiceDetails, com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails> WS_TRANSFORM = new Function<LabInvoiceDetails, com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails apply(LabInvoiceDetails l) {
-                final com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData fd = FeaturesData.WS_TRANSFORM.apply(l.featuresData);
-                final com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails labInvoiceDetails = new com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails(
-                        l.headEmail, l.labName, l.url, l.members, fd, l.lastUpdated, l.storeBalance, l.accountType.name(), l.isFree
-                );
+        public static java.util.function.Function<LabInvoiceDetails,
+            com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails> WS_TRANSFORM = l -> {
+                final com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData fd =
+                    FeaturesData.WS_TRANSFORM.apply(l.featuresData);
+
+                final com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails labInvoiceDetails =
+                    new com.infoclinika.mssharing.services.billing.rest.api.model.LabInvoiceDetails(
+                        l.headEmail, l.labName, l.url, l.members, fd, l.lastUpdated, l.storeBalance,
+                        l.accountType.name(), l.isFree
+                    );
                 labInvoiceDetails.setLabAccountFeatures(l.getLabAccountFeatures());
                 return labInvoiceDetails;
-            }
-        };
+            };
     }
 
     class Invoice {
@@ -188,14 +194,11 @@ public interface ChargeableItemUsageReader {
             this.featureItem = featureItem;
         }
 
-        public static Function<Invoice, com.infoclinika.mssharing.services.billing.rest.api.model.Invoice> WS_TRANSFORM = new Function<Invoice, com.infoclinika.mssharing.services.billing.rest.api.model.Invoice>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.Invoice apply(Invoice i) {
-                return new com.infoclinika.mssharing.services.billing.rest.api.model.Invoice(
-                        i.labName, i.labId, i.storeBalance, i.total, i.date,
-                        InvoiceFeatureItem.WS_TRANSFORM.apply(i.featureItem));
-            }
-        };
+        public static Function<Invoice, com.infoclinika.mssharing.services.billing.rest.api.model.Invoice>
+            WS_TRANSFORM = i -> new com.infoclinika.mssharing.services.billing.rest.api.model.Invoice(
+                i.labName, i.labId, i.storeBalance, i.total, i.date,
+                InvoiceFeatureItem.WS_TRANSFORM.apply(i.featureItem)
+            );
     }
 
     class ChargeableItemBill {
@@ -212,7 +215,8 @@ public interface ChargeableItemUsageReader {
         public final long unscaledTotal;
 
         public ChargeableItemBill(String name, long total, BillingFeature type, long totalChargeValue,
-                                  BillingChargeType loggedChargeValueType, Collection<UsageByUser> usageByUsers, Optional<Long> totalFiles, long totalUsers, long price, long unscaledTotal) {
+                                  BillingChargeType loggedChargeValueType, Collection<UsageByUser> usageByUsers,
+                                  Optional<Long> totalFiles, long totalUsers, long price, long unscaledTotal) {
             this.name = name;
             this.total = total;
             this.type = type;
@@ -225,16 +229,15 @@ public interface ChargeableItemUsageReader {
             this.unscaledTotal = unscaledTotal;
         }
 
-        public static Function<ChargeableItemBill, com.infoclinika.mssharing.services.billing.rest.api.model.ChargeableItemBill> WS_TRANSFORM = new Function<ChargeableItemBill, com.infoclinika.mssharing.services.billing.rest.api.model.ChargeableItemBill>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.ChargeableItemBill apply(ChargeableItemBill i) {
-                List<com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser> usagesByUser = from(i.usageByUsers).transform(UsageByUser.WS_TRANSFORM).toList();
+        public static Function<ChargeableItemBill,
+            com.infoclinika.mssharing.services.billing.rest.api.model.ChargeableItemBill> WS_TRANSFORM = i -> {
+                List<com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser> usagesByUser =
+                    from(i.usageByUsers).transform(UsageByUser.WS_TRANSFORM).toList();
                 return new com.infoclinika.mssharing.services.billing.rest.api.model.ChargeableItemBill(
-                        i.name, i.total, i.type, i.totalLoggedChargeValue, i.loggedChargeValueType, usagesByUser
-                        , i.totalFiles.orNull(), i.totalUsers, i.price, i.unscaledTotal
+                    i.name, i.total, i.type, i.totalLoggedChargeValue, i.loggedChargeValueType, usagesByUser,
+                    i.totalFiles.orNull(), i.totalUsers, i.price, i.unscaledTotal
                 );
-            }
-        };
+            };
     }
 
     class UsageByUser {
@@ -258,47 +261,53 @@ public interface ChargeableItemUsageReader {
             this.balance = balance;
         }
 
-        public static Function<UsageByUser, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser> WS_TRANSFORM = new Function<UsageByUser, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser apply(UsageByUser u) {
-                final Set<? extends com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.UsageLine> transformUsageLines = UsageByUserTransformers.transformUsageLines(u.usageLines);
-                return new com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser(
-                        u.userName, u.userId, u.totalUsedFeatureValue, u.totalPrice, transformUsageLines, u.filesCount, u.balance
-                );
-            }
+        public static Function<UsageByUser, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser>
+            WS_TRANSFORM =
+            new Function<UsageByUser, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser>() {
+                @Override
+                public com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser apply(UsageByUser u) {
+                    final Set<? extends com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.UsageLine>
+                        transformUsageLines = UsageByUserTransformers.transformUsageLines(u.usageLines);
+                    return new com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser(
+                        u.userName, u.userId, u.totalUsedFeatureValue, u.totalPrice, transformUsageLines, u.filesCount,
+                        u.balance
+                    );
+                }
 
 
-        };
+            };
     }
 
     class UsageByUserTransformers {
-        public static final long DEFAULT_FILE_VALUE = 0l;
+        public static final long DEFAULT_FILE_VALUE = 0L;
 
-        private static final Function<ChargeableItemUsageReader.ExperimentUsageLine, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.ExperimentUsageLine> ExperimentUsageLine_WS = new Function<ChargeableItemUsageReader.ExperimentUsageLine, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.ExperimentUsageLine>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.ExperimentUsageLine apply(ChargeableItemUsageReader.ExperimentUsageLine e) {
-                return new com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.ExperimentUsageLine(e.usedFeatureValue, e.price, e.loggedPrice, e.balance, e.experimentId,
-                        e.experimentName, e.timestamp);
-            }
-        };
-        private static final Function<ChargeableItemUsageReader.FileUsageLine, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.FileUsageLine> FileUsageLine_WS = new Function<ChargeableItemUsageReader.FileUsageLine, com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.FileUsageLine>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.FileUsageLine apply(ChargeableItemUsageReader.FileUsageLine f) {
-                return new com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.FileUsageLine(f.fileId.or(DEFAULT_FILE_VALUE), f.usedFeatureValue, f.instrument, f.price, f.loggedPrice, f.balance,
-                        f.hours, f.fileName, f.timestamp);
-            }
-        };
+        private static final java.util.function.Function<ExperimentUsageLine,
+            com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.ExperimentUsageLine>
+            ExperimentUsageLine_WS = e ->
+                new com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.ExperimentUsageLine(
+                    e.usedFeatureValue, e.price, e.loggedPrice, e.balance, e.experimentId,
+                    e.experimentName, e.timestamp
+                );
 
-        public static Set<? extends com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.UsageLine> transformUsageLines(Set<? extends ChargeableItemUsageReader.UsageLine> usageLineSet) {
+        private static final Function<FileUsageLine,
+            com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.FileUsageLine> FileUsageLine_WS = f ->
+                new com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.FileUsageLine(
+                    f.fileId.or(DEFAULT_FILE_VALUE), f.usedFeatureValue, f.instrument, f.price, f.loggedPrice,
+                    f.balance, f.hours, f.fileName, f.timestamp
+                );
+
+        public static Set<? extends com.infoclinika.mssharing.services.billing.rest.api.model.UsageByUser.UsageLine>
+            transformUsageLines(Set<? extends UsageLine> usageLineSet) {
+
             if (usageLineSet.isEmpty()) {
                 return newHashSet();
             }
-            if (usageLineSet.iterator().next() instanceof ChargeableItemUsageReader.FileUsageLine) {
-                final Set<ChargeableItemUsageReader.FileUsageLine> filesUageLineSet = (Set<ChargeableItemUsageReader.FileUsageLine>) usageLineSet;
+            if (usageLineSet.iterator().next() instanceof FileUsageLine) {
+                final Set<FileUsageLine> filesUageLineSet = (Set<FileUsageLine>) usageLineSet;
                 return FluentIterable.from(filesUageLineSet).transform(FileUsageLine_WS).toSet();
-            } else if (usageLineSet.iterator().next() instanceof ChargeableItemUsageReader.ExperimentUsageLine) {
-                final Set<ChargeableItemUsageReader.ExperimentUsageLine> filesUageLineSet = (Set<ChargeableItemUsageReader.ExperimentUsageLine>) usageLineSet;
-                return FluentIterable.from(filesUageLineSet).transform(ExperimentUsageLine_WS).toSet();
+            } else if (usageLineSet.iterator().next() instanceof ExperimentUsageLine) {
+                final Set<ExperimentUsageLine> filesUageLineSet = (Set<ExperimentUsageLine>) usageLineSet;
+                return FluentIterable.from(filesUageLineSet).transform(ExperimentUsageLine_WS::apply).toSet();
             }
             throw new IllegalStateException("Unknown type usage line: " + usageLineSet.iterator().next().getClass());
         }
@@ -328,7 +337,8 @@ public interface ChargeableItemUsageReader {
         public final int hours;
 
         public FileUsageLine(Long fileId, long usedFeatureValue,
-                             String instrument, long price, long loggedPrice, long balance, int days, String fileName, Date date) {
+                             String instrument, long price, long loggedPrice, long balance, int days, String fileName,
+                             Date date) {
             super(usedFeatureValue, price, loggedPrice, balance, date);
             this.fileId = Optional.fromNullable(fileId);
             this.instrument = instrument;
@@ -341,7 +351,8 @@ public interface ChargeableItemUsageReader {
         public final long experimentId;
         public final String experimentName;
 
-        public ExperimentUsageLine(long usedFeatureValue, long price, long loggedPrice, long balance, long experimentId, String experimentName, Date date) {
+        public ExperimentUsageLine(long usedFeatureValue, long price, long loggedPrice, long balance, long experimentId,
+                                   String experimentName, Date date) {
             super(usedFeatureValue, price, loggedPrice, balance, date);
             this.experimentId = experimentId;
             this.experimentName = experimentName;
@@ -356,14 +367,10 @@ public interface ChargeableItemUsageReader {
             this.features = features;
         }
 
-        public static Function<FeaturesData, com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData> WS_TRANSFORM = new Function<FeaturesData, com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData apply(FeaturesData fd) {
-                return new com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData(
-                        fd.features
-                );
-            }
-        };
+        public static Function<FeaturesData, com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData>
+            WS_TRANSFORM = fd -> new com.infoclinika.mssharing.services.billing.rest.api.model.FeaturesData(
+                fd.features
+            );
     }
 
     /**
@@ -377,13 +384,13 @@ public interface ChargeableItemUsageReader {
             this.features = features;
         }
 
-        public static Function<InvoiceFeatureItem, com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceFeatureItem> WS_TRANSFORM = new Function<InvoiceFeatureItem, com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceFeatureItem>() {
-            @Override
-            public com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceFeatureItem apply(InvoiceFeatureItem i) {
-                final ImmutableSet<com.infoclinika.mssharing.services.billing.rest.api.model.ChargeableItemBill> features = from(i.features).transform(ChargeableItemBill.WS_TRANSFORM)
-                        .toSortedSet((bill, bill2) -> bill.type.compareTo(bill2.type));
+        public static Function<InvoiceFeatureItem,
+            com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceFeatureItem>
+            WS_TRANSFORM = i -> {
+                final ImmutableSet<com.infoclinika.mssharing.services.billing.rest.api.model.ChargeableItemBill>
+                    features = from(i.features).transform(ChargeableItemBill.WS_TRANSFORM)
+                    .toSortedSet(Comparator.comparing(bill -> bill.type));
                 return new com.infoclinika.mssharing.services.billing.rest.api.model.InvoiceFeatureItem(features);
-            }
-        };
+            };
     }
 }

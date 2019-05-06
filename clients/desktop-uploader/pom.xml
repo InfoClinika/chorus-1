@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.infoclinika</groupId>
+        <artifactId>clients</artifactId>
+        <version>1.0</version>
+    </parent>
+
+    <artifactId>desktop-uploader</artifactId>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>desktop-uploader-service</module>
+        <module>desktop-uploader-swing-ui</module>
+        <module>desktop-uploader-resource-bundle</module>
+    </modules>
+
+    <properties>
+        <exeFileName>Chorus Desktop Uploader</exeFileName>
+        <maven.build.timestamp.format>ddMMMyyyy</maven.build.timestamp.format>
+        <product.company>InfoClinika Ltd.</product.company>
+        <zipFileName>desktop-uploader-${zipFileNameSuffix}</zipFileName>
+        <zipFileNameSuffix>locally-built-${maven.build.timestamp}</zipFileNameSuffix>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infoclinika</groupId>
+            <artifactId>desktop-clients-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>forms_rt</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jgoodies</groupId>
+            <artifactId>forms</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

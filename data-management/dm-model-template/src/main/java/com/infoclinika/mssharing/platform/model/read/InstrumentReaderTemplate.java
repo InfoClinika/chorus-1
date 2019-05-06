@@ -4,6 +4,7 @@ import com.infoclinika.mssharing.platform.model.PagedItem;
 import com.infoclinika.mssharing.platform.model.PagedItemInfo;
 import com.infoclinika.mssharing.platform.model.common.items.InstrumentItem;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -20,16 +21,18 @@ public interface InstrumentReaderTemplate<INSTRUMENT_LINE extends InstrumentRead
      */
     Set<INSTRUMENT_LINE> readInstruments(long actor);
 
-    Set<INSTRUMENT_LINE> readInstrumentsByLab(long actor, long lab);
-
     PagedItem<INSTRUMENT_LINE> readInstruments(long actor, PagedItemInfo pagedItemInfo);
 
+    Set<INSTRUMENT_LINE> readInstrumentsByLab(long actor, long lab);
+
     PagedItem<INSTRUMENT_LINE> readInstrumentsByLab(long actor, long lab, PagedItemInfo pagedItemInfo);
+
+    Set<INSTRUMENT_LINE> readInstrumentsByLabAndStudyType(long actor, long lab, long studyType);
 
     SortedSet<InstrumentItem> readInstrumentsWhereUserIsOperator(long actor);
 
     enum InstrumentAccess {
-        NO_ACCESS, OPERATOR, PENDING
+        NO_ACCESS, OPERATOR
     }
 
     class InstrumentLineTemplate {
@@ -43,7 +46,8 @@ public interface InstrumentReaderTemplate<INSTRUMENT_LINE extends InstrumentRead
         public final long files;
         public final InstrumentAccess access;
 
-        public InstrumentLineTemplate(long id, String name, String vendor, String lab, String serial, long creator, long files, String model, InstrumentAccess access) {
+        public InstrumentLineTemplate(long id, String name, String vendor, String lab, String serial, long creator,
+                                      long files, String model, InstrumentAccess access) {
             this.id = id;
             this.name = name;
             this.vendor = vendor;
@@ -64,41 +68,32 @@ public interface InstrumentReaderTemplate<INSTRUMENT_LINE extends InstrumentRead
             creator = other.creator;
             model = other.model;
             files = other.files;
-            this.access = other.access;
+            access = other.access;
         }
 
         @Override
-        @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof InstrumentLineTemplate)) return false;
-
-            InstrumentLineTemplate that = (InstrumentLineTemplate) o;
-
-            if (creator != that.creator) return false;
-            if (files != that.files) return false;
-            if (id != null ? !id.equals(that.id) : that.id != null) return false;
-            if (lab != null ? !lab.equals(that.lab) : that.lab != null) return false;
-            if (model != null ? !model.equals(that.model) : that.model != null) return false;
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-            if (serialNumber != null ? !serialNumber.equals(that.serialNumber) : that.serialNumber != null)
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof InstrumentLineTemplate)) {
                 return false;
-            if (vendor != null ? !vendor.equals(that.vendor) : that.vendor != null) return false;
-
-            return true;
+            }
+            InstrumentLineTemplate that = (InstrumentLineTemplate) o;
+            return creator == that.creator &&
+                files == that.files &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(vendor, that.vendor) &&
+                Objects.equals(lab, that.lab) &&
+                Objects.equals(serialNumber, that.serialNumber) &&
+                Objects.equals(model, that.model) &&
+                access == that.access;
         }
 
         @Override
         public int hashCode() {
-            int result = id != null ? id.hashCode() : 0;
-            result = 31 * result + (name != null ? name.hashCode() : 0);
-            result = 31 * result + (vendor != null ? vendor.hashCode() : 0);
-            result = 31 * result + (lab != null ? lab.hashCode() : 0);
-            result = 31 * result + (serialNumber != null ? serialNumber.hashCode() : 0);
-            result = 31 * result + (int) (creator ^ (creator >>> 32));
-            result = 31 * result + (model != null ? model.hashCode() : 0);
-            result = 31 * result + (int) (files ^ (files >>> 32));
-            return result;
+            return Objects.hash(id, name, vendor, lab, serialNumber, creator, model, files, access);
         }
     }
 }

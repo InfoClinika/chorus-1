@@ -51,7 +51,8 @@ public interface AdvertisementReader {
         public final Date endDate;
         public final boolean isEnabled;
 
-        public AdvertisementDetailsItem(long id, String title, String redirectLink, long clickedCount, long displayedCount, Date startDate, Date endDate, boolean isEnabled) {
+        public AdvertisementDetailsItem(long id, String title, String redirectLink, long clickedCount,
+                                        long displayedCount, Date startDate, Date endDate, boolean isEnabled) {
             this.id = id;
             this.title = title;
             this.redirectLink = redirectLink;
@@ -70,7 +71,8 @@ public interface AdvertisementReader {
         public final Date uploadDate;
         public final String imageToDisplayRef;
 
-        public AdvertisementAttachmentItem(long id, String name, long sizeInBytes, Date uploadDate, String imageToDisplayRef) {
+        public AdvertisementAttachmentItem(long id, String name, long sizeInBytes, Date uploadDate,
+                                           String imageToDisplayRef) {
             this.id = id;
             this.name = name;
             this.sizeInBytes = sizeInBytes;

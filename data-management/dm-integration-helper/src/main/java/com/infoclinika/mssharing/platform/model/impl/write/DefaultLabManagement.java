@@ -26,7 +26,8 @@ import static com.infoclinika.mssharing.platform.model.DefaultTransformers.perso
  */
 @Transactional
 @Component
-public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabManagementTemplate.LabInfoTemplate> implements LabManagementTemplate<LAB_INFO> {
+public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabManagementTemplate.LabInfoTemplate>
+    implements LabManagementTemplate<LAB_INFO> {
 
     @Inject
     private RuleValidator ruleValidator;
@@ -49,7 +50,17 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
 
     @Override
     public void editLab(Long actor, Long lab, LAB_INFO labInfo) {
-        if (!ruleValidator.canEditLabDetails(actor, lab)) throw new AccessDenied("Couldn't edit lab");
+
+        if (!ruleValidator.canEditLabDetails(actor, lab)) {
+            throw new AccessDenied("Couldn't edit lab");
+        }
+
+        final LAB labByName = labRepository.findByName(labInfo.labName);
+
+        if (labByName != null && !labByName.getId().equals(lab)) {
+            throw new IllegalArgumentException("Lab with name: " + labInfo.labName + " already exists");
+        }
+
         labManager.editLab(lab, labInfo);
         afterEditLab(actor, lab, labInfo);
     }
@@ -59,7 +70,9 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
 
     @Override
     public Long createLab(Long actor, LAB_INFO labInfo, String contactEmail) {
-        if (!ruleValidator.canCreateLabs(actor)) throw new AccessDenied("Couldn't create labs");
+        if (!ruleValidator.canCreateLabs(actor)) {
+            throw new AccessDenied("Couldn't create labs");
+        }
         LAB lab = labManager.createLab(labInfo, contactEmail);
         LAB labAfterCreate = afterCreateLab(actor, lab, labInfo);
         return labAfterCreate.getId();
@@ -72,20 +85,26 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
 
     @Override
     public Long requestLabCreation(LabInfoTemplate labInfo, String contactEmail) {
-        final LabCreationRequestTemplate existingRequest = labCreationRequestRepository.findByLabName(labInfo.labName);
-        if (existingRequest != null) {
-            //todo[tymchenko]: discuss what happens if several users requested the same laboratory creation
-            return existingRequest.getId();
+        if (labCreationRequestRepository.findByLabName(labInfo.labName) != null
+            || labRepository.findByName(labInfo.labName) != null) {
+            throw new IllegalArgumentException("Lab with name: " + labInfo.labName + " already exists");
         }
-        final LAB lab = labRepository.findByName(labInfo.labName);
-        if (lab != null) {
-            throw new IllegalArgumentException("Such laboratory name already used");
-        }
-        final LabCreationRequestTemplate labCreationRequest = new LabCreationRequestTemplate(labInfo.labName, labInfo.institutionUrl,
-                personalInfoToData(labInfo.labHead), contactEmail, current.get());
+        final LabCreationRequestTemplate labCreationRequest =
+            new LabCreationRequestTemplate(
+                labInfo.labName,
+                labInfo.institutionUrl,
+                personalInfoToData(labInfo.labHead),
+                contactEmail,
+                current.get()
+            );
         UserTemplate requester = userRepository.findByEmail(contactEmail);
         if (requester != null) {
-            requests.addOutboxItem(requester.getId(), "Administrators", "You requested creation of lab " + labInfo.labName, current.get());
+            requests.addOutboxItem(
+                requester.getId(),
+                "Administrators",
+                "You requested creation of lab " + labInfo.labName,
+                current.get()
+            );
         }
         notifyAdmins(labInfo, contactEmail);
         return saveLabCreationRequest(labCreationRequest).getId();
@@ -94,7 +113,13 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
     private void notifyAdmins(LabInfoTemplate labInfo, String contactEmail) {
         final String headName = labInfo.labHead.firstName + " " + labInfo.labHead.lastName;
         for (UserTemplate user : userRepository.findAdmins()) {
-            notifier.sendLabCreationRequestNotification(user.getId(), contactEmail, headName, labInfo.labName, labInfo.labHead.email);
+            notifier.sendLabCreationRequestNotification(
+                user.getId(),
+                contactEmail,
+                headName,
+                labInfo.labName,
+                labInfo.labHead.email
+            );
         }
     }
 
@@ -105,8 +130,9 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
 
     @Override
     public void editLabRequestInfo(Long actor, Long requestId, LabInfoTemplate labInfo) {
-        if (!ruleValidator.canEditLabCreationRequests(actor))
+        if (!ruleValidator.canEditLabCreationRequests(actor)) {
             throw new AccessDenied("Couldn't edit lab creation request");
+        }
         final LabCreationRequestTemplate request = findLabCreationRequest(requestId);
         request.setInstitutionUrl(labInfo.institutionUrl);
         request.setLabName(labInfo.labName);
@@ -121,16 +147,24 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
     @Override
     public Long confirmLabCreation(Long actor, Long labCreationRequestId) {
 
-        if (!ruleValidator.canProcessLabRequests(actor)) throw new AccessDenied("Can't process lab requests");
+        if (!ruleValidator.canProcessLabRequests(actor)) {
+            throw new AccessDenied("Can't process lab requests");
+        }
 
         final LabCreationRequestTemplate request = labCreationRequestRepository.findOne(labCreationRequestId);
         if (request == null) {
             notifier.staleOnLabRequest(actor, labCreationRequestId);
             throw new StaleLabCreationRequestException(labCreationRequestId);
         }
+
+        if (labRepository.findByName(request.getLabName()) != null) {
+            throw new IllegalArgumentException("Lab with name: " + request.getLabName() + " already exists");
+        }
+
         final PersonData headData = request.getHeadData();
         final UserManagementTemplate.PersonInfo personInfo = DefaultTransformers.personDataToPersonInfo(headData);
-        final LAB_INFO labInfo = (LAB_INFO) new LabInfoTemplate(request.getInstitutionUrl(), personInfo, request.getLabName());
+        final LAB_INFO labInfo =
+            (LAB_INFO) new LabInfoTemplate(request.getInstitutionUrl(), personInfo, request.getLabName());
         final LAB lab = labRepository.findOne(createLab(actor, labInfo, request.getContactEmail()));
 
         sendLabCreationEmailNotifcations(lab);
@@ -138,7 +172,11 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
         labCreationRequestRepository.delete(request);
         UserTemplate requester = userRepository.findByEmail(request.getContactEmail());
         if (requester != null) {
-            inboxNotifier.notify(actor, requester.getId(), "Your request for creation lab " + request.getLabName() + " was approved");
+            inboxNotifier.notify(
+                actor,
+                requester.getId(),
+                "Your request for creation lab " + request.getLabName() + " was approved"
+            );
         }
         return lab.getId();
     }
@@ -151,14 +189,20 @@ public class DefaultLabManagement<LAB extends LabTemplate, LAB_INFO extends LabM
 
     @Override
     public void rejectLabCreation(Long actor, Long labCreationRequestId, String rejectComment) {
-        if (!ruleValidator.canProcessLabRequests(actor)) throw new AccessDenied("Cannot update lab creation request");
+        if (!ruleValidator.canProcessLabRequests(actor)) {
+            throw new AccessDenied("Cannot update lab creation request");
+        }
         final LabCreationRequestTemplate request = labCreationRequestRepository.findOne(labCreationRequestId);
         if (request != null) {
             notifier.labCreationRejected(request.getContactEmail(), rejectComment, request.getLabName());
             labCreationRequestRepository.delete(request);
             UserTemplate requester = userRepository.findByEmail(request.getContactEmail());
             if (requester != null) {
-                inboxNotifier.notify(actor, requester.getId(), "Your request for creation lab " + request.getLabName() + " was rejected: " + rejectComment);
+                inboxNotifier.notify(
+                    actor,
+                    requester.getId(),
+                    "Your request for creation lab " + request.getLabName() + " was rejected: " + rejectComment
+                );
             }
         } else {
             notifier.staleOnLabRequest(actor, labCreationRequestId);

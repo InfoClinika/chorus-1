@@ -3,8 +3,10 @@ package com.infoclinika.mssharing.platform.repository;
 import com.infoclinika.mssharing.platform.entity.ExperimentFileTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,4 +20,9 @@ public interface ExperimentFileRepositoryTemplate<T extends ExperimentFileTempla
 
     @Query("select rawFile from #{#entityName} rawFile where rawFile.fileMetaData.id=:id")
     List<T> findByMetaData(@Param("id") long fileMetaDataId);
+
+    @Transactional
+    @Modifying
+    @Query("delete from #{#entityName} rawFile where rawFile.fileMetaData.id=:fileMetadataId")
+    void deleteByFileMetadataId(@Param("fileMetadataId") Long fileMetadataId);
 }

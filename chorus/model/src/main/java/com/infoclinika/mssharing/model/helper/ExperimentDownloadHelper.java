@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
 public interface ExperimentDownloadHelper extends ExperimentDownloadHelperTemplate<
-        ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
-        ChorusExperimentDownloadData,
-        ChorusFileData> {
+    ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
+    ChorusExperimentDownloadData,
+    ChorusFileData> {
 
 }

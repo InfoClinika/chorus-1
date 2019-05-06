@@ -23,24 +23,27 @@ public class DtoTransformer extends FunctionTransformerAbstract {
 
     // From DTO
     public static final Function<UploadFilesDTORequest.UploadFile,
-            InstrumentManagement.UploadFileItem> FROM_FILES_REQUEST = new Function<UploadFilesDTORequest.UploadFile, InstrumentManagement.UploadFileItem>() {
-        @Nullable
-        @Override
-        public InstrumentManagement.UploadFileItem apply(@Nullable UploadFilesDTORequest.UploadFile item) {
-            return new InstrumentManagement.UploadFileItem(item.getName(),
-                    item.getLabels(), item.getSize(), item.getSpecie(), item.isArchive());
-        }
-    };
+        InstrumentManagement.UploadFileItem> FROM_FILES_REQUEST =
+        new Function<UploadFilesDTORequest.UploadFile, InstrumentManagement.UploadFileItem>() {
+            @Nullable
+            @Override
+            public InstrumentManagement.UploadFileItem apply(@Nullable UploadFilesDTORequest.UploadFile item) {
+                return new InstrumentManagement.UploadFileItem(item.getName(),
+                    item.getLabels(), item.getSize(), item.getSpecie(), item.isArchive()
+                );
+            }
+        };
 
 
     // To DTO
-    public static final Function<DictionaryItem, DictionaryDTO> TO_DICTIONARY = new Function<DictionaryItem, DictionaryDTO>() {
-        @Nullable
-        @Override
-        public DictionaryDTO apply(@Nullable DictionaryItem item) {
-            return new DictionaryDTO(item.id, item.name);
-        }
-    };
+    public static final Function<DictionaryItem, DictionaryDTO> TO_DICTIONARY =
+        new Function<DictionaryItem, DictionaryDTO>() {
+            @Nullable
+            @Override
+            public DictionaryDTO apply(@Nullable DictionaryItem item) {
+                return new DictionaryDTO(item.id, item.name);
+            }
+        };
 
     public static final Function<FileLine, FileDTO> TO_FILE_DTO = new Function<FileLine, FileDTO>() {
         @Nullable
@@ -49,69 +52,76 @@ public class DtoTransformer extends FunctionTransformerAbstract {
             DashboardReader.FileColumns columns = item.columns;
             // From Annotations ignore
             FileColumnsDTO columnsDTO = new FileColumnsDTO(columns.name,
-                    columns.sizeInBytes, columns.instrument, columns.laboratory,
-                    columns.uploadDate, columns.labels);
+                columns.sizeInBytes, columns.instrument, columns.laboratory,
+                columns.uploadDate, columns.labels
+            );
 
             return new FileDTO(item.id, item.name, item.instrumentId,
-                    item.specieId, item.contentId, item.uploadId,
-                    item.destinationPath, item.isArchive,
-                    FileDTO.AccessLevel.valueOf(item.accessLevel.name()),
-                    item.usedInExperiments, item.owner, item.lastPingDate,
-                    columnsDTO, item.invalid);
+                item.specieId, item.contentId, item.uploadId,
+                item.destinationPath, item.isArchive,
+                FileDTO.AccessLevel.valueOf(item.accessLevel.name()),
+                item.usedInExperiments, item.owner, item.lastPingDate,
+                columnsDTO, item.invalid
+            );
         }
     };
 
-    public static final Function<InstrumentItem, InstrumentDTO> TO_INSTRUMENT_DTO = new Function<InstrumentItem, InstrumentDTO>() {
-        @Nullable
-        @Override
-        public InstrumentDTO apply(@Nullable InstrumentItem item) {
-            final VendorItem vendor = item.vendor;
-            final Set<FileExtensionItem> fileUploadExtensions = vendor.fileUploadExtensions;
-            final Set<FileExtensionDTO> fileExtensions = new HashSet<>();
+    public static final Function<InstrumentItem, InstrumentDTO> TO_INSTRUMENT_DTO =
+        new Function<InstrumentItem, InstrumentDTO>() {
+            @Nullable
+            @Override
+            public InstrumentDTO apply(@Nullable InstrumentItem item) {
+                final VendorItem vendor = item.vendor;
+                final Set<FileExtensionItem> fileUploadExtensions = vendor.fileUploadExtensions;
+                final Set<FileExtensionDTO> fileExtensions = new HashSet<>();
 
-            for (FileExtensionItem fileUploadExtension : fileUploadExtensions) {
-                final Map<String, FileExtensionDTO.AdditionalExtensionImportance> additionalExtensions = new HashMap<>();
-                final Map<String, AdditionalExtensionImportance> importanceMap = fileUploadExtension.additionalExtensions;
+                for (FileExtensionItem fileUploadExtension : fileUploadExtensions) {
+                    final Map<String, FileExtensionDTO.AdditionalExtensionImportance> additionalExtensions =
+                        new HashMap<>();
+                    final Map<String, AdditionalExtensionImportance> importanceMap =
+                        fileUploadExtension.additionalExtensions;
 
-                for (String key : importanceMap.keySet()) {
-                    final FileExtensionDTO.AdditionalExtensionImportance extensionImportance =
+                    for (String key : importanceMap.keySet()) {
+                        final FileExtensionDTO.AdditionalExtensionImportance extensionImportance =
                             FileExtensionDTO.AdditionalExtensionImportance.valueOf(importanceMap.get(key).name());
-                    additionalExtensions.put(key, extensionImportance);
-                }
+                        additionalExtensions.put(key, extensionImportance);
+                    }
 
-                fileExtensions.add(new FileExtensionDTO(
+                    fileExtensions.add(new FileExtensionDTO(
                         fileUploadExtension.name,
                         fileUploadExtension.zip,
                         additionalExtensions
-                ));
-            }
-            final VendorDTO vendorDTO = new VendorDTO(
+                    ));
+                }
+                final VendorDTO vendorDTO = new VendorDTO(
                     vendor.id,
                     vendor.name,
                     fileExtensions,
                     vendor.folderArchiveUploadSupport,
                     vendor.multipleFiles,
                     new DictionaryDTO(
-                            vendor.studyTypeItem.id,
-                            vendor.studyTypeItem.name
+                        vendor.studyTypeItem.id,
+                        vendor.studyTypeItem.name
                     )
-            );
+                );
 
-            return new InstrumentDTO(item.id, item.name,
-                    vendorDTO, item.lab, item.serial, item.creator);
-        }
-    };
+                return new InstrumentDTO(item.id, item.name,
+                    vendorDTO, item.lab, item.serial, item.creator
+                );
+            }
+        };
 
-    public static final Function<InstrumentLine, InstrumentDTO> TO_SIMPLE_INSTRUMENT_DTO = new Function<InstrumentLine, InstrumentDTO>() {
-        @Nullable
-        @Override
-        public InstrumentDTO apply(@Nullable InstrumentLine input) {
-            return new InstrumentDTO(
+    public static final Function<InstrumentLine, InstrumentDTO> TO_SIMPLE_INSTRUMENT_DTO =
+        new Function<InstrumentLine, InstrumentDTO>() {
+            @Nullable
+            @Override
+            public InstrumentDTO apply(@Nullable InstrumentLine input) {
+                return new InstrumentDTO(
                     input.id,
                     input.name
-            );
-        }
-    };
+                );
+            }
+        };
 
     private DtoTransformer() {
     }

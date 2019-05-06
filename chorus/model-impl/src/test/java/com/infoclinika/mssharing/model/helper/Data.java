@@ -3,26 +3,23 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.helper;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
+import com.google.common.collect.*;
 import com.infoclinika.mssharing.model.write.FileItem;
 import com.infoclinika.mssharing.model.write.UserManagement;
+import com.infoclinika.mssharing.platform.model.InstrumentsDefaults;
 import com.infoclinika.mssharing.platform.model.common.items.AdditionalExtensionImportance;
 import com.infoclinika.mssharing.platform.model.common.items.FileExtensionItem;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.LabManagementTemplate;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Sets.newHashSet;
@@ -63,18 +60,29 @@ public class Data {
     public static final String LAB_4 = "lab#4";
 
     public static final String HARVARD_URL = "harward.com";
-    public static final UserManagement.PersonInfo PAUL_INFO = new UserManagement.PersonInfo(PAUL_FIRST_NAME, PAUL_LAST_NAME, PAUL_EMAIL);
-    public static final UserManagement.PersonInfo JOHN_INFO = new UserManagement.PersonInfo(JOHN_FIRST_NAME, JOHN_LAST_NAME, JOHN_EMAIL);
-    public static final UserManagement.PersonInfo KATE_INFO = new UserManagement.PersonInfo(KATE_FIRST_NAME, KATE_LAST_NAME, KATE_EMAIL);
-    public static final UserManagement.PersonInfo BOB_INFO = new UserManagement.PersonInfo(BOBS_FIRST, BOBS_LAST, BOBS_EMAIL);
-    public static final UserManagement.PersonInfo L_PAUL_INFO = new UserManagement.PersonInfo(PAUL_FIRST_NAME, PAUL_LAST_NAME, PAUL_EMAIL);
-    public static final UserManagement.PersonInfo L_KATE_INFO = new UserManagement.PersonInfo(KATE_FIRST_NAME, KATE_LAST_NAME, KATE_EMAIL);
-    public static final UserManagement.PersonInfo JAKE_INFO = new UserManagement.PersonInfo(JAKE_FIRST_NAME, JAKE_LAST_NAME, JAKE_EMAIL);
-    public static final UserManagement.PersonInfo L_BOB_INFO = new UserManagement.PersonInfo(BOBS_FIRST, BOBS_LAST, BOBS_EMAIL);
+    public static final UserManagement.PersonInfo PAUL_INFO =
+        new UserManagement.PersonInfo(PAUL_FIRST_NAME, PAUL_LAST_NAME, PAUL_EMAIL);
+    public static final UserManagement.PersonInfo JOHN_INFO =
+        new UserManagement.PersonInfo(JOHN_FIRST_NAME, JOHN_LAST_NAME, JOHN_EMAIL);
+    public static final UserManagement.PersonInfo KATE_INFO =
+        new UserManagement.PersonInfo(KATE_FIRST_NAME, KATE_LAST_NAME, KATE_EMAIL);
+    public static final UserManagement.PersonInfo BOB_INFO =
+        new UserManagement.PersonInfo(BOBS_FIRST, BOBS_LAST, BOBS_EMAIL);
+    public static final UserManagement.PersonInfo L_PAUL_INFO =
+        new UserManagement.PersonInfo(PAUL_FIRST_NAME, PAUL_LAST_NAME, PAUL_EMAIL);
+    public static final UserManagement.PersonInfo L_KATE_INFO =
+        new UserManagement.PersonInfo(KATE_FIRST_NAME, KATE_LAST_NAME, KATE_EMAIL);
+    public static final UserManagement.PersonInfo JAKE_INFO =
+        new UserManagement.PersonInfo(JAKE_FIRST_NAME, JAKE_LAST_NAME, JAKE_EMAIL);
+    public static final UserManagement.PersonInfo L_BOB_INFO =
+        new UserManagement.PersonInfo(BOBS_FIRST, BOBS_LAST, BOBS_EMAIL);
 
-    public static final LabManagementTemplate.LabInfoTemplate LAB_4_DATA = new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_4);
-    public static final LabManagementTemplate.LabInfoTemplate LAB_3_DATA = new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_3);
-    public static final LabManagementTemplate.LabInfoTemplate LAB_2_DATA = new LabManagementTemplate.LabInfoTemplate("", L_PAUL_INFO, "");
+    public static final LabManagementTemplate.LabInfoTemplate LAB_4_DATA =
+        new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_4);
+    public static final LabManagementTemplate.LabInfoTemplate LAB_3_DATA =
+        new LabManagementTemplate.LabInfoTemplate(HARVARD_URL, L_PAUL_INFO, LAB_3);
+    public static final LabManagementTemplate.LabInfoTemplate LAB_2_DATA =
+        new LabManagementTemplate.LabInfoTemplate("", L_PAUL_INFO, "");
 
     public static String RESEARCH_TITLE = "X1";
     public static final String PROJECT_TITLE = "Running";
@@ -95,17 +103,20 @@ public class Data {
     public static final String AB_SCIEX_INSTRUMENT_MODEL = "AB_SCIEX_MODEL";
     public static final String AB_SCIEX = "Sciex";
     public static final HashSet<FileExtensionItem> AB_SCIEX_EXTENSIONS = newHashSet(
-            new FileExtensionItem(".wiff", ".wiff",
-                    Maps.newHashMap(
-                            ImmutableMap.of(
-                                    ".wiff.scan", AdditionalExtensionImportance.NOT_REQUIRED,
-                                    ".wiff.mtd", AdditionalExtensionImportance.NOT_REQUIRED)
-                    )));
+        new FileExtensionItem(".wiff", ".wiff",
+            Maps.newHashMap(
+                ImmutableMap.of(
+                    ".wiff.scan", AdditionalExtensionImportance.NOT_REQUIRED,
+                    ".wiff.mtd", AdditionalExtensionImportance.NOT_REQUIRED
+                )
+            )
+        ));
     public static final String BRUKER_INSTRUMENT_MODEL = "Bruker_MODEL";
     public static final String BRUKER = "Bruker";
     public static final HashSet<FileExtensionItem> BRUKER_EXTENSIONS = newHashSet(
-            new FileExtensionItem(".d", ".d",
-                    Maps.<String, AdditionalExtensionImportance>newHashMap()));
+        new FileExtensionItem(".d", ".d",
+            Maps.<String, AdditionalExtensionImportance>newHashMap()
+        ));
     public static final String instrumentType21 = "Mass Spectrometer";
     public static String instrumentModel122 = "S1";
     public static String instrumentModel212 = "G";
@@ -114,6 +125,14 @@ public class Data {
     public static final String ADMIN_EMAIL = "mark@mmm.c";
     public static final String ADMIN_EMAIL_2 = "mark3@mmm.c";
 
+    public static String NGS_VENDOR = "NGS Vendor";
+    public static String NGS_STUDY_TYPE = InstrumentsDefaults.NG_TECHNOLOGY_TYPE;
+    public static String NGS_TYPE = "NGS Instrument Type";
+    public static String NGS_MODEL = "NGS Instrument Model";
+    public static String NGS_INSTRUMENT = "NGS Instrument";
+    public static Set<FileExtensionItem> NGS_EXTENSIONS =
+        Sets.newHashSet(new FileExtensionItem("", "", new HashMap<>()));
+    public static String NGS_EXP_TYPE_NAME = "NGS Experiment Type";
+    public static String NGS_NT_EXTRACTION_METHOD_NAME = "NGS NT Extraction Method";
 
-    public static final String BUCKET = "chorus-unit-tests";
 }

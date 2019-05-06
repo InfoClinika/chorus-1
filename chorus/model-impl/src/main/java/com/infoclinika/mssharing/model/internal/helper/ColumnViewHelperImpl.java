@@ -4,9 +4,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSortedSet;
-import com.infoclinika.mssharing.model.internal.RuleValidator;
-import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.model.helper.ColumnViewHelper;
+import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.entity.ColumnDefinition;
 import com.infoclinika.mssharing.model.internal.entity.ColumnsView;
 import com.infoclinika.mssharing.model.internal.entity.User;
@@ -15,6 +14,7 @@ import com.infoclinika.mssharing.model.internal.read.Transformers;
 import com.infoclinika.mssharing.model.internal.repository.ColumnDefinitionRepository;
 import com.infoclinika.mssharing.model.internal.repository.ColumnViewRepository;
 import com.infoclinika.mssharing.model.internal.repository.UserRepository;
+import com.infoclinika.mssharing.platform.model.AccessDenied;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -76,7 +76,8 @@ public class ColumnViewHelperImpl implements ColumnViewHelper {
 
     @Override
     public ImmutableSortedSet<ColumnInfo> getPrimaryColumnSetOrDefault(long actor, ColumnViewType type) {
-        final Optional<ColumnsView> primary = fromNullable(columnViewRepository.findPrimary(transformType(type), actor));
+        final Optional<ColumnsView> primary =
+            fromNullable(columnViewRepository.findPrimary(transformType(type), actor));
         if (primary.isPresent()) {
             return transformColumns(primary.get().getColumns());
         }
@@ -97,7 +98,14 @@ public class ColumnViewHelperImpl implements ColumnViewHelper {
         }).transform(new Function<ColumnDefinition, Column>() {
             @Override
             public Column apply(ColumnDefinition input) {
-                return new Column(input.getId(), input.getName(), input.getDataType(), input.isHideable(), input.isSortable(), input.getUnits());
+                return new Column(
+                    input.getId(),
+                    input.getName(),
+                    input.getDataType(),
+                    input.isHideable(),
+                    input.isSortable(),
+                    input.getUnits()
+                );
             }
         }).toSet();
     }
@@ -118,8 +126,8 @@ public class ColumnViewHelperImpl implements ColumnViewHelper {
     @Override
     public List<ColumnView> getViews(long actor, ColumnViewType type) {
         return from(columnViewRepository.findAllowed(actor, transformType(type)))
-                .transform(columnViewTransformer())
-                .toList();
+            .transform(columnViewTransformer())
+            .toList();
     }
 
     @Override
@@ -131,8 +139,8 @@ public class ColumnViewHelperImpl implements ColumnViewHelper {
     public Optional<ColumnView> readPrimary(long actor, ColumnViewType type) {
         Optional<ColumnsView> primaryView = fromNullable(columnViewRepository.findPrimary(transformType(type), actor));
         return primaryView.isPresent()
-                ? Optional.of(columnViewTransformer().apply(primaryView.get()))
-                : Optional.<ColumnView>absent();
+            ? Optional.of(columnViewTransformer().apply(primaryView.get()))
+            : Optional.<ColumnView>absent();
     }
 
     @Override
@@ -146,7 +154,6 @@ public class ColumnViewHelperImpl implements ColumnViewHelper {
     }
 
     private Collection<ViewColumn> transformViewToModel(Set<ColumnInfo> columns) {
-
         return from(columns).transform(new Function<ColumnInfo, ViewColumn>() {
             @Override
             public ViewColumn apply(ColumnInfo input) {
@@ -187,7 +194,13 @@ public class ColumnViewHelperImpl implements ColumnViewHelper {
         return new Function<ColumnsView, ColumnView>() {
             @Override
             public ColumnView apply(ColumnsView input) {
-                return new ColumnView(input.getId(), input.getName(), input.isDefault(), input.isPrimary(), transformType(input.getType()));
+                return new ColumnView(
+                    input.getId(),
+                    input.getName(),
+                    input.isDefault(),
+                    input.isPrimary(),
+                    transformType(input.getType())
+                );
             }
         };
     }

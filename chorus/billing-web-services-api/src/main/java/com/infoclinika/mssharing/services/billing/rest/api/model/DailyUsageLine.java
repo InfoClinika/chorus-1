@@ -15,7 +15,8 @@ public class DailyUsageLine {
     public Long balance;
     public long amount;
 
-    public DailyUsageLine(long labId, Date date, String serverDayFormatted, String timeZoneId, @Nullable Long balance, long amount) {
+    public DailyUsageLine(long labId, Date date, String serverDayFormatted, String timeZoneId, @Nullable Long balance,
+                          long amount) {
 
         this.labId = labId;
         this.date = date;

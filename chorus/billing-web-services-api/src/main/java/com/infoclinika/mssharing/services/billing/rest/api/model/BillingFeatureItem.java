@@ -10,7 +10,8 @@ public class BillingFeatureItem {
     public BillingChargeType chargeType;
     public int chargeValue;
 
-    public BillingFeatureItem(int price, BillingFeature feature, String name, BillingChargeType chargeType, int chargeValue) {
+    public BillingFeatureItem(int price, BillingFeature feature, String name, BillingChargeType chargeType,
+                              int chargeValue) {
         this.price = price;
         this.feature = feature;
         this.name = name;

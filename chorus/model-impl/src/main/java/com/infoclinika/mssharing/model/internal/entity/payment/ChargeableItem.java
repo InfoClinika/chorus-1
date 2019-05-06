@@ -3,8 +3,6 @@ package com.infoclinika.mssharing.model.internal.entity.payment;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
-import java.util.EnumSet;
 
 /**
  * @author Elena Kurilina, Herman Zamula
@@ -68,15 +66,25 @@ public class ChargeableItem extends AbstractPersistable<Long> {
         this.chargeType = chargeType;
     }
 
-    public static enum Feature {
-        ARCHIVE_STORAGE, ANALYSE_STORAGE, DOWNLOAD, ANALYSIS, PUBLIC_DOWNLOAD, PROCESSING, STORAGE_VOLUMES, ARCHIVE_STORAGE_VOLUMES;
+    public enum Feature {
+        ARCHIVE_STORAGE,
+        ANALYSE_STORAGE,
+        DOWNLOAD,
+        PUBLIC_DOWNLOAD,
+        STORAGE_VOLUMES,
+        ARCHIVE_STORAGE_VOLUMES;
 
         public static Feature[] getPerFileMembers() {
-            return new Feature[] {ARCHIVE_STORAGE, ANALYSE_STORAGE, DOWNLOAD, ANALYSIS, PUBLIC_DOWNLOAD};
+            return new Feature[] {
+                ARCHIVE_STORAGE,
+                ANALYSE_STORAGE,
+                DOWNLOAD,
+                PUBLIC_DOWNLOAD
+            };
         }
     }
 
-    public static enum ChargeType {
+    public enum ChargeType {
         GB,
     }
 }

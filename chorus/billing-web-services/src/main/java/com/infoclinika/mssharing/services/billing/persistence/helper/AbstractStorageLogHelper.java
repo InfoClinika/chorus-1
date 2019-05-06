@@ -1,8 +1,6 @@
 package com.infoclinika.mssharing.services.billing.persistence.helper;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Function;
@@ -11,19 +9,25 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.infoclinika.mssharing.model.helper.FeaturesHelper;
 import com.infoclinika.mssharing.model.helper.StoredObjectPaths;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
 import com.infoclinika.mssharing.model.internal.entity.Lab;
 import com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount;
 import com.infoclinika.mssharing.model.internal.entity.view.BillingFileView;
 import com.infoclinika.mssharing.model.internal.read.Transformers;
-import com.infoclinika.mssharing.model.internal.repository.*;
+import com.infoclinika.mssharing.model.internal.repository.BillingFileViewRepository;
+import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
+import com.infoclinika.mssharing.model.internal.repository.LabPaymentAccountRepository;
+import com.infoclinika.mssharing.model.internal.repository.LabRepository;
 import com.infoclinika.mssharing.services.billing.persistence.enity.ChargeableItemUsage;
 import com.infoclinika.mssharing.services.billing.persistence.repository.StorageFeatureUsageRepository;
-import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +38,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.sql.Connection;
@@ -52,7 +55,6 @@ import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.size;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.infoclinika.mssharing.services.billing.persistence.helper.BillingFeatureChargingHelper.ChargedInfo;
-import static java.lang.String.format;
 import static org.joda.time.Days.daysBetween;
 
 
@@ -60,17 +62,11 @@ import static org.joda.time.Days.daysBetween;
  * @author Herman Zamula
  */
 public abstract class AbstractStorageLogHelper implements StorageLogHelper {
-    private static final Logger LOG = Logger.getLogger(AbstractStorageLogHelper.class);
 
     private static final int MAX_S3_RETRIES_COUNT = 5;
     public static final int INTERVAL_UNIT = 1;
     private static final int MAX_S3_CONNECTIONS = 1000;
-    private static final Function<ChargeableItemUsage, Long> FILE_FROM_USAGE = new Function<ChargeableItemUsage, Long>() {
-        @Override
-        public Long apply(ChargeableItemUsage input) {
-            return input.getFile();
-        }
-    };
+    private static final Function<ChargeableItemUsage, Long> FILE_FROM_USAGE = input -> input.getFile();
     public static final int SUM_LOGS_MAX_PAGE_SIZE = 5000;
 
     @Inject
@@ -84,8 +80,7 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
     @Inject
     protected StoredObjectPaths storedObjectPaths;
     @Inject
-    @Named("cachedFeaturesRepository")
-    protected FeaturesRepository featuresRepository;
+    protected FeaturesHelper featuresHelper;
     @Inject
     protected BillingFileViewRepository fileViewRepository;
     @PersistenceContext(unitName = "mssharing")
@@ -95,9 +90,11 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
     protected TransactionTemplate transactionTemplate;
     @Inject
     protected Transformers transformers;
+    @Inject
+    private CloudStorageClientsProvider cloudStorageClientsProvider;
 
-    protected final Logger logger = Logger.getLogger(this.getClass());
-    private AmazonS3Client s3Client;
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private AmazonS3 s3Client;
     private final Predicate<S3ObjectSummary> filterBySize = input -> input.getSize() > 0;
     protected DateTimeZone timeZone;
 
@@ -110,7 +107,7 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         return daysBetween(new DateTime(0).withZone(timeZone), timestamp).getDays();
     }
 
-    private AmazonS3Client getS3Client() {
+    private AmazonS3 getS3Client() {
         return s3Client;
     }
 
@@ -118,14 +115,13 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
     public void initializeAmazonClient() {
         this.transactionTemplate = new TransactionTemplate(ptm);
         this.timeZone = DateTimeZone.forTimeZone(transformers.serverTimezone);
-        this.s3Client = new AmazonS3Client(new BasicAWSCredentials(storedObjectPaths.getAmazonKey(),
-                storedObjectPaths.getAmazonSecret()), new ClientConfiguration().withMaxConnections(MAX_S3_CONNECTIONS));
+        this.s3Client = cloudStorageClientsProvider.getAmazonS3Client();
     }
 
     /*---------------------------- Retrieve files from S3 common methods ---------------------------------------------*/
 
     protected ImmutableMap<String, S3ObjectSummary> readFiles(final String bucket, final String prefix) {
-        logger.trace("Start listing files from S3. Bucket {" + bucket + "}, prefix {" + prefix + "}");
+        logger.trace("Start listing files from S3. Bucket { {} }, prefix { {} }", bucket, prefix);
 
         ObjectListing objectListing = listItemsWithRetries(bucket, prefix, initialListing(bucket, prefix));
         final ImmutableMap.Builder<String, S3ObjectSummary> builder = ImmutableMap.builder();
@@ -134,30 +130,30 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         while (objectListing.isTruncated()) {
             objectListing = listItemsWithRetries(bucket, prefix, nextBatchListing(objectListing));
             addSummariesFilteredBySize(objectListing, builder);
-            if (!objectListing.isTruncated()) break;
+            if (!objectListing.isTruncated()) {
+                break;
+            }
         }
 
-        logger.trace("End listing files from S3. Bucket {" + bucket + "}, prefix {" + prefix + "}");
+        logger.trace("End listing files from S3. Bucket { {} }, prefix { {} }", bucket, prefix);
         return builder.build();
     }
 
     private ObjectListingHandler initialListing(final String bucket, final String prefix) {
-        return new ObjectListingHandler() {
-            @Override
-            public ObjectListing listObjects() {
-                logger.trace("Initial objects listing. Bucket {" + bucket + "}, prefix {" + prefix + "}");
-                final ObjectListing objectListing = getS3Client().listObjects(bucket, prefix);
-                logger.trace("Initial objects listing. Listed " + objectListing.getObjectSummaries().size() + " objects.");
-                return objectListing;
-            }
+        return () -> {
+            logger.trace("Initial objects listing. Bucket { {} }, prefix { {} }", bucket, prefix);
+            final ObjectListing objectListing = getS3Client().listObjects(bucket, prefix);
+            logger.trace("Initial objects listing. Listed {} objects.", objectListing.getObjectSummaries().size());
+            return objectListing;
         };
     }
 
     private ObjectListingHandler nextBatchListing(final ObjectListing objectListing) {
         return () -> {
-            logger.trace("Listing next batch of objects. Bucket {" + objectListing.getBucketName() + "}, prefix {" + objectListing.getPrefix() + "}");
+            logger.trace("Listing next batch of objects. Bucket { {} }, prefix { {} }", objectListing.getBucketName(),
+                objectListing.getPrefix());
             final ObjectListing nextListing = getS3Client().listNextBatchOfObjects(objectListing);
-            logger.trace("Listing next batch of objects. Listed " + nextListing.getObjectSummaries().size() + " objects.");
+            logger.trace("Listing next batch of objects. Listed {} objects.", nextListing.getObjectSummaries().size());
             return nextListing;
         };
     }
@@ -171,13 +167,17 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
             } catch (Throwable ex) {
                 retries++;
                 lastException = ex;
-                logger.warn(String.format("*** Cannot list objects from S3: %s. Bucket {%s}, prefix {%s}, retries count: %d", ex.getMessage(), bucket, prefix, retries));
+                logger.warn(
+                    "*** Cannot list objects from S3: {}. Bucket { {} }, prefix { {} }, retries count: {}",
+                    ex.getMessage(), bucket, prefix, retries
+                );
             }
         } while (MAX_S3_RETRIES_COUNT > retries);
         throw new RuntimeException(lastException);
     }
 
-    private void addSummariesFilteredBySize(ObjectListing objectListing, ImmutableMap.Builder<String, S3ObjectSummary> builder) {
+    private void addSummariesFilteredBySize(ObjectListing objectListing,
+                                            ImmutableMap.Builder<String, S3ObjectSummary> builder) {
         for (S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
             if (filterBySize.apply(s3ObjectSummary)) {
                 builder.put(s3ObjectSummary.getKey(), s3ObjectSummary);
@@ -186,13 +186,15 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
     }
 
     private interface ObjectListingHandler {
-        public ObjectListing listObjects();
+        ObjectListing listObjects();
     }
 
     /*--------------------- File usage processing common methods -----------------------------------------------------*/
 
-    protected void handleMissedLogs(Date now, BillingFileView file, long logInterval, Function<Integer, ? extends ChargeableItemUsage> onMissedFound) {
-        if (fromNullable(file.getLastChargingDate()).transform(forPredicate(isDateUnbound(now, logInterval))).or(false)) {
+    protected void handleMissedLogs(Date now, BillingFileView file, long logInterval,
+                                    Function<Integer, ? extends ChargeableItemUsage> onMissedFound) {
+        if (fromNullable(file.getLastChargingDate()).transform(forPredicate(isDateUnbound(now, logInterval)))
+            .or(false)) {
             logger.trace("*** File {" + file.getId() + "} is not logged in time. Recharging feature usage...");
             final long nowTime = normalizeTime(now, logInterval);
             final long lastChargingTime = normalizeTime(file.getLastChargingDate(), logInterval);
@@ -215,12 +217,13 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         try {
             return executorService.invokeAll(tasks, wait, TimeUnit.HOURS);
         } catch (InterruptedException e) {
-            logger.error("*** Exception thrown when executing async task: " + e.getMessage(), e);
+            logger.error("*** Exception thrown when executing async task", e);
         }
         return Collections.emptyList();
     }
 
-    protected <T extends ChargeableItemUsage> List<Future<Iterable<T>>> invokeAll(ExecutorService executorService, Set<Callable<Iterable<T>>> tasks) {
+    protected <T extends ChargeableItemUsage> List<Future<Iterable<T>>> invokeAll(ExecutorService executorService,
+                                                                                  Set<Callable<Iterable<T>>> tasks) {
         return invokeAll(executorService, tasks, 1);
     }
 
@@ -228,11 +231,13 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         return now.getTime() / (logInterval);
     }
 
-   /*----------------------- Post process logging of feature usage functions -----------------------------------------*/
+    /*----------------------- Post process logging of feature usage functions
+    -----------------------------------------*/
 
-    protected <T extends ChargeableItemUsage> void saveUsagesAndPostProcessTasks(final StorageFeatureUsageRepository<T> repository,
-                                                                                 List<Future<Iterable<T>>> processedTasks,
-                                                                                 final Date filesLoggedTime) {
+    protected <T extends ChargeableItemUsage> void saveUsagesAndPostProcessTasks(
+        final StorageFeatureUsageRepository<T> repository,
+        List<Future<Iterable<T>>> processedTasks,
+        final Date filesLoggedTime) {
 
         logger.debug("*** Processing data for saving...");
 
@@ -264,24 +269,25 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         final int dayToLog = daysSinceEpoch(new DateTime(dateDayToLog)); //Previous day
 
         labs.stream().forEach(lab -> executorService.execute(()
-                -> doSumLogsByLab(lab, hourlyUsageRepository, dailyUsageRepository, dayToLog)));
+            -> doSumLogsByLab(lab, hourlyUsageRepository, dailyUsageRepository, dayToLog)));
 
         executorService.shutdown();
     }
 
-    private void doSumLogsByLab(Lab lab, StorageFeatureUsageRepository hourlyUsageRepository, StorageFeatureUsageRepository dailyUsageRepository, int dayToLog) {
+    private void doSumLogsByLab(Lab lab, StorageFeatureUsageRepository hourlyUsageRepository,
+                                StorageFeatureUsageRepository dailyUsageRepository, int dayToLog) {
 
         Pageable pageRequest = getInitialPageRequest();
         Page<ChargeableItemUsage> page;
 
-        logger.debug(format("Executing sum logs paged result for lab {%d}...", lab.getId()));
+        logger.debug("Executing sum logs paged result for lab {}...", lab.getId());
 
         do {
 
             page = sumLogsFn(dayToLog, pageRequest).apply(lab);
 
             if (!page.getContent().isEmpty()) {
-                logger.debug(format("Saving sum logs paged result for lab {%d}, page is {%s}...", lab.getId(), page));
+                logger.debug("Saving sum logs paged result for lab {}, page is {}...", lab.getId(), page);
                 //noinspection unchecked
                 saveSumLogsPage(hourlyUsageRepository, dailyUsageRepository, page, dayToLog);
             }
@@ -295,19 +301,21 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
     }
 
 
-    protected <T extends ChargeableItemUsage> void saveSumLogsPage(final StorageFeatureUsageRepository<T> hourlyUsageRepository,
-                                                                   StorageFeatureUsageRepository<T> dailyUsageRepository,
-                                                                   final Page<T> page,
-                                                                   final int dayToLog) {
+    protected <T extends ChargeableItemUsage> void saveSumLogsPage(
+        final StorageFeatureUsageRepository<T> hourlyUsageRepository,
+        StorageFeatureUsageRepository<T> dailyUsageRepository,
+        final Page<T> page,
+        final int dayToLog) {
 
         doSaveSumLogs(hourlyUsageRepository, dailyUsageRepository, dayToLog, page.getContent());
 
     }
 
-    synchronized private <T extends ChargeableItemUsage> void doSaveSumLogs(final StorageFeatureUsageRepository<T> hourlyUsageRepository,
-                                                                            final StorageFeatureUsageRepository<T> dailyUsageRepository,
-                                                                            final int dayToLog,
-                                                                            final Iterable<T> content) {
+    private <T extends ChargeableItemUsage> void doSaveSumLogs(
+        final StorageFeatureUsageRepository<T> hourlyUsageRepository,
+        final StorageFeatureUsageRepository<T> dailyUsageRepository,
+        final int dayToLog,
+        final Iterable<T> content) {
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
@@ -319,7 +327,9 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
 
     /*----------------------------------- Logs CRUD methods ----------------------------------------------------------*/
 
-    private <T extends ChargeableItemUsage> void deleteLogs(Iterable<T> fluentUsages, StorageFeatureUsageRepository<T> usageRepository, int dayToLog) {
+    private <T extends ChargeableItemUsage> void deleteLogs(Iterable<T> fluentUsages,
+                                                            StorageFeatureUsageRepository<T> usageRepository,
+                                                            int dayToLog) {
         logger.debug("Deleting logs...");
         final ImmutableSet<Long> files = from(fluentUsages).transform(FILE_FROM_USAGE).toSet();
         if (files.isEmpty()) {
@@ -329,7 +339,8 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         usageRepository.deleteLogsForFilesOfDay(files, dayToLog);
     }
 
-    private <T extends ChargeableItemUsage> void updateFileLastLoggedTime(Date filesLoggedTime, FluentIterable<T> fluentUsages) {
+    private <T extends ChargeableItemUsage> void updateFileLastLoggedTime(Date filesLoggedTime,
+                                                                          FluentIterable<T> fluentUsages) {
         logger.debug("*** Updating files last charging date...");
         final ImmutableList<Long> filesToSave = from(fluentUsages.transform(FILE_FROM_USAGE).toSet()).toList();
         if (filesToSave.isEmpty()) {
@@ -341,7 +352,8 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
 
     private Connection getConnection() {
         try {
-            return ((SessionFactoryImplementor) em.unwrap(Session.class).getSessionFactory()).getConnectionProvider().getConnection();
+            return ((SessionFactoryImplementor) em.unwrap(Session.class).getSessionFactory()).getConnectionProvider()
+                .getConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -353,7 +365,8 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         try {
             connection = getConnection();
             final String idsString = toInClause(fileIds);
-            final String query = "UPDATE FileMetaDataTemplate set billing_last_charging_date = ? WHERE id in ( " + idsString + ")";
+            final String query =
+                "UPDATE FileMetaDataTemplate set billing_last_charging_date = ? WHERE id in ( " + idsString + ")";
             statement = connection.prepareStatement(query);
             statement.setTimestamp(1, new Timestamp(filesLoggedTime.getTime()));
             statement.executeUpdate();
@@ -365,16 +378,17 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
                 try {
                     statement.close();
                 } catch (SQLException e) {
-                    LOG.error("Can't close statement: " + e.getMessage(), e);
+                    logger.error("Can't close statement", e);
                 }
             }
 
             if (connection != null) {
 
                 try {
-                    ((SessionFactoryImplementor) em.unwrap(Session.class).getSessionFactory()).getConnectionProvider().closeConnection(connection);
+                    ((SessionFactoryImplementor) em.unwrap(Session.class).getSessionFactory()).getConnectionProvider()
+                        .closeConnection(connection);
                 } catch (SQLException e) {
-                    LOG.error("Can't close connection: " + e.getMessage(), e);
+                    logger.error("Can't close connection", e);
                 }
             }
 
@@ -399,19 +413,22 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         for (Map.Entry<Long, ImmutableSet.Builder<T>> labUsagesEntry : usagesPerLab.entrySet()) {
             final ImmutableSet<T> labUsages = labUsagesEntry.getValue().build();
             final LabPaymentAccount paymentAccount = labPaymentAccountRepository.findByLab(labUsagesEntry.getKey());
-            final ChargedInfo chargedInfo = new ChargedInfo(paymentAccount.getStoreBalance(), paymentAccount.getScaledToPayValue());
+            final ChargedInfo chargedInfo =
+                new ChargedInfo(paymentAccount.getStoreBalance(), paymentAccount.getScaledToPayValue());
             setChargedValuesToUsages(labUsages, chargedInfo);
         }
     }
 
-    private static <T extends ChargeableItemUsage> void setChargedValuesToUsages(ImmutableSet<T> labUsages, ChargedInfo chargedInfo) {
+    private static <T extends ChargeableItemUsage> void setChargedValuesToUsages(ImmutableSet<T> labUsages,
+                                                                                 ChargedInfo chargedInfo) {
         for (T labUsage : labUsages) {
             labUsage.setBalance(chargedInfo.balance);
             labUsage.setScaledToPayValue(chargedInfo.scaledToPayValue);
         }
     }
 
-    private <T extends ChargeableItemUsage> void saveUsages(StorageFeatureUsageRepository<T> repository, Iterable<T> fluentUsages) {
+    private <T extends ChargeableItemUsage> void saveUsages(StorageFeatureUsageRepository<T> repository,
+                                                            Iterable<T> fluentUsages) {
         logger.debug("*** Saving usages... ");
         repository.save(fluentUsages);
     }
@@ -420,13 +437,16 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
 
     /*------------------------ Transforming functions ----------------------------------------------------------------*/
 
-    private <T extends ChargeableItemUsage> FluentIterable<T> retrieveUsages(List<Future<Iterable<T>>> commands, Function<Future<Iterable<T>>, Iterable<T>> function) {
+    private <T extends ChargeableItemUsage> FluentIterable<T> retrieveUsages(List<Future<Iterable<T>>> commands,
+                                                                             Function<Future<Iterable<T>>,
+                                                                                 Iterable<T>> function) {
         return from(commands)
-                .transformAndConcat(function)
-                .filter(notNull());
+            .transformAndConcat(function)
+            .filter(notNull());
     }
 
-    private <T extends ChargeableItemUsage> HashMap<Long, ImmutableSet.Builder<T>> transformToUsagesPerLab(FluentIterable<T> fluentUsages) {
+    private <T extends ChargeableItemUsage> HashMap<Long, ImmutableSet.Builder<T>> transformToUsagesPerLab(
+        FluentIterable<T> fluentUsages) {
         final HashMap<Long, ImmutableSet.Builder<T>> usagesPerLab = newHashMap();
 
         for (T usage : fluentUsages) {
@@ -440,15 +460,11 @@ public abstract class AbstractStorageLogHelper implements StorageLogHelper {
         return usagesPerLab;
     }
 
-    private <T extends ChargeableItemUsage> Function<Future<Iterable<T>>, Iterable<T>> retrieveItemFn() {
-        return this::getChargeableItemSet;
-    }
-
     private <T extends ChargeableItemUsage> Iterable<T> getChargeableItemSet(Future<Iterable<T>> input) {
         try {
             return input.get();
         } catch (Exception e) {
-            logger.error("Unexpected exception occurred while getting task result: " + e.getMessage());
+            logger.error("Unexpected exception occurred while getting task result: {}" + e.getMessage());
             return ImmutableSet.of();
         }
     }

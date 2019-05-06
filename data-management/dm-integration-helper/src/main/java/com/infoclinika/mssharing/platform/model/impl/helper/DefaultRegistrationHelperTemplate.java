@@ -19,7 +19,8 @@ import static com.google.common.collect.FluentIterable.from;
  * @author Herman Zamula
  */
 @Transactional(readOnly = true)
-public abstract class DefaultRegistrationHelperTemplate<LAB_ITEM extends LabItem> implements RegistrationHelperTemplate<LAB_ITEM> {
+public abstract class DefaultRegistrationHelperTemplate<LAB_ITEM extends LabItem>
+    implements RegistrationHelperTemplate<LAB_ITEM> {
 
     @Inject
     private UserRepositoryTemplate<?> userRepository;
@@ -44,22 +45,13 @@ public abstract class DefaultRegistrationHelperTemplate<LAB_ITEM extends LabItem
     public ImmutableSortedSet<LAB_ITEM> availableLabs() {
 
         return from(labRepository.findAll())
-                .transform(new Function<LabTemplate, LAB_ITEM>() {
-                    @Override
-                    public LAB_ITEM apply(LabTemplate input) {
-                        return transformLabItem(input);
-                    }
-                }).toSortedSet(labItemComparator());
+            .transform((Function<LabTemplate, LAB_ITEM>) input -> transformLabItem(input))
+            .toSortedSet(labItemComparator());
     }
 
     protected Comparator<LAB_ITEM> labItemComparator() {
 
-        return new Comparator<LAB_ITEM>() {
-            @Override
-            public int compare(LAB_ITEM o1, LAB_ITEM o2) {
-                return o1.name.compareTo(o2.name);
-            }
-        };
+        return Comparator.comparing(o -> o.name);
 
     }
 

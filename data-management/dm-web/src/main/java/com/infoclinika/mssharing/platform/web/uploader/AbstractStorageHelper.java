@@ -6,31 +6,41 @@ import com.infoclinika.mssharing.platform.fileserver.StoredObject;
 import com.infoclinika.mssharing.platform.fileserver.model.NodePath;
 import com.infoclinika.mssharing.platform.fileserver.model.StoredFile;
 import com.infoclinika.mssharing.platform.model.ObjectNotFoundException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 
 import javax.inject.Inject;
 
 /**
  * @author Pavel Kaplin
- *         <p/>
- *         TODO: Move it to Data Management Platform
+ *     <p/>
+ *     TODO: Move it to Data Management Platform
  */
 public abstract class AbstractStorageHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStorageHelper.class);
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractStorageHelper.class);
     @Inject
     private StorageService fileStorageService;
+
+    protected abstract FileData getData(long item, long userId);
 
     @Async
     public void feedContentToStorage(long fileItemId, long userId, StoredFile storedFile) {
         final NodePath nodePath = getData(fileItemId, userId).nodePath;
-        LOGGER.debug("Posting the attachment binary contents to the project. File item ID = " + fileItemId + "; user ID = " + userId + ".");
+        LOGGER.debug("Posting the attachment binary contents to the project. File item ID = {}; user ID = {}.",
+            fileItemId,
+            userId);
 
         fileStorageService.put(nodePath, storedFile);
 
 
-        LOGGER.debug("Project attachment saved successfully. File item ID = " + fileItemId + "; user ID = " + userId + ". Path = " + nodePath);
+        LOGGER.debug(
+            "Project attachment saved successfully. File item ID = {}; user ID = {}. Path = {}",
+            fileItemId,
+            userId,
+            nodePath
+        );
     }
 
     public Optional<FileContent> getContent(long itemId, long userId) {
@@ -43,8 +53,6 @@ public abstract class AbstractStorageHelper {
         }
 
     }
-
-    protected abstract FileData getData(long item, long userId);
 
     public static class FileContent {
         public final String name;

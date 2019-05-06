@@ -1,6 +1,5 @@
 package com.infoclinika.mssharing.platform.model.impl;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.infoclinika.mssharing.platform.entity.*;
 import com.infoclinika.mssharing.platform.entity.restorable.ExperimentTemplate;
@@ -11,8 +10,6 @@ import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.*;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +22,17 @@ import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Predicates.or;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Iterables.all;
+import static com.infoclinika.mssharing.platform.entity.Sharing.Type.PRIVATE;
 import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditions.checkPresence;
+import static com.infoclinika.mssharing.platform.model.impl.ValidatorPredicates.isProjectLabHead;
 
 /**
  * @author : Alexander Serebriyan, Herman Zamula, Andrii Loboda
  */
 @Component
 public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE extends FileMetaDataTemplate,
-        PROJECT extends ProjectTemplate, INSTRUMENT extends InstrumentTemplate, LAB extends LabTemplate>
-        implements RuleValidator {
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultRuleValidator.class);
+    PROJECT extends ProjectTemplate, INSTRUMENT extends InstrumentTemplate, LAB extends LabTemplate>
+    implements RuleValidator {
     @Inject
     protected ValidatorPredicates validatorPredicates;
     @Inject
@@ -60,9 +58,8 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     @Inject
     private SpeciesRepositoryTemplate<Species> speciesRepository;
     @Inject
-    private InstrumentCreationRequestRepositoryTemplate<InstrumentCreationRequestTemplate> instrumentCreationRequestRepository;
-    @Inject
-    private VendorRepositoryTemplate vendorRepository;
+    private InstrumentCreationRequestRepositoryTemplate<InstrumentCreationRequestTemplate>
+        instrumentCreationRequestRepository;
 
 
     //========== labs
@@ -103,35 +100,25 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
 
     @Override
     public boolean canBeCreatedOrUpdated(UserManagementTemplate.PersonInfo user, Set<Long> labIds) {
-        if (labIds.isEmpty()) {
-            return true;
-        }
-        final List<LabTemplate> labs = instrumentRepository.labsToWithUserPending(user.email);
-        switch (labs.size()) {
-            case 0:
-                return true;
-            case 1:
-                final Long id = labs.iterator().next().getId();
-                for (Long labId : labIds) {
-                    if (id.equals(labId)) {
-                        return true;
-                    }
-                }
-                return false;
-            default: {
-                LOG.warn("Actually we can not create user with this email ( {} )at all", user.email);
-                return false;
-            }
-        }
+        return true;
     }
 
     @Override
     public boolean userHasPermissionsToRemoveUserFromLab(long labHead, long labId, long userId) {
-        if (labHead == userId) return false;
+        if (labHead == userId) {
+            return false;
+        }
         final LabTemplate lab = checkPresence(labRepository.findOne(labId));
-        if (!lab.getHead().getId().equals(labHead)) return false;
+        if (!lab.getHead().getId().equals(labHead)) {
+            return false;
+        }
         final UserTemplate user = checkPresence(userRepository.findOne(userId));
         return user.getLabs().contains(lab);
+    }
+
+    @Override
+    public boolean canUserPerformActions(long actor) {
+        return userNotDeleted(actor);
     }
 
 
@@ -141,7 +128,7 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
      * User can create experiments on his project or in projects shared with him
      */
     @Override
-    public boolean isUserCanCreateExperimentsInProject(long userId, long projectId) {
+    public boolean canUserCreateExperimentsInProject(long userId, long projectId) {
         return projectRepository.isProjectAllowedForWriting(userId, projectId);
     }
 
@@ -169,8 +156,9 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     @Override
     public boolean canRemoveProject(long actor, long projectId) {
         final ProjectTemplate project = checkPresence(projectRepository.findOne(projectId));
-        return (project.getCreator().getId().equals(actor) || ValidatorPredicates.isProjectLabHead(factories.userFromId.apply(actor)).apply(project))
-                && project.getSharing().getType() == Sharing.Type.PRIVATE;
+        return (project.getCreator().getId().equals(actor) ||
+            isProjectLabHead(factories.userFromId.apply(actor)).apply(project))
+            && project.getSharing().getType() == PRIVATE;
     }
 
 
@@ -201,8 +189,8 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     public boolean isUserCanReadInstrument(long actor, long instrument) {
 
         return validatorPredicates
-                .isUserCanReadInstrument(actor)
-                .apply(instrumentRepository.findOne(instrument));
+            .isUserCanReadInstrument(actor)
+            .apply(instrumentRepository.findOne(instrument));
     }
 
     @Override
@@ -239,7 +227,7 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     public boolean canInstrumentBeCreated(long labId, final String instrumentName, String serialNumber) {
         final LabTemplate lab = labRepository.findOne(labId);
         return lab != null && instrumentRepository.findBySerialNumber(serialNumber) == null &&
-                instrumentRepository.findOneByName(instrumentName, labId) == null;
+            instrumentRepository.findOneByName(instrumentName, labId) == null;
     }
 
     @Override
@@ -247,12 +235,12 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
         final InstrumentTemplate instrument = instrumentRepository.findOne(instrumentId);
 
         return instrument.getSerialNumber().equalsIgnoreCase(serialNumber) &&
+            instrument.getName().equalsIgnoreCase(newName)
+            ||
+            instrumentRepository.findBySerialNumber(serialNumber) == null &&
                 instrument.getName().equalsIgnoreCase(newName)
-                ||
-                instrumentRepository.findBySerialNumber(serialNumber) == null &&
-                        instrument.getName().equalsIgnoreCase(newName)
-                ||
-                instrumentRepository.findOneByName(newName, instrument.getLab().getId()) == null;
+            ||
+            instrumentRepository.findOneByName(newName, instrument.getLab().getId()) == null;
 
     }
 
@@ -260,7 +248,7 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     public boolean canUserEditInstrument(long actor, long instrument) {
         final InstrumentTemplate instrument1 = checkPresence(instrumentRepository.findOne(instrument));
         //noinspection unchecked
-        return instrument1.isOperator(factories.userFromId.apply(actor));
+        return userRepository.findOne(actor).getLabs().contains(instrument1.getLab());
     }
 
     @Override
@@ -276,7 +264,6 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     @Override
     public boolean canShareInstrument(long actor, long operator) {
         return inSameLab(actor, operator);
-
     }
 
     @Override
@@ -291,7 +278,8 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
 
     @Override
     public boolean canInstrumentModelBeUpdatedWithName(long modelId, String newModelName, String vendorName) {
-        final InstrumentModel instrumentModel = instrumentModelRepository.findByNameAndVendorName(newModelName, vendorName);
+        final InstrumentModel instrumentModel =
+            instrumentModelRepository.findByNameAndVendorName(newModelName, vendorName);
         return instrumentModel == null || instrumentModel.getId().equals(modelId);
     }
 
@@ -322,25 +310,20 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     }
 
     @Override
-    public boolean canEditOperatorsList(long user, long instrument) {
-        //noinspection unchecked
-        return checkPresence(instrumentRepository.findOne(instrument), "Instrument doesn't exist")
-                .isOperator(factories.userFromId.apply(user));
-    }
-
-    @Override
     public boolean isUserCanReadExperiment(long actor, long experiment) {
         return validatorPredicates.isUserCanReadExperiment(actor).apply(experimentRepository.findOne(experiment));
     }
 
     protected boolean isExperimentLabHead(ExperimentTemplate input, long actor) {
-        return input.getLab() == null ? input.getCreator().getId().equals(actor) : input.getLab().getHead().getId().equals(actor);
+        return input.getLab() == null ? input.getCreator().getId().equals(actor) :
+            input.getLab().getHead().getId().equals(actor);
     }
 
     @Override
     public boolean canUserCreateExperimentWithTitle(long actor, String experimentName) {
         final UserTemplate user = checkPresence(userRepository.findOne(actor));
-        return experimentName.trim().length() != 0 && experimentRepository.findOneByName(user.getId(), experimentName) == null;
+        return experimentName.trim().length() != 0 &&
+            experimentRepository.findOneByName(user.getId(), experimentName) == null;
     }
 
     @Override
@@ -353,7 +336,8 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     @Override
     public boolean canSaveExperimentWithModel(long instrumentModel, Set<Long> files) {
         final List<FILE> dataList = fileMetaDataRepository.findAllByIds(files);
-        final InstrumentModel model = checkNotNull(instrumentModelRepository.findOne(instrumentModel), "Instrument model not found.");
+        final InstrumentModel model =
+            checkNotNull(instrumentModelRepository.findOne(instrumentModel), "Instrument model not found.");
         return all(dataList, validatorPredicates.hasSameInstrumentModel(model));
     }
 
@@ -395,13 +379,6 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     }
 
     @Override
-    public boolean canReadInstrumentInboxDetails(long actor, long instrument) {
-        final InstrumentTemplate template = instrumentRepository.findOne(instrument);
-        //noinspection unchecked
-        return template.isOperator(userRepository.findOne(actor));
-    }
-
-    @Override
     public boolean canRemoveGroup(long actor, long groupId) {
         final GroupTemplate group = groupRepository.findOne(groupId);
         final List<PROJECT> projectsSharedForGroup = projectRepository.findBySharedGroup(groupId);
@@ -426,7 +403,8 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     @Override
     @Transactional
     public boolean hasReadAccessOnProject(long user, long projectId) {
-        return validatorPredicates.isUserCanReadProject(factories.userFromId.apply(user)).apply(projectRepository.findOne(projectId));
+        return validatorPredicates.isUserCanReadProject(factories.userFromId.apply(user))
+            .apply(projectRepository.findOne(projectId));
     }
 
     @Override
@@ -436,8 +414,8 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
         final UserTemplate userTemplate = factories.userFromId.apply(actor);
 
         return or(
-                ValidatorPredicates.isOwnerInProject(userTemplate),
-                ValidatorPredicates.isProjectLabHead(userTemplate)
+            ValidatorPredicates.isOwnerInProject(userTemplate),
+            isProjectLabHead(userTemplate)
         ).apply(project);
     }
 
@@ -452,20 +430,16 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
         }
         final InstrumentTemplate instrumentOne = checkPresence(instrumentRepository.findOne(instrument));
         final InstrumentModel model = instrumentOne.getModel();
-        return instrumentModelRepository.findWithFolderArchiveUploadSupport().contains(model) || model.isAdditionalFiles();
+        return instrumentModelRepository.findWithFolderArchiveUploadSupport().contains(model) ||
+            model.isAdditionalFiles();
     }
 
     @Override
-    public boolean canRemoveFile(final long actor, long file) {
-        final FileMetaDataTemplate entity = checkPresence(fileMetaDataRepository.findOne(file));
+    public boolean canRemoveFile(final long actor, long fileId) {
+        final FileMetaDataTemplate entity = checkPresence(fileMetaDataRepository.findOne(fileId));
         //noinspection unchecked
-        boolean isOperator = FluentIterable.from(entity.getInstrument().getOperators()).anyMatch(new Predicate<UserTemplate>() {
-            @Override
-            public boolean apply(UserTemplate user) {
-                return user.getId().equals(actor);
-            }
-        });
-        final boolean usedInExperiments = experimentRepository.countByFile(file) > 0;
+        boolean isOperator = userRepository.findOne(actor).getLabs().contains(entity.getInstrument().getLab());
+        final boolean usedInExperiments = experimentRepository.countByFile(fileId) > 0;
         return !usedInExperiments && !(!entity.getOwner().getId().equals(actor) && !isOperator);
     }
 
@@ -478,9 +452,16 @@ public class DefaultRuleValidator<EXPERIMENT extends ExperimentTemplate, FILE ex
     @Override
     public boolean canReadInstrumentRequestDetails(long actor, long request) {
 
-        final InstrumentCreationRequestTemplate creationRequest = checkNotNull(instrumentCreationRequestRepository.findOne(request),
-                "Cannot find instrument creation request by id: " + request);
+        final InstrumentCreationRequestTemplate creationRequest = checkNotNull(
+            instrumentCreationRequestRepository.findOne(request),
+            "Cannot find instrument creation request by id: " + request
+        );
 
         return creationRequest.getLab().getHead().getId().equals(actor);
+    }
+
+    private boolean userNotDeleted(long actor) {
+        final UserTemplate user = checkPresence(userRepository.findOne(actor));
+        return !user.isDeleted();
     }
 }

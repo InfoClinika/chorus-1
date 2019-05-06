@@ -35,12 +35,18 @@ public class DictionaryDTO implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         DictionaryDTO that = (DictionaryDTO) o;
 
-        if (id != that.id) return false;
+        if (id != that.id) {
+            return false;
+        }
 
         return true;
     }
@@ -53,9 +59,9 @@ public class DictionaryDTO implements Serializable {
     @Override
     public String toString() {
         return "DictionaryDTO{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                '}';
+            "id=" + id +
+            ", name='" + name + '\'' +
+            '}';
     }
 }
 

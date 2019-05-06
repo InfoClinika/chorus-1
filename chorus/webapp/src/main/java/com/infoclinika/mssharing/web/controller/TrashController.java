@@ -7,16 +7,22 @@ import com.infoclinika.mssharing.model.write.LabHeadManagement;
 import com.infoclinika.mssharing.model.write.StudyManagement;
 import com.infoclinika.mssharing.web.controller.request.ReadNotRestorableItemsRequest;
 import com.infoclinika.mssharing.web.controller.response.ReadNotRestorableItemsResponse;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.inject.Inject;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.List;
 
+import static com.infoclinika.mssharing.model.read.TrashReader.TrashLine;
+import static com.infoclinika.mssharing.model.read.TrashReader.TrashLineShort;
 import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId;
 
 /**
@@ -25,7 +31,7 @@ import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId
 @Controller
 @RequestMapping("/trash")
 public class TrashController extends PagedItemsController {
-    private static final Logger LOG = Logger.getLogger(TrashController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrashController.class);
 
     @Inject
     private TrashReader trashReader;
@@ -38,8 +44,9 @@ public class TrashController extends PagedItemsController {
 
     @ResponseBody
     @RequestMapping(value = "/list")
-    public Collection<TrashReader.TrashLine> list(Principal principal) {
+    public Collection<TrashLine> list(Principal principal) {
         final long actor = getUserId(principal);
+
         return trashReader.readByOwnerOrLabHead(actor);
     }
 
@@ -50,7 +57,7 @@ public class TrashController extends PagedItemsController {
         for (Long itemId : itemIds) {
             instrumentManagement.restoreFile(actor, itemId);
         }
-        LOG.debug("File was restored " + actor);
+        LOGGER.debug("File was restored {}", actor);
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -60,7 +67,7 @@ public class TrashController extends PagedItemsController {
         for (Long itemId : itemIds) {
             studyManagement.restoreExperiment(actor, itemId);
         }
-        LOG.debug("Experiment was restored " + actor);
+        LOGGER.debug("Experiment was restored {}", actor);
     }
 
     @ResponseStatus(HttpStatus.OK)
@@ -70,17 +77,23 @@ public class TrashController extends PagedItemsController {
         for (Long itemId : itemIds) {
             studyManagement.restoreProject(actor, itemId);
         }
-        LOG.debug("Project was restored " + actor);
+        LOGGER.debug("Project was restored {}", actor);
     }
 
     @ResponseBody
     @RequestMapping(value = "/readNotRestorableItems")
-    public ReadNotRestorableItemsResponse readNotRestorableItems(Principal principal, ReadNotRestorableItemsRequest request) {
+    public ReadNotRestorableItemsResponse readNotRestorableItems(
+        Principal principal,
+        ReadNotRestorableItemsRequest request
+    ) {
         final long actor = getUserId(principal);
-        ImmutableSet<TrashReader.TrashLineShort> projects = trashReader.readNotRestorableProjects(actor, request.getProjectIds());
-        ImmutableSet<TrashReader.TrashLineShort> experiments = trashReader.readNotRestorableExperiments(actor, request.getExperimentIds());
-        ImmutableSet<TrashReader.TrashLineShort> files = trashReader.readNotRestorableFiles(actor, request.getFileIds());
+        ImmutableSet<TrashLineShort> projects = trashReader.readNotRestorableProjects(actor, request.getProjectIds());
+        ImmutableSet<TrashLineShort> experiments = trashReader.readNotRestorableExperiments(
+            actor,
+            request.getExperimentIds()
+        );
+        ImmutableSet<TrashLineShort> files = trashReader.readNotRestorableFiles(actor, request.getFileIds());
+
         return new ReadNotRestorableItemsResponse(projects, experiments, files);
     }
-
 }

@@ -21,8 +21,12 @@ public class ExperimentPreparedSampleItem {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ExperimentPreparedSampleItem that = (ExperimentPreparedSampleItem) o;
         return Objects.equal(name, that.name);
     }

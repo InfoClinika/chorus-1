@@ -1,46 +1,69 @@
-angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", "js-upload", "security-front", "security-back", "front-end", "error-catcher", "dashboard-common-directives"])
-    .controller("projects", function ($scope, $rootScope, $location, $routeParams, Projects, $route, removeProjectConfirmation,
-                                      contentRequestParameters, projectsExpandMenu, PaginationPropertiesSettingService, ProjectColumns, changeableColumnsHelper) {
+"use strict";
 
-        if ($scope.pathError) return;
-        CommonLogger.setTags(["PROJECTS", "PROJECTS-CONTROLLER"]);
+angular
+    .module(
+        "projects-front",
+        ["projects", "users", "groups", "breadcrumbs", "js-upload", "security-front", "security-back", "front-end",
+            "error-catcher", "dashboard-common-directives", "user-details-service"]
+    )
+    .controller("projects", function ($scope,
+                                      $rootScope,
+                                      $location,
+                                      $routeParams,
+                                      Projects,
+                                      $route,
+                                      removeProjectConfirmation,
+                                      contentRequestParameters,
+                                      projectsExpandMenu,
+                                      PaginationPropertiesSettingService,
+                                      ProjectColumns,
+                                      changeableColumnsHelper,
+                                      UserDetailsProvider) {
 
-        $scope.page.title = "Projects";
-        $scope.page.filterScope = $scope;
-        $scope.page.showPageableFilter = true;
-        $scope.total = 0;
-        $scope.page.changeableProjectsColumns = true;
-        var isTableEmpty = false;
+            if ($scope.pathError) {
+                return;
+            }
+            CommonLogger.setTags(["PROJECTS", "PROJECTS-CONTROLLER"]);
 
-        var pageRequest = contentRequestParameters.getParameters("projects");
-        pageRequest.labId = 0;
-        if($routeParams.labId){
-            pageRequest.labId = $routeParams.labId;
+            $scope.page.title = "Projects";
+            $scope.page.filterScope = $scope;
+            $scope.page.showPageableFilter = true;
+            $scope.total = 0;
+            $scope.page.changeableProjectsColumns = true;
+            $scope.getLoggedUserName = UserDetailsProvider.getLoggedUserName;
+
+            var isTableEmpty = false;
+
+            var pageRequest = contentRequestParameters.getParameters("projects");
+            pageRequest.labId = 0;
+            if ($routeParams.labId) {
+                pageRequest.labId = $routeParams.labId;
+            }
+
+            changeableColumnsHelper($scope, ProjectColumns);
+
+            Projects.get(pageRequest, function (response) {
+                $scope.projects = response.items;
+                PaginationPropertiesSettingService.setPaginationProperties($scope, response);
+                isTableEmpty = $scope.projects.length == 0;
+            });
+
+            $scope.filter = $routeParams.filter;
+            $scope.page.subtitle = $scope.$eval("filter | filterToString");
+
+            projectsExpandMenu($scope);
+
+            $scope.isTableEmpty = function () {
+                return isTableEmpty;
+            };
+
+            $scope.getEmptyTableMessage = function () {
+                return "There are no projects";
+            };
+
+            $scope.displayConfirmation = removeProjectConfirmation($scope);
         }
-
-        changeableColumnsHelper($scope, ProjectColumns);
-
-        Projects.get(pageRequest, function (response) {
-            $scope.projects = response.items;
-            PaginationPropertiesSettingService.setPaginationProperties($scope, response);
-            isTableEmpty = $scope.projects.length == 0;
-        });
-
-        $scope.filter = $routeParams.filter;
-        $scope.page.subtitle = $scope.$eval("filter | filterToString");
-
-        projectsExpandMenu($scope);
-
-        $scope.isTableEmpty = function () {
-            return isTableEmpty;
-        };
-
-        $scope.getEmptyTableMessage = function () {
-            return "There are no projects";
-        };
-
-        $scope.displayConfirmation = removeProjectConfirmation($scope);
-    })
+    )
     .run(function (registerBreadcrumbHandler) {
         registerBreadcrumbHandler(function (path) {
             var match = path.match(/\/projects\/(all|my|shared|public)\/([\d]+)\/experiments$/);
@@ -48,160 +71,196 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
                 return null;
             }
             var filter = match[1];
-            return {label: filter[0].toUpperCase() + filter.substring(1) + " Projects", url: "#" + path.replace(/\/([\d]+)\/experiments/, "")};
+            return {
+                label: filter[0].toUpperCase() + filter.substring(1) + " Projects",
+                url: "#" + path.replace(/\/([\d]+)\/experiments/, "")
+            };
         });
     })
-    .controller("project-details",function ($rootScope, $scope, $location, $routeParams, ProjectDetails, Projects, Users, Groups,
-                                            ProjectAttachments, startNewUpload, Security, Laboratories, ProjectShortDetails, savingProject) {
-        if ($scope.pathError) return;
-        CommonLogger.setTags(["PROJECTS", "PROJECT-DETAILS-CONTROLLER"]);
-        $scope.showDetailsDialog = true;
-        $scope.groups = Groups.query({includeAllUsers: true});
-        $scope.page.title = "Project Details";
-        $scope.shared = {};
-        $scope.shared.sharedGroups = [];
-        $scope.shared.sharedUsers = [];
-        $scope.shared.invitedUsers = [];
-        $scope.excludeEmails = [];
-        $scope.shared.withEmailNotification = false;
-        $scope.labs = [];
-        $scope.createNewProjectMode = false;
-        $scope.details = {};
-        $scope.details.lab = undefined;
-        $scope.shared.inviteHandler = function (item, callback) {
-            Security.invite({email: item.email}, function (user) {
-                callback(user);
-            });
-        };
-
-        var attachmentsInitialized = false;
-
-        $scope.users = Users.query();
-        CommonLogger.log($scope.excludeEmails);
-        ProjectDetails.get({id: $routeParams.project}, function (response) {
-            if (response.errorMessage) {
-                $scope.returnUrl = $scope.defaultUrl;
-                hideModal();
+    .controller("project-details", function ($rootScope,
+                                             $scope,
+                                             $location,
+                                             $routeParams,
+                                             ProjectDetails,
+                                             Projects,
+                                             Users,
+                                             Groups,
+                                             ProjectAttachments,
+                                             startNewUpload,
+                                             Security,
+                                             Laboratories,
+                                             ProjectShortDetails,
+                                             savingProject,
+                                             UserDetailsProvider) {
+            if ($scope.pathError) {
                 return;
             }
-            var project = response.details;
-            $scope.details = project;
-            //since ngSwitch creates a new scope and requires object to propagate field changes
-            $scope.details.descriptionObj = {value: ""};
-            $scope.details.descriptionObj.value = project.description;
-            $scope.returnUrl = $rootScope.returnUrl;
-            $scope.shared.sharedGroups = $scope.details.sharedGroups;
-            $scope.shared.sharedUsers = $scope.details.sharedPersons;
-            $scope.excludeEmails.push($scope.details.ownerEmail);
-            CommonLogger.log($scope.excludeEmails);
-
-            $scope.$watch("loggedInUser", function () {
-                $scope.editMode = ($scope.getLoggedUserName() == $scope.details.ownerEmail || $scope.getUserId() == project.labHead);
-                if (!attachmentsInitialized) {
-                    AttachmentsHelper.commonSetup($scope, $scope.details.projectId, "#project-details-dialog", ProjectAttachments,
-                        startNewUpload, "../attachments/project/download/", $scope.editMode);
-                    attachmentsInitialized = true;
-                }
-
-            });
-
-            Security.labs(function (labs) {
-                $scope.labs = labs;
-                /*$.grep(labs, function (lab) {
-                 return $.inArray(lab.id, labs) != -1;
-                 });*/
-            });
-
-
-        });
-
-
-        $scope.projectsShortDetails = ProjectShortDetails.query({filter: "my"});
-        $scope.isProjectNameDuplicated = function () {
-            var projects = $.grep($scope.projectsShortDetails, function (projectShortDetails) {
-                return (projectShortDetails.name == $scope.details.name) && $scope.details.projectId != projectShortDetails.id;
-            });
-            return projects.length != 0;
-        };
-        $scope.getLabName = function (labId) {
-            if (typeof labId == "undefined") return;
-            if (labId == null) {
-                return "No Laboratory";
-            }
-            var labs = $.grep($scope.labs, function (lab) {
-                return (lab.id == labId);
-            });
-            if (labs.length == 0) {
-                return;
-            }
-            return labs[0].name;
-        };
-
-        var savingProjectFactory = savingProject($scope);
-        $scope.save = savingProjectFactory.save;
-        $scope.saveProjectSharedWithUnregisteredUsers = savingProjectFactory.saveWithUnregisteredUsers;
-        $scope.saveWithUnregisteredUsersDialogMessages = savingProjectFactory.saveWithUnregisteredUsersDialogMessages;
-
-        $scope.saveProject = function () {
-            var project = {};
-            project.name = $scope.details.name;
-            project.projectId = $scope.details.projectId;
-            project.areaOfResearch = $scope.details.areaOfResearch;
-            project.description = $scope.details.description;
-            project.lab = $scope.details.lab;
-            project.areaOfResearch = $scope.details.areaOfResearch;
-            project.withEmailNotification = $scope.shared.withEmailNotification;
-            project.description = $scope.details.descriptionObj.value;
-            project.blogEnabled = $scope.details.blogEnabled;
-
-            setSharingPolicy(project, $scope.shared.sharedUsers, $scope.shared.sharedGroups);
-
-            Projects.update(project, function (data) {
-                CommonLogger.log("Project Updated. Response: " + JSON.stringify(data));
-                ProjectAttachmentsHelper.completeAttachment($scope, data.projectId, ProjectAttachments, function () {
-                    setTimeout(function () {
-                        $(".modal").modal("hide");
-                    }, 0);
+            CommonLogger.setTags(["PROJECTS", "PROJECT-DETAILS-CONTROLLER"]);
+            $scope.showDetailsDialog = true;
+            $scope.groups = Groups.query({includeAllUsers: true});
+            $scope.page.title = "Project Details";
+            $scope.shared = {};
+            $scope.shared.sharedGroups = [];
+            $scope.shared.sharedUsers = [];
+            $scope.shared.invitedUsers = [];
+            $scope.excludeEmails = [];
+            $scope.shared.withEmailNotification = false;
+            $scope.labs = [];
+            $scope.createNewProjectMode = false;
+            $scope.details = {};
+            $scope.details.lab = undefined;
+            $scope.shared.inviteHandler = function (item, callback) {
+                Security.invite({email: item.email}, function (user) {
+                    callback(user);
                 });
+            };
+
+            var attachmentsInitialized = false;
+
+            $scope.users = Users.query();
+            CommonLogger.log($scope.excludeEmails);
+            ProjectDetails.get({id: $routeParams.project}, function (response) {
+                if (response.errorMessage) {
+                    $scope.returnUrl = $scope.defaultUrl;
+                    hideModal();
+                    return;
+                }
+                var project = response.details;
+                $scope.details = project;
+                //since ngSwitch creates a new scope and requires object to propagate field changes
+                $scope.details.descriptionObj = {value: ""};
+                $scope.details.descriptionObj.value = project.description;
+                $scope.returnUrl = $rootScope.returnUrl;
+                $scope.shared.sharedGroups = $scope.details.sharedGroups;
+                $scope.shared.sharedUsers = $scope.details.sharedPersons;
+                $scope.excludeEmails.push($scope.details.ownerEmail);
+                CommonLogger.log($scope.excludeEmails);
+
+                $scope.$watch("loggedInUser", function () {
+                    $scope.editMode = UserDetailsProvider.getLoggedUserName() == $scope.details.ownerEmail
+                        || UserDetailsProvider.getUserId() == project.labHead;
+                    if (!attachmentsInitialized) {
+                        AttachmentsHelper.commonSetup(
+                            $scope,
+                            $scope.details.projectId,
+                            "#project-details-dialog",
+                            ProjectAttachments,
+                            startNewUpload,
+                            "../attachments/project/download/",
+                            $scope.editMode
+                        );
+                        attachmentsInitialized = true;
+                    }
+
+                });
+
+                Security.labs(function (labs) {
+                    $scope.labs = labs;
+                    /*$.grep(labs, function (lab) {
+                     return $.inArray(lab.id, labs) != -1;
+                     });*/
+                });
+
+
             });
-        };
 
-        $scope.$watch(function () {
-            if ($scope.shared.sharedUsers.length + $scope.shared.sharedGroups.length == 0) {
-                return "PRIVATE";
-            }
-            if ($.grep($scope.shared.sharedGroups,function (group) {
-                return group.name.toLowerCase() == "all";
-            }).length > 0) {
-                return "PUBLIC"
-            }
-            return "SHARED";
-        }, function (level) {
-            $scope.shared.accessLevel = level;
-        });
 
-        $scope.getCountOfMembers = function () {
-            return getCountOfMembers($scope.shared.sharedUsers.length + $scope.shared.sharedGroups.length);
-        };
+            $scope.projectsShortDetails = ProjectShortDetails.query({filter: "my"});
+            $scope.isProjectNameDuplicated = function () {
+                var projects = $.grep($scope.projectsShortDetails, function (projectShortDetails) {
+                    return projectShortDetails.name == $scope.details.name &&
+                        $scope.details.projectId != projectShortDetails.id;
+                });
+                return projects.length != 0;
+            };
+            $scope.getLabName = function (labId) {
+                if (typeof labId == "undefined") {
+                    return;
+                }
+                if (labId == null) {
+                    return "No Laboratory";
+                }
+                var labs = $.grep($scope.labs, function (lab) {
+                    return lab.id == labId;
+                });
+                if (labs.length == 0) {
+                    return;
+                }
+                return labs[0].name;
+            };
 
-        $scope.sharedCount = function () {
-            return $scope.shared.sharedUsers.length + $scope.shared.sharedGroups.length;
-        };
+            var savingProjectFactory = savingProject($scope);
+            $scope.save = savingProjectFactory.save;
+            $scope.saveProjectSharedWithUnregisteredUsers = savingProjectFactory.saveWithUnregisteredUsers;
+            $scope.saveWithUnregisteredUsersDialogMessages =
+                savingProjectFactory.saveWithUnregisteredUsersDialogMessages;
 
-        $scope.isTableWithMembersEmpty = function () {
-            return $scope.sharedUsersAndGroups.length == 0;
-        };
+            $scope.saveProject = function () {
+                var project = {};
+                project.name = $scope.details.name;
+                project.projectId = $scope.details.projectId;
+                project.areaOfResearch = $scope.details.areaOfResearch;
+                project.description = $scope.details.description;
+                project.lab = $scope.details.lab;
+                project.areaOfResearch = $scope.details.areaOfResearch;
+                project.withEmailNotification = $scope.shared.withEmailNotification;
+                project.description = $scope.details.descriptionObj.value;
+                project.blogEnabled = $scope.details.blogEnabled;
 
-        $scope.getEmptyTableWithMembersMessage = function () {
-            return "There are no members";
-        };
+                setSharingPolicy(project, $scope.shared.sharedUsers, $scope.shared.sharedGroups);
 
-    }).
-    controller("projectColumnsEditor", function ($scope, ProjectColumns, columnsEditor) {
+                Projects.update(project, function (data) {
+                    CommonLogger.log("Project Updated. Response: " + JSON.stringify(data));
+                    ProjectAttachmentsHelper.completeAttachment(
+                        $scope,
+                        data.projectId,
+                        ProjectAttachments,
+                        function () {
+                            setTimeout(function () {
+                                $(".modal").modal("hide");
+                            }, 0);
+                        }
+                    );
+                });
+            };
+
+            $scope.$watch(function () {
+                if ($scope.shared.sharedUsers.length + $scope.shared.sharedGroups.length == 0) {
+                    return "PRIVATE";
+                }
+                if ($.grep($scope.shared.sharedGroups, function (group) {
+                    return group.name.toLowerCase() == "all";
+                }).length > 0) {
+                    return "PUBLIC";
+                }
+                return "SHARED";
+            }, function (level) {
+                $scope.shared.accessLevel = level;
+            });
+
+            $scope.getCountOfMembers = function () {
+                return getCountOfMembers($scope.shared.sharedUsers.length + $scope.shared.sharedGroups.length);
+            };
+
+            $scope.sharedCount = function () {
+                return $scope.shared.sharedUsers.length + $scope.shared.sharedGroups.length;
+            };
+
+            $scope.isTableWithMembersEmpty = function () {
+                return $scope.sharedUsersAndGroups.length == 0;
+            };
+
+            $scope.getEmptyTableWithMembersMessage = function () {
+                return "There are no members";
+            };
+
+        }
+    )
+    .controller("projectColumnsEditor", function ($scope, ProjectColumns, columnsEditor) {
         columnsEditor($scope, ProjectColumns);
 
-    }).
-    controller("project-copy", function ($scope, $routeParams, ProjectCopy, ProjectDetails, Users, Security) {
+    })
+    .controller("project-copy", function ($scope, $routeParams, ProjectCopy, ProjectDetails, Users, Security) {
         CommonLogger.setTags(["PROJECTS", "PROJECT-COPY-CONTROLLER"]);
         $scope.users = Users.query();
         $scope.newOwners = [];
@@ -226,7 +285,9 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
             getCountOfMembers($scope.newOwners);
         };
         $scope.createCopy = function (isInvalid) {
-            if (isInvalid) return;
+            if (isInvalid) {
+                return;
+            }
             if ($scope.invitedOwnerUsers.length > 0) {
                 $scope.dialogNotToReturn = true;
                 $(".modal").modal("hide");
@@ -241,14 +302,14 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
         };
         $scope.createCopyHandler = function () {
             $.each($scope.newOwners, function (index, user) {
-              /*  ProjectCopy.copy({newOwner: user.id, id: $routeParams.project,
-                    emailNotification: $scope.emailNotifications}, function (res) {
-                    CommonLogger.log(res);
-                })*/
+                /*  ProjectCopy.copy({newOwner: user.id, id: $routeParams.project,
+                      emailNotification: $scope.emailNotifications}, function (res) {
+                      CommonLogger.log(res);
+                  })*/
 
-                ProjectCopy.sendCopyConfirmation({newOwner: user.id, project: $routeParams.project}, function(result) {
+                ProjectCopy.sendCopyConfirmation({newOwner: user.id, project: $routeParams.project}, function (result) {
                     CommonLogger.log(result);
-                })
+                });
             });
             $(".modal").modal("hide");
         };
@@ -260,6 +321,7 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
 
             function inviteUser(item) {
                 $scope.inviteHandler(item, createCopyIfAllInvited);
+
                 function createCopyIfAllInvited(invited) {
                     invited.name = invited.firstName + " " + invited.lastName;
                     $scope.newOwners.push(invited);
@@ -278,17 +340,20 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
         };
     })
     .directive("projectCopyingSelector", userOrGroupSelection({
-        "isEmailNotificationsAvailable": true,
-        "groupSelectionAvailable": false,
-        "emptyTableMessage": "No members",
-        "addActionText": "Specify people, for whom you want to create a copy.",
-        "addPlaceHolderText": "Enter person's email",
-        "showAllowWrite": false,
-        "getInvitedUsers" : true})
-    ).
-    controller("newProject", function ($scope, $location, Projects, Users, Groups, ProjectAttachments, startNewUpload,
-                                       Security, Laboratories, ProjectShortDetails, savingProject) {
-        if ($scope.pathError) return;
+            "isEmailNotificationsAvailable": true,
+            "groupSelectionAvailable": false,
+            "emptyTableMessage": "No members",
+            "addActionText": "Specify people, for whom you want to create a copy.",
+            "addPlaceHolderText": "Enter person's email",
+            "showAllowWrite": false,
+            "getInvitedUsers": true
+        })
+    )
+    .controller("newProject", function ($scope, $location, Projects, Users, Groups, ProjectAttachments, startNewUpload,
+                                        Security, Laboratories, ProjectShortDetails, savingProject) {
+        if ($scope.pathError) {
+            return;
+        }
         $scope.project = {};
         $scope.groups = [];
         $scope.shared = {};
@@ -311,6 +376,7 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
         var savingProjectFactory = null;
 
         init();
+
         function init() {
             CommonLogger.setTags(["PROJECTS", "NEW-PROJECT-CONTROLLER"]);
             $scope.groups = Groups.query({includeAllUsers: true});
@@ -346,9 +412,11 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
         }
 
         $scope.isProjectNameDuplicated = function () {
-            if (!$scope.project.name) return false;
+            if (!$scope.project.name) {
+                return false;
+            }
             var projects = $.grep($scope.projectsShortDetails, function (projectShortDetails) {
-                return (projectShortDetails.name.trim().toUpperCase() === $scope.project.name.trim().toUpperCase());
+                return projectShortDetails.name.trim().toUpperCase() === $scope.project.name.trim().toUpperCase();
             });
             return projects.length != 0;
         };
@@ -367,10 +435,10 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
             if ($scope.shared.sharedUsers.length + $scope.shared.sharedGroups.length == 0) {
                 return "PRIVATE";
             }
-            if ($.grep($scope.shared.sharedGroups,function (group) {
+            if ($.grep($scope.shared.sharedGroups, function (group) {
                 return group.name.toLowerCase() == "all";
             }).length > 0) {
-                return "PUBLIC"
+                return "PUBLIC";
             }
             return "SHARED";
         }, function (level) {
@@ -402,9 +470,9 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
             });
         };
     })
-    .directive("selectWithAutoComplete", function ($timeout) {
+    .directive("selectWithAutoComplete", function () {
         return function (scope, iElement, iAttrs) {
-            scope.$watch(iAttrs, function (values) {
+            scope.$watch(iAttrs, function () {
                 iElement.autocomplete({
                     source: function (request, response) {
                         var mappedItems = $.map(scope.availableItems(), function (item) {
@@ -413,23 +481,28 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
                                 "value": scope.identify(item),
                                 "orig": item,
                                 "type": scope.isUser(item) ? "user" : "group"
-                            }
+                            };
                         });
 
                         var filteredValuesByTerm = $.ui.autocomplete.filter(mappedItems, request.term);
                         if (filteredValuesByTerm.length == 0
                             && !scope.onlyRegisteredUsers
                             && IsEmail(request.term)
-                            && $.grep(scope.selectedUsers, function(item){ return item.email == request.term}).length == 0
-                            && $.grep(scope.invitedUsers, function(item){ return item.email == request.term}).length == 0
+                            && $.grep(scope.selectedUsers, function (item) {
+                                return item.email == request.term;
+                            }).length == 0
+                            && $.grep(scope.invitedUsers, function (item) {
+                                return item.email == request.term;
+                            }).length == 0
                             && $.inArray(request.term, scope.excludeEmails) == -1) {
                             filteredValuesByTerm.push({
                                 "label": "Not registered yet " + "<" + request.term + ">",
                                 "value": request.term,
                                 "orig": {email: request.term},
                                 "type": "invited"
-                            })
+                            });
                         }
+
                         function IsEmail(email) {
                             var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
                             return regex.test(email);
@@ -450,20 +523,26 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
         };
     })
     .directive("projectDetails", detailsLink({"title": "Show Project Details", "dataTarget": "#projectDetails"}))
-    .directive("projectCopy", detailsLink({"title": "Pass a copy", "dataTarget": "#projectDetails",
-        "urlParam": "/copy", icon: "icon pass-copy"}))
-    .directive("projectDetailsButton", detailsDirective({"title": "Show Project Details", "dataTarget": "#projectDetails"}))
+    .directive("projectCopy", detailsLink({
+        "title": "Pass a copy", "dataTarget": "#projectDetails",
+        "urlParam": "/copy", icon: "icon pass-copy"
+    }))
+    .directive(
+        "projectDetailsButton",
+        detailsDirective({"title": "Show Project Details", "dataTarget": "#projectDetails"})
+    )
     .directive("projectName", linkedName({"sub": "experiments"}))
     .directive("sharingSelector", userOrGroupSelection({
-        "isEmailNotificationsAvailable": true,
-        "groupSelectionAvailable": true,
-        "emptyTableMessage": "There are no members",
-        "addActionText": "Invite people personally or by groups. Use \"All\" special group to make project public.",
-        "addPlaceHolderText": "Enter person's email, group name or \"All\" special group name",
-        "showAllowWrite": true,
-        "getInvitedUsers" : true})
+            "isEmailNotificationsAvailable": true,
+            "groupSelectionAvailable": true,
+            "emptyTableMessage": "There are no members",
+            "addActionText": "Invite people personally or by groups. Use \"All\" special group to make project public.",
+            "addPlaceHolderText": "Enter person's email, group name or \"All\" special group name",
+            "showAllowWrite": true,
+            "getInvitedUsers": true
+        })
     )
-    .directive("confirmActionForUnregistered", function ($location) {
+    .directive("confirmActionForUnregistered", function () {
         return {
             restrict: "E",
             templateUrl: "../pages/projects/confirm-action-for-unregistered.html",
@@ -472,7 +551,7 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
                 plainAction: "=",
                 dialogMessages: "="
             },
-            link: function ($scope, elem, attrs) {
+            link: function ($scope) {
                 $scope.projectDialogReturn = function () {
                     $scope.$parent.dialogNotToReturn = false;
                 };
@@ -481,7 +560,7 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
                     $(".modal").modal("hide"); //close project dialog and return
                 });
             }
-        }
+        };
     })
     .factory("removeProjectConfirmation", function ($route, Projects) {
         return function ($scope) {
@@ -489,18 +568,22 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
                 $scope.confirmation = new Confirmation("#remove-project-confirmation", project,
                     {
                         success: function () {
-                            Projects.delete({project: project.id, removePermanently: $scope.confirmation.removePermanently}, function () {
+                            Projects.delete({
+                                project: project.id,
+                                removePermanently: $scope.confirmation.removePermanently
+                            }, function () {
                                 $route.reload();
-                            })
+                            });
                         },
                         getName: function () {
                             return project.name;
                         }
-                    });
+                    }
+                );
                 $scope.confirmation.removePermanently = true;
                 $scope.confirmation.showPopup();
-            }
-        }
+            };
+        };
     })
     .factory("projectsExpandMenu", function (ProjectAttachments, ProjectDetails) {
         return initExpandMenu(function openInlineFashion(project, $scope) {
@@ -511,24 +594,32 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
                 project.attachments = $.map(attachments, function (attachment) {
                     var type = AttachmentsHelper.attachmentTypeFromName(attachment.name);
                     CommonLogger.log(type);
-                    var a = new AttachmentsHelper.Attachment(attachment.name, attachment.uploadDate, attachment.sizeInBytes, type, null, null);
+                    var a = new AttachmentsHelper.Attachment(
+                        attachment.name,
+                        attachment.uploadDate,
+                        attachment.sizeInBytes,
+                        type,
+                        null,
+                        null
+                    );
                     a.attachmentId = attachment.id;
                     return a;
                 });
             });
 
             $scope.downloadAttachment = function (attachmentId) {
-                $.fileDownload("../attachments/project/download/" + attachmentId, {
-                });
+                $.fileDownload("../attachments/project/download/" + attachmentId, {});
             };
-        })
+        });
     })
     .factory("savingProject", function () {
         return function ($scope) {
             return {
                 save: function (isInvalid) {
                     $scope.buttonPressed = true;
-                    if (isInvalid) return;
+                    if (isInvalid) {
+                        return;
+                    }
                     if ($scope.shared.invitedUsers.length > 0) {
                         $scope.dialogNotToReturn = true;
                         $(".modal").modal("hide");
@@ -549,6 +640,7 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
 
                     function inviteUser(item) {
                         $scope.shared.inviteHandler(item, saveProjectIfAllInvited);
+
                         function saveProjectIfAllInvited(invited) {
                             invited.name = invited.firstName + " " + invited.lastName;
                             invited.allowWrite = item.allowWrite;
@@ -566,8 +658,8 @@ angular.module("projects-front", ["projects", "users", "groups", "breadcrumbs", 
                     plainButtonText: "Remove from sharing list",
                     confirmButtonText: "Invite"
                 }
-            }
-        }
+            };
+        };
     });
 
 function setSharingPolicy(project, sharedUsers, sharedGroups) {
@@ -600,14 +692,14 @@ function getDefaultOptionValue(items, currentValue) {
     if (currentValue) {
         return currentValue;
     }
-    if(items.length > 0) {
-        return  items[0].id;
+    if (items.length > 0) {
+        return items[0].id;
     }
 }
 
 function getFirstOrWithIdEqualTo(items, currentValue) {
 
-    if(items.length == 0) {
+    if (items.length == 0) {
         return -1;
     }
     var hasItemWithIdEqualTo = items.find(function (item) {
@@ -618,7 +710,7 @@ function getFirstOrWithIdEqualTo(items, currentValue) {
         return currentValue;
     }
 
-    return  items[0].id;
+    return items[0].id;
 
 }
 

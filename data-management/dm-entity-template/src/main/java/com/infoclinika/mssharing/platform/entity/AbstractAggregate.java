@@ -17,5 +17,4 @@ public abstract class AbstractAggregate extends AbstractPersistable {
     public void setLastModification(Date lastModification) {
         this.lastModification = lastModification;
     }
-
 }

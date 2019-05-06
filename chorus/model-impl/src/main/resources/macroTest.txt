@@ -1,0 +1,92 @@
+//
+// parameters
+
+// Use "$" to use value from external parameter
+//
+//sigmaBlur=1.5 // stdev for gaussian blur
+//bgScale=50    // background scale in pixels. being used to eliminate background (should be >cell size)
+//sizeMin=20    // minumum size of cells
+//sizeMax=1e6   // maximum size of cells (infinity here)
+
+
+//imgInp = "d:\\Downloads\\microglia_24_24.jpeg";
+open(imgInp);
+fileDir     = split(getDirectory("image"),"\n");
+imgDir      = fileDir[0];
+
+
+t1    = getTitle()
+//orig = getImageID()
+
+//basename
+fbase=t1
+index = lastIndexOf(t1, ".")
+if (index!=-1) fbase = substring(t1, 0, index);
+
+
+
+t2=t1+"_copy1";
+run("Duplicate...", "title="+t2);
+
+t2r = t2+" (red)";
+t2g = t2+" (green)";
+t2b = t2+" (blue)";
+tquant = "quant";
+
+selectWindow(t2);
+run("Split Channels");
+selectWindow(t2r); close();
+selectWindow(t2g); close();
+
+//this image will be used for quantification of grayscale levels
+selectWindow(t2b);
+run("Duplicate...", "title="+tquant);
+
+// use blue channel for segmentation
+selectWindow(t2b);
+run("Gaussian Blur...", "sigma="+$sigmaBlur);
+
+run("Subtract Background...", "rolling="+$bgScale+" light");
+run("Auto Threshold", "method=IsoData");
+run("Invert");
+run("Fill Holes");
+run("Set Measurements...", "area mean min centroid center perimeter bounding shape display redirect=["+tquant+"] decimal=3");
+
+// analyze cells
+analyzeOptions =  "size="+$sizeMin+"-"+$sizeMax+" circularity=0.0-1.0 show=[Overlay Outlines] clear";
+run("Analyze Particles...", analyzeOptions);
+
+// export restults
+saveAs("Results", imgDir+fbase+"_cells.csv");
+
+//tidy up tquant
+selectWindow(tquant);
+close();
+
+// copy outlines ot the original image
+selectWindow(t2b);
+run("To ROI Manager");
+
+// close t2b
+close();
+selectWindow(t1);
+run("From ROI Manager");
+
+
+//export image
+selectWindow(t1);
+run("Input/Output...","jpeg=85 gif=-1 file=.csv copy_column copy_row save_column save_row");
+saveAs("Jpeg",imgDir+fbase+"_seg.jpg");
+run("Close");
+run("Quit");
+
+
+
+
+
+
+
+
+
+
+

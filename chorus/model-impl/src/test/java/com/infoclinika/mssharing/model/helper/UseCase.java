@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.helper;
 
@@ -12,9 +14,12 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.infoclinika.mssharing.model.internal.entity.User;
-import com.infoclinika.mssharing.platform.fileserver.model.StoredFile;
 import com.infoclinika.mssharing.model.read.DashboardReader;
-import com.infoclinika.mssharing.model.write.*;
+import com.infoclinika.mssharing.model.write.FileMetaDataInfo;
+import com.infoclinika.mssharing.model.write.InstrumentDetails;
+import com.infoclinika.mssharing.model.write.ProjectInfo;
+import com.infoclinika.mssharing.model.write.UserManagement;
+import com.infoclinika.mssharing.platform.fileserver.model.StoredFile;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.helper.InstrumentCreationHelperTemplate;
 import com.infoclinika.mssharing.platform.model.helper.InstrumentCreationHelperTemplate.PotentialOperator;
@@ -23,7 +28,6 @@ import com.infoclinika.mssharing.platform.model.write.LabManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
 
-import javax.swing.*;
 import java.io.InputStream;
 import java.util.*;
 
@@ -32,6 +36,8 @@ import static com.google.common.collect.ImmutableSet.of;
 import static com.google.common.collect.Iterables.find;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.infoclinika.mssharing.model.helper.Data.*;
+import static com.infoclinika.mssharing.platform.model.write.UserManagementTemplate.*;
+import static com.infoclinika.mssharing.platform.model.write.UserManagementTemplate.LabMembershipRequestActions.*;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -70,19 +76,21 @@ public class UseCase {
     private Optional<Long> kate = Optional.absent();
     private Optional<Long> paul = Optional.absent(); //paul is the head of lab 3 and lab 2
     private Optional<Long> john = Optional.absent(); //john is the user with no lab
-    private Optional<Long> jake = Optional.absent(); // jake is a user with expired email verification and password reset links
-
+    private Optional<Long> jake = Optional.absent();
+    // jake is a user with expired email verification and password reset links
 
     private Optional<Long> lab3Instrument = Optional.absent();
+    private static final List<Long> EMPTY_PERIPHERALS = ImmutableList.of();
 
+    private static final UserManagement.LabMembershipRequestActions APPROVE = LabMembershipRequestActions.APPROVE;
+    private static final UserManagement.LabMembershipRequestActions REFUSE = LabMembershipRequestActions.REFUSE;
 
-    private final List<Long> EMPTY_PERIPHERALS = ImmutableList.of();
-
-    private final UserManagement.LabMembershipRequestActions APPROVE = UserManagementTemplate.LabMembershipRequestActions.APPROVE;
-    private final UserManagement.LabMembershipRequestActions REFUSE = UserManagementTemplate.LabMembershipRequestActions.REFUSE;
-
-    public UseCase(WriteServices ws, long adminId, InstrumentCreationHelperTemplate instrumentCreationHelper,
-                   ExperimentCreationHelper experimentCreationHelper, DashboardReader dashboardReader, Repositories repositories) {
+    public UseCase(WriteServices ws,
+                   long adminId,
+                   InstrumentCreationHelperTemplate instrumentCreationHelper,
+                   ExperimentCreationHelper experimentCreationHelper,
+                   DashboardReader dashboardReader,
+                   Repositories repositories) {
         this.ws = ws;
         this.adminId = adminId;
         this.instrumentCreationHelper = instrumentCreationHelper;
@@ -93,8 +101,14 @@ public class UseCase {
 
 
     public long requestLab2creation() {
-        if (!lab2.isPresent())
-            labRequest2 = Optional.of(ws.labManagement.requestLabCreation(new LabManagementTemplate.LabInfoTemplate(Data.HARVARD_URL, Data.L_KATE_INFO, "lab2"), "me@c.com"));
+        if (!lab2.isPresent()) {
+            labRequest2 =
+                Optional.of(ws.labManagement.requestLabCreation(new LabManagementTemplate.LabInfoTemplate(
+                    Data.HARVARD_URL,
+                    Data.L_KATE_INFO,
+                    "lab2"
+                ), "me@c.com"));
+        }
         return labRequest2.get();
     }
 
@@ -113,7 +127,11 @@ public class UseCase {
     }
 
     public void requestJohnLab3Membership() {
-        ws.userManagement.updatePerson(john.get(), new UserManagement.PersonInfo("Joe", "J", "jjj@j.com"), ImmutableSet.of(lab3.get()));
+        ws.userManagement.updatePerson(
+            john.get(),
+            new UserManagement.PersonInfo("Joe", "J", "jjj@j.com"),
+            ImmutableSet.of(lab3.get())
+        );
     }
 
     private long activateLab(long actor, long request) {
@@ -123,11 +141,12 @@ public class UseCase {
     /**
      * By create I mean request and activate
      */
-    public void createLab2() {
+    public long createLab2() {
         if (!lab2.isPresent()) {
             final long request = requestLab2creation();
             lab2 = Optional.of(activateLab(adminId, request));
         }
+        return lab2.get();
     }
 
     public long createLab3() {
@@ -173,7 +192,11 @@ public class UseCase {
     }
 
     public final long createJoe() {
-        return ws.userManagement.createPersonAndApproveMembership(new UserManagement.PersonInfo("Joe", "J", "jjj@j.com"), "1231", lab3.get(), null);
+        return ws.userManagement.createPersonAndApproveMembership(new UserManagement.PersonInfo(
+            "Joe",
+            "J",
+            "jjj@j.com"
+        ), "1231", lab3.get(), null);
     }
 
     public final long createKateAndLab2() {
@@ -190,13 +213,21 @@ public class UseCase {
     public final void addKateToLab3() {
         createLab3();
         checkState(kate.isPresent());
-        ws.userManagement.updatePersonAndApproveMembership(kate.get(), KATE_INFO, ImmutableSet.of(lab2.get(), lab3.get()));
+        ws.userManagement.updatePersonAndApproveMembership(
+            kate.get(),
+            KATE_INFO,
+            ImmutableSet.of(lab2.get(), lab3.get())
+        );
     }
 
     public final void addKateToLab4() {
         createLab4();
         checkState(kate.isPresent());
-        ws.userManagement.updatePersonAndApproveMembership(kate.get(), KATE_INFO, ImmutableSet.of(lab2.get(), lab3.get(), lab4.get()));
+        ws.userManagement.updatePersonAndApproveMembership(
+            kate.get(),
+            KATE_INFO,
+            ImmutableSet.of(lab2.get(), lab3.get(), lab4.get())
+        );
     }
 
     public Optional<Long> createInstrumentAndApproveIfNeeded(long user, long lab) {
@@ -204,22 +235,36 @@ public class UseCase {
     }
 
     public Optional<Long> createInstrumentAndApproveIfNeeded(long user, long lab, long model) {
-        return createInstrumentAndApproveIfNeeded(user, lab, model, new InstrumentDetails(anyStr(), anyStr(), anyStr(), anyStr(), Collections.<LockMzItem>emptyList()));
+        return createInstrumentAndApproveIfNeeded(
+            user,
+            lab,
+            model,
+            new InstrumentDetails(
+                anyStr(),
+                anyStr(),
+                anyStr(),
+                anyStr(),
+                Collections.<LockMzItem>emptyList()
+            )
+        );
     }
 
     private Optional<Long> createInstrumentAndApproveIfNeeded(long user,
-                                                             long lab,
-                                                             long model,
-                                                             InstrumentDetails details){
+                                                              long lab,
+                                                              long model,
+                                                              InstrumentDetails details) {
 
         final boolean labHead = ws.labManagement.isLabHead(user, lab);
-        if(labHead){
+        if (labHead) {
             return Optional.of(ws.instrumentManagement.createInstrument(user, lab, model, details));
         } else {
             final Optional<Long> instrumentRequest =
-                    ws.instrumentManagement.newInstrumentRequest(user, lab, model, details, new ArrayList<Long>());
+                ws.instrumentManagement.newInstrumentRequest(user, lab, model, details);
             final LabReaderTemplate.LabLineTemplate labLine = dashboardReader.readLab(lab);
-            return Optional.of(ws.instrumentManagement.approveInstrumentCreation(labLine.labHead, instrumentRequest.get()));
+            return Optional.of(ws.instrumentManagement.approveInstrumentCreation(
+                labLine.labHead,
+                instrumentRequest.get()
+            ));
         }
 
     }
@@ -245,25 +290,38 @@ public class UseCase {
     }
 
     public long saveFile(long userId) {
-        if (!lab3Instrument.isPresent())
+        if (!lab3Instrument.isPresent()) {
             lab3Instrument = createInstrumentAndApproveIfNeeded(userId, lab3.get(), anyThermoInstrumentModel());
+        }
         return saveFile(userId, lab3Instrument.get());
     }
 
     public long saveFile(long userId, long instrument) {
-        final long file = ws.instrumentManagement.createFile(userId, instrument, new FileMetaDataInfo(UUID.randomUUID().toString(), 0, "", null, unspecified(), false));
+        final long file = ws.instrumentManagement.createFile(
+            userId,
+            instrument,
+            new FileMetaDataInfo(UUID.randomUUID().toString(), 0, "", null, unspecified(), false)
+        );
         updateFileContent(userId, file);
         return file;
     }
 
     public long saveFileWithSize(long userId, long instrument, long size) {
-        final long file = ws.instrumentManagement.createFile(userId, instrument, new FileMetaDataInfo(UUID.randomUUID().toString(), size, "", null, unspecified(), false));
+        final long file = ws.instrumentManagement.createFile(
+            userId,
+            instrument,
+            new FileMetaDataInfo(UUID.randomUUID().toString(), size, "", null, unspecified(), false)
+        );
         updateFileContent(userId, file);
         return file;
     }
 
     public long saveFileWithName(long userId, long instrument, String name) {
-        final long file = ws.instrumentManagement.createFile(userId, instrument, new FileMetaDataInfo(name, 0, "", null, unspecified(), false));
+        final long file = ws.instrumentManagement.createFile(
+            userId,
+            instrument,
+            new FileMetaDataInfo(name, 0, "", null, unspecified(), false)
+        );
         updateFileContent(userId, file);
         return file;
     }
@@ -289,14 +347,21 @@ public class UseCase {
     }
 
     public void sharing(long actor, long project, Set<Long> collaborator, Set<Long> groups) {
-        ws.sharingManagement.updateSharingPolicy(actor, project, addAccessLevel(collaborator), addAccessLevel(groups), false);
+        ws.sharingManagement.updateSharingPolicy(
+            actor,
+            project,
+            addAccessLevel(collaborator),
+            addAccessLevel(groups),
+            false
+        );
     }
 
     private Map<Long, SharingManagementTemplate.Access> addAccessLevel(Set<Long> collaborator) {
         return addAccessLevel(collaborator, SharingManagementTemplate.Access.WRITE);
     }
 
-    private Map<Long, SharingManagementTemplate.Access> addAccessLevel(Set<Long> collaborator, SharingManagementTemplate.Access access) {
+    private Map<Long, SharingManagementTemplate.Access> addAccessLevel(Set<Long> collaborator,
+                                                                       SharingManagementTemplate.Access access) {
         Map<Long, SharingManagementTemplate.Access> result = newHashMap();
         for (Long id : collaborator) {
             result.put(id, access);
@@ -312,19 +377,34 @@ public class UseCase {
         shareProjectThrowGroup(owner, collaborator, project, SharingManagementTemplate.Access.WRITE);
     }
 
-    public void shareProjectThrowGroup(long owner, long collaborator, long project, SharingManagementTemplate.Access access) {
+    public void shareProjectThrowGroup(long owner,
+                                       long collaborator,
+                                       long project,
+                                       SharingManagementTemplate.Access access) {
         final long paul = createPaul();
         final long group = ws.sharingManagement.createGroup(owner, "kates lab", ImmutableSet.of(paul));
         ws.sharingManagement.setCollaborators(owner, group, ImmutableSet.of(collaborator), false);
 
-        ws.sharingManagement.updateSharingPolicy(owner, project, addAccessLevel(emptyCollaborators), addAccessLevel(ImmutableSet.of(group), access), false);
+        ws.sharingManagement.updateSharingPolicy(
+            owner,
+            project,
+            addAccessLevel(emptyCollaborators),
+            addAccessLevel(ImmutableSet.of(group), access),
+            false
+        );
     }
 
     public void shareProjectToKateInGroup(long owner, long project) {
         final long paul = createPaul();
         final long group = ws.sharingManagement.createGroup(owner, "kates lab", ImmutableSet.of(paul));
         ws.sharingManagement.setCollaborators(owner, group, ImmutableSet.of(createKateAndLab2()), false);
-        ws.sharingManagement.updateSharingPolicy(owner, project, addAccessLevel(emptyCollaborators), addAccessLevel(ImmutableSet.of(group)), false);
+        ws.sharingManagement.updateSharingPolicy(
+            owner,
+            project,
+            addAccessLevel(emptyCollaborators),
+            addAccessLevel(ImmutableSet.of(group)),
+            false
+        );
     }
 
     //TODO: [stanislav.kurilin] shouldn't be placed here
@@ -335,11 +415,11 @@ public class UseCase {
 
     private long anyThermoInstrumentModel() {
         return instrumentCreationHelper
-                .models(thermoVendor())
-                .stream()
-                .findAny()
-                .orElseThrow(() -> new RuntimeException("Instrument model is not found."))
-                .id;
+            .models(thermoVendor())
+            .stream()
+            .findAny()
+            .orElseThrow(() -> new RuntimeException("Instrument model is not found."))
+            .id;
     }
 
     private long anyVendor() {
@@ -382,7 +462,12 @@ public class UseCase {
         if (john.isPresent()) {
             return john.get();
         }
-        john = Optional.of(ws.userManagement.createPersonAndApproveMembership(JOHN_INFO, "1231", ImmutableSet.<Long>of(), null));
+        john = Optional.of(ws.userManagement.createPersonAndApproveMembership(
+            JOHN_INFO,
+            "1231",
+            ImmutableSet.<Long>of(),
+            null
+        ));
         return john.get();
     }
 
@@ -390,12 +475,12 @@ public class UseCase {
         return instrumentCreationHelper.models(anyVendorWithFolderArchiveUploadSupport()).first().id;
     }
 
-
     public long getJake() {
         if (jake.isPresent()) {
             return jake.get();
         }
-        final long jakeId = ws.userManagement.createPersonAndApproveMembership(JAKE_INFO, "1231", ImmutableSet.<Long>of(), null);
+        final long jakeId =
+            ws.userManagement.createPersonAndApproveMembership(JAKE_INFO, "1231", ImmutableSet.<Long>of(), null);
         final User jake = repositories.userRepository.findOne(jakeId);
         final Calendar now = Calendar.getInstance();
         now.add(Calendar.DAY_OF_MONTH, -7);
@@ -407,5 +492,9 @@ public class UseCase {
         this.jake = Optional.of(jakeId);
 
         return this.jake.get();
+    }
+
+    public long getRawFileId(long fileMetaDataId, long experimentId) {
+        return repositories.experimentFileRepository.findByFileAndExperiment(fileMetaDataId, experimentId).getId();
     }
 }

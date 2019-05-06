@@ -1,6 +1,8 @@
 <div class="search-message clearfix">
     <div class="contact-info">
-        <p><span class="icon email"></span><strong><a href="mailto:&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#064;&#099;&#104;&#111;&#114;&#117;&#115;&#112;&#114;&#111;&#106;&#101;&#099;&#116;&#046;&#111;&#114;&#103;">support@chorusproject.org</a></strong></p>
+        <p><span class="icon email"></span><strong><a
+                href="mailto:&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#064;&#099;&#104;&#111;&#114;&#117;&#115;&#112;&#114;&#111;&#106;&#101;&#099;&#116;&#046;&#111;&#114;&#103;">support@infoclinika.com</a></strong>
+        </p>
     </div>
     <p>Search Results for &quot;<strong ng-bind="lastSearchQuery"></strong>&quot;</p>
     <a href="#/questions" class="close">&nbsp;</a>
@@ -11,17 +13,17 @@
     <ul class="search-results">
        <li ng-repeat="videoItem in results.videos">
            <h3>
-               <span ng-click="toggleOpened($event)" class="title" ng-bind="videoItem.video.title"></span>
+               <span ng-click="toggleOpened($event)" class="title" ng-bind="videoItem.snippet.title"></span>
                <em class="arrow"></em>
            </h3>
            <div class="hide">
                <div class="how-box clearfix">
                    <div class="text">
                        <div class="item">
-                           <a title="{{videoItem.video.title}}" ng-click="showVideo($index)">
-                               <img src="{{videoItem.video.thumbnail.hqDefault}}" alt="videoItem.video.title" />
+                           <a title="{{videoItem.snippet.title}}" ng-click="showVideo($index)">
+                               <img src="{{videoItem.snippet.thumbnails.high.url}}" alt="videoItem.snippet.title" />
                                <span class="btn-play">Play it</span>
-                               <span class="title" ng-bind="videoItem.video.title"></span>
+                               <span class="title" ng-bind="videoItem.snippet.title"></span>
                                <span class="overlay"></span>
                            </a>
                        </div>
@@ -61,4 +63,16 @@
     <h3>Still have questions?</h3>
     <p>
         <a href="{{forumProperties.url}}">Post to our on-line forum questions</a> and we'll get back to you as soon as we can.</p>
+</div>
+
+<div class="user-guide-results" ng-show="results.userGuideItems.length > 0">
+    <h3>User Guide</h3>
+    <ul class="search-results">
+        <li ng-repeat="item in results.userGuideItems">
+            <h3 ng-click="toggleOpened($event)"><span  class="title" ng-bind="item.title"></span><em class="arrow"></em></h3>
+            <div class="hide">
+                <p ng-bind-html-unsafe="item.content"></p>
+            </div>
+        </li>
+    </ul>
 </div>

@@ -16,6 +16,10 @@ public interface BillingFileViewRepository extends CrudRepository<BillingFileVie
     @Query("SELECT distinct f FROM BillingFileView f WHERE (f.contentId in (:contentIds))")
     List<BillingFileView> findByContentId(@Param("contentIds") Set<String> contentIds);
 
+    @Query("SELECT distinct f FROM BillingFileView f " +
+        " WHERE (f.archiveId is not null and size(f.userFunctionsViews) > 0 )")
+    List<BillingFileView> findAllArchivedWithTranslationData();
+
     @Query("SELECT distinct f FROM BillingFileView f WHERE (f.archiveId in (:archiveIds))")
     List<BillingFileView> findAllByArchiveId(@Param("archiveIds") Iterable<String> strings);
 }

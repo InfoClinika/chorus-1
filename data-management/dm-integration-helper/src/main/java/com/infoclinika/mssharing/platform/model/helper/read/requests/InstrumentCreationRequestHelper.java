@@ -19,25 +19,20 @@ import static com.infoclinika.mssharing.platform.model.helper.read.ResultBuilder
 @Component
 @Scope(value = "prototype")
 public class InstrumentCreationRequestHelper
-        <ENTITY extends InstrumentCreationRequestTemplate, REQUEST extends InstrumentCreationRequestInfo>
-        extends AbstractReaderHelper<ENTITY, REQUEST, InstrumentCreationRequestInfo> {
+    <ENTITY extends InstrumentCreationRequestTemplate, REQUEST extends InstrumentCreationRequestInfo>
+    extends AbstractReaderHelper<ENTITY, REQUEST, InstrumentCreationRequestInfo> {
 
     @Inject
     private InstrumentCreationRequestRepositoryTemplate<ENTITY> instrumentCreationRequestRepository;
 
     @Override
     public Function<ENTITY, InstrumentCreationRequestInfo> getDefaultTransformer() {
-        return new Function<ENTITY, InstrumentCreationRequestInfo>() {
-            @Override
-            public InstrumentCreationRequestInfo apply(ENTITY input) {
-                return new InstrumentCreationRequestInfo(
-                        input.getRequester().getEmail(),
-                        input.getName(),
-                        input.getRequestDate(),
-                        input.getId()
-                );
-            }
-        };
+        return input -> new InstrumentCreationRequestInfo(
+            input.getRequester().getEmail(),
+            input.getName(),
+            input.getRequestDate(),
+            input.getId()
+        );
     }
 
     public ResultBuilder<ENTITY, REQUEST> readRequests(long actor) {

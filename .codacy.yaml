@@ -1,0 +1,13 @@
+exclude_paths:
+- "**/resources/css/**"
+- "**/resources/fonts/**"
+- "**/resources/lib/**"
+- "**/resources/offline/**"
+- "**/jquery-plugins/**"
+- "**/angular-plugins/**"
+- "**/lodash.min.js"
+- "**/paypal-button.min.js"
+- "**/*.min.js"
+- "**/msdapl/**"
+- "**/js-upload.js"
+- "**/*.json"

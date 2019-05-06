@@ -19,19 +19,15 @@ public class FilesDownloadGroup extends AbstractPersistable<Long> {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "filegroup_to_job",
-            joinColumns =
-            @JoinColumn(name = "group_id", referencedColumnName = "id", nullable = false),
-            inverseJoinColumns =
-            @JoinColumn(name = "job_id", referencedColumnName = "id", nullable = false)
+        joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id", nullable = false),
+        inverseJoinColumns = @JoinColumn(name = "job_id", referencedColumnName = "id", nullable = false)
     )
     private Set<FileDownloadJob> jobs = newHashSet();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "filegroup_to_user",
-            joinColumns =
-            @JoinColumn(name = "group_id", referencedColumnName = "id", nullable = false),
-            inverseJoinColumns =
-            @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+        joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id", nullable = false),
+        inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     )
     private Set<User> notifiers = newHashSet();
 

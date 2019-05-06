@@ -19,7 +19,7 @@ public class Repositories {
 
     public List<? extends CrudRepository> get() {
         return ImmutableList.<CrudRepository>builder()
-                .add(userRepository)
-                .build();
+            .add(userRepository)
+            .build();
     }
 }

@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.test.instrument;
 
@@ -14,8 +16,8 @@ import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.FileReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.Filter;
-import com.infoclinika.mssharing.platform.model.read.InstrumentReaderTemplate;
-import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate;
+import com.infoclinika.mssharing.platform.model.read.InstrumentReaderTemplate.InstrumentLineTemplate;
+import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate.FileMetaDataInfoTemplate;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -44,9 +46,13 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testCorrectFileStatusIfContentWasntSet() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false));
+        fileManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false)
+        );
 
-        final InstrumentReaderTemplate.InstrumentLineTemplate next = instrumentReader.readInstruments(bob).iterator().next();
+        final InstrumentLineTemplate next = instrumentReader.readInstruments(bob).iterator().next();
         checkState(next.id == instrument);
         assertEquals(next.files, 1);
 
@@ -67,7 +73,11 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testFilesWithNotSettedContentAvailableThrowUploadHelper() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false));
+        fileManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false)
+        );
         assertEquals(Iterables.size(fileReader.readUnfinishedFiles(bob)), 1);
     }
 
@@ -75,7 +85,12 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testDiscardedFilesAreNotSettedContentAvailableThrowUploadHelper() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final long file = fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false));
+        final long file =
+            fileManagement.createFile(
+                bob,
+                instrument,
+                new FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false)
+            );
         fileUploadManagement.cancelUpload(bob, file);
         assertEquals(Iterables.size(fileReader.readUnfinishedFiles(bob)), 0);
     }
@@ -84,7 +99,12 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testCancelFileUpload() {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final long file = fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(generateString(), 1024, "", null, anySpecies(), false));
+        final long file =
+            fileManagement.createFile(
+                bob,
+                instrument,
+                new FileMetaDataInfoTemplate(generateString(), 1024, "", null, anySpecies(), false)
+            );
         fileUploadManagement.cancelUpload(bob, file);
         assertEquals(Iterables.size(fileReader.readUnfinishedFiles(bob)), 0);
     }
@@ -93,7 +113,12 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testCompleteUploadFilesAreNotSettedContentAvailableThrowUploadHelper() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        final long file = fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false));
+        final long file =
+            fileManagement.createFile(
+                bob,
+                instrument,
+                new FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false)
+            );
         setContent(bob, file);
         assertEquals(Iterables.size(fileReader.readUnfinishedFiles(bob)), 0);
     }
@@ -101,8 +126,18 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     @Test
     public void testUserCanUploadArchivedDirWithCorrectInstrumentVendor() throws Exception {
         final long bob = uc.createLab3AndBob();
-        final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3(), uc.getInstrumentModelWhichSupportArchiveUpload()).get();
-        final long file = fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false));
+        final long instrument = uc.createInstrumentAndApproveIfNeeded(
+            bob,
+            uc.getLab3(),
+            uc.getInstrumentModelWhichSupportArchiveUpload()
+        ).get();
+
+        final long file =
+            fileManagement.createFile(
+                bob,
+                instrument,
+                new FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), false)
+            );
         setContent(bob, file);
         assertEquals(Iterables.size(fileReader.readUnfinishedFiles(file)), 0);
     }
@@ -111,7 +146,11 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     public void testUserCannotUploadArchivedDirWithNotCorrectInstrumentVendor() throws Exception {
         final long bob = uc.createLab3AndBob();
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
-        fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), true));
+        fileManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfoTemplate(generateString(), 0, "", null, anySpecies(), true)
+        );
     }
 
     @Test
@@ -176,8 +215,6 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
         final Long lab3 = uc.getLab3();
         final long instrument = createInstrumentAndApproveIfNeeded(bob, lab3);
 
-        instrumentManagement.addOperatorDirectly(bob, instrument, poll);
-
         final long project = uc.createProject(bob, lab3);
 
         sharingManagement.makeProjectPublic(bob, project);
@@ -187,7 +224,8 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
         checkHasAccessToFile(poll, lab3, fileId);
     }
 
-    //TODO: checkMultipleFilesValidForUpload is not implemented in DefaultFileUploadManagement. Enable when it will be implemented
+    //TODO: checkMultipleFilesValidForUpload is not implemented in DefaultFileUploadManagement. Enable when it will
+    // be implemented
     @Test(enabled = false)
     public void testMultipleFilesValidForUpload() {
         final long poll = uc.createPaul();
@@ -199,13 +237,17 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
 
         final List<String> invalidAbSciexFiles4 = Lists.newArrayList("file.wiff", "file.wiff.mtd", "valid_file.wiff");
 
-        final boolean abSciexFiles1Valid = fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles1);
+        final boolean abSciexFiles1Valid =
+            fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles1);
         assertEquals(abSciexFiles1Valid, true);
-        final boolean abSciexFiles2Valid = fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles2);
+        final boolean abSciexFiles2Valid =
+            fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles2);
         assertEquals(abSciexFiles2Valid, true);
-        final boolean abSciexFiles3Valid = fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles3);
+        final boolean abSciexFiles3Valid =
+            fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, validAbSciexFiles3);
         assertEquals(abSciexFiles3Valid, true);
-        final boolean abSciexFiles4Valid = fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, invalidAbSciexFiles4);
+        final boolean abSciexFiles4Valid =
+            fileUploadManagement.checkMultipleFilesValidForUpload(abSciexInstrument, invalidAbSciexFiles4);
         assertEquals(abSciexFiles4Valid, false);
 
     }
@@ -213,10 +255,21 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     @Test
     public void testIsFileAlreadyUploaded() {
         final long bob = uc.createLab3AndBob();
-        final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3(), uc.getInstrumentModelWhichSupportArchiveUpload()).get();
+        final long instrument =
+            uc.createInstrumentAndApproveIfNeeded(
+                bob,
+                uc.getLab3(),
+                uc.getInstrumentModelWhichSupportArchiveUpload()
+            ).get();
+
         final String existedFileName = generateString();
         final String nonExistedFileName = generateString();
-        final long file = fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(existedFileName, 0, "", null, anySpecies(), false));
+        final long file =
+            fileManagement.createFile(
+                bob,
+                instrument,
+                new FileMetaDataInfoTemplate(existedFileName, 0, "", null, anySpecies(), false)
+            );
         setContent(bob, file);
 
         assertTrue(fileUploadManagement.isFileAlreadyUploadedForInstrument(bob, instrument, existedFileName));
@@ -226,10 +279,20 @@ public class UploadingFilesTest extends AbstractInstrumentTest {
     @Test
     public void testFindFileByNameForInstrument() {
         final long bob = uc.createLab3AndBob();
-        final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3(), uc.getInstrumentModelWhichSupportArchiveUpload()).get();
+        final long instrument =
+            uc.createInstrumentAndApproveIfNeeded(
+                bob,
+                uc.getLab3(),
+                uc.getInstrumentModelWhichSupportArchiveUpload()
+            ).get();
         final String existedFileName = generateString();
         final String nonExistedFileName = generateString();
-        final long file = fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(existedFileName, 0, "", null, anySpecies(), false));
+        final long file =
+            fileManagement.createFile(
+                bob,
+                instrument,
+                new FileMetaDataInfoTemplate(existedFileName, 0, "", null, anySpecies(), false)
+            );
         setContent(bob, file);
 
         assertTrue(!fileReader.readByNameForInstrument(bob, instrument, existedFileName).isEmpty());

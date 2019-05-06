@@ -1,24 +1,26 @@
 package com.infoclinika.mssharing.model.internal.write;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Sets;
+import com.infoclinika.mssharing.model.features.ApplicationFeature;
+import com.infoclinika.mssharing.model.helper.FeaturesHelper;
 import com.infoclinika.mssharing.model.helper.FileArchivingHelper;
 import com.infoclinika.mssharing.model.helper.StoredObjectPaths;
-import com.infoclinika.mssharing.model.features.ApplicationFeature;
-import com.infoclinika.mssharing.model.internal.features.FeaturesReader;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
+import com.infoclinika.mssharing.propertiesprovider.BillingPropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -31,33 +33,30 @@ import static com.google.common.collect.Iterables.isEmpty;
  */
 @Component
 public class FileArchivingHelperImpl implements FileArchivingHelper {
-
-    private static final int MAX_HTTP_CONNECTIONS = 100;
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileArchivingHelperImpl.class);
+    private static final Set<String> ARCHIVE_STORAGE_CLASSES = Sets.newHashSet(StorageClass.Glacier.toString());
     private final Predicate<S3ObjectSummary> isGlacierStorageClass = input ->
-            input.getSize() > 0 && input.getStorageClass().equals(StorageClass.Glacier.toString());
+        input.getSize() > 0 && ARCHIVE_STORAGE_CLASSES.contains(input.getStorageClass());
 
-    @Value("${billing.storage.archive.restore.expiration}")
-    private int unarchiveExpirationInDays;
-    @Value("${billing.storage.archive.download.restore.expiration}")
-    private int downloadExpirationInDays;
     @Inject
     private StoredObjectPaths paths;
-    @Inject
-    private FeaturesReader featuresReader;
-    private static AmazonS3Client client;
 
-    private static final Logger LOG = Logger.getLogger(FileArchivingHelperImpl.class);
+    @Inject
+    private FeaturesHelper featuresHelper;
+
+    @Inject
+    private CloudStorageClientsProvider cloudStorageClientsProvider;
+
+    @Inject
+    private BillingPropertiesProvider billingPropertiesProvider;
+
+    private static AmazonS3 client;
     private String analysableStorageBucket;
     private String archiveStorageBucket;
 
     @PostConstruct
     public void initializeAmazonClient() {
-        final BasicAWSCredentials credentials = new BasicAWSCredentials(paths.getAmazonKey(), paths.getAmazonSecret());
-        final ClientConfiguration modifiedConf = new ClientConfiguration();
-        modifiedConf.setMaxConnections(MAX_HTTP_CONNECTIONS);
-        modifiedConf.setMaxErrorRetry(10);
-        client = new AmazonS3Client(credentials, modifiedConf);
+        client = cloudStorageClientsProvider.getAmazonS3Client();
 
         analysableStorageBucket = paths.getRawFilesBucket();
         archiveStorageBucket = paths.getArchiveBucket();
@@ -65,19 +64,20 @@ public class FileArchivingHelperImpl implements FileArchivingHelper {
 
     @Override
     public String moveToArchiveStorage(String filePath) {
-        LOG.info("** Moving file '" + filePath + "' to archive storage...");
+        LOGGER.info("** Moving file '{}' to archive storage...", filePath);
         try {
             return move(analysableStorageBucket, archiveStorageBucket, filePath);
         } catch (AmazonS3Exception ex) {
-            LOG.error("*** There are an error occurred when trying to move file to archive storage.", ex);
-            //throw new IllegalStateException("*** There are an error occurred when trying to move file to archive storage. File: " + filePath, ex);
+            LOGGER.error("*** There are an error occurred when trying to move file to archive storage.", ex);
+            // throw new IllegalStateException("*** There are an error occurred when trying to move file to archive
+            // storage. File: " + filePath, ex);
             return null;
         }
     }
 
     @Override
     public boolean isOnGoingToRestore(String archiveId) {
-        LOG.info("** Check if file '" + archiveId + "' is already going to restore...");
+        LOGGER.info("** Check if file '{}' is already going to restore...", archiveId);
         final ObjectMetadata metadata = client.getObjectMetadata(archiveStorageBucket, archiveId);
 
         return metadata != null && metadata.getOngoingRestore() != null && metadata.getOngoingRestore();
@@ -85,20 +85,33 @@ public class FileArchivingHelperImpl implements FileArchivingHelper {
 
     @Override
     public boolean requestUnarchive(String archiveId, boolean forDownloadOnly) {
-        checkState(featuresReader.isFeatureEnabled(ApplicationFeature.GLACIER), "Unarchive operation is not possible because GLACIER feature is not enabled.");
+        checkState(
+            featuresHelper.isEnabled(ApplicationFeature.GLACIER),
+            "Unarchive operation is not possible because GLACIER feature is not enabled."
+        );
         checkNotNull(archiveId, "Archive id is not specified.");
-        LOG.info("** Requesting unarchive file '" + archiveId + "'...");
+        LOGGER.info("** Requesting unarchive file '{}'...", archiveId);
         try {
             if (!archiveHasGlacierStorageClass(archiveId)) {
-                LOG.info("*** Skipping object restoration from archive. Probably, object has been already restored or newly uploaded. Archive id: " + archiveId);
+                LOGGER.info(
+                    "*** Skipping object restoration from archive. Probably, object has been already restored or " +
+                        "newly uploaded. Archive id: {}",
+                    archiveId
+                );
+
                 return true;
             }
-            final int expirationInDays = forDownloadOnly ? downloadExpirationInDays : unarchiveExpirationInDays;
+
+            final int expirationInDays = forDownloadOnly
+                ? billingPropertiesProvider.getUnarchivedForDownloadMaxDays()
+                : billingPropertiesProvider.getUnarchiveExpirationInDays();
             client.restoreObject(archiveStorageBucket, archiveId, expirationInDays);
         } catch (AmazonS3Exception ex) {
-            LOG.error("*** There are an error occurred when request file restoration.", ex);
+            LOGGER.error("*** There are an error occurred when request file restoration.", ex);
+
             return false;
         }
+
         return true;
     }
 
@@ -106,43 +119,55 @@ public class FileArchivingHelperImpl implements FileArchivingHelper {
         List<S3ObjectSummary> objects = client.listObjects(archiveStorageBucket, archiveId).getObjectSummaries();
         if (isEmpty(objects)) {
             //throw new IllegalStateException("Element with key '" + archiveId + "' not found in archive");
-            LOG.error("Element with key '" + archiveId + "' not found in archive");
+            LOGGER.error("Element with key '{}' not found in archive", archiveId);
         }
+
         return from(objects).firstMatch(isGlacierStorageClass).isPresent();
     }
 
     @Override
     public boolean isArchiveReadyToRestore(final String archiveId) {
-        LOG.debug("** Checking file ready to restore: " + archiveId);
+        LOGGER.debug("** Checking file ready to restore: {}", archiveId);
         try {
             final ObjectMetadata metadata = client.getObjectMetadata(archiveStorageBucket, archiveId);
+
             return !fromNullable(metadata.getOngoingRestore()).or(() -> archiveHasGlacierStorageClass(archiveId));
         } catch (AmazonS3Exception ex) {
-            LOG.error("*** There are an error occurred when trying to check file restoration readiness:\n " + ex.getMessage());
+            LOGGER.error(
+                "*** There are an error occurred when trying to check file restoration readiness:\n {}",
+                ex.getMessage()
+            );
+
             return false;
         }
     }
 
     @Override
     public String moveToAnalyzableStorage(String archiveId) {
-        LOG.info("** Moving to analyzable storage: " + archiveId);
+        LOGGER.info("** Moving to analyzable storage: {}", archiveId);
         try {
             return move(archiveStorageBucket, analysableStorageBucket, archiveId);
         } catch (AmazonS3Exception ex) {
-            LOG.error("*** Moving file to analysable storage failed.", ex);
-            throw new IllegalStateException("*** There are an error occurred when trying to move file to analysable storage. File: " + archiveId, ex);
+            LOGGER.error("*** Moving file to analysable storage failed.", ex);
+            throw new IllegalStateException(
+                "*** There are an error occurred when trying to move file to analysable storage. File: " + archiveId,
+                ex
+            );
         }
     }
 
     @Override
     public String moveArchivedFileToTempStorage(String archiveId, String destination) {
         checkNotNull(archiveId);
-        LOG.info("** Moving archive to temp storage: " + archiveId);
+        LOGGER.info("** Moving archive to temp storage: {}", archiveId);
         try {
             return copyToTemp(archiveStorageBucket, archiveId, destination);
         } catch (AmazonS3Exception ex) {
-            LOG.error("*** Moving file to temp storage failed.", ex);
-            throw new IllegalStateException("*** There are an error occurred when trying to move archive to temp storage. File: " + archiveId, ex);
+            LOGGER.error("*** Moving file to temp storage failed.", ex);
+            throw new IllegalStateException(
+                "*** There are an error occurred when trying to move archive to temp storage. File: " + archiveId,
+                ex
+            );
         }
     }
 
@@ -154,12 +179,15 @@ public class FileArchivingHelperImpl implements FileArchivingHelper {
     @Override
     public String moveNotArchivedFileToTempStorage(String filePath, String destination) {
         checkNotNull(filePath);
-        LOG.info("** Moving file to temp storage: " + filePath);
+        LOGGER.info("** Moving file to temp storage: {}", filePath);
         try {
             return copyToTemp(analysableStorageBucket, filePath, destination);
         } catch (AmazonS3Exception ex) {
-            LOG.error("*** Moving file to temp storage failed.", ex);
-            throw new IllegalStateException("*** There are an error occurred when trying to move archive to temp storage. File: " + filePath, ex);
+            LOGGER.error("*** Moving file to temp storage failed.", ex);
+            throw new IllegalStateException(
+                "*** There are an error occurred when trying to move archive to temp storage. File: " + filePath,
+                ex
+            );
         }
     }
 

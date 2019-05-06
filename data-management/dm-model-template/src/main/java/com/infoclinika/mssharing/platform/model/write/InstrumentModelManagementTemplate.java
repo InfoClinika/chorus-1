@@ -5,7 +5,8 @@ import java.util.Set;
 /**
  * @author timofei.kasianov 12/6/16
  */
-public interface InstrumentModelManagementTemplate<DETAILS extends InstrumentModelManagementTemplate.InstrumentModelDetails> {
+public interface InstrumentModelManagementTemplate<
+    DETAILS extends InstrumentModelManagementTemplate.InstrumentModelDetails> {
 
     long create(long actor, DETAILS details);
 
@@ -22,7 +23,11 @@ public interface InstrumentModelManagementTemplate<DETAILS extends InstrumentMod
         public final boolean additionalFiles;
         public final boolean folderArchiveSupport;
 
-        public InstrumentModelDetails(String name, String technologyType, String vendor, String instrumentType, Set<String> extensions) {
+        public InstrumentModelDetails(String name,
+                                      String technologyType,
+                                      String vendor,
+                                      String instrumentType,
+                                      Set<String> extensions) {
             this.name = name;
             this.technologyType = technologyType;
             this.vendor = vendor;

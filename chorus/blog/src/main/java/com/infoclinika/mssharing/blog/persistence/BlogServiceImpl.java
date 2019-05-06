@@ -17,7 +17,8 @@ import java.util.Set;
  */
 @Component
 @Transactional
-//todo [pavel.kaplin] extract external (create/delete blog) operations into separate interface and perform access check for them
+//todo [pavel.kaplin] extract external (create/delete blog) operations into separate interface and perform access
+// check for them
 //todo [pavel.kaplin] don't allow to perform any operations on disabled blogs
 public class BlogServiceImpl implements BlogService {
 
@@ -26,9 +27,11 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     public List<BlogPost> getBlogPosts(long blog) {
-        return em.createQuery("from BlogPost where blog.id = :blog and blog.enabled = true order by date desc", BlogPost.class)
-                .setParameter("blog", blog)
-                .getResultList();
+        return em.createQuery("from BlogPost where blog.id = :blog and blog.enabled = true order by date desc",
+            BlogPost.class
+        )
+            .setParameter("blog", blog)
+            .getResultList();
     }
 
     @Override
@@ -53,8 +56,8 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public List<Comment> getComments(long post) {
         return em.createQuery("from Comment where post.id = :post order by date desc", Comment.class)
-                .setParameter("post", post)
-                .getResultList();
+            .setParameter("post", post)
+            .getResultList();
     }
 
     @Override
@@ -66,9 +69,11 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public List<BlogPost> getMostRecentPosts(long user, SecurityChecker securityChecker) {
         Set<Long> projectsWithReadAccess = securityChecker.getProjectsWithReadAccess(user);
-        return em.createQuery("from BlogPost where blog.id in :blogs and blog.enabled = true order by date desc", BlogPost.class)
-                .setParameter("blogs", projectsWithReadAccess)
-                .setMaxResults(8).getResultList();
+        return em.createQuery("from BlogPost where blog.id in :blogs and blog.enabled = true order by date desc",
+            BlogPost.class
+        )
+            .setParameter("blogs", projectsWithReadAccess)
+            .setMaxResults(8).getResultList();
     }
 
     @Override
@@ -77,8 +82,7 @@ public class BlogServiceImpl implements BlogService {
         if (blog == null) {
             blog = new Blog(id, name);
             em.persist(blog);
-        }
-        else {
+        } else {
             blog.setName(name);
             blog.setEnabled(true);
         }
@@ -93,10 +97,13 @@ public class BlogServiceImpl implements BlogService {
     public List<BlogPost> getMostRecentBlogs(long user, SecurityChecker securityChecker) {
         Set<Long> projectsWithReadAccess = securityChecker.getProjectsWithReadAccess(user);
 
-        return em.createQuery("from BlogPost post where post.blog.id in :blogs and blog.enabled = true and post.date = " +
-                "(select max(another.date) from BlogPost another where another.blog = post.blog) order by date desc", BlogPost.class)
-                .setParameter("blogs", projectsWithReadAccess)
-                .getResultList();
+        return em.createQuery(
+            "from BlogPost post where post.blog.id in :blogs and blog.enabled = true and post.date = " +
+                "(select max(another.date) from BlogPost another where another.blog = post.blog) order by date desc",
+            BlogPost.class
+        )
+            .setParameter("blogs", projectsWithReadAccess)
+            .getResultList();
     }
 
     @Override
@@ -153,13 +160,15 @@ public class BlogServiceImpl implements BlogService {
     }
 
     private void removeComments(long blog) {
-        // complex queries caused by Hibernate issue. See http://stackoverflow.com/questions/7246563/hibernate-exception-on-mysql-cross-join-query
+        // complex queries caused by Hibernate issue. See http://stackoverflow
+        // .com/questions/7246563/hibernate-exception-on-mysql-cross-join-query
         em.createQuery("delete Comment where post in (from BlogPost where blog.id = :blog)")
-                .setParameter("blog", blog).executeUpdate();
+            .setParameter("blog", blog).executeUpdate();
     }
 
     private void removeBlogPosts(long blog) {
-        final List<BlogPost> blogPosts = em.createQuery("select bp from BlogPost bp where blog in (from Blog where id = :blog)", BlogPost.class)
+        final List<BlogPost> blogPosts =
+            em.createQuery("select bp from BlogPost bp where blog in (from Blog where id = :blog)", BlogPost.class)
                 .setParameter("blog", blog).getResultList();
 
         // Hibernate doesn't cascade delete an element collection records, so remove subscribers directly
@@ -177,9 +186,10 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public void deletePost(long user, long blog, long post) {
         BlogPost blogPostEntity = em.find(BlogPost.class, post);
-        // complex queries caused by Hibernate issue. See http://stackoverflow.com/questions/7246563/hibernate-exception-on-mysql-cross-join-query
+        // complex queries caused by Hibernate issue. See http://stackoverflow
+        // .com/questions/7246563/hibernate-exception-on-mysql-cross-join-query
         em.createQuery("delete Comment where post=:blogPost")
-                .setParameter("blogPost", blogPostEntity).executeUpdate();
+            .setParameter("blogPost", blogPostEntity).executeUpdate();
 
         blogPostEntity = em.find(BlogPost.class, post);
         em.remove(blogPostEntity);

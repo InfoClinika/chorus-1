@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
  * @author Herman Zamula
  */
 @Component
-public class DefaultFileReaderAdapter extends DefaultFileReader<FileMetaDataTemplate, FileReaderTemplate.FileLineTemplate> {
+public class DefaultFileReaderAdapter
+    extends DefaultFileReader<FileMetaDataTemplate, FileReaderTemplate.FileLineTemplate> {
     @Override
     public FileLineTemplate transform(FileMetaDataTemplate fileMetaDataTemplate) {
         return fileReaderHelper.getDefaultTransformer().apply(fileMetaDataTemplate);

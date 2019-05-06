@@ -43,13 +43,16 @@ public final class ChorusAuthenticator implements Authenticator<UserCredentials>
         try {
             final AuthenticateUserResponse response = chorusAuthenticationService.authenticateUser(request);
             userManagement.addApplicationForUser(
-                    Optional.fromNullable(credentials.getUniqueID()),
-                    ApplicationType.CHORUS,
-                    credentials.getUsername(),
-                    response.userSecretKey.value);
+                Optional.fromNullable(credentials.getUniqueID()),
+                ApplicationType.CHORUS,
+                credentials.getUsername(),
+                response.userSecretKey.value
+            );
 
         } catch (NotAuthorizedException notAuthorized) {
-            final String errorMessage = "Chorus: credentials don't match to authenticate, login: " + credentials.getUsername() + ", message:" + notAuthorized.getMessage();
+            final String errorMessage =
+                "Chorus: credentials don't match to authenticate, login: " + credentials.getUsername() + ", message:" +
+                    notAuthorized.getMessage();
             throw new CredentialsException(errorMessage, notAuthorized);
         } catch (javax.ws.rs.InternalServerErrorException e) {
             final String errorMessage = "Exception during authenticating at Chorus endpoint, message:" + e.getMessage();

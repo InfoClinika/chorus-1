@@ -10,9 +10,9 @@ import java.util.Date;
 
 /**
  * @author Herman Zamula
- *         <p/>
- *         View for mapping Project records in dashboard. Read only.
- *         See classpath*: views.sql
+ *
+ *     <p/>View for mapping Project records in dashboard. Read only.
+ *     See classpath*: views.sql
  */
 @Table(name = "project_dashboard_record")
 @Entity

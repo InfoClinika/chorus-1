@@ -13,4 +13,13 @@ public class FileDescription {
         this.directory = directory;
         this.readyToUpload = readyToUpload;
     }
+
+    @Override
+    public String toString() {
+        return "FileDescription{" +
+            "fileName='" + fileName + '\'' +
+            ", directory=" + directory +
+            ", readyToUpload=" + readyToUpload +
+            '}';
+    }
 }

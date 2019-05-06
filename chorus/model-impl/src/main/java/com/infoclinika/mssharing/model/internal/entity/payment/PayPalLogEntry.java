@@ -14,7 +14,14 @@ public class PayPalLogEntry extends PaymentLogEntry {
     public PayPalLogEntry() {
     }
 
-    public PayPalLogEntry(long amount, Long lab, Date timestamp, long totalToPay, long storeBalance, String transactionId) {
+    public PayPalLogEntry(
+        long amount,
+        Long lab,
+        Date timestamp,
+        long totalToPay,
+        long storeBalance,
+        String transactionId
+    ) {
         super(amount, lab, timestamp, totalToPay, storeBalance, transactionId);
     }
 

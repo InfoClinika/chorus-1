@@ -16,10 +16,13 @@ import java.util.Map;
 public interface InstrumentModelRepository extends InstrumentModelRepositoryTemplate<InstrumentModel> {
 
     @Query("select im from InstrumentModel im " +
-            " where cast(im.id as string) like :query or im.name like :query or im.studyType.name like :query or im.vendor.name like :query or im.type.name like :query")
+        " where cast(im.id as string) like :query or im.name like :query or im.studyType.name like :query or im" +
+        ".vendor.name like :query or im.type.name like :query")
     Page<InstrumentModel> findPage(@Param("query") String query, Pageable request);
 
-    @Query("select new map(im.id as id, (select count(*) from Instrument i left join i.model m where m.id = im.id) as count) from InstrumentModel im where im.id in(:ids)")
+    @Query(
+        "select new map(im.id as id, (select count(*) from Instrument i left join i.model m where m.id = im.id) as " +
+            "count) from InstrumentModel im where im.id in(:ids)")
     List<Map<String, Long>> findInstrumentCounts(@Param("ids") List<Long> modelIds);
 
 }

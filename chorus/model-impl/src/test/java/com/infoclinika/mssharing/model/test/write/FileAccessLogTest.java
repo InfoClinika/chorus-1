@@ -159,10 +159,14 @@ public class FileAccessLogTest extends AbstractTest {
         UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(bob);
         final FileItem fileDetails = getUserAnyFileDetails(bob);
 
-        fileAccessLogService.logFileDownload(bob, new ChorusFileData(fileDetails.contentId, fileDetails.archiveId, fileDetails.name, false, null,
+        fileAccessLogService.logFileDownload(
+            bob,
+            new ChorusFileData(null, fileDetails.contentId, fileDetails.archiveId, fileDetails.name, false, null,
                 uc.getLab3(), fileDetails.id,
                 fromNullable(null),
-                AccessLevel.PUBLIC));
+                AccessLevel.PUBLIC, fileDetails.instrumentName
+            )
+        );
 
         Thread.sleep(1000);
         final Optional<FileAccessLogReader.FileAccessLogDTO> lastLog = readLastLog();
@@ -184,7 +188,7 @@ public class FileAccessLogTest extends AbstractTest {
 
     private Optional<FileAccessLogReader.FileAccessLogDTO> readLastLog() {
         final PagedItem<FileAccessLogReader.FileAccessLogDTO> logs =
-                fileAccessLogReader.readLogs(admin(), new PagedItemInfo(1, 0, "id", false, ""));
+            fileAccessLogReader.readLogs(admin(), new PagedItemInfo(1, 0, "id", false, ""));
 
         final Iterator<FileAccessLogReader.FileAccessLogDTO> iterator = logs.iterator();
         FileAccessLogReader.FileAccessLogDTO lastLog = null;

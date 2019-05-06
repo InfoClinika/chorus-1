@@ -18,7 +18,8 @@ import static com.infoclinika.mssharing.platform.model.read.GroupsReaderTemplate
  */
 @Component
 @Scope(value = "prototype")
-public class GroupReaderHelper<G extends GroupTemplate, LINE extends GroupLine> extends AbstractReaderHelper<G, LINE, GroupLine> {
+public class GroupReaderHelper<G extends GroupTemplate, LINE extends GroupLine>
+    extends AbstractReaderHelper<G, LINE, GroupLine> {
 
     @Inject
     private GroupRepositoryTemplate<G> groupRepository;
@@ -29,21 +30,17 @@ public class GroupReaderHelper<G extends GroupTemplate, LINE extends GroupLine> 
     public ResultBuilder<G, LINE> readGroups(long user, boolean includeAllUsers) {
 
         return builder(groupRepository
-                .findByOwner(user, includeAllUsers), activeTransformer);
+            .findByOwner(user, includeAllUsers), activeTransformer);
     }
 
     @Override
     public Function<G, GroupLine> getDefaultTransformer() {
-        return new Function<G, GroupLine>() {
-            @Override
-            public GroupLine apply(G input) {
-                return new GroupLine(input.getId(),
-                        input.getName(),
-                        input.getLastModification(),
-                        input.getNumberOfMembers(),
-                        projectRepository.findBySharedGroup(input.getId()).size()
-                );
-            }
-        };
+        return input -> new GroupLine(
+            input.getId(),
+            input.getName(),
+            input.getLastModification(),
+            input.getNumberOfMembers(),
+            projectRepository.findBySharedGroup(input.getId()).size()
+        );
     }
 }

@@ -2,7 +2,6 @@ package com.infoclinika.mssharing.platform.model.helper.write;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -22,9 +21,9 @@ import com.infoclinika.mssharing.platform.repository.FactorRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.ProjectRepositoryTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Functions.compose;
 import static com.google.common.base.Optional.fromNullable;
@@ -74,8 +73,10 @@ public class ExperimentManager<EXPERIMENT extends ExperimentTemplate, EXPERIMENT
 
     private void updateExperimentDetails(EXPERIMENT experiment, EXPERIMENT_INFO info) {
         final ExperimentData experimentData = new ExperimentData(info.description, info.is2dLc);
-        final InstrumentRestriction<? extends InstrumentTemplate> instrumentRestriction = new InstrumentRestriction(factories.instrumentModelFromId.apply(info.restriction.instrumentModel),
-                info.restriction.instrument.transform(factories.instrumentFromId));
+        final InstrumentRestriction<? extends InstrumentTemplate> instrumentRestriction = new InstrumentRestriction(
+            factories.instrumentModelFromId.apply(info.restriction.instrumentModel),
+            info.restriction.instrument.transform(factories.instrumentFromId)
+        );
         experiment.setProject(factories.projectFromId.apply(info.project));
         experiment.setExperiment(experimentData);
         experiment.setInstrumentRestriction(instrumentRestriction);
@@ -84,15 +85,20 @@ public class ExperimentManager<EXPERIMENT extends ExperimentTemplate, EXPERIMENT
     }
 
 
-    public void updateExperimentFiles(EXPERIMENT_INFO info, EXPERIMENT experiment, Function<ExperimentFileTemplate, ExperimentFileTemplate> setFilePropsFn, Function<FactorTemplate, FactorTemplate> setFactorPropsFn) {
+    public void updateExperimentFiles(EXPERIMENT_INFO info, EXPERIMENT experiment,
+                                      Function<ExperimentFileTemplate, ExperimentFileTemplate> setFilePropsFn,
+                                      Function<FactorTemplate, FactorTemplate> setFactorPropsFn) {
 
         validateFactors(info.factors, info.files);
 
-        final ImmutableList<FactorTemplate> factors = persistFactors(transform(info.factors,
-                compose(setFactorPropsFn, transformFactors(experiment, getLevelsOfFactors(copyOf(info.files))))));
+        final ImmutableList<FactorTemplate> factors = persistFactors(transform(
+            info.factors,
+            compose(setFactorPropsFn, transformFactors(experiment, getLevelsOfFactors(copyOf(info.files))))
+        ));
 
         final ImmutableList<ExperimentFileTemplate> rawFilesData = persistExperimentFiles(constructRawFiles(info.files,
-                experiment.getExperiment(), factors, setFilePropsFn));
+            experiment.getExperiment(), factors, setFilePropsFn
+        ));
 
         experiment.rawFiles.getData().clear();
         experiment.rawFiles.getFactors().clear();
@@ -134,7 +140,10 @@ public class ExperimentManager<EXPERIMENT extends ExperimentTemplate, EXPERIMENT
 
         final ExperimentData experimentData = new ExperimentData(info.description, info.is2dLc);
         final InstrumentRestriction restriction =
-                new InstrumentRestriction(factories.instrumentModelFromId.apply(info.restriction.instrumentModel), info.restriction.instrument.transform(factories.instrumentFromId));
+            new InstrumentRestriction(
+                factories.instrumentModelFromId.apply(info.restriction.instrumentModel),
+                info.restriction.instrument.transform(factories.instrumentFromId)
+            );
         final Species species = factories.speciesFromId.apply(info.specie);
 
         experimentTemplate.setLab(fromNullable(info.lab).transform(factories.labFromId).orNull());
@@ -155,7 +164,8 @@ public class ExperimentManager<EXPERIMENT extends ExperimentTemplate, EXPERIMENT
         return copyOf(factorRepository.save(original));
     }
 
-    private ImmutableList<ExperimentFileTemplate> persistExperimentFiles(Iterable<ExperimentFileTemplate> experimentFiles) {
+    private ImmutableList<ExperimentFileTemplate> persistExperimentFiles(
+        Iterable<ExperimentFileTemplate> experimentFiles) {
         return copyOf(experimentFileRepository.save(experimentFiles));
     }
 
@@ -167,55 +177,51 @@ public class ExperimentManager<EXPERIMENT extends ExperimentTemplate, EXPERIMENT
             case SHARED:
             case PRIVATE:
                 experiment.setDownloadToken(null);
+                break;
+            default:
+                throw new IllegalArgumentException("Unrecognized sharing type: " + type);
+
         }
     }
 
-    public Function<MetaFactorTemplate, FactorTemplate> transformFactors(final EXPERIMENT experiment, List<Set<String>> levelsOfFactors) {
+    public Function<MetaFactorTemplate, FactorTemplate> transformFactors(final EXPERIMENT experiment,
+                                                                         List<Set<String>> levelsOfFactors) {
         final Iterator<Set<String>> iterator = levelsOfFactors.iterator();
-        return new Function<MetaFactorTemplate, FactorTemplate>() {
-            @Override
-            public FactorTemplate apply(MetaFactorTemplate input) {
+        return input -> {
 
-                final Set<String> levelValues = iterator.next();
-                final FactorTemplate factorTemplate = factories.factor.get();
-                factorTemplate.setName(input.name);
-                factorTemplate.setExperiment(experiment);
-                factorTemplate.getLevels().addAll(from(levelValues).transform(new Function<String, LevelTemplate>() {
-                    @Override
-                    public LevelTemplate apply(String input) {
-                        final LevelTemplate template = factories.level.get();
-                        template.setName(input);
-                        template.setFactor(factorTemplate);
-                        return template;
-                    }
-                }).toList());
-                factorTemplate.setType(input.isNumeric ? FactorTemplate.Type.INTEGER : FactorTemplate.Type.STRING);
-                factorTemplate.setUnits(input.units);
-                return factorTemplate;
-            }
+            final Set<String> levelValues = iterator.next();
+            final FactorTemplate factorTemplate = factories.factor.get();
+            factorTemplate.setName(input.name);
+            factorTemplate.setExperiment(experiment);
+            factorTemplate.getLevels().addAll(from(levelValues).transform(level -> {
+                final LevelTemplate template = factories.level.get();
+                template.setName(level);
+                template.setFactor(factorTemplate);
+                return template;
+            }).toList());
+            factorTemplate.setType(input.isNumeric ? FactorTemplate.Type.INTEGER : FactorTemplate.Type.STRING);
+            factorTemplate.setUnits(input.units);
+            return factorTemplate;
         };
     }
 
     ImmutableCollection<ExperimentFileTemplate> constructRawFiles(final Collection<? extends FileItemTemplate> files,
                                                                   final ExperimentData experiment,
                                                                   final Iterable<FactorTemplate> factors,
-                                                                  Function<ExperimentFileTemplate, ExperimentFileTemplate> setFilePropsFn) {
+                                                                  Function<ExperimentFileTemplate,
+                                                                      ExperimentFileTemplate> setFilePropsFn) {
 
-        return copyOf(Collections2.transform(files, compose(setFilePropsFn, new Function<FileItemTemplate, ExperimentFileTemplate>() {
-            @Override
-            public ExperimentFileTemplate apply(FileItemTemplate input) {
+        return copyOf(Collections2
+            .transform(files, compose(setFilePropsFn, (Function<FileItemTemplate, ExperimentFileTemplate>) input -> {
 
                 checkArgument(input.factorValues.size() == size(factors));
-                checkArgument(Iterables.all(input.factorValues, new Predicate<String>() {
-                    @Override
-                    public boolean apply(@Nullable String input) {
-                        return input != null && !input.isEmpty();
-                    }
-                }));
-                checkArgument(!experiment.is2dLc() || Iterables.all(files, Predicates.notNull()));
+                checkArgument(input.factorValues.stream().allMatch(factor -> factor != null && !factor.isEmpty()));
+                checkArgument(!experiment.is2dLc() || files.stream().allMatch(Objects::nonNull));
 
-                final ImmutableList<AnnotationTemplate> savedAnnotations = from(input.annotationValues)
-                        .transform(managerTransformers.annotationTransformer(true)).toList();
+                final List<AnnotationTemplate> savedAnnotations =
+                    input.annotationValues.stream()
+                        .map(managerTransformers.annotationTransformer(true)::apply)
+                        .collect(Collectors.toList());
 
                 final ExperimentFileTemplate fileTemplate = factories.rawFile.get();
                 fileTemplate.setFileMetaData(factories.fileFromId.apply(input.id));
@@ -225,8 +231,8 @@ public class ExperimentManager<EXPERIMENT extends ExperimentTemplate, EXPERIMENT
                 fileTemplate.setCopy(input.copy);
 
                 return fileTemplate;
-            }
-        })));
+            }))
+        );
     }
 
     private void addConditionsToLevelsAndRawFiles(EXPERIMENT ex) {
@@ -234,22 +240,16 @@ public class ExperimentManager<EXPERIMENT extends ExperimentTemplate, EXPERIMENT
     }
 
 
-    private void validateFactors(final Iterable<? extends MetaFactorTemplate> factorDescription, Iterable<? extends FileItemTemplate> files) {
-        from(files).allMatch(new Predicate<FileItemTemplate>() {
-            @Override
-            public boolean apply(FileItemTemplate input) {
-                checkArgument(Iterables.size(factorDescription) == input.factorValues.size());
-                for (MetaFactorTemplate each : factorDescription) {
-                    if (each.name == null || each.name.trim().length() == 0) {
-                        throw new InvalidFactorException("No name was specified for meta factor");
-                    }
-                    //TODO: [stanislav.kurilin]
-                    //checkArgument(input.factorValues.containsKey(each.name));
-                    //TODO: [stanislav.kurilin] numeric check. are doubles / negatives allowed? comma separators?
-//                    checkArgument(!input.factorValues.get(each.name).isEmpty());
+    private void validateFactors(final Iterable<? extends MetaFactorTemplate> factorDescription,
+                                 Iterable<? extends FileItemTemplate> files) {
+        from(files).allMatch((Predicate<FileItemTemplate>) input -> {
+            checkArgument(Iterables.size(factorDescription) == input.factorValues.size());
+            for (MetaFactorTemplate each : factorDescription) {
+                if (each.name == null || each.name.trim().length() == 0) {
+                    throw new InvalidFactorException("No name was specified for meta factor");
                 }
-                return true;
             }
+            return true;
         });
     }
 

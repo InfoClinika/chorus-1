@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jaxrs="http://cxf.apache.org/jaxrs-client" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://cxf.apache.org/jaxrs-client http://cxf.apache.org/schemas/jaxrs-client.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder ignore-resource-not-found="true"
+                                  ignore-unresolvable="true"
+                                  location="classpath*:clients-common.properties"/>
+
+    <bean id="proxyPropertiesProvider" class="com.infoclinika.mssharing.propertiesprovider.ProxyPropertiesProvider"/>
+
+    <bean id="desktopClientsPropertiesProvider"
+          class="com.infoclinika.mssharing.propertiesprovider.DesktopClientsPropertiesProvider"/>
+
+    <jaxrs:client id="uploaderRestService"
+                  address="${uploader.api.url}"
+                  serviceClass="com.infoclinika.mssharing.web.rest.UploaderRestService"
+                  inheritHeaders="true">
+        <!--Turn on in case of requests payload content debugging is required-->
+        <!--<jaxrs:features>-->
+            <!--<cxf:logging/>-->
+        <!--</jaxrs:features>-->
+        <jaxrs:providers>
+            <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>
+            <bean class="com.infoclinika.mssharing.clients.common.web.impl.UploadRequestWriter"/>
+        </jaxrs:providers>
+    </jaxrs:client>
+
+</beans>

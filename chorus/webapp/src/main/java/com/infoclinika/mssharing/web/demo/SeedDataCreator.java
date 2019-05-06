@@ -6,41 +6,44 @@ import com.infoclinika.mssharing.model.PredefinedDataCreator;
 import com.infoclinika.mssharing.model.helper.ColumnViewHelper;
 import com.infoclinika.mssharing.model.helper.ExperimentCreationHelper;
 import com.infoclinika.mssharing.model.internal.features.FeaturesInitializer;
+import com.infoclinika.mssharing.platform.model.InstrumentsDefaults;
 import com.infoclinika.mssharing.platform.model.common.items.AdditionalExtensionImportance;
 import com.infoclinika.mssharing.platform.model.common.items.FileExtensionItem;
+import com.infoclinika.util.FilenameUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static com.infoclinika.mssharing.web.demo.VendorNames.*;
 
 /**
  * @author Pavel Kaplin
  */
 @Component
 public class SeedDataCreator {
+    public static final String BOTTOM_UP_PROTEOMICS_EXPERIMENT_TYPE = "Bottom Up Proteomics";
     private static final String THERMO_VENDOR = "Thermo Scientific";
     private static final String WATERS_VENDOR = "Waters";
     private static final String AGILENT_VENDOR = "Agilent";
     private static final String BRUKER_VENDOR = "Bruker";
     private static final String AB_SCIEX_VENDOR = "Sciex";
     private static final String NEXT_GEN_SEQUENCING_VENDOR = "Roche";
-    private static final String MS_INSTRUMENT_STUDY_TYPE = "Mass Spectrometry";
-    private static final String MA_INSTRUMENT_STUDY_TYPE = "Micro-array";
-    private static final String NG_INSTRUMENT_STUDY_TYPE = "NGS";
-    private static final String BOTTOM_UP_PROTEOMICS_EXPERIMENT_TYPE = "Bottom Up Proteomics";
     private static final String METABOLOMICS_EXPERIMENT_TYPE = "Metabolomics";
     private static final String DMPK_EXPERIMENT_TYPE = "DMPK";
+    private static final String ALIS_SCREENING = "ALIS Screening";
     private static final String OTHER_EXPERIMENT_TYPE = "Other";
     private static final String TOP_DOWN_PROTEOMICS_EXPERIMENT_TYPE = "Top Down Proteomics";
     private static final String HOMO_SAPIENS = "Homo sapiens";
     private static final String NUMBER_DATA_TYPE = "number";
     private static final String STRING_DATA_TYPE = "string";
     private static final String DATE_DATA_TYPE = "date";
+    private static final String BOOLEAN_DATA_TYPE = "boolean";
     private static final String ID = "id";
     private static final String NAME = "name";
     private static final String SIZE = "size";
@@ -62,13 +65,17 @@ public class SeedDataCreator {
     private static final String USER_NAME = "user name";
     private static final String USER_LABELS = "user labels";
     private static final String FILE_CONDITION = "file condition";
+    private static final String TRANSLATE_FLAG = "translate flag";
     private static final String INSTRUMENT_SERIAL = "instrument serial";
+    private static final String DETECTED_ISOTOPE_GROUPS = "detected isotope groups";
+    private static final String ANNOTATED_ISOTOPE_GROUPS = "annotated isotope groups";
     private static final String PHONE = "phone";
     private static final String INSTRUMENT_NAME = "instrument name";
     private static final String EXPERIMENT_NAME = "experiment name";
     private static final String OWNER = "owner";
     private static final String PROJECT = "project";
     private static final String FILES = "files";
+    private static final String FAILED = "failed";
     private static final String MODIFIED = "modified";
     private static final String PROJECT_NAME = "project name";
     private static final String AREA_OF_RESEARCH = "area of research";
@@ -106,32 +113,43 @@ public class SeedDataCreator {
     private static final int INSTRUMENT_COLUMN_INDEX = 3;
     private static final int LAB_COLUMN_INDEX = 4;
     private static final int UPLOAD_DATY_COLUMN_INDEX = 5;
+    private static final int FAILED_COLUMN_INDEX = 7;
+    // Instriment NGS Model Type
+    private static final String NEXTSEQ_MODEL_TYPE = "NextSeq";
+    private static final String HiSEQ_MODEL_TYPE = "HiSeq";
+    private static final String NOVASEQ_MODEL_TYPE = "NovaSeq";
+    private static final String MINISEQ_MODEL_TYPE = "MiniSeq";
+    private static final String MISEQ_MODEL_TYPE = "MiSeq";
+    private static final String DEFAULT_NAME = "Default";
 
+    // Technolgies
+    private static final String MS_INSTRUMENT_STUDY_TYPE = InstrumentsDefaults.MS_TECHNOLOGY_TYPE;
+    private static final String MA_INSTRUMENT_STUDY_TYPE = InstrumentsDefaults.MA_TECHNOLOGY_TYPE;
+    private static final String NG_INSTRUMENT_STUDY_TYPE = InstrumentsDefaults.NG_TECHNOLOGY_TYPE;
+    private static final String CL_INSTRUMENT_STUDY_TYPE = InstrumentsDefaults.CL_TECHNOLOGY_TYPE;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     @Inject
     private PredefinedDataCreator initiator;
-
     @Inject
     private Notifier notifier;
-
     @Inject
     private FeaturesInitializer featuresInitializer;
-
     @Inject
     private ExperimentCreationHelper experimentCreationHelper;
-
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public SeedDataCreator() {
     }
 
-    @PostConstruct
     public void createSeedData() {
+        featuresInitializer.initializeFeatures();
+
         if (isSeedDataAlreadyHere()) {
             log.info("Seed data is already here. Skipping");
             return;
         }
 
         experimentTypes();
+        studyTypes();
         vendors();
         species();
         fileColumns();
@@ -140,7 +158,6 @@ public class SeedDataCreator {
         experimentLabels();
 
         initiator.allUsersGroup();
-        featuresInitializer.initializeFeatures();
     }
 
     private void fileColumns() {
@@ -169,22 +186,37 @@ public class SeedDataCreator {
                 add(new ColumnViewHelper.Column(0L, USER_NAME, STRING_DATA_TYPE, true, false, UNITS_17));
                 add(new ColumnViewHelper.Column(0L, USER_LABELS, STRING_DATA_TYPE, true, false, UNITS_17));
                 add(new ColumnViewHelper.Column(0L, FILE_CONDITION, STRING_DATA_TYPE, true, false, UNITS_17));
+                add(new ColumnViewHelper.Column(0L, TRANSLATE_FLAG, STRING_DATA_TYPE, true, false, UNITS_17));
                 add(new ColumnViewHelper.Column(0L, INSTRUMENT_SERIAL, STRING_DATA_TYPE, true, false, UNITS_17));
                 add(new ColumnViewHelper.Column(0L, PHONE, STRING_DATA_TYPE, true, false, UNITS_17));
                 add(new ColumnViewHelper.Column(0L, INSTRUMENT_NAME, STRING_DATA_TYPE, true, false, UNITS_17));
+                add(new ColumnViewHelper.Column(0L, DETECTED_ISOTOPE_GROUPS, NUMBER_DATA_TYPE, true, false, UNITS_17));
+                add(new ColumnViewHelper.Column(0L, ANNOTATED_ISOTOPE_GROUPS, NUMBER_DATA_TYPE, true, false, UNITS_17));
             }
         };
 
         final List<Long> ids = initiator.createColumnsDefinitions(columnSet, ColumnViewHelper.ColumnViewType.FILE);
 
         Set<ColumnViewHelper.ColumnInfo> columns = newHashSet(
-                new ColumnViewHelper.ColumnInfo(ID, ID_COLUMN_INDEX, false, true, ids.get(ID_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(NAME, NAME_COLUMN_INDEX, false, true, ids.get(NAME_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(SIZE, SIZE_COLUMN_INDEX, true, true, ids.get(SIZE_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(INSTRUMENT, INSTRUMENT_COLUMN_INDEX, true, true, ids.get(INSTRUMENT_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(LABORATORY, LAB_COLUMN_INDEX, true, true, ids.get(LAB_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(UPLOAD_DATE, UPLOAD_DATY_COLUMN_INDEX, true, true, ids.get(UPLOAD_DATY_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(LABELS, LABELS_COLUMN_INDEX, true, true, ids.get(LABELS_COLUMN_INDEX))
+            new ColumnViewHelper.ColumnInfo(ID, ID_COLUMN_INDEX, false, true, ids.get(ID_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(NAME, NAME_COLUMN_INDEX, false, true, ids.get(NAME_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(SIZE, SIZE_COLUMN_INDEX, true, true, ids.get(SIZE_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(
+                INSTRUMENT,
+                INSTRUMENT_COLUMN_INDEX,
+                true,
+                true,
+                ids.get(INSTRUMENT_COLUMN_INDEX)
+            ),
+            new ColumnViewHelper.ColumnInfo(LABORATORY, LAB_COLUMN_INDEX, true, true, ids.get(LAB_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(
+                UPLOAD_DATE,
+                UPLOAD_DATY_COLUMN_INDEX,
+                true,
+                true,
+                ids.get(UPLOAD_DATY_COLUMN_INDEX)
+            ),
+            new ColumnViewHelper.ColumnInfo(LABELS, LABELS_COLUMN_INDEX, true, true, ids.get(LABELS_COLUMN_INDEX))
         );
 
         initiator.defaultColumnsView(columns, ColumnViewHelper.ColumnViewType.FILE);
@@ -201,20 +233,40 @@ public class SeedDataCreator {
                 add(new ColumnViewHelper.Column(0L, PROJECT, STRING_DATA_TYPE, true, true, UNITS_12));
                 add(new ColumnViewHelper.Column(0L, FILES, NUMBER_DATA_TYPE, true, true, UNITS_8));
                 add(new ColumnViewHelper.Column(0L, MODIFIED, DATE_DATA_TYPE, true, true, UNITS_10));
-
+                add(new ColumnViewHelper.Column(0L, FAILED, BOOLEAN_DATA_TYPE, true, true, UNITS_10));
             }
         };
 
-        final List<Long> ids = initiator.createColumnsDefinitions(columnSet, ColumnViewHelper.ColumnViewType.EXPERIMENT);
+        final List<Long> ids =
+            initiator.createColumnsDefinitions(columnSet, ColumnViewHelper.ColumnViewType.EXPERIMENT);
 
         Set<ColumnViewHelper.ColumnInfo> columns = newHashSet(
-                new ColumnViewHelper.ColumnInfo(ID, ID_COLUMN_INDEX, false, true, ids.get(ID_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(EXPERIMENT_NAME, NAME_COLUMN_INDEX, false, true, ids.get(NAME_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(OWNER, SIZE_COLUMN_INDEX, true, true, ids.get(SIZE_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(LABORATORY, INSTRUMENT_COLUMN_INDEX, true, true, ids.get(INSTRUMENT_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(PROJECT, LAB_COLUMN_INDEX, true, true, ids.get(LAB_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(FILES, UPLOAD_DATY_COLUMN_INDEX, true, true, ids.get(UPLOAD_DATY_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(MODIFIED, LABELS_COLUMN_INDEX, true, true, ids.get(LABELS_COLUMN_INDEX))
+            new ColumnViewHelper.ColumnInfo(ID, ID_COLUMN_INDEX, false, true, ids.get(ID_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(
+                EXPERIMENT_NAME,
+                NAME_COLUMN_INDEX,
+                false,
+                true,
+                ids.get(NAME_COLUMN_INDEX)
+            ),
+            new ColumnViewHelper.ColumnInfo(OWNER, SIZE_COLUMN_INDEX, true, true, ids.get(SIZE_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(
+                LABORATORY,
+                INSTRUMENT_COLUMN_INDEX,
+                true,
+                true,
+                ids.get(INSTRUMENT_COLUMN_INDEX)
+            ),
+            new ColumnViewHelper.ColumnInfo(PROJECT, LAB_COLUMN_INDEX, true, true, ids.get(LAB_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(
+                FILES,
+                UPLOAD_DATY_COLUMN_INDEX,
+                true,
+                true,
+                ids.get(UPLOAD_DATY_COLUMN_INDEX)
+            ),
+            new ColumnViewHelper.ColumnInfo(MODIFIED, LABELS_COLUMN_INDEX, true, true, ids.get(LABELS_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(FAILED, FAILED_COLUMN_INDEX, true, true, ids.get(FAILED_COLUMN_INDEX))
         );
 
         initiator.defaultColumnsView(columns, ColumnViewHelper.ColumnViewType.EXPERIMENT);
@@ -237,12 +289,24 @@ public class SeedDataCreator {
         final List<Long> ids = initiator.createColumnsDefinitions(columnSet, ColumnViewHelper.ColumnViewType.PROJECT);
 
         Set<ColumnViewHelper.ColumnInfo> columns = newHashSet(
-                new ColumnViewHelper.ColumnInfo(ID, ID_COLUMN_INDEX, false, true, ids.get(ID_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(PROJECT_NAME, NAME_COLUMN_INDEX, false, true, ids.get(NAME_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(OWNER, SIZE_COLUMN_INDEX, true, true, ids.get(SIZE_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(LABORATORY, INSTRUMENT_COLUMN_INDEX, true, true, ids.get(INSTRUMENT_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(AREA_OF_RESEARCH, LAB_COLUMN_INDEX, true, true, ids.get(LAB_COLUMN_INDEX)),
-                new ColumnViewHelper.ColumnInfo(MODIFIED, UPLOAD_DATY_COLUMN_INDEX, true, true, ids.get(UPLOAD_DATY_COLUMN_INDEX))
+            new ColumnViewHelper.ColumnInfo(ID, ID_COLUMN_INDEX, false, true, ids.get(ID_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(PROJECT_NAME, NAME_COLUMN_INDEX, false, true, ids.get(NAME_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(OWNER, SIZE_COLUMN_INDEX, true, true, ids.get(SIZE_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(
+                LABORATORY,
+                INSTRUMENT_COLUMN_INDEX,
+                true,
+                true,
+                ids.get(INSTRUMENT_COLUMN_INDEX)
+            ),
+            new ColumnViewHelper.ColumnInfo(AREA_OF_RESEARCH, LAB_COLUMN_INDEX, true, true, ids.get(LAB_COLUMN_INDEX)),
+            new ColumnViewHelper.ColumnInfo(
+                MODIFIED,
+                UPLOAD_DATY_COLUMN_INDEX,
+                true,
+                true,
+                ids.get(UPLOAD_DATY_COLUMN_INDEX)
+            )
         );
 
         initiator.defaultColumnsView(columns, ColumnViewHelper.ColumnViewType.PROJECT);
@@ -256,17 +320,37 @@ public class SeedDataCreator {
         initiator.experimentType(DMPK_EXPERIMENT_TYPE, false, false);
         initiator.experimentType(OTHER_EXPERIMENT_TYPE, false, false);
         initiator.experimentType(TOP_DOWN_PROTEOMICS_EXPERIMENT_TYPE, false, false);
+        initiator.experimentType(ALIS_SCREENING, false, false);
         notifier.setEnabled(true);
+    }
+
+    private void studyTypes() {
+        initiator.createInstrumentStudyType(MS_INSTRUMENT_STUDY_TYPE);
+        initiator.createInstrumentStudyType(MA_INSTRUMENT_STUDY_TYPE);
+        initiator.createInstrumentStudyType(NG_INSTRUMENT_STUDY_TYPE);
+        initiator.createInstrumentStudyType(CL_INSTRUMENT_STUDY_TYPE);
     }
 
     private void vendors() {
         notifier.setEnabled(false);
 
-        final HashSet<FileExtensionItem> raws = newHashSet(new FileExtensionItem(RAW, EMPTY_AMINO_ACID, Collections.<String, AdditionalExtensionImportance>emptyMap()));
+        final HashSet<FileExtensionItem> raws = newHashSet(new FileExtensionItem(
+            RAW,
+            EMPTY_AMINO_ACID,
+            Collections.<String, AdditionalExtensionImportance>emptyMap()
+        ));
         initiator.instrumentModel(THERMO_VENDOR, LTQ, MS_INSTRUMENT_STUDY_TYPE, LTQ, false, false, raws);
         initiator.instrumentModel(THERMO_VENDOR, OT, MS_INSTRUMENT_STUDY_TYPE, "LTQ Orbitrap XL", false, false, raws);
         initiator.instrumentModel(THERMO_VENDOR, OT, MS_INSTRUMENT_STUDY_TYPE, "Exactive Plus", false, false, raws);
-        initiator.instrumentModel(THERMO_VENDOR, OT, MS_INSTRUMENT_STUDY_TYPE, "LTQ Orbitrap XL ETD", false, false, raws);
+        initiator.instrumentModel(
+            THERMO_VENDOR,
+            OT,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "LTQ Orbitrap XL ETD",
+            false,
+            false,
+            raws
+        );
         initiator.instrumentModel(THERMO_VENDOR, OT, MS_INSTRUMENT_STUDY_TYPE, "Orbitrap Elite", false, false, raws);
         initiator.instrumentModel(THERMO_VENDOR, OT, MS_INSTRUMENT_STUDY_TYPE, "Orbitrap Velos", false, false, raws);
         initiator.instrumentModel(THERMO_VENDOR, LTQ, MS_INSTRUMENT_STUDY_TYPE, "LTQ Velos", false, false, raws);
@@ -275,83 +359,409 @@ public class SeedDataCreator {
         initiator.instrumentModel(THERMO_VENDOR, FT, MS_INSTRUMENT_STUDY_TYPE, "LTQ-FT", false, false, raws);
         initiator.instrumentModel(THERMO_VENDOR, OT, MS_INSTRUMENT_STUDY_TYPE, "Q Exactive", false, false, raws);
         initiator.instrumentModel(THERMO_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "TSQ Quantum", false, false, raws);
-        initiator.instrumentModel(THERMO_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "TSQ Quantum Ultra", false, false, raws);
+        initiator.instrumentModel(
+            THERMO_VENDOR,
+            QQQ,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "TSQ Quantum Ultra",
+            false,
+            false,
+            raws
+        );
         initiator.instrumentModel(THERMO_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "TSQ Vantage", false, false, raws);
         initiator.instrumentModel(THERMO_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "TSQ Quantiva", false, false, raws);
 
-        final HashSet<FileExtensionItem> waters = newHashSet(new FileExtensionItem(RAW, RAW, Collections.<String, AdditionalExtensionImportance>emptyMap()));
+        final HashSet<FileExtensionItem> waters =
+            newHashSet(new FileExtensionItem(RAW, RAW, Collections.<String, AdditionalExtensionImportance>emptyMap()));
         initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "API-US", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Micro", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Premier", true, false, waters);
 
         initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Synapt HDMS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI Synapt MS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI Synapt HDMS", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "MALDI Synapt MS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "MALDI Synapt HDMS",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Synapt G2 MS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Synapt G2 HDMS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI Synapt G2 MS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI Synapt G2 HDMS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Synapt G2-S MS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Synapt G2-S MS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Synapt G2-S HDMS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI Synapt G2-S MS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI Synapt G2-S HDMS", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Synapt G2 HDMS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "MALDI Synapt G2 MS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "MALDI Synapt G2 HDMS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Synapt G2-S MS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Synapt G2-S MS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Synapt G2-S HDMS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "MALDI Synapt G2-S MS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "MALDI Synapt G2-S HDMS",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Xevo QTof", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Xevo G2 QTof", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "Xevo G2-S QTof", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            Q_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Xevo G2-S QTof",
+            true,
+            false,
+            waters
+        );
 
-        initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Platform", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Platform II", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            SINGLE_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Platform",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            SINGLE_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Platform II",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "PLC", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Platform LCZ", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            SINGLE_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Platform LCZ",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "ZMD", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "ZQ", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "EMD 1000", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            SINGLE_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "EMD 1000",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "3100", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "ACQUITY SQD", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, SINGLE_QUAD, MS_INSTRUMENT_STUDY_TYPE, "SQ Detector 2", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            SINGLE_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "ACQUITY SQD",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            SINGLE_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "SQ Detector 2",
+            true,
+            false,
+            waters
+        );
 
         initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Bio-Q", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro II", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro LC", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro Ultima", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro Ultima Pt", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro micro", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro Premier", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Quattro Premier XE", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "ACQUITY TQD", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Xevo TQ MS", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Xevo TQ-S", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, TANDEM_QUAD, MS_INSTRUMENT_STUDY_TYPE, "Xevo TQD", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Quattro II",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Quattro LC",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Quattro Ultima",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Quattro Ultima Pt",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Quattro micro",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Quattro Premier",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Quattro Premier XE",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "ACQUITY TQD",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Xevo TQ MS",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Xevo TQ-S",
+            true,
+            false,
+            waters
+        );
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            TANDEM_QUAD,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Xevo TQD",
+            true,
+            false,
+            waters
+        );
 
         initiator.instrumentModel(WATERS_VENDOR, LC_TOF, MS_INSTRUMENT_STUDY_TYPE, "LCT", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, LC_TOF, MS_INSTRUMENT_STUDY_TYPE, "LCT Premier", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, LC_TOF, MS_INSTRUMENT_STUDY_TYPE, "LCT Premier XE", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            LC_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "LCT Premier XE",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, LC_TOF, MS_INSTRUMENT_STUDY_TYPE, "Xevo G2 Tof", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, LC_TOF, MS_INSTRUMENT_STUDY_TYPE, "Xevo G2-S Tof", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            LC_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "Xevo G2-S Tof",
+            true,
+            false,
+            waters
+        );
 
         initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI L", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI LR", true, false, waters);
         initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI R", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI micro MX", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            MALDI_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "MALDI micro MX",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "TofSpec", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "TofSpec 2E", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            MALDI_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "TofSpec 2E",
+            true,
+            false,
+            waters
+        );
         initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "TofSpec E", true, false, waters);
-        initiator.instrumentModel(WATERS_VENDOR, MALDI_TOF, MS_INSTRUMENT_STUDY_TYPE, "TofSpec SE", true, false, waters);
+        initiator.instrumentModel(
+            WATERS_VENDOR,
+            MALDI_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "TofSpec SE",
+            true,
+            false,
+            waters
+        );
 
 
-        final HashSet<FileExtensionItem> ds = newHashSet(new FileExtensionItem(".d", ".d", Collections.<String, AdditionalExtensionImportance>emptyMap()));
-        initiator.instrumentModel(AGILENT_VENDOR, IT, MS_INSTRUMENT_STUDY_TYPE, "220 GC/MS Ion Trap System", true, false, ds);
-        initiator.instrumentModel(AGILENT_VENDOR, IT, MS_INSTRUMENT_STUDY_TYPE, "240 GC/MS Ion Trap System", true, false, ds);
-        initiator.instrumentModel(AGILENT_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "7000 Triple Quadrupole GC/MS System", true, false, ds);
+        final HashSet<FileExtensionItem> ds = newHashSet(new FileExtensionItem(
+            ".d",
+            ".d",
+            Collections.<String, AdditionalExtensionImportance>emptyMap()
+        ));
+        initiator.instrumentModel(
+            AGILENT_VENDOR,
+            IT,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "220 GC/MS Ion Trap System",
+            true,
+            false,
+            ds
+        );
+        initiator.instrumentModel(
+            AGILENT_VENDOR,
+            IT,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "240 GC/MS Ion Trap System",
+            true,
+            false,
+            ds
+        );
+        initiator.instrumentModel(
+            AGILENT_VENDOR,
+            QQQ,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "7000 Triple Quadrupole GC/MS System",
+            true,
+            false,
+            ds
+        );
         initiator.instrumentModel(AGILENT_VENDOR, Q_TOF, MS_INSTRUMENT_STUDY_TYPE, "7200 GC/Q-TOF", true, false, ds);
-        initiator.instrumentModel(AGILENT_VENDOR, TOF, MS_INSTRUMENT_STUDY_TYPE, "6200 Series Accurate-Mass Time-of-Flight (TOF) LC/MS", true, false, ds);
-        initiator.instrumentModel(AGILENT_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "6400 Series Triple Quadrupole LC/MS", true, false, ds);
+        initiator.instrumentModel(
+            AGILENT_VENDOR,
+            TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "6200 Series Accurate-Mass Time-of-Flight (TOF) LC/MS",
+            true,
+            false,
+            ds
+        );
+        initiator.instrumentModel(
+            AGILENT_VENDOR,
+            QQQ,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "6400 Series Triple Quadrupole LC/MS",
+            true,
+            false,
+            ds
+        );
 
         final HashSet<FileExtensionItem> bruker = newHashSet(new FileExtensionItem(".d", ".d",
-                Collections.<String, AdditionalExtensionImportance>emptyMap()));
-        initiator.instrumentModel(BRUKER_VENDOR, O_TOF, MS_INSTRUMENT_STUDY_TYPE, "micrOTOF focus II", true, true, bruker);
+            Collections.<String, AdditionalExtensionImportance>emptyMap()
+        ));
+        initiator.instrumentModel(
+            BRUKER_VENDOR,
+            O_TOF,
+            MS_INSTRUMENT_STUDY_TYPE,
+            "micrOTOF focus II",
+            true,
+            true,
+            bruker
+        );
         initiator.instrumentModel(BRUKER_VENDOR, O_TOF, MS_INSTRUMENT_STUDY_TYPE, "micrOTOF-Q II", true, true, bruker);
         initiator.instrumentModel(BRUKER_VENDOR, TOF, MS_INSTRUMENT_STUDY_TYPE, "maXis impact", true, true, bruker);
         initiator.instrumentModel(BRUKER_VENDOR, TOF, MS_INSTRUMENT_STUDY_TYPE, "maXis 4G", true, true, bruker);
@@ -359,34 +769,210 @@ public class SeedDataCreator {
         initiator.instrumentModel(BRUKER_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "EVOQ Elite", true, true, bruker);
         initiator.instrumentModel(BRUKER_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "EVOQ Qube", true, true, bruker);
 
-        final HashMap<String, AdditionalExtensionImportance> additionalExtensionsWiff = new HashMap<String, AdditionalExtensionImportance>() {{
-            put(".wiff.scan", AdditionalExtensionImportance.NOT_REQUIRED);
-            put(".wiff.mtd", AdditionalExtensionImportance.NOT_REQUIRED);
-        }};
+        final HashMap<String, AdditionalExtensionImportance> additionalExtensionsWiff =
+            new HashMap<String, AdditionalExtensionImportance>() {
+                {
+                    put(".wiff.scan", AdditionalExtensionImportance.NOT_REQUIRED);
+                    put(".wiff.mtd", AdditionalExtensionImportance.NOT_REQUIRED);
+                }
+            };
 
-        final HashSet<FileExtensionItem> wiff = newHashSet(new FileExtensionItem(".wiff", ".wiff", additionalExtensionsWiff));
+        final HashSet<FileExtensionItem> wiff =
+            newHashSet(new FileExtensionItem(".wiff", ".wiff", additionalExtensionsWiff));
         initiator.instrumentModel(AB_SCIEX_VENDOR, TOF, MS_INSTRUMENT_STUDY_TYPE, "TripleTOF 5600", false, true, wiff);
         initiator.instrumentModel(AB_SCIEX_VENDOR, TOF, MS_INSTRUMENT_STUDY_TYPE, "TripleTOF 6600", false, true, wiff);
         initiator.instrumentModel(AB_SCIEX_VENDOR, TOF_TOF, MS_INSTRUMENT_STUDY_TYPE, "MALDI 4800", false, true, wiff);
         initiator.instrumentModel(AB_SCIEX_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "4000 QTRAP", false, true, wiff);
         initiator.instrumentModel(AB_SCIEX_VENDOR, QQQ, MS_INSTRUMENT_STUDY_TYPE, "QTRAP 5500", false, true, wiff);
 
+        /*NextGen Sequencing instrument models*/
+        final Set<FileExtensionItem> nextGenExtensions =
+            makeFileExtensionsSet(".fastq", ".fastq.gz", ".bam", ".sam", ".txt");
+
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            HiSEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "HiSeq 2500",
+            false,
+            false,
+            nextGenExtensions
+        );
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            HiSEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "HiSeq 3000",
+            false,
+            false,
+            nextGenExtensions
+        );
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            HiSEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "HiSeq 4000",
+            false,
+            false,
+            nextGenExtensions
+        );
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            HiSEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "HiSeq X",
+            false,
+            false,
+            nextGenExtensions
+        );
+
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            NEXTSEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "NextSeq 500",
+            false,
+            false,
+            nextGenExtensions
+        );
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            NEXTSEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "NextSeq 550",
+            false,
+            false,
+            nextGenExtensions
+        );
+
+
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            NOVASEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "NovaSeq 5000",
+            false,
+            false,
+            nextGenExtensions
+        );
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            NOVASEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "NovaSeq 6000",
+            false,
+            false,
+            nextGenExtensions
+        );
+
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            MISEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "MiSeqDx",
+            false,
+            false,
+            nextGenExtensions
+        );
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            MISEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "MiSeq FGx",
+            false,
+            false,
+            nextGenExtensions
+        );
+
+        initiator.instrumentModel(
+            ILLUMINA_VENDOR,
+            MINISEQ_MODEL_TYPE,
+            NG_INSTRUMENT_STUDY_TYPE,
+            "MiniSeq",
+            false,
+            false,
+            nextGenExtensions
+        );
+
+        initiator.instrumentModel(
+            PACBIO_VENDOR,
+            PACBIO_VENDOR,
+            NG_INSTRUMENT_STUDY_TYPE,
+            PACBIO_VENDOR,
+            false,
+            false,
+            nextGenExtensions
+        );
+        initiator.instrumentModel(
+            ROCHE_VENDOR,
+            ROCHE_VENDOR,
+            NG_INSTRUMENT_STUDY_TYPE,
+            ROCHE_VENDOR,
+            false,
+            false,
+            nextGenExtensions
+        );
+
+        final Set<FileExtensionItem> defaultExtensions = makeFileExtensionsSet(FilenameUtil.ALL_FILES_DOT_STAR);
+        createDefaultVendorForTechnology(CL_INSTRUMENT_STUDY_TYPE, defaultExtensions);
+        createDefaultVendorForTechnology(NG_INSTRUMENT_STUDY_TYPE, defaultExtensions);
+        createDefaultVendorForTechnology(MA_INSTRUMENT_STUDY_TYPE, defaultExtensions);
+        createDefaultVendorForTechnology(MS_INSTRUMENT_STUDY_TYPE, defaultExtensions);
+
         notifier.setEnabled(true);
+    }
+
+    private void createDefaultVendorForTechnology(String nameTechnology, Set<FileExtensionItem> fileExtensions) {
+        initiator.instrumentModel(
+            DEFAULT_VENDOR,
+            DEFAULT_NAME,
+            nameTechnology,
+            DEFAULT_NAME,
+            false,
+            false,
+            fileExtensions
+        );
     }
 
     private void species() {
         notifier.setEnabled(false);
-        final Set<String> species = Sets.newHashSet("Unspecified", "Arabidopsis thaliana", "Escherichia coli", "Pneumocystis carinii",
-                "Bos taurus", "Hepatitis C virus", "Rattus norvegicus",
-                "Caenorhabditis elegans", HOMO_SAPIENS, "Saccharomyces cerevisiae",
-                "Chlamydomonas reinhardtii", "Mus musculus", "Schizosaccharomyces pombe",
-                "Danio rerio (zebrafish)", "Mycoplasma pneumoniae", "Takifugu rubripes",
-                "Dictyostelium discoideum", "Oryza sativa", "Xenopus laevis",
-                "Drosophila melanogaster", "Plasmodium falciparum", "Zea mays",
-                "Bemisia tabaci (Gennadius)", "Mucata mulata", "Canis familiaris", "Gallus gallus", "Sus scrofa",
-                "Anopheles gambiae", "Caenorhabditis briggsae", "Caenorhabditis remanei", "Haliotis rufescens", "Pseudomonas aeruginosa",
-                "Staphylococcus aureus", "Gasterosteus aculeatus (fish)",
-                "Trichomonas vaginalis");
+        final Set<String> species = Sets.newHashSet(
+            "Unspecified",
+            "Arabidopsis thaliana",
+            "Escherichia coli",
+            "Pneumocystis carinii",
+            "Bos taurus",
+            "Hepatitis C virus",
+            "Rattus norvegicus",
+            "Caenorhabditis elegans",
+            HOMO_SAPIENS,
+            "Saccharomyces cerevisiae",
+            "Chlamydomonas reinhardtii",
+            "Mus musculus",
+            "Schizosaccharomyces pombe",
+            "Danio rerio (zebrafish)",
+            "Mycoplasma pneumoniae",
+            "Takifugu rubripes",
+            "Dictyostelium discoideum",
+            "Oryza sativa",
+            "Xenopus laevis",
+            "Drosophila melanogaster",
+            "Plasmodium falciparum",
+            "Zea mays",
+            "Bemisia tabaci (Gennadius)",
+            "Mucata mulata",
+            "Canis familiaris",
+            "Gallus gallus",
+            "Sus scrofa",
+            "Anopheles gambiae",
+            "Caenorhabditis briggsae",
+            "Caenorhabditis remanei",
+            "Haliotis rufescens",
+            "Pseudomonas aeruginosa",
+            "Staphylococcus aureus",
+            "Gasterosteus aculeatus (fish)",
+            "Trichomonas vaginalis"
+        );
         initiator.species(species.toArray(new String[species.size()]));
 
 
@@ -395,6 +981,12 @@ public class SeedDataCreator {
 
     public boolean isSeedDataAlreadyHere() {
         return !experimentCreationHelper.experimentTypes().isEmpty();
+    }
+
+    private Set<FileExtensionItem> makeFileExtensionsSet(String... extensions) {
+        return Stream.of(extensions)
+            .map(ext -> new FileExtensionItem(ext, EMPTY_AMINO_ACID, Collections.emptyMap()))
+            .collect(Collectors.toSet());
     }
 
     private void experimentLabels() {

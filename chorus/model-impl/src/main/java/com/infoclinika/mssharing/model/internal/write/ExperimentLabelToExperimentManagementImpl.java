@@ -33,26 +33,31 @@ public class ExperimentLabelToExperimentManagementImpl implements ExperimentLabe
     private ExperimentLabelRepository experimentLabelRepository;
 
     public void persistExperimentLabels(long experiment, ExperimentLabelsInfo experimentLabels) {
-        final List<ExperimentLabelToExperiment> experimentLabelsToPersist = createExperimentLabels(experiment, experimentLabels);
+        final List<ExperimentLabelToExperiment> experimentLabelsToPersist =
+            createExperimentLabels(experiment, experimentLabels);
         experimentLabelToExperimentRepository.deleteAllByExperiment(experiment);
         experimentLabelToExperimentRepository.save(experimentLabelsToPersist);
     }
 
-    private List<ExperimentLabelToExperiment> createExperimentLabels(long experimentId, ExperimentLabelsInfo experimentLabelItems) {
+    private List<ExperimentLabelToExperiment> createExperimentLabels(
+        long experimentId,
+        ExperimentLabelsInfo experimentLabelItems
+    ) {
         final ActiveExperiment experiment = experimentRepository.findOne(experimentId);
         final ImmutableSet<Long> labelsToBuild = ImmutableSet.<Long>builder()
-                .addAll(experimentLabelItems.heavyLabels)
-                .addAll(experimentLabelItems.mediumLabels)
-                .addAll(experimentLabelItems.lightLabels)
-                .addAll(experimentLabelItems.specialLabels)
-                .build();
+            .addAll(experimentLabelItems.heavyLabels)
+            .addAll(experimentLabelItems.mediumLabels)
+            .addAll(experimentLabelItems.lightLabels)
+            .addAll(experimentLabelItems.specialLabels)
+            .build();
 
-        final ImmutableMap<Long, ExperimentLabel> idToLabelMap = Maps.uniqueIndex(experimentLabelRepository.findAll(labelsToBuild), new Function<ExperimentLabel, Long>() {
-            @Override
-            public Long apply(ExperimentLabel label) {
-                return label.getId();
-            }
-        });
+        final ImmutableMap<Long, ExperimentLabel> idToLabelMap =
+            Maps.uniqueIndex(experimentLabelRepository.findAll(labelsToBuild), new Function<ExperimentLabel, Long>() {
+                @Override
+                public Long apply(ExperimentLabel label) {
+                    return label.getId();
+                }
+            });
 
         final List<ExperimentLabelToExperiment> labels = newLinkedList();
 
@@ -75,17 +80,23 @@ public class ExperimentLabelToExperimentManagementImpl implements ExperimentLabe
     @Override
     public void copyExperimentLabels(long experimentFrom, long experimentTo) {
         final ActiveExperiment exTo = experimentRepository.findOne(experimentTo);
-        final List<ExperimentLabelToExperiment> labels = experimentLabelToExperimentRepository.findLabelsById(experimentFrom);
+        final List<ExperimentLabelToExperiment> labels =
+            experimentLabelToExperimentRepository.findLabelsById(experimentFrom);
         final List<ExperimentLabelToExperiment> newLabels = newLinkedList();
         for (ExperimentLabelToExperiment label : labels) {
-            newLabels.add(new ExperimentLabelToExperiment(exTo, label.getExperimentLabel(), label.getExperimentLabelMixType()));
+            newLabels.add(new ExperimentLabelToExperiment(
+                exTo,
+                label.getExperimentLabel(),
+                label.getExperimentLabelMixType()
+            ));
         }
         experimentLabelToExperimentRepository.save(labels);
     }
 
     @Override
     public void deleteExperimentLabels(long experiment) {
-        final List<ExperimentLabelToExperiment> labels = experimentLabelToExperimentRepository.findLabelsById(experiment);
+        final List<ExperimentLabelToExperiment> labels =
+            experimentLabelToExperimentRepository.findLabelsById(experiment);
         for (ExperimentLabelToExperiment label : labels) {
             experimentLabelToExperimentRepository.delete(label);
         }

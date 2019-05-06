@@ -21,7 +21,7 @@ public class AppearanceController extends ErrorHandler {
 
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public AppearanceSettings getAppearanceSettings(){
+    public AppearanceSettings getAppearanceSettings() {
         return appearanceSettings;
     }
 }

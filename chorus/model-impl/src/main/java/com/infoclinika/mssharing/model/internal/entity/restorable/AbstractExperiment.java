@@ -65,7 +65,7 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
     @Column(name = "minReporterFraction", nullable = false)
     private double minReporterFraction;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     public AnnotationAttachment annotationAttachment;
 
     @Basic(optional = false)
@@ -96,7 +96,8 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
                               double minBasePeakRatio,
                               double minReporterFraction,
                               ExperimentCategory experimentCategory,
-                              NgsRelatedData ngsRelatedData
+                              NgsRelatedData ngsRelatedData,
+                              boolean failed
     ) {
         setName(name);
         setLab(lab);
@@ -121,6 +122,7 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
         this.minReporterFraction = minReporterFraction;
         this.experimentCategory = experimentCategory;
         this.ngsRelatedData = ngsRelatedData;
+        setFailed(failed);
     }
 
     public void setLockMasses(List<LockMz> lockMasses) {
@@ -261,21 +263,21 @@ public class AbstractExperiment extends ExperimentTemplate<User, Lab, AbstractPr
     @Override
     public String toString() {
         return "AbstractExperiment{" +
-                "bounds=" + bounds +
-                ", billLaboratory=" + billLaboratory +
-                ", lockMasses=" + lockMasses +
-                ", sampleTypesCount=" + sampleTypesCount +
-                ", channelsCount=" + channelsCount +
-                ", labelType='" + labelType + '\'' +
-                ", groupSpecificParametersType='" + groupSpecificParametersType + '\'' +
-                ", reporterMassTol=" + reporterMassTol +
-                ", filterByPIFEnabled=" + filterByPIFEnabled +
-                ", minReporterPIF=" + minReporterPIF +
-                ", minBasePeakRatio=" + minBasePeakRatio +
-                ", minReporterFraction=" + minReporterFraction +
-                ", annotationAttachment=" + annotationAttachment +
-                ", experimentCategory=" + experimentCategory +
-                ", ngsRelatedData=" + ngsRelatedData +
-                "} " + super.toString();
+            ", bounds=" + bounds +
+            ", billLaboratory=" + billLaboratory +
+            ", lockMasses=" + lockMasses +
+            ", sampleTypesCount=" + sampleTypesCount +
+            ", channelsCount=" + channelsCount +
+            ", labelType='" + labelType + '\'' +
+            ", groupSpecificParametersType='" + groupSpecificParametersType + '\'' +
+            ", reporterMassTol=" + reporterMassTol +
+            ", filterByPIFEnabled=" + filterByPIFEnabled +
+            ", minReporterPIF=" + minReporterPIF +
+            ", minBasePeakRatio=" + minBasePeakRatio +
+            ", minReporterFraction=" + minReporterFraction +
+            ", annotationAttachment=" + annotationAttachment +
+            ", experimentCategory=" + experimentCategory +
+            ", ngsRelatedData=" + ngsRelatedData +
+            "} " + super.toString();
     }
 }

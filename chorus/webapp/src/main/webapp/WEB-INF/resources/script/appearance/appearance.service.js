@@ -1,7 +1,6 @@
+"use strict";
+
 (function () {
-
-    "use strict";
-
     angular.module("appearance").factory("Appearance", AppearanceService);
 
     AppearanceService.$inject = ["$resource"];

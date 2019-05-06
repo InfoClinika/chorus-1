@@ -23,7 +23,9 @@ public class NewsManagementImpl implements NewsManagement {
 
     @Override
     public void updateNews(long actor, long newsId, NewsInfo newsInfo) {
-        if(!ruleValidator.canManageNews(actor)) throw new AccessDenied("Only admin can update news");
+        if (!ruleValidator.canManageNews(actor)) {
+            throw new AccessDenied("Only admin can update news");
+        }
         final NewsItem newsItem = checkPresence(newsRepository.findOne(newsId));
         newsItem.setAuthor(newsInfo.creatorEmail);
         newsItem.setIntroduction(newsInfo.introduction);
@@ -36,10 +38,13 @@ public class NewsManagementImpl implements NewsManagement {
 
     @Override
     public void createNews(long actor, NewsInfo newsInfo) {
-        if(!ruleValidator.canManageNews(actor)) throw new AccessDenied("Only admin can create news");
+        if (!ruleValidator.canManageNews(actor)) {
+            throw new AccessDenied("Only admin can create news");
+        }
 
-        final Date date = newsInfo.dateCreated != null ? newsInfo.dateCreated: new Date();
-        NewsItem newsItem = new NewsItem(newsInfo.title, newsInfo.introduction, newsInfo.text, newsInfo.creatorEmail, date);
+        final Date date = newsInfo.dateCreated != null ? newsInfo.dateCreated : new Date();
+        NewsItem newsItem =
+            new NewsItem(newsInfo.title, newsInfo.introduction, newsInfo.text, newsInfo.creatorEmail, date);
         newsItem.setLastModification(date);
 
         newsRepository.save(newsItem);
@@ -47,7 +52,9 @@ public class NewsManagementImpl implements NewsManagement {
 
     @Override
     public void deleteNews(long actor, long newsId) {
-        if(!ruleValidator.canManageNews(actor)) throw new AccessDenied("Only admin can delete news");
+        if (!ruleValidator.canManageNews(actor)) {
+            throw new AccessDenied("Only admin can delete news");
+        }
         final Long news = checkPresence(newsId);
         newsRepository.delete(news);
     }

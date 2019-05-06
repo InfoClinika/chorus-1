@@ -18,25 +18,23 @@ import static com.infoclinika.mssharing.platform.model.helper.read.ResultBuilder
  */
 @Component
 @Scope(value = "prototype")
-public class LabMembershipRequestHelper<ENTITY extends UserLabMembershipRequestTemplate, LINE extends LabMembershipRequest>
-        extends AbstractReaderHelper<ENTITY, LINE, LabMembershipRequest> {
+public class LabMembershipRequestHelper<ENTITY extends UserLabMembershipRequestTemplate,
+    LINE extends LabMembershipRequest>
+    extends AbstractReaderHelper<ENTITY, LINE, LabMembershipRequest> {
 
     @Inject
     private UserLabMembershipRequestRepositoryTemplate<ENTITY> userLabMemebershipRequestRepository;
 
     @Override
     public Function<ENTITY, LabMembershipRequest> getDefaultTransformer() {
-        return new Function<ENTITY, LabMembershipRequest>() {
-            @Override
-            public LabMembershipRequest apply(ENTITY input) {
-                return new LabMembershipRequest(input.getId(),
-                        input.getLab().getId(),
-                        input.getSent(),
-                        input.getUser().getEmail(),
-                        input.getUser().getFullName(),
-                        input.getLab().getName());
-            }
-        };
+        return input -> new LabMembershipRequest(
+            input.getId(),
+            input.getLab().getId(),
+            input.getSent(),
+            input.getUser().getEmail(),
+            input.getUser().getFullName(),
+            input.getLab().getName()
+        );
     }
 
     public ResultBuilder<ENTITY, LINE> readInbox(long actor) {

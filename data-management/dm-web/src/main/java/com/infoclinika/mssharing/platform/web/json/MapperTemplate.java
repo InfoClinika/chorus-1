@@ -7,16 +7,18 @@ import com.infoclinika.mssharing.platform.model.write.InstrumentManagementTempla
 
 /**
  * @author Pavel Kaplin
- *         <p/>
- *         Motivated by http://wiki.fasterxml.com/JacksonMixInAnnotations
+ *     <p/>
+ *     Motivated by http://wiki.fasterxml.com/JacksonMixInAnnotations
  */
 public class MapperTemplate extends ObjectMapper {
+
     public MapperTemplate() {
-        addMixInAnnotations(ExperimentManagementTemplate.Restriction.class, RestrictionMixin.class);
-        addMixInAnnotations(ExperimentManagementTemplate.MetaFactorTemplate.class, MetaFactorMixin.class);
-        addMixInAnnotations(ExperimentManagementTemplate.AnnotationTemplate.class, AnnotationMixin.class);
-        addMixInAnnotations(ExperimentManagementTemplate.FileItemTemplate.class, ExperimentFileItemMixin.class);
-        addMixInAnnotations(InstrumentManagementTemplate.InstrumentDetailsTemplate.class, InstrumentDetailsTemplateMixin.class);
+        addMixIn(ExperimentManagementTemplate.Restriction.class, RestrictionMixin.class);
+        addMixIn(ExperimentManagementTemplate.MetaFactorTemplate.class, MetaFactorMixin.class);
+        addMixIn(ExperimentManagementTemplate.AnnotationTemplate.class, AnnotationMixin.class);
+        addMixIn(ExperimentManagementTemplate.FileItemTemplate.class, ExperimentFileItemMixin.class);
+        addMixIn(InstrumentManagementTemplate.InstrumentDetailsTemplate.class, InstrumentDetailsTemplateMixin.class);
+
         registerModule(new GuavaModule());
     }
 }

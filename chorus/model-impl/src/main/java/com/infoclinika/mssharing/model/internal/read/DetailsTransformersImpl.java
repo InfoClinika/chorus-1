@@ -21,24 +21,34 @@ import static com.infoclinika.mssharing.model.internal.read.Transformers.transfo
 public class DetailsTransformersImpl extends DetailsTransformers {
 
     @Override
-    public <F extends ExperimentFileTemplate> Function<F, DetailsReaderTemplate.FileItemTemplate> experimentFileTransformer() {
+    public <F extends ExperimentFileTemplate> Function<F, DetailsReaderTemplate.FileItemTemplate>
+        experimentFileTransformer() {
 
         return new Function<F, DetailsReaderTemplate.FileItemTemplate>() {
             @Override
             public DetailsReaderTemplate.FileItemTemplate apply(F input) {
 
-                final DetailsReaderTemplate.FileItemTemplate byDefault = DetailsTransformersImpl.super.experimentFileTransformer().apply(input);
+                final DetailsReaderTemplate.FileItemTemplate byDefault =
+                    DetailsTransformersImpl.super.experimentFileTransformer().apply(input);
 
                 final ActiveFileMetaData fileMetaData = (ActiveFileMetaData) input.getFileMetaData();
                 final RawFile rawFile = (RawFile) input;
                 final ExperimentPreparedSample preparedSample = rawFile.getPreparedSample();
-                final ExperimentPreparedSampleItem preparedSampleItem = new ExperimentPreparedSampleItem(preparedSample.getName(),
-                        from(preparedSample.getSamples()).transform(Transformers.AS_SAMPLE_ITEM).toSet());
-                return new FileItem(byDefault, fileMetaData.getArchiveId(),
-                        transformStorageStatus(fileMetaData.getStorageData().getStorageStatus(), fileMetaData.getStorageData().isArchivedDownloadOnly()),
-                        rawFile.getFractionNumber(), preparedSampleItem);
+                final ExperimentPreparedSampleItem preparedSampleItem = new ExperimentPreparedSampleItem(
+                    preparedSample.getName(),
+                    from(preparedSample.getSamples()).transform(Transformers.AS_SAMPLE_ITEM).toSet()
+                );
+                return new FileItem(byDefault,
+                    fileMetaData.getArchiveId(),
+                    transformStorageStatus(
+                        fileMetaData.getStorageData().getStorageStatus(),
+                        fileMetaData.getStorageData().isArchivedDownloadOnly()
+                    ),
+                    rawFile.getPairedEnd(),
+                    rawFile.getFractionNumber(),
+                    preparedSampleItem
+                );
             }
         };
     }
-
 }

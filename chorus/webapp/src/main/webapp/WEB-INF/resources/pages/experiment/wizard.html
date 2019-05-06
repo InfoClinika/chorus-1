@@ -23,15 +23,15 @@
 	     			<div class="number">3</div>
 	     			<div class="title">File Selection</div>
      			</div>
-                <div class="step-holder steps-count-7" ng-class="{active: step == 4, skip: shouldSkipFourthStep()}">
+                <div class="step-holder steps-count-7" ng-class="{active: step == 4, skip: isSkippingFourthStep}">
                     <div class="number">4</div>
                     <div class="title">File-to-Prep</div>
                 </div>
-                <div class="step-holder steps-count-7" ng-class="{active: step == 5, skip: shouldSkipFifthStep()}">
+                <div class="step-holder steps-count-7" ng-class="{active: step == 5, skip: isSkippingFifthStep}">
                     <div class="number">5</div>
                     <div class="title">Sample-to-Prep</div>
                 </div>
-     			<div class="step-holder steps-count-7" ng-class="{active: step == 6}">
+     			<div class="step-holder steps-count-7" ng-class="{active: step == 6, skip: isSkippingDesignStep}">
 	     			<div class="number">6</div>
 	     			<div class="title">Experiment Design</div>
      			</div>
@@ -172,132 +172,21 @@
             <div ng-switch-when="3" class="relative"  on-content-load="correctModalHeight()">
                 <div class="step-description">
                     <i class="icon details"></i>
-                    <label>Select files that are part of the experiment. Scroll down to load more.</label>
+                    <label>Select files that are part of the experiment.</label>
                 </div>
-                <div class="relative">
-                    <label class="filter-label control-label">Filter</label>
-                </div>
-                <div class="well row-fluid files-filter">
-                    <div class="contains-filter row-fluid">
-                        <div class="control-group input-append">
-                            <label class="control-label" for="fromDateInput">Name contains</label>
-                            <input class="filter-checker" type="checkbox" ng-model="filesFilter.containsEnabled" />
-                            <input id="contains-input" type="text" class="contains-input" type="text"
-                                   ng-model="filesFilter.contains"
-                                   ng-disabled="!filesFilter.containsEnabled"/>
-                        </div>
-                    </div>
-                    <div class="date-filter row-fluid">
-                        <div class="control-group input-append">
-                            <label class="control-label" for="fromDateInput">Uploaded from</label>
-                            <input class="filter-checker" type="checkbox" ng-model="filesFilter.fromEnabled" />
-                            <input id="fromDateInput" type="text" class="calendar-picker" type="text" input-validator
-                                   ng-model="filesFilter.fromDate"
-                                   chorus-start-datepicker="filesFilter.toDate"
-                                   chorus-start-datepicker-from-today="false" ng-disabled="!filesFilter.fromEnabled"/>
-                            <label for="fromDateInput" class="add-on"><i class="icon-calendar"></i>
-                            </label>
-                        </div>
 
-                        <div class="control-group input-append">
-                            <label class="control-label" for="toDateInput">Uploaded before</label>
-                            <input class="filter-checker" type="checkbox" ng-model="filesFilter.toEnabled"/>
-                            <input id="toDateInput" type="text" class="calendar-picker" type="text" input-validator
-                                   ng-model="filesFilter.toDate"
-                                   chorus-end-datepicker="filesFilter.fromDate"
-                                   chorus-start-datepicker-from-today="false" ng-disabled="!filesFilter.toEnabled"/>
-                            <label for="toDateInput" class="add-on"><i class="icon-calendar"></i>
-                            </label>
-                        </div>
+                <filter-builder fields="filter.fields"
+                                advanced="filter.advanced"
+                                composed="filter.composed"
+                                query="filter.query"
+                                style="height: 150px">
+                </filter-builder>
 
-                        <div class="control-group">
-                            <label class="date-checker" class="control-label" for="applyFilterBtn">&nbsp;</label>
-                            <button class="btn secondary-action"
-                                    ng-disabled="!filesFilter.fromEnabled && !filesFilter.toEnabled && !filesFilter.containsEnabled"
-                                    id="applyFilterBtn" ng-click="applyFilesFilter()">Apply</button>
-                        </div>
-
-                    </div>
-                </div>
-                <div class="relative">
-
-                    <label class="control-label loaded-files-label">Files Loaded: <span ng-bind="files.length + ' of ' + totalFileItems"></span>
-                    </label>
-
-                    <label class="control-label uploaded-files-label" data-ng-class="{error: buttonPressed && (!isFilesSelected() || !haveSameSpecies)}">Select Files (selected: <span ng-bind="selectedFilesLength"></span>)
-                        <span class="error-message" ng-show="!isFilesSelected()">- select at least one file</span>
-                        <span class="error-message" ng-show="!haveSameSpecies">- specie of all files should match previously selected specie</span>
-                    </label>
-
-                </div>
-                <!--TODO: Replace with ng-if when migrate to newer version of angularjs-->
-               <div ng-switch="createFromFilesMode">
-                   <div class="limit-table limit-table-body select-files-table" ng-switch-when="true">
-                       <table class="table table-hover factor-table">
-                           <thead>
-                           <tr>
-                               <th class="cell-check" sorting="selected" ng-show="createFromFilesMode" style="width: 35px" sort-by-default="asc"><input type="checkbox" ng-model="allFilesSelected" ng-change="selectAll(allFilesSelected, items)"/></th>
-                               <th class="cell-name" sorting="name" ng-show="createFromFilesMode">File Name</th>
-                               <th class="cell-date" sorting="uploadDate">Date</th>
-                               <th class="cell-label">
-                                   Labels
-                                        <span class="labels-filter">
-                                            <i class="icon filter"></i>
-                                            <input class="filter-input" type="text" ng-model="labelsFilter.labels"/>
-                                        </span>
-                               </th>
-                           </tr>
-                           </thead>
-                           <tbody infinite-scroll='loadNextFilesPage()' infinite-scroll-disabled='filesInfiniteScrollDisable' infinite-scroll-delta="7">
-                           <tr ng-show="filesLoaded" ng-repeat="file in (items = ( files | filter:labelsFilter | orderBy:sorting.field:sorting.reverse))">
-                               <td class="cell-check"><input type="checkbox" ng-checked="file.selected" ng-click="changeSelection(file)"/></td>
-                               <td class="cell-name" title="{{file.name}}">
-                                   <div class="name ellipsize" title="{{file.name}}" ng-bind="file.name"></div>
-                               </td>
-                               <td class="cell-date" ng-bind="file.uploadDate | date"></td>
-                               <td class="cell-label">
-                                   <div class="labels ellipsize" ng-bind="file.labels | labels"></div>
-                               </td>
-                           </tr>
-                           </tbody>
-                       </table>
-                   </div>
-                   <div class="limit-table limit-table-body select-files-table" ng-switch-default="">
-                       <table class="table table-hover factor-table">
-                           <thead>
-                           <tr ng-click="restoreFilesOrdering()">
-                               <th class="cell-check" sorting="selected"><input type="checkbox" ng-model="allFilesSelected" ng-change="selectAll(allFilesSelected, items)"/></th>
-                               <th class="cell-name" sorting="name" sort-by-default="asc">
-                                   File Name
-                               </th>
-                               <th class="cell-date" sorting="uploadDate">Date</th>
-                               <th class="cell-label">
-                                   Labels
-                                        <span class="labels-filter">
-                                            <i class="icon filter"></i>
-                                            <input class="filter-input" type="text" ng-model="labelsFilter.labels"/>
-                                        </span>
-                               </th>
-                           </tr>
-                           </thead>
-                           <tbody infinite-scroll='loadNextFilesPage()' infinite-scroll-disabled='filesInfiniteScrollDisable' infinite-scroll-delta="7">
-                           <!-- ng repeat behaviour was overrode in experiment-front.js -->
-                           <tr ng-show="filesLoaded" ng-repeat="file in (items = ( files | filter:labelsFilter | orderBy:sorting.field:sorting.reverse:ignoreFilesOrdering:'experimentFiles'))" ng-click="changeSelection(file)">
-                               <td class="cell-check"><input type="checkbox" ng-checked="file.selected"/></td>
-                               <td class="cell-name" title="{{file.name}}">
-                                   <div class="name ellipsize" title="{{file.name}}" ng-bind="file.name"></div>
-                               </td>
-                               <td class="cell-date" ng-bind="file.uploadDate | date"></td>
-                               <td class="cell-label">
-                                   <div class="labels ellipsize" ng-bind="file.labels | labels"></div>
-                               </td>
-                           </tr>
-                           </tbody>
-                       </table>
-                   </div>
-                   <span ng-hide="filesLoaded" class="empty-table empty-table-w ng-binding empty-files-table">Loading...</span>
-                   <span ng-show="files.length <= 0 && filesLoaded" class="empty-table empty-table-w ng-binding empty-files-table">No files found.</span>
-               </div>
+                <files-side-by-side filter="filterExtended"
+                                    tech-type-id="experiment.restriction.technologyType"
+                                    files="experimentItems"
+                                    style="height: 290px">
+                </files-side-by-side>
             </div>
 
             <div ng-show="step==4">
@@ -342,9 +231,9 @@
                     </ul>
                 </div>
                 <experiment-wizard-sample-to-factors-step configuration="sampleToFactorsStepConfiguration"></experiment-wizard-sample-to-factors-step>
-                <annotation-attachments-upload id="annotation-attachments" experiment="experiment"
-                                               existing-attachments="existingAnnotationAttachmentModel.existingAttachments"
-                        removed-attachments="existingAnnotationAttachmentModel.removedAttachments"></annotation-attachments-upload>
+                <!--<annotation-attachments-upload id="annotation-attachments" experiment="experiment"-->
+                <!--existing-attachments="existingAnnotationAttachmentModel.existingAttachments"-->
+                <!--removed-attachments="existingAnnotationAttachmentModel.removedAttachments"></annotation-attachments-upload>-->
             </div>
 
             <div ng-switch-when="7">
@@ -432,7 +321,6 @@
             <p>No instrument model for selected Technology Type and Vendor. Request a new model from Administrator.</p>
         </span>
         <span class="no-files" ng-show="showFileError()"><i class="icon warning-uploads"></i> No files for selected instrument and species</span>
-        <span class="proteinSearchWillBeRemoved" ng-show="bProteinSearchesWillBeRemoved"><i class="icon warning-uploads"></i> All Searches will be deleted</span>
         <button class="btn secondary-action" data-dismiss="modal" ng-bind='closeWizardActionCaption'></button>
         <button id="back" class="btn secondary-action back" ng-click="back()" ng-show="step > 1 && !viewMode"><span class="left-tail"></span>Back</button>
         <button id="next" class="btn main-action next" ng-click="next(isFormInvalid(step))" ng-disabled="isFormInvalid(step) || (step == 1 && isAttachmentsUploading())" ng-show="step < 7 && !viewMode">Next<span class="right-tail"></span></button>

@@ -19,10 +19,10 @@ public class BulkDownloadStatusResponse {
     @Override
     public String toString() {
         return "BulkDownloadStatusResponse{" +
-                "requestId=" + requestId +
-                ", completed=" + completed +
-                ", percentage=" + percentage +
-                ", interrupted=" + interrupted +
-                '}';
+            "requestId=" + requestId +
+            ", completed=" + completed +
+            ", percentage=" + percentage +
+            ", interrupted=" + interrupted +
+            '}';
     }
 }

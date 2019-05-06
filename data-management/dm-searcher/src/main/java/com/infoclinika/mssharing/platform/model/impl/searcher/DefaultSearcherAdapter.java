@@ -22,14 +22,14 @@ import javax.inject.Inject;
  */
 @Component
 public class DefaultSearcherAdapter extends DefaultSearcherTemplate
-        <ProjectTemplate,
-                ExperimentTemplate,
-                FileMetaDataTemplate,
-                InstrumentTemplate,
-                ProjectLineTemplate,
-                ExperimentLineTemplate,
-                FileLineTemplate,
-                InstrumentLineTemplate> {
+    <ProjectTemplate,
+        ExperimentTemplate,
+        FileMetaDataTemplate,
+        InstrumentTemplate,
+        ProjectLineTemplate,
+        ExperimentLineTemplate,
+        FileLineTemplate,
+        InstrumentLineTemplate> {
 
     @Inject
     protected ProjectReaderHelper<ProjectTemplate, ProjectLineTemplate> projectReaderHelper;

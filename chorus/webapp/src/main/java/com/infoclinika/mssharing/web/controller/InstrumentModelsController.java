@@ -19,10 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId;
@@ -55,11 +52,11 @@ public class InstrumentModelsController extends PagedItemsController {
 
         final long userId = getUserId(principal);
         final InstrumentModelDetails details = new InstrumentModelDetails(
-                request.name,
-                request.technologyType,
-                request.vendor,
-                request.instrumentType,
-                request.extensions.stream().collect(Collectors.toSet())
+            request.name,
+            request.technologyType,
+            request.vendor,
+            request.instrumentType,
+            new HashSet<>(request.extensions)
         );
         final long id = instrumentModelManagement.create(userId, details);
 
@@ -72,11 +69,11 @@ public class InstrumentModelsController extends PagedItemsController {
 
         final long userId = getUserId(principal);
         final InstrumentModelDetails details = new InstrumentModelDetails(
-                request.name,
-                request.technologyType,
-                request.vendor,
-                request.instrumentType,
-                request.extensions.stream().collect(Collectors.toSet())
+            request.name,
+            request.technologyType,
+            request.vendor,
+            request.instrumentType,
+            new HashSet<>(request.extensions)
         );
         instrumentModelManagement.update(userId, request.id, details);
 
@@ -92,8 +89,10 @@ public class InstrumentModelsController extends PagedItemsController {
 
     @RequestMapping(value = "/paged", method = RequestMethod.GET)
     @ResponseBody
-    public ValueResponse listPaged(PageRequest pageRequest,
-                                   Principal principal) {
+    public ValueResponse listPaged(
+        PageRequest pageRequest,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
         final PagedItemInfo pagedInfo = createPagedInfo(pageRequest);
         final PagedItem<InstrumentModelLine> instrumentModels = instrumentModelReader.read(userId, pagedInfo);
@@ -102,68 +101,82 @@ public class InstrumentModelsController extends PagedItemsController {
 
     @RequestMapping("/instrumentTypesByTechnologyTypeAndVendor")
     @ResponseBody
-    public ValueResponse getInstrumentTypesByTechnologyTypeAndVendor(@RequestParam Long technologyType,
-                                                                     @RequestParam Long vendor,
-                                                                     Principal principal) {
+    public ValueResponse getInstrumentTypesByTechnologyTypeAndVendor(
+        @RequestParam Long technologyType,
+        @RequestParam Long vendor,
+        Principal principal
+    ) {
         if (technologyType == null || vendor == null) {
             return new ValueResponse<>(new ArrayList<>());
         }
 
         final long userId = getUserId(principal);
-        final Set<InstrumentModelLineTemplate> instrumentModels = dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
+        final Set<InstrumentModelLineTemplate> instrumentModels =
+            dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
         final List<DictionaryItem> uniqueInstrumentTypes = instrumentModels
-                .stream()
-                .map(im -> im.instrumentType)
-                .collect(Collectors.toSet())
-                .stream().collect(Collectors.toList());
+            .stream()
+            .map(im -> im.instrumentType)
+            .collect(Collectors.toSet())
+            .stream().collect(Collectors.toList());
 
         return new ValueResponse<>(uniqueInstrumentTypes);
     }
 
     @RequestMapping("/vendorExtensionsByTechnologyTypeAndVendor")
     @ResponseBody
-    public ValueResponse getVendorExtensionsByTechnologyTypeAndVendor(@RequestParam long technologyType,
-                                                                      @RequestParam long vendor,
-                                                                      Principal principal) {
+    public ValueResponse getVendorExtensionsByTechnologyTypeAndVendor(
+        @RequestParam long technologyType,
+        @RequestParam long vendor,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final Set<InstrumentModelLineTemplate> instrumentModels = dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
+        final Set<InstrumentModelLineTemplate> instrumentModels =
+            dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
         final List<String> uniqueExtensions = instrumentModels
-                .stream()
-                .map(im -> im.extensions)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet())
-                .stream().collect(Collectors.toList());
+            .stream()
+            .map(im -> im.extensions)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet())
+            .stream().collect(Collectors.toList());
 
         return new ValueResponse<>(uniqueExtensions);
     }
 
     @RequestMapping("/getByTechnologyTypeAndVendor")
     @ResponseBody
-    public ValueResponse getByTechnologyTypeAndVendor(@RequestParam long technologyType,
-                                                      @RequestParam long vendor,
-                                                      Principal principal) {
+    public ValueResponse getByTechnologyTypeAndVendor(
+        @RequestParam long technologyType,
+        @RequestParam long vendor,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final Set<InstrumentModelLineTemplate> instrumentModels = dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
+        final Set<InstrumentModelLineTemplate> instrumentModels =
+            dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
         return new ValueResponse<>(instrumentModels);
     }
 
     @RequestMapping("/getByLabTechnologyTypeAndVendor")
     @ResponseBody
-    public ValueResponse getByLabTechnologyTypeAndVendor(@RequestParam long lab,
-                                                         @RequestParam long technologyType,
-                                                         @RequestParam long vendor,
-                                                         Principal principal) {
+    public ValueResponse getByLabTechnologyTypeAndVendor(
+        @RequestParam long lab,
+        @RequestParam long technologyType,
+        @RequestParam long vendor,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
-        final Set<InstrumentModelLineTemplate> instrumentModels = dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
+        final Set<InstrumentModelLineTemplate> instrumentModels =
+            dashboardReader.readByStudyTypeAndVendor(userId, technologyType, vendor);
         return new ValueResponse<>(instrumentModels);
     }
 
     @RequestMapping("/isNameUnique")
     @ResponseBody
-    public ValueResponse validateModelNameUniqueness(@RequestParam(required = false) Long modelId,
-                                                     @RequestParam String name,
-                                                     @RequestParam(required = false) Long vendor,
-                                                     Principal principal) {
+    public ValueResponse validateModelNameUniqueness(
+        @RequestParam(required = false) Long modelId,
+        @RequestParam String name,
+        @RequestParam(required = false) Long vendor,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
         final boolean unique = instrumentModelReader.isNameUnique(userId, name, vendor, modelId);
         return new ValueResponse<>(unique);
@@ -175,9 +188,9 @@ public class InstrumentModelsController extends PagedItemsController {
         final long userId = getUserId(principal);
         final Set<InstrumentModelLineTemplate> instrumentModels = dashboardReader.readByVendor(userId, vendor);
         final List<DictionaryItem> dictionaryItems = instrumentModels
-                .stream()
-                .map(im -> new DictionaryItem(im.id, im.name))
-                .collect(Collectors.toList());
+            .stream()
+            .map(im -> new DictionaryItem(im.id, im.name))
+            .collect(Collectors.toList());
         return new ValueResponse<>(dictionaryItems);
     }
 }

@@ -1,20 +1,24 @@
+"use strict";
+
 angular.module("projects", ["ngResource"])
     .factory("Projects", function ($resource) {
         return $resource("../projects/:paged/:filter/:id", {userId: "@id"},
-            {"update": { method: "PUT" }}
+            {"update": {method: "PUT"}}
         );
     })
     .factory("ProjectCopy", function ($resource) {
         return $resource("../projects/copy/:action/:id", {}, {
-            "copy": { method: "GET", isArray: false},
-            "sendCopyConfirmation": {method: "POST", params: {action: "request"}}}
+                "copy": {method: "GET", isArray: false},
+                "sendCopyConfirmation": {method: "POST", params: {action: "request"}}
+            }
         );
     })
     .factory("ProjectDetails", function ($resource) {
         return $resource("../projects/details/:id/:size/", {},
             {
                 "short": {method: "GET", params: {size: "short"}, isArray: false}
-            });
+            }
+        );
     })
     .factory("ProjectColumns", function ($resource) {
         return $resource("../projects/column-view/:path/:id", {}, {
@@ -38,6 +42,6 @@ angular.module("projects", ["ngResource"])
         });
     })
     .factory("ProjectShortDetails", function ($resource) {
-        return $resource("../projects/:filter/shortDetails")
+        return $resource("../projects/:filter/shortDetails");
     });
 

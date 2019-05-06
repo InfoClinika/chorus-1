@@ -1,0 +1,20 @@
+<div class="limit-table-body sample-to-files">
+    <table class="table table-hover factor-table">
+        <thead>
+        <th>#</th>
+        <th>SAMPLE NAME</th>
+        <th>MAPPED FILE</th>
+        </thead>
+        <tbody>
+        <tr ng-repeat="(sample,files) in mapping">
+            <th>{{$index+1}}</th>
+            <td>{{sample}}</td>
+            <td>
+                <ul class="files">
+                    <li ng-repeat="file in files">{{file}}</li>
+                </ul>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>

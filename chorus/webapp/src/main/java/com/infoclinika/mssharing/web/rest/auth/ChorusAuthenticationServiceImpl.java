@@ -24,7 +24,7 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
  * @author andrii.loboda
  */
 public class ChorusAuthenticationServiceImpl implements ChorusAuthenticationService {
-    private static final Logger LOG = LoggerFactory.getLogger(ChorusAuthenticationServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChorusAuthenticationServiceImpl.class);
 
     @Context  //injected response proxy supporting multiple threads
     private HttpServletResponse response;
@@ -34,6 +34,18 @@ public class ChorusAuthenticationServiceImpl implements ChorusAuthenticationServ
     private PasswordEncoder passwordEncoder;
     @Inject
     private UserManagement userManagement;
+
+    private static Attributes composeAttributes(UserDetails userDetails) {
+        final HashMap<String, Object> attributesMap = newHashMap();
+        attributesMap.put(UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_USERNAME, userDetails.email);
+        attributesMap.put(UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_ID, userDetails.id);
+
+        return new Attributes(attributesMap);
+    }
+
+    private static <T> T noResult() {
+        return null;
+    }
 
     @Override
     public AuthenticateUserResponse authenticateUser(AuthenticateUserRequest request) {
@@ -47,7 +59,8 @@ public class ChorusAuthenticationServiceImpl implements ChorusAuthenticationServ
 
         final UserDetails userDetails = securityHelper.getUserDetailsByEmail(request.login.value);
         if (userDetails != null) {
-            if (userDetails.email.equals(request.login.value) && passwordEncoder.matches(request.password.value, userDetails.password)) {
+            if (userDetails.email.equals(request.login.value) &&
+                passwordEncoder.matches(request.password.value, userDetails.password)) {
                 final UserSecretKey userSecretKey = getOrGenerateSecretToken(userDetails);
                 final Attributes attributes = composeAttributes(userDetails);
                 final AuthenticateUserResponse response = new AuthenticateUserResponse(userSecretKey, attributes);
@@ -60,10 +73,10 @@ public class ChorusAuthenticationServiceImpl implements ChorusAuthenticationServ
         return noResult(); // no additional data is needed because of error code in response(Unauthorized)
     }
 
-
     @Override
     public GetAttributesResponse getAttributes(GetAttributesRequest request) {
-        final UserDetails userDetails = securityHelper.getUserDetailsByEmailAndSecretToken(request.login, request.userSecretKey.value);
+        final UserDetails userDetails =
+            securityHelper.getUserDetailsByEmailAndSecretToken(request.login, request.userSecretKey.value);
         if (userDetails != null) {
             final Attributes attributes = composeAttributes(userDetails);
             return new GetAttributesResponse(attributes);
@@ -74,12 +87,10 @@ public class ChorusAuthenticationServiceImpl implements ChorusAuthenticationServ
         return noResult(); // no additional data is needed because of error code in response(Unauthorized)
     }
 
-
     @Override
     public String healthCheck() {
         return HEALTH_CHECK_RESPONSE;
     }
-
 
     private UserSecretKey getOrGenerateSecretToken(UserDetails userDetails) {
         final String secretToken;
@@ -96,19 +107,7 @@ public class ChorusAuthenticationServiceImpl implements ChorusAuthenticationServ
         if (response != null) {
             response.setStatus(UNAUTHORIZED.getStatusCode());
         } else {
-            LOG.warn("This code should be executed only in test environment.");
+            LOGGER.warn("This code should be executed only in test environment.");
         }
-    }
-
-    private static Attributes composeAttributes(UserDetails userDetails) {
-        final HashMap<String, Object> attributesMap = newHashMap();
-        attributesMap.put(UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_USERNAME, userDetails.email);
-        attributesMap.put(UserDetailsByCasTokenServiceWrapper.ATTRIBUTE_CHORUS_ID, userDetails.id);
-
-        return new Attributes(attributesMap);
-    }
-
-    private static <T> T noResult() {
-        return null;
     }
 }

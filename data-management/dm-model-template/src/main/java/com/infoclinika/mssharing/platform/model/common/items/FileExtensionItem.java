@@ -1,6 +1,7 @@
 package com.infoclinika.mssharing.platform.model.common.items;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Herman Zamula
@@ -17,26 +18,21 @@ public class FileExtensionItem {
     }
 
     @Override
-    @SuppressWarnings("all")
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        FileExtensionItem that = (FileExtensionItem) o;
-
-        if (additionalExtensions != null ? !additionalExtensions.equals(that.additionalExtensions) : that.additionalExtensions != null)
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof FileExtensionItem)) {
             return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (zip != null ? !zip.equals(that.zip) : that.zip != null) return false;
-
-        return true;
+        }
+        FileExtensionItem that = (FileExtensionItem) o;
+        return Objects.equals(name, that.name) &&
+            Objects.equals(zip, that.zip) &&
+            Objects.equals(additionalExtensions, that.additionalExtensions);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (zip != null ? zip.hashCode() : 0);
-        result = 31 * result + (additionalExtensions != null ? additionalExtensions.hashCode() : 0);
-        return result;
+        return Objects.hash(name, zip, additionalExtensions);
     }
 }

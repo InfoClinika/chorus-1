@@ -33,8 +33,8 @@ public interface PanoramaAuthenticationService {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("email", email)
-                    .toString();
+                .add("email", email)
+                .toString();
         }
     }
 

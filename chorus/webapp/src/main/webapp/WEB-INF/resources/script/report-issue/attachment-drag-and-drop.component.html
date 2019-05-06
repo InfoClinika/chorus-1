@@ -1,0 +1,35 @@
+<div class="drag-and-drop">
+
+    <div class="row-fluid file-selection">
+        <div class="span9">
+            <span class="select-file-btn btn secondary-action">
+                Browse&hellip;
+                <input type="file" multiple="" accept="{{ vm.getAcceptableExtensions() }}" id="fileChooser"
+                       on-files-selected="vm.addFiles">
+            </span>
+        </div>
+    </div>
+
+    <div class="attachment-container" on-files-drop="vm.addFiles">
+        <div class="unsupported-files-alert-container">
+            <ul class="unsupported-files-alert">
+                <li class="alert single-alert" ng-repeat="alert in vm.alerts">{{ alert }}</li>
+            </ul>
+        </div>
+        <div class="attachment" ng-repeat="attachment in vm.attachments">
+            <a ng-show="!attachment.fromCloud" class="close remove-attachment" ng-click="vm.removeAttachment($index)">&times;</a>
+            <span ng-switch="attachment.isImage">
+                <img ng-switch-when="true" src="{{ attachment.content }}"/>
+                <span ng-switch-when="false" class="attachment-file-icon glyphicon glyphicon-file" aria-hidden="true"></span>
+            </span>
+            <div class="attachment-name" ng-bind="attachment.name"></div>
+        </div>
+
+        <div class="overlay" ng-class="{'dont-hide': !vm.attachments.length}">
+            <div class="overlay-caption">
+                <i class="icon drop-here"></i>
+                <span>Drag &amp; drop Attachments here</span>
+            </div>
+        </div>
+    </div>
+</div>

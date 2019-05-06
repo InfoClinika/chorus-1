@@ -2,8 +2,6 @@ package com.infoclinika.mssharing.platform.model.write;
 
 import com.google.common.base.Optional;
 
-import java.util.List;
-
 /**
  * @author Herman Zamula
  */
@@ -15,23 +13,13 @@ public interface InstrumentManagementTemplate<DETAILS extends InstrumentManageme
 
     void deleteInstrument(long actor, long instrumentId);
 
-    void setInstrumentOperators(long userId, long instrumentId, List<Long> newOperators);
-
-    void addOperatorDirectly(long initiator, long instrumentId, long newOperator);
-
-    void requestAccessToInstrument(long initiator, long instrumentId);
-
-    void refuseAccessToInstrument(long actor, long instrumentId, long initiatorId, String refuseComment);
-
-    void approveAccessToInstrument(long actor, long instrumentId, long initiatorId);
-
     long approveInstrumentCreation(long actor, long requestId);
 
     void refuseInstrumentCreation(long actor, long requestId, String refuseComment);
 
-    Optional<Long> newInstrumentRequest(long creator, long labId, long model, DETAILS instrumentDetails, List<Long> operators);
+    Optional<Long> newInstrumentRequest(long creator, long labId, long model, DETAILS instrumentDetails);
 
-    Optional<Long> updateNewInstrumentRequest(long actor, long requestId, long model, DETAILS details, List<Long> operators);
+    Optional<Long> updateNewInstrumentRequest(long actor, long requestId, long model, DETAILS details);
 
     class InstrumentDetailsTemplate {
 

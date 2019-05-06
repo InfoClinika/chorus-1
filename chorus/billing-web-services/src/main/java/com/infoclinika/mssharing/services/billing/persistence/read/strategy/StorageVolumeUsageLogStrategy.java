@@ -9,7 +9,8 @@ import com.infoclinika.mssharing.services.billing.persistence.helper.PaymentCalc
 import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader;
 import com.infoclinika.mssharing.services.billing.persistence.repository.StorageVolumeUsageRepository;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType.PER_VOLUME;
-import static java.lang.String.format;
 
 /**
  * @author timofey 29.03.16.
@@ -27,7 +27,7 @@ import static java.lang.String.format;
 @Component
 public class StorageVolumeUsageLogStrategy implements FeatureLogStrategy {
 
-    private static final Logger LOGGER = Logger.getLogger(StorageVolumeUsageLogStrategy.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StorageVolumeUsageLogStrategy.class);
 
     @Inject
     private StorageVolumeUsageRepository storageVolumeUsageRepository;
@@ -39,7 +39,7 @@ public class StorageVolumeUsageLogStrategy implements FeatureLogStrategy {
     @Override
     public ChargeableItemUsageReader.ChargeableItemBill readBill(long lab, Date dateFrom, Date dateTo) {
 
-        LOGGER.debug(format("Reading bill for lab {%d}. From {%s} to {%s}", lab, dateFrom, dateTo));
+        LOGGER.debug("Reading bill for lab {}. From {} to {}", lab, dateFrom, dateTo);
 
         final long fromInMills = dateFrom.getTime();
         final long toInMills = dateTo.getTime();
@@ -51,12 +51,10 @@ public class StorageVolumeUsageLogStrategy implements FeatureLogStrategy {
         final int totalVolumes = itemUsages.stream().mapToInt(StorageVolumeUsage::getVolumesCount).sum();
         LOGGER.debug("Usages was read...");
         LOGGER.debug(
-                format(
-                        "Invoice data loaded. Total price {%d}, usages size: {%d}, volumes count: {%d}",
-                        unscaled,
-                        itemUsages.size(),
-                        totalVolumes
-                )
+            "Invoice data loaded. Total price {}, usages size: {}, volumes count: {}",
+            unscaled,
+            itemUsages.size(),
+            totalVolumes
         );
 
         final ChargeableItem.Feature feature = Transformers.transformFeature(BillingFeature.STORAGE_VOLUMES);
@@ -64,22 +62,22 @@ public class StorageVolumeUsageLogStrategy implements FeatureLogStrategy {
         final int totalUsers = itemUsages.stream().collect(Collectors.groupingBy(StorageVolumeUsage::getUser)).size();
 
         return new ChargeableItemUsageReader.ChargeableItemBill(
-                BillingFeature.STORAGE_VOLUMES.getValue(),
-                paymentCalculationsHelper.unscalePrice(unscaled),
-                BillingFeature.STORAGE_VOLUMES,
-                totalVolumes,
-                PER_VOLUME,
-                new ArrayList<>(),
-                Optional.<Long>absent(),
-                totalUsers,
-                chargeableItem.getPrice(),
-                unscaled
+            BillingFeature.STORAGE_VOLUMES.getValue(),
+            paymentCalculationsHelper.unscalePrice(unscaled),
+            BillingFeature.STORAGE_VOLUMES,
+            totalVolumes,
+            PER_VOLUME,
+            new ArrayList<>(),
+            Optional.absent(),
+            totalUsers,
+            chargeableItem.getPrice(),
+            unscaled
         );
     }
 
     @Override
     public ChargeableItemUsageReader.ChargeableItemBill readShortBill(long lab, Date day) {
-        LOGGER.debug(format("Reading feature bill for lab {%d}. Day {%s}", lab, day));
+        LOGGER.debug("Reading feature bill for lab {}. Day {}", lab, day);
 
         final int daySinceEpoch = paymentCalculationsHelper.calculationDaySinceEpoch(day);
         final Long unscaled = storageVolumeUsageRepository.sumAllRawPricesByLabUnscaled(lab, daySinceEpoch);
@@ -89,12 +87,10 @@ public class StorageVolumeUsageLogStrategy implements FeatureLogStrategy {
         final int totalVolumes = itemUsages.stream().mapToInt(StorageVolumeUsage::getVolumesCount).sum();
         LOGGER.debug("Usages was read...");
         LOGGER.debug(
-                format(
-                        "Invoice data loaded. Total price {%d}, usages size: {%d}, volumes count: {%d}",
-                        unscaled,
-                        itemUsages.size(),
-                        totalVolumes
-                )
+            "Invoice data loaded. Total price {}, usages size: {}, volumes count: {}",
+            unscaled,
+            itemUsages.size(),
+            totalVolumes
         );
 
         final ChargeableItem.Feature feature = Transformers.transformFeature(BillingFeature.STORAGE_VOLUMES);
@@ -102,16 +98,16 @@ public class StorageVolumeUsageLogStrategy implements FeatureLogStrategy {
         final int totalUsers = itemUsages.stream().collect(Collectors.groupingBy(StorageVolumeUsage::getUser)).size();
 
         return new ChargeableItemUsageReader.ChargeableItemBill(
-                BillingFeature.STORAGE_VOLUMES.getValue(),
-                paymentCalculationsHelper.unscalePrice(unscaled),
-                BillingFeature.STORAGE_VOLUMES,
-                totalVolumes,
-                PER_VOLUME,
-                new ArrayList<>(),
-                Optional.<Long>absent(),
-                totalUsers,
-                chargeableItem.getPrice(),
-                unscaled
+            BillingFeature.STORAGE_VOLUMES.getValue(),
+            paymentCalculationsHelper.unscalePrice(unscaled),
+            BillingFeature.STORAGE_VOLUMES,
+            totalVolumes,
+            PER_VOLUME,
+            new ArrayList<>(),
+            Optional.absent(),
+            totalUsers,
+            chargeableItem.getPrice(),
+            unscaled
         );
     }
 

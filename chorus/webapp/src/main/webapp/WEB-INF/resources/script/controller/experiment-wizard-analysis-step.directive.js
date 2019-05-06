@@ -1,8 +1,6 @@
-/*global angular isNumber getDefaultOptionValue getFirstOrWithIdEqualTo:true*/
+"use strict";
 
 (function () {
-
-    "use strict";
 
     angular.module("experiments-front")
         .directive("experimentWizardAnalysisStep", experimentWizardAnalysisStepDirective)
@@ -20,9 +18,18 @@
             scope: {
                 configuration: "="
             },
-            controller: function ($scope, $timeout, ExperimentLabels, ExperimentLabelTypes, ExperimentTypes,
-                                  ExperimentInstrumentModels, ExperimentInstruments, InstrumentStudyType,
-                                  ExperimentInstrumentTypes, ExperimentFiles, ExperimentSpecialLabelType) {
+            controller: function ($scope,
+                                  $timeout,
+                                  ExperimentLabels,
+                                  NGSExperiments,
+                                  ExperimentLabelTypes,
+                                  ExperimentTypes,
+                                  ExperimentInstrumentModels,
+                                  ExperimentInstruments,
+                                  InstrumentStudyType,
+                                  ExperimentInstrumentTypes,
+                                  ExperimentFiles,
+                                  ExperimentSpecialLabelType) {
                 $scope.initialized = false;
                 $scope.$watch("configuration", setupAPIandActivate); // initialization after first binding
                 $scope.$watch("configuration.restriction", onExperimentRestrictionChange);
@@ -49,10 +56,10 @@
 
                     function getSelected() {
                         var result = angular.copy($scope.vm.selected);
-                        result.is2dLc = (result.is2dLc === "1");//Yes
+                        result.is2dLc = result.is2dLc == "1";//Yes
                         result.selectedLabelType = getSelectedLabelType().name;
                         result.groupSpecificParametersType = getSelectedGroupSpecificParametersType().name;
-                        if (result.labeledYesNo === "2") { // no
+                        if (result.labeledYesNo == "2") { // no
                             result.mixedSampleType = 0;
                             result.selectedLabelType = undefined;
                             result.groupSpecificParametersType = undefined;
@@ -63,13 +70,24 @@
                             lightLabels: extractIds(result.singleLabels),
                             specialLabels: extractIds(result.specialLabels)
                         };
+                        result.experimentTypeDetails = $scope.vm.experimentTypes.find(function (type) {
+                            return type.id == result.experimentType;
+                        });
+
                         result.ngsRelatedInfo.multiplexing = !!isMultiplexing();
+                        result.ngsRelatedInfo.pairedEnd = getPairedEnd();
+                        result.ngsRelatedInfo.rnaSelection = getRnaSelection();
+                        result.ngsRelatedInfo.xenograft = isXenograft();
+                        result.ngsRelatedInfo.libraryPrep = getLibraryPrep();
+                        result.ngsRelatedInfo.experimentType = getNgsExperimentType();
+                        result.ngsRelatedInfo.experimentPrepMethod = getExperimentPrepMethod();
+                        result.ngsRelatedInfo.ntExtractionMethod = getNtExtractionMethod();
 
                         return result;
                     }
 
                     function validate() {
-                        return  $scope.vm.filesExist;
+                        return $scope.vm.filesExist;
                     }
                 }
 
@@ -119,9 +137,18 @@
                                 {id: 3, name: 3}
                             ],
                             multiplexingTypes: [
-                                /*{id: 1, name: "Yes"},*/
+                                {id: 1, name: "Yes"},
                                 {id: 2, name: "No"}
                             ],
+                            pairedEndTypes: [
+                                {id: 1, name: "Single File"},
+                                {id: 2, name: "Two Files"}
+                            ],
+                            pairedEndEnabled: isPairedEndEnabled(),
+                            libraryPrepTypes: data.ngsLibraryPrepTypes,
+                            experimentPrepMethods: [],
+                            ntExtractionMethods: data.ntExtractionMethods,
+                            ngsExperimentTypes: [],
                             specialLabelType: false,
                             mixedSampleTypesLabel: "Mixed Samples"
                         };
@@ -133,6 +160,32 @@
 
                         $scope.$on($scope.configuration.api.events.SPECIFY_SELECTION, specifySelectionEventHandler);
 
+                        $scope.$watch("vm.selected.ngsRelatedInfo.experimentType", function (type, old) {
+                            if (type > 0 && type != old) {
+
+                                NGSExperiments.experimentPrepMethodsByType({typeId: type}, function (response) {
+
+                                    var prepMethods = response.value || [];
+                                    $scope.vm.experimentPrepMethods = prepMethods;
+
+                                    var foundCurrentExpPrepMethod = prepMethods.find(function (method) {
+                                        return method.id == $scope.vm.selected.ngsRelatedInfo.experimentPrepMethod;
+                                    });
+
+                                    if (!foundCurrentExpPrepMethod) {
+                                        $scope.vm.selected.ngsRelatedInfo.experimentPrepMethod =
+                                            prepMethods.length > 0 ?
+                                                prepMethods[0].id :
+                                                null;
+                                    }
+                                });
+                            }
+                        });
+
+                        NGSExperiments.ngsExperimentTypes(function (response) {
+                            $scope.vm.ngsExperimentTypes = response.value || [];
+                        });
+
                         function getSampleTypesLabel() {
                             return $scope.vm.specialLabelType ? "Channels" : "Mixed Samples";
                         }
@@ -140,7 +193,7 @@
                         function selectSpecialLabels(filteredLabels, channelsCount) {
                             var filteredSpecialLabels = filterSpecialLabels(filteredLabels, channelsCount);
 
-                            addSpecialLabels($scope.vm.selected.specialLabels, extractIds(filteredSpecialLabels))
+                            addSpecialLabels($scope.vm.selected.specialLabels, extractIds(filteredSpecialLabels));
                         }
 
                         function getInstrumentSN(instrument) {
@@ -171,10 +224,8 @@
                                     if (isSpecialLabel(labelType.name)) {
                                         filteredLabelTypes[index++] = labelType;
                                     }
-                                } else {
-                                    if (!isSpecialLabel(labelType.name)) {
-                                        filteredLabelTypes[index++] = labelType;
-                                    }
+                                } else if (!isSpecialLabel(labelType.name)) {
+                                    filteredLabelTypes[index++] = labelType;
                                 }
                             }
 
@@ -248,14 +299,18 @@
                         }
 
                         function notifyComponentInitialized() {
-                            if (uiComponentsInitialized.mixSampleTypeCalled && uiComponentsInitialized.labelYesTypeCalled
-                                && uiComponentsInitialized.experimentTypeCalled) {
+                            if (uiComponentsInitialized.mixSampleTypeCalled &&
+                                uiComponentsInitialized.labelYesTypeCalled &&
+                                uiComponentsInitialized.experimentTypeCalled) {
                                 $scope.$emit($scope.configuration.api.events.INITIALIZED);
                             }
                         }
 
                         function changedLabelYesType() {
-                            $scope.vm.availableSamples = filterSamples(data.allSamples, $scope.vm.selected.labelYesType);
+                            $scope.vm.availableSamples = filterSamples(
+                                data.allSamples,
+                                $scope.vm.selected.labelYesType
+                            );
 
                             var mixedSampleTypes = $scope.vm.mixedSampleTypes;
                             var newMixedSampleTypes = getSampleTypes();
@@ -264,7 +319,8 @@
                                 $scope.vm.mixedSampleTypes = getSampleTypes();
                             }
 
-                            if (!$scope.vm.firstInit && (isSpecialLabelType() || $scope.vm.specialLabelType != isSpecialLabelType())) {
+                            if (!$scope.vm.firstInit &&
+                                (isSpecialLabelType() || $scope.vm.specialLabelType != isSpecialLabelType())) {
                                 $scope.vm.specialLabelType = isSpecialLabelType();
                                 $scope.vm.selected.mixedSampleType = 1;
                                 $scope.vm.mixedSampleTypesLabel = getSampleTypesLabel();
@@ -284,7 +340,11 @@
 
                         function changedGroupSpecificParametersType() {
                             var selectedGroupSpecificParametersType = getSelectedGroupSpecificParametersType().name;
-                            $scope.vm.labelYesTypes = filterLabelTypes(data.labeledTypes, selectedGroupSpecificParametersType);
+                            $scope.vm.labelYesTypes = filterLabelTypes(
+                                data.labeledTypes,
+                                selectedGroupSpecificParametersType
+                            );
+
                             $scope.vm.selected.labelYesType = $scope.vm.labelYesTypes[0].id;
                         }
 
@@ -308,7 +368,10 @@
                                 $scope.vm.selected.singleLabels = [];
                                 $scope.vm.selected.heavyLabels = [];
                                 $scope.vm.selected.specialLabels = [];
-                                $scope.vm.availableSamples = filterSamples(data.allSamples, $scope.vm.selected.labelYesType);
+                                $scope.vm.availableSamples = filterSamples(
+                                    data.allSamples,
+                                    $scope.vm.selected.labelYesType
+                                );
                             }
                         }
 
@@ -382,11 +445,11 @@
                                 experimentType: 1, //"Bottom Up Proteomics"
                                 labeledYesNo: 2, // no
                                 mixedSampleType: 1,
-                                labelYesType: 1,//SILAC
+                                labelYesType: 1, //SILAC
                                 mediumLabels: [],
                                 heavyLabels: [],
                                 singleLabels: [],
-                                specialLabels: [],//labels for TMT, iodoTMT, iTRAQ Label Types
+                                specialLabels: [], //labels for TMT, iodoTMT, iTRAQ Label Types
                                 is2dLc: 2, // no
                                 reporterMassTol: 0.01,
                                 filterByPIFEnabled: false,
@@ -399,7 +462,7 @@
                                     multiplexing: 2,
                                     samplesCount: 5
                                 }
-                            }
+                            };
                         }
 
                         function is2dLcAllowed() {
@@ -450,7 +513,9 @@
                             });
                             $.grep(selectedItemIds, function (selectedItemId) {
                                 var selectedAcid = allSamplesMap[selectedItemId].aminoAcid;
-                                if ($.inArray(selectedItemId, idsPresentInTarget) === -1 && $.inArray(selectedAcid, aminoAcidsPresentInTarget) === -1) {
+                                if ($.inArray(selectedItemId, idsPresentInTarget) === -1 &&
+                                    $.inArray(selectedAcid, aminoAcidsPresentInTarget) === -1) {
+
                                     target.push({
                                         id: selectedItemId,
                                         name: allSamplesMap[selectedItemId].name
@@ -460,7 +525,10 @@
                                 }
                             });
                             selectedItemIds.splice(0, selectedItemIds.length);
-                            $scope.vm.availableSamples = filterSamples(data.allSamples, $scope.vm.selected.labelYesType);
+                            $scope.vm.availableSamples = filterSamples(
+                                data.allSamples,
+                                $scope.vm.selected.labelYesType
+                            );
                         }
 
                         function addSpecialLabels(target, selectedItemIds) {
@@ -481,7 +549,10 @@
                             });
 
                             selectedItemIds.splice(0, selectedItemIds.length);
-                            $scope.vm.availableSamples = filterSamples(data.allSamples, $scope.vm.selected.labelYesType);
+                            $scope.vm.availableSamples = filterSamples(
+                                data.allSamples,
+                                $scope.vm.selected.labelYesType
+                            );
                         }
 
                         function removeLabels(target, itemIdsToRemove) {
@@ -499,7 +570,10 @@
                                 }
                             });
 
-                            $scope.vm.availableSamples = filterSamples(data.allSamples, $scope.vm.selected.labelYesType);
+                            $scope.vm.availableSamples = filterSamples(
+                                data.allSamples,
+                                $scope.vm.selected.labelYesType
+                            );
                         }
 
                         function specifySelectionEventHandler(e, selection) {
@@ -508,7 +582,9 @@
                             }
                             $scope.vm.selected.is2dLc = selection.is2dLc == false ? 2 : 1; // transform to yes or no
                             $scope.vm.selected.ngsRelatedInfo = selection.ngsRelatedInfo;
-                            $scope.vm.selected.ngsRelatedInfo.multiplexing = selection.ngsRelatedInfo.multiplexing ? 1:2;
+                            $scope.vm.selected.ngsRelatedInfo.multiplexing =
+                                selection.ngsRelatedInfo.multiplexing ? 1 : 2;
+                            $scope.vm.selected.ngsRelatedInfo.xenograft = selection.ngsRelatedInfo.xenograft ? 1 : 2;
                             var mixedSamples = selection.mixedSamplesCount ? selection.mixedSamplesCount : 0; //no
 
                             $scope.originalExperimentCopy = selection.originalExperimentCopy;
@@ -516,7 +592,7 @@
                             $scope.vm.selected.instrumentType = selection.instrumentType;
                             $scope.vm.selected.instrument = selection.instrument;
 
-                            if($scope.configuration.restriction){
+                            if ($scope.configuration.restriction) {
                                 $scope.configuration.restriction.species = selection.info.specie;
                             }
 
@@ -538,7 +614,8 @@
                                         $scope.vm.selected.minBasePeakRatio = selection.minBasePeakRatio;
                                         $scope.vm.selected.minReporterFraction = selection.minReporterFraction;
 
-                                        $scope.vm.labelYesTypes = filterLabelTypes(data.labeledTypes, groupSpecificParametersType);
+                                        $scope.vm.labelYesTypes =
+                                            filterLabelTypes(data.labeledTypes, groupSpecificParametersType);
                                         $scope.vm.selected.labelYesType = getLabelTypeByName(selection.labelType).id;
 
                                         $scope.vm.mixedSampleTypes = getSampleTypes();
@@ -550,24 +627,39 @@
                                     }
 
                                     if (selection.labels.heavyLabels) {
-                                        $scope.vm.addLabels($scope.vm.selected.heavyLabels, selection.labels.heavyLabels);
+                                        $scope.vm.addLabels(
+                                            $scope.vm.selected.heavyLabels,
+                                            selection.labels.heavyLabels
+                                        );
                                     }
                                     if (selection.labels.mediumLabels) {
-                                        $scope.vm.addLabels($scope.vm.selected.mediumLabels, selection.labels.mediumLabels);
+                                        $scope.vm.addLabels(
+                                            $scope.vm.selected.mediumLabels,
+                                            selection.labels.mediumLabels
+                                        );
                                     }
                                     if (selection.labels.lightLabels) {
-                                        $scope.vm.addLabels($scope.vm.selected.singleLabels, selection.labels.lightLabels);
+                                        $scope.vm.addLabels(
+                                            $scope.vm.selected.singleLabels,
+                                            selection.labels.lightLabels
+                                        );
                                     }
                                     if (selection.labels.specialLabels) {
-                                        $scope.vm.addLabels($scope.vm.selected.specialLabels, selection.labels.specialLabels);
+                                        $scope.vm.addLabels(
+                                            $scope.vm.selected.specialLabels,
+                                            selection.labels.specialLabels
+                                        );
                                     }
                                 }
 
                             }
+
+                            $scope.vm.pairedEndEnabled = isPairedEndEnabled();
                         }
                     });
 
                     function requestAllExperimentData(resolveFn) {
+
                         new Promise(queryAllData).then(createLabelsMapAndTypes);
 
                         function createLabelsMapAndTypes(data) {
@@ -585,14 +677,20 @@
                             return resolveFn({
                                 allSamples: labelsMap,
                                 labeledTypes: labeledTypes,
-                                experimentTypes: data.experimentTypes
+                                experimentTypes: data.experimentTypes,
+                                ngsLibraryPrepTypes: data.ngsLibraryPrepTypes,
+                                ntExtractionMethods: data.ntExtractionMethods
                             });
                         }
 
-                        function queryAllData(resolve, reject) {
+                        function queryAllData(resolve) {
+
                             var allLabels = null;
                             var allLabelTypes = null;
                             var experimentTypes = null;
+                            var ngsLibraryPrepTypes = null;
+                            var ntExtractionMethods = null;
+
                             ExperimentLabels.query(function (data) {
                                 allLabels = data;
                                 resolveIfAllDataObtained();
@@ -605,12 +703,27 @@
                                 experimentTypes = types;
                                 resolveIfAllDataObtained();
                             });
+                            NGSExperiments.libraryPrepTypes(function (response) {
+                                ngsLibraryPrepTypes = response.value || [];
+                                resolveIfAllDataObtained();
+                            });
+                            NGSExperiments.ntExtractionMethods(function (response) {
+                                ntExtractionMethods = response.value || [];
+                                resolveIfAllDataObtained();
+                            });
+
                             function resolveIfAllDataObtained() {
-                                if (allLabels != null && allLabelTypes != null && experimentTypes != null) {
+                                if (allLabels != null &&
+                                    allLabelTypes != null &&
+                                    experimentTypes != null &&
+                                    ngsLibraryPrepTypes != null &&
+                                    ntExtractionMethods != null) {
                                     resolve({
                                         allLabels: allLabels,
                                         allLabelTypes: allLabelTypes,
-                                        experimentTypes: experimentTypes
+                                        experimentTypes: experimentTypes,
+                                        ngsLibraryPrepTypes: ngsLibraryPrepTypes,
+                                        ntExtractionMethods: ntExtractionMethods
                                     });
                                 }
                             }
@@ -619,7 +732,7 @@
                 }
 
                 function getInstrumentModels() {
-                    if(!$scope.vm || !$scope.vm.instrumentModels) {
+                    if (!$scope.vm || !$scope.vm.instrumentModels) {
                         return [];
                     }
                     return $scope.vm.instrumentModels;
@@ -631,7 +744,7 @@
 
 
                 function reloadInstruments(instrumentModel, oldModel) {
-                    if(!$scope.configuration || !instrumentModel || instrumentModel === oldModel) {
+                    if (!$scope.configuration || !instrumentModel || instrumentModel === oldModel) {
                         return;
                     }
                     if (isNumber(instrumentModel)) {
@@ -639,7 +752,8 @@
                             $scope.vm.instruments = instruments;
                             $scope.vm.instrumentsByLab = getInstrumentsByLab($scope.configuration.restriction.lab);
                             //preserve the initial instrument if the same model has been chosen
-                            if ($scope.originalExperimentCopy && instrumentModel == $scope.originalExperimentCopy.restriction.instrumentModel) {
+                            if ($scope.originalExperimentCopy &&
+                                instrumentModel == $scope.originalExperimentCopy.restriction.instrumentModel) {
                                 var instrument = $scope.originalExperimentCopy.restriction.instrument;
                                 $scope.vm.selected.instrument = instrument != null ? instrument : -1;
                             } else {
@@ -653,7 +767,7 @@
                 }
 
                 function onInstrumentChange(instrument, oldInstrument) {
-                    if(!$scope.vm || !instrument || instrument === oldInstrument) {
+                    if (!$scope.vm || !instrument || instrument === oldInstrument) {
                         return;
                     }
 
@@ -662,7 +776,7 @@
 
                 function onSpeciesChange(specie, oldSpecie) {
 
-                    if(!$scope.vm || !specie || specie === oldSpecie) {
+                    if (!$scope.vm || !specie || specie === oldSpecie) {
                         return;
                     }
 
@@ -673,28 +787,29 @@
                 }
 
                 function onInstrumentTypeChange(newInstrumentType, oldInstrumentType) {
-                    if(!$scope.vm) {
+                    if (!$scope.vm) {
                         return;
                     }
 
-                    if(newInstrumentType && newInstrumentType != oldInstrumentType) {
+                    if (newInstrumentType && newInstrumentType != oldInstrumentType) {
                         var restriction = angular.copy($scope.configuration.restriction);
                         restriction.instrumentType = newInstrumentType;
                         reloadInstrumentModels(restriction);
-                    } else if(!newInstrumentType){
+                    } else if (!newInstrumentType) {
                         $scope.vm.selected.instrumentModel = null;
                     }
                 }
 
                 function onExperimentRestrictionChange(restriction) {
-                    if(!$scope.configuration || !restriction) {
+                    if (!$scope.configuration || !restriction) {
                         return;
                     }
 
-                    if(isMicroArray()) {
+                    if (isMicroArray()) {
                         ExperimentInstrumentTypes.query(restriction, function (types) {
                             $scope.vm.instrumentTypes = types;
-                            $scope.vm.selected.instrumentType = getFirstOrWithIdEqualTo(types, $scope.vm.selected.instrumentType);
+                            $scope.vm.selected.instrumentType =
+                                getFirstOrWithIdEqualTo(types, $scope.vm.selected.instrumentType);
                         });
                     } else {
                         reloadInstrumentModels(restriction);
@@ -703,19 +818,17 @@
 
                 function checkIfFilesExist(instrument) {
 
-                    var species = $scope.configuration.restriction.species;
-                    var model = $scope.vm.selected.instrumentModel;
-                    var instrumentId = instrument != "-1" ? instrument : "";
+                    var species = $scope.configuration.restriction.species || -1;
+                    var model = $scope.vm.selected.instrumentModel || -1;
+                    var instrumentId = instrument || -1;
+                    var labId = $scope.configuration.restriction.lab || -1;
 
                     var requestData = {
                         instrument: instrumentId,
                         model: model,
-                        species: species
+                        species: species,
+                        lab: labId
                     };
-
-                    if($scope.configuration.restriction.lab != -1) {
-                        requestData.lab = $scope.configuration.restriction.lab;
-                    }
 
                     ExperimentFiles.exist(requestData, function (response) {
                         $scope.vm.filesExist = response.value;
@@ -728,21 +841,27 @@
                     }
 
                     var requestData = angular.copy(restriction);
-                    if(requestData.lab == -1) {
+                    if (requestData.lab == -1) {
                         delete requestData.lab;
                     }
 
                     ExperimentInstrumentModels.query(requestData, function (models) {
                         $scope.vm.instrumentModels = models;
                         $scope.vm.isInstrumentsPresents = $scope.vm.instrumentModels.length > 0;
-                        $scope.vm.selected.instrumentModel = getFirstOrWithIdEqualTo(models, $scope.vm.selected.instrumentModel);
+                        $scope.vm.selected.instrumentModel = getFirstOrWithIdEqualTo(
+                            models,
+                            $scope.vm.selected.instrumentModel
+                        );
                         $scope.vm.instrumentsByLab = getInstrumentsByLab($scope.configuration.restriction.lab);
-                        $scope.vm.selected.instrument = getFirstOrWithIdEqualTo($scope.vm.instrumentsByLab, $scope.vm.selected.instrument);
+                        $scope.vm.selected.instrument = getFirstOrWithIdEqualTo(
+                            $scope.vm.instrumentsByLab,
+                            $scope.vm.selected.instrument
+                        );
                     });
                 }
 
-                function getInstrumentsByLab (lab) {
-                    if(!$scope.vm || !$scope.vm.instruments) {
+                function getInstrumentsByLab(lab) {
+                    if (!$scope.vm || !$scope.vm.instruments) {
                         return [];
                     }
 
@@ -840,29 +959,86 @@
                 }
 
                 function isNGS() {
-                    return techTypeIs(InstrumentStudyType.NG);
+                    return techTypeIs(InstrumentStudyType.NGS);
                 }
 
                 function techTypeIs(type) {
-                    if($scope.configuration.restriction) {
+                    if ($scope.configuration.restriction) {
                         return $scope.configuration.restriction.technologyTypeValue == type;
                     }
                 }
 
                 function isCreateMode() {
-                    if($scope.configuration) {
+                    if ($scope.configuration) {
                         return $scope.configuration.createMode;
                     }
                 }
 
                 function isMultiplexing() {
-                    if($scope.vm) {
+                    if ($scope.vm) {
                         return $scope.vm.selected.ngsRelatedInfo.multiplexing == 1;
                     }
                 }
 
+                function getPairedEnd() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.pairedEnd;
+                    }
+                }
+
+                function isPairedEndEnabled() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.pairedEnd >= 1;
+                    }
+                }
+
+                $scope.enablePairedEnd = function (enabled) {
+                    if (enabled) {
+                        $scope.vm.selected.ngsRelatedInfo.pairedEnd = 1;
+                        jQuery("#pairedEnd").select2("open");
+                    } else {
+                        $scope.vm.selected.ngsRelatedInfo.pairedEnd = null;
+                    }
+                };
+
+                function getRnaSelection() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.rnaSelection;
+                    }
+                }
+
+                function isXenograft() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.xenograft == 1;
+                    }
+                }
+
+                function getLibraryPrep() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.libraryPrep;
+                    }
+                }
+
+                function getNgsExperimentType() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.experimentType;
+                    }
+                }
+
+                function getExperimentPrepMethod() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.experimentPrepMethod;
+                    }
+                }
+
+                function getNtExtractionMethod() {
+                    if ($scope.vm) {
+                        return $scope.vm.selected.ngsRelatedInfo.ntExtractionMethod;
+                    }
+                }
+
             }
-        }
+        };
     }
 
 })();

@@ -31,8 +31,10 @@ public interface RuleValidator extends SecurityChecker {
 
     boolean userHasPermissionsToRemoveUserFromLab(long labHead, long labId, long userId);
 
+    boolean canUserPerformActions(long actor);
+
     //  projects
-    boolean isUserCanCreateExperimentsInProject(long userId, long projectId);
+    boolean canUserCreateExperimentsInProject(long userId, long projectId);
 
     boolean canUserCreateProjectWithTitle(long actor, String projectName);
 
@@ -63,10 +65,6 @@ public interface RuleValidator extends SecurityChecker {
     boolean canRemoveInstrument(long actor, long instrument);
 
     boolean canShareInstrument(long actor, long operator);
-
-    boolean canEditOperatorsList(long user, long instrument);
-
-    boolean canReadInstrumentInboxDetails(long actor, long instrument);
 
     boolean canUserManageInstrumentModels(long actor);
 

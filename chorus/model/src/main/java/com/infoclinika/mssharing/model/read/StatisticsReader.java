@@ -21,7 +21,8 @@ public interface StatisticsReader {
         public final long projectsCount;
         public final long experimentsCount;
 
-        public UsageStatisticsInfo(long usersCount, long filesSize, long filesCount, long projectsCount, long experimentsCount) {
+        public UsageStatisticsInfo(long usersCount, long filesSize, long filesCount, long projectsCount,
+                                   long experimentsCount) {
             this.usersCount = usersCount;
             this.filesSize = filesSize;
             this.filesCount = filesCount;

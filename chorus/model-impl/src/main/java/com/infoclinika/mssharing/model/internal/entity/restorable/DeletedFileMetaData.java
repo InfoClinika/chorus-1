@@ -15,9 +15,11 @@ public class DeletedFileMetaData extends AbstractFileMetaData {
 
     protected DeletedFileMetaData() {
     }
+
     public DeletedFileMetaData(ActiveFileMetaData f) {
         super(f.getOwner(), f.getName(), f.getUploadDate(), f.getInstrument(), f.getSizeInBytes(), f.getLabels(),
-                f.getSpecie(), f.isArchive());
+            f.getSpecie(), f.isArchive()
+        );
         this.setArchiveId(f.getArchiveId());
         this.setContentId(f.getContentId());
         this.setCopy(f.isCopy());

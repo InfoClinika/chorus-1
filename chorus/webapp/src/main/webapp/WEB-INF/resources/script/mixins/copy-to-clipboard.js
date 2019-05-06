@@ -1,6 +1,6 @@
-(function () {
+"use strict";
 
-    "use strict";
+(function () {
 
     angular.module("mixins").factory("CopyToClipboard", CopyToClipboard);
 
@@ -12,7 +12,7 @@
          * Used to attach tmp listeners on copy event that will be removed after
          * datacube copy-to-clipboard action will be processed.
          */
-        var html5_body =  $("body")[0];
+        var html5_body = $("body")[0];
 
         return {
             copyToClipboard: copyToClipboard

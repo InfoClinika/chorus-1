@@ -12,7 +12,9 @@ public class SingleResultBuilder<ENTITY, ENTITY_LINE> extends AbstractResultBuil
         super(entities, defaultTransformer);
     }
 
-    public static <ENTITY, ENTITY_LINE> SingleResultBuilder<ENTITY, ENTITY_LINE> builder(ENTITY entity, Function<ENTITY, ENTITY_LINE> transformer) {
+    public static <ENTITY, ENTITY_LINE> SingleResultBuilder<ENTITY, ENTITY_LINE> builder(ENTITY entity,
+                                                                                         Function<ENTITY,
+                                                                                             ENTITY_LINE> transformer) {
         return new SingleResultBuilder<>(ImmutableSet.of(entity), transformer);
     }
 

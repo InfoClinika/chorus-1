@@ -12,11 +12,16 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DefaultRequestsDetailsReaderAdapter
-
-        extends DefaultRequestsDetailsReader<InstrumentCreationRequestTemplate, LabCreationRequestTemplate, InstrumentCreationItemTemplate, LabItemTemplate> {
+    extends DefaultRequestsDetailsReader<
+    InstrumentCreationRequestTemplate,
+    LabCreationRequestTemplate,
+    InstrumentCreationItemTemplate,
+    LabItemTemplate> {
 
     @Override
-    protected InstrumentCreationItemTemplate transformInstrumentCreationRequest(InstrumentCreationRequestTemplate instrumentCreationRequest) {
+    protected InstrumentCreationItemTemplate transformInstrumentCreationRequest(
+        InstrumentCreationRequestTemplate instrumentCreationRequest) {
+
         return instrumentRequestDetailsHelper.getDefaultTransformer().apply(instrumentCreationRequest);
     }
 

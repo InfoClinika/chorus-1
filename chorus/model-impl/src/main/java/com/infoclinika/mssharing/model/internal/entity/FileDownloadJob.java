@@ -1,7 +1,6 @@
 package com.infoclinika.mssharing.model.internal.entity;
 
 
-
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
 import com.infoclinika.mssharing.model.internal.entity.restorable.StorageData;
 import org.springframework.data.jpa.domain.AbstractPersistable;

@@ -20,7 +20,6 @@
                 <li class="active"><a href="#general" data-toggle="tab">General
                     <span data-ng-class="{'tab-error': form.$error.inputValidator || isNameDuplicated() || (generalTab && form.$invalid)}"></span>
                 </a></li>
-                <li><a href="#operators"  ng-click="generalTab = true"  data-toggle="tab">Operators</a></li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane fade active in" id="general">
@@ -74,6 +73,18 @@
                             </select>
                             <span class="error-message">Field Laboratory is required</span>
                         </div>
+                        <div class="control-group clearfix"
+                             data-ng-class="{error: form.workflow.$error.uiSelect2Validator || (generalTab && form.workflow.$invalid)}"
+                             ng-show="isFeatureAvailable(LabFeatures.ALIS)">
+                            <label for="workflow">Workflow</label>
+                            <select id="workflow" name="workflow" ui-select2="instrument.details.workflow" ng-model="instrument.details.workflow" class="dialog-select" data-placeholder="-- Select One --" ui-select2-validator>
+                                <option></option>
+                                <option value="{{workflow.id}}" ng-repeat="workflow in workflows" ng-selected="workflow.id==instrument.details.workflow">
+                                    {{workflow.name}}
+                                </option>
+                            </select>
+                            <span class="error-message">Field Workflow is required</span>
+                        </div>
                         <div class="control-group clearfix" data-ng-class="{error: form.serialNumber.$error.inputValidator || saveInstrumentError || (generalTab && form.serialNumber.$invalid)}">
                             <label for="serialNumber">Serial Number</label>
                             <input id="serialNumber" name="serialNumber" class="dialog-text-input dont-hide" ng-model="instrument.details.serialNumber" maxlength="255" input-validator/>
@@ -117,15 +128,6 @@
                                 <input id="peripherals" class="dialog-text-input dont-hide" maxlength="255" ng-model="instrument.details.peripherals"/>
                             </div>
                         </section>
-                    </div>
-                </div>
-                <div class="tab-pane fade sharing" id="operators">
-                    <div ng-show= "onLabSelected()">
-                        <operator-selector users="users" invite-handler="inviteHandler"
-                                           selected-users="instrument.operators" exclude-emails="excludeEmails"></operator-selector>
-                    </div>
-                    <div class="modal-body" ng-hide="onLabSelected()">
-                        <p class="static-value" style="text-align: center">Please select laboratory</p>
                     </div>
                 </div>
             </div>

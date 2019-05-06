@@ -27,19 +27,28 @@ public interface CorsRequestSignerTemplate {
 
     SignedRequest signAbortUploadRequest(long userId, String objectName, String uploadId);
 
-    SignedRequest signCompleteUploadRequest(long userId, String objectName, String uploadId, boolean addCharsetToContentType);
+    SignedRequest signCompleteUploadRequest(long userId,
+                                            String objectName,
+                                            String uploadId,
+                                            boolean addCharsetToContentType);
 
     boolean useServerSideEncryption();
+
+    boolean useSessionToken();
+
+    String getAmazonToken();
 
     class SignedRequest {
         public final String dateAsString;
         public final String host;
         public final String authorization;
+        public final String amazonToken;
 
-        public SignedRequest(String dateAsString, String host, String authorization) {
+        public SignedRequest(String dateAsString, String host, String authorization, String amazonToken) {
             this.dateAsString = dateAsString;
             this.host = host;
             this.authorization = authorization;
+            this.amazonToken = amazonToken;
         }
     }
 }

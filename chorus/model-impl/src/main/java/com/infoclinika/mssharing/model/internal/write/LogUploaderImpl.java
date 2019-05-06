@@ -1,11 +1,12 @@
 package com.infoclinika.mssharing.model.internal.write;
 
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
 import com.infoclinika.mssharing.model.write.LogUploader;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.propertiesprovider.AmazonPropertiesProvider;
 import org.springframework.stereotype.Service;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.net.URL;
 import java.util.Calendar;
@@ -16,24 +17,30 @@ import java.util.Calendar;
 
 @Service
 public class LogUploaderImpl implements LogUploader {
+    private static final String LOGS = "logs/";
 
-    public static final String LOGS = "logs/";
-    @Value("${amazon.key}")
-    private String accessKey;
-    @Value("${amazon.secret}")
-    private String secretKey;
-    @Value("${amazon.active.bucket}")
-    private String bucket;
-    @Value("${amazon.expiration.months}")
-    private String months;
+    private final CloudStorageClientsProvider cloudStorageClientsProvider;
+    private final AmazonPropertiesProvider amazonPropertiesProvider;
+
+    @Inject
+    public LogUploaderImpl(CloudStorageClientsProvider cloudStorageClientsProvider,
+                           AmazonPropertiesProvider amazonPropertiesProvider) {
+        this.cloudStorageClientsProvider = cloudStorageClientsProvider;
+        this.amazonPropertiesProvider = amazonPropertiesProvider;
+    }
 
     @Override
     public URL uploadFile(File log) {
-        TransferManager transferManager = new TransferManager(new BasicAWSCredentials(accessKey, secretKey));
-        transferManager.upload(bucket, LOGS + log.getName(), log);
+        TransferManager transferManager = cloudStorageClientsProvider.getS3FileOperationHandler().getTransferManager();
+        transferManager.upload(amazonPropertiesProvider.getActiveBucket(), LOGS + log.getName(), log);
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MONTH, Integer.valueOf(months));
-        return transferManager.getAmazonS3Client().generatePresignedUrl(bucket, LOGS + log.getName(), calendar.getTime());
+        calendar.add(Calendar.MONTH, amazonPropertiesProvider.getPresignedURLDuration());
+
+        return transferManager.getAmazonS3Client().generatePresignedUrl(
+            amazonPropertiesProvider.getActiveBucket(),
+            LOGS + log.getName(),
+            calendar.getTime()
+        );
 
     }
 

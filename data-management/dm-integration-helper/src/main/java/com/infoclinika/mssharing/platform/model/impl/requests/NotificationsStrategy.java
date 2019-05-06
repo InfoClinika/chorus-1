@@ -1,6 +1,5 @@
 package com.infoclinika.mssharing.platform.model.impl.requests;
 
-import com.google.common.base.Function;
 import com.infoclinika.mssharing.platform.entity.InboxMessageTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.repository.InboxMessageRepositoryTemplate;
@@ -25,12 +24,13 @@ class NotificationsStrategy extends Strategy {
     @Override
     public Collection<InboxItem> getInboxItems(long actor) {
         List<InboxMessageTemplate> inboxMessages = messageRepository.findByTo(actor);
-        return transform(inboxMessages, new Function<InboxMessageTemplate, InboxItem>() {
-            @Override
-            public InboxItem apply(InboxMessageTemplate input) {
-                return new InboxItem(buildGlobalId(input.getId()), input.getFrom().getFullName(), input.getMessage(), input.getDate(), InboxItem.Actions.OK);
-            }
-        });
+        return transform(inboxMessages, input -> new InboxItem(
+            buildGlobalId(input.getId()),
+            input.getFrom().getFullName(),
+            input.getMessage(),
+            input.getDate(),
+            InboxItem.Actions.OK
+        ));
     }
 
     @Override

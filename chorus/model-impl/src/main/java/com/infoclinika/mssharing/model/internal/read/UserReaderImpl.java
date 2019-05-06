@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.read;
 
@@ -18,6 +20,7 @@ import com.infoclinika.mssharing.platform.model.write.UserManagementTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.util.Date;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.FluentIterable.from;
@@ -33,20 +36,23 @@ public class UserReaderImpl implements UserReader {
     @Override
     public UserShortForm shortForm(long actor) {
         final User user = find(actor);
-        return new UserShortForm(user.getId(),
-                user.getFullName(),
-                user.getEmail(),
-                getLabNames(user));
+        return new UserShortForm(
+            user.getId(),
+            user.getFullName(),
+            user.getEmail(),
+            getLabNames(user)
+        );
     }
 
     @Override
     public AccountSettingsForm accountSettingsForm(long actor) {
         final User user = find(actor);
         return new AccountSettingsForm(
-                user.getPersonData().getFirstName(),
-                user.getPersonData().getLastName(),
-                getLabNames(user),
-                user.getEmail());
+            user.getPersonData().getFirstName(),
+            user.getPersonData().getLastName(),
+            getLabNames(user),
+            user.getEmail()
+        );
     }
 
     @Override
@@ -55,12 +61,24 @@ public class UserReaderImpl implements UserReader {
         return new UserManagementTemplate.PersonInfo(user.getFirstName(), user.getLastName(), user.getEmail());
     }
 
+    @Override
+    public Date readConsentToPrivacyPolicyDate(long actor) {
+        final User user = find(actor);
+        return user.getConsentToPrivacyPolicyDate();
+    }
+
+    @Override
+    public Date readAccountRemovalRequestDate(long actor) {
+        final User user = find(actor);
+        return user.getAccountRemovalRequestDate();
+    }
+
     private User find(long id) {
         return checkNotNull(repository.findOne(id), "Couldn't find user with id %s", id);
     }
 
     private static ImmutableSet<String> getLabNames(User user) {
-        return from(user.getLabs()).transform(new Function<Lab, String>(){
+        return from(user.getLabs()).transform(new Function<Lab, String>() {
             @Override
             public String apply(Lab input) {
                 return input.getName();

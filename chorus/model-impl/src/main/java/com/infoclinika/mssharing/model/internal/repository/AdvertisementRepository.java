@@ -12,6 +12,7 @@ import java.util.List;
  * @author andrii.loboda
  */
 public interface AdvertisementRepository extends CrudRepository<Advertisement, Long> {
-    @Query("select ad from Advertisement ad where ad.startRollDate <= :dateForAdd and ad.endRollDate >=:dateForAdd and ad.isEnabled=1")
+    @Query("select ad from Advertisement ad where ad.startRollDate <= :dateForAdd and ad.endRollDate >=:dateForAdd " +
+        " and ad.isEnabled=1")
     List<Advertisement> findAdsForDate(@Param("dateForAdd") Date date);
 }

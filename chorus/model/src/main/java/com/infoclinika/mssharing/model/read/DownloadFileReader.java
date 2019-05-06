@@ -10,11 +10,11 @@ import java.util.Date;
  */
 public interface DownloadFileReader {
 
-    public DownloadFileJob readJobByFile(Long id);
+    DownloadFileJob readJobByFile(Long id);
 
-    public FileItemLocation readFileLocation(Long id);
+    FileItemLocation readFileLocation(Long id);
 
-    public ImmutableList<DownloadFileGroup> readGroupByJob(Long id);
+    ImmutableList<DownloadFileGroup> readGroupByJob(Long id);
 
     final class DownloadFileJob {
         public long id;
@@ -31,11 +31,11 @@ public interface DownloadFileReader {
         @Override
         public String toString() {
             return "DownloadFileJob{" +
-                    "id=" + id +
-                    ", completed=" + completed +
-                    ", fileMetaData=" + fileMetaData +
-                    ", experimentId=" + experimentId +
-                    '}';
+                "id=" + id +
+                ", completed=" + completed +
+                ", fileMetaData=" + fileMetaData +
+                ", experimentId=" + experimentId +
+                '}';
         }
     }
 

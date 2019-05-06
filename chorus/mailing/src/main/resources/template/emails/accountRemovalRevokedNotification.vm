@@ -1,0 +1,12 @@
+Chorus: Account Removal Revoked
+
+Hello!
+
+The following account removal has been revoked on ${date}:
+
+User ID: ${userId}
+User Email: ${userEmail}
+
+The account will not be removed.
+
+Thanks!

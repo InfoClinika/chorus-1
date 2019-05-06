@@ -13,7 +13,8 @@
                             com.infoclinika.mssharing.platform.model,
                             com.infoclinika.mssharing.platform.fileserver,
                             com.infoclinika.mssharing.platform.repository,
-                            com.infoclinika.mssharing.platform.security"/>
+                            com.infoclinika.mssharing.platform.security,
+                            com.infoclinika.mssharing.propertiesprovider"/>
 
     <bean id="encoder" class="org.springframework.security.crypto.password.StandardPasswordEncoder"/>
     <bean id="projectAccessChangedEventListener"

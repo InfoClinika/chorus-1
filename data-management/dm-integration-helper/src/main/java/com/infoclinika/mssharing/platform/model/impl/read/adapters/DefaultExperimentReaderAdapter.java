@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
  * @author Herman Zamula
  */
 @Component
-public class DefaultExperimentReaderAdapter extends DefaultExperimentReader<ExperimentTemplate, ExperimentReaderTemplate.ExperimentLineTemplate> {
+public class DefaultExperimentReaderAdapter
+    extends DefaultExperimentReader<ExperimentTemplate, ExperimentReaderTemplate.ExperimentLineTemplate> {
     @Override
     public ExperimentLineTemplate transform(ExperimentTemplate experimentTemplate) {
         return experimentReaderHelper.getDefaultTransformer().apply(experimentTemplate);

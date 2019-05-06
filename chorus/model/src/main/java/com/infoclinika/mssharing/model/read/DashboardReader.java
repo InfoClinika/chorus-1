@@ -3,11 +3,14 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.read;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.infoclinika.mssharing.platform.model.common.items.InstrumentItem;
 import com.infoclinika.mssharing.platform.model.read.*;
@@ -24,13 +27,15 @@ import static com.infoclinika.mssharing.platform.model.read.GroupsReaderTemplate
  * @author Stanislav Kurilin
  */
 public interface DashboardReader extends
-        ProjectReaderTemplate<ProjectLine>,
-        ExperimentReaderTemplate<ExperimentLine>,
-        InstrumentReaderTemplate<InstrumentLine>,
-        LabReaderTemplate<LabLineTemplate>,
-        FileReaderTemplate<FileLine>,
-        GroupsReaderTemplate<GroupLine>,
-        InstrumentModelReaderTemplate<InstrumentModelLineTemplate>{
+    ProjectReaderTemplate<ProjectLine>,
+    ExperimentReaderTemplate<ExperimentLine>,
+    InstrumentReaderTemplate<InstrumentLine>,
+    LabReaderTemplate<LabLineTemplate>,
+    FileReader<FileLine>,
+    GroupsReaderTemplate<GroupLine>,
+    InstrumentModelReaderTemplate<InstrumentModelLineTemplate> {
+
+    void setExperimentFailed(long actor, long experiment, boolean failed);
 
     //TODO: Used only in tests
     ImmutableSet<InstrumentItem> instrumentsWithAvailableFiles(long actor);
@@ -39,22 +44,9 @@ public interface DashboardReader extends
 
     ImmutableSet<UserLine> readUsersByLab(long labHead, long lab);
 
-    String getChartsUrlForFiles(long user, List<Long> files);
-
     FullFolderStructure readFolderStructure(long user);
 
     FolderStructure readFolderStructure(long user, Filter filter);
-
-    /**
-     * Return features which are enabled or disabled in application for user
-     */
-    Map<String, Boolean> getFeatures(long actor);
-
-    /**
-     * @param actor user for whom features are requested.
-     * @return map in which key is a name of feature, value is a feature itself.
-     */
-    Map<String, FeatureItem> getFeatureItems(long actor);
 
     Set<ExperimentLevelItem> readExperimentLevels(long userId, long experiment);
 
@@ -69,6 +61,10 @@ public interface DashboardReader extends
     SortedSet<ExperimentStructure> readExperimentsOnlyStructure(long userId, Filter filter);
 
     SortedSet<UploadedFile> readFilesOnlyStructure(long userId, Filter filter);
+
+    StringBuffer readFileCompoundsAsCSV(long actor, Set<Long> files);
+
+    StringBuffer readRawFileCompoundsAsCSV(long actor, Set<Long> files);
 
     class ExperimentLevelItem {
         public final long id;
@@ -103,6 +99,10 @@ public interface DashboardReader extends
         public final Date uploadDate;
         public final String labels;
 
+        // from file processing result
+        public long detectedIsotopeGroups;
+        public long annotatedIsotopeGroups;
+
         //From Annotations
         public Date creationDate;
         public String comment;
@@ -122,7 +122,8 @@ public interface DashboardReader extends
         public String phone;
         public String instrumentName;
 
-        public FileColumns(String name, long sizeInBytes, String instrument, String laboratory, Date uploadDate, String labels) {
+        public FileColumns(String name, long sizeInBytes, String instrument, String laboratory, Date uploadDate,
+                           String labels) {
             this.name = name;
             this.sizeInBytes = sizeInBytes;
             this.instrument = instrument;
@@ -157,14 +158,24 @@ public interface DashboardReader extends
         public final String project;
         public final long files;
         public final Date modified;
+        public final boolean failed;
 
-        public ExperimentColumns(String name, String owner, String laboratory, String project, long files, Date modified) {
+        public ExperimentColumns(
+            String name,
+            String owner,
+            String laboratory,
+            String project,
+            long files,
+            Date modified,
+            boolean failed
+        ) {
             this.name = name;
             this.owner = owner;
             this.laboratory = laboratory;
             this.project = project;
             this.files = files;
             this.modified = modified;
+            this.failed = failed;
         }
     }
 
@@ -209,14 +220,24 @@ public interface DashboardReader extends
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             FolderStructure that = (FolderStructure) o;
 
-            if (experiments != null ? !experiments.equals(that.experiments) : that.experiments != null) return false;
-            if (files != null ? !files.equals(that.files) : that.files != null) return false;
-            if (projects != null ? !projects.equals(that.projects) : that.projects != null) return false;
+            if (experiments != null ? !experiments.equals(that.experiments) : that.experiments != null) {
+                return false;
+            }
+            if (files != null ? !files.equals(that.files) : that.files != null) {
+                return false;
+            }
+            if (projects != null ? !projects.equals(that.projects) : that.projects != null) {
+                return false;
+            }
 
             return true;
         }
@@ -255,18 +276,33 @@ public interface DashboardReader extends
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             ProjectStructure that = (ProjectStructure) o;
 
-            if (id != that.id) return false;
-            if (experiments != null ? !experiments.equals(that.experiments) : that.experiments != null) return false;
-            if (labName != null ? !labName.equals(that.labName) : that.labName != null) return false;
-            if (lastModified != null ? !lastModified.equals(that.lastModified) : that.lastModified != null)
+            if (id != that.id) {
                 return false;
-            if (owner != null ? !owner.equals(that.owner) : that.owner != null) return false;
-            if (projectName != null ? !projectName.equals(that.projectName) : that.projectName != null) return false;
+            }
+            if (experiments != null ? !experiments.equals(that.experiments) : that.experiments != null) {
+                return false;
+            }
+            if (labName != null ? !labName.equals(that.labName) : that.labName != null) {
+                return false;
+            }
+            if (lastModified != null ? !lastModified.equals(that.lastModified) : that.lastModified != null) {
+                return false;
+            }
+            if (owner != null ? !owner.equals(that.owner) : that.owner != null) {
+                return false;
+            }
+            if (projectName != null ? !projectName.equals(that.projectName) : that.projectName != null) {
+                return false;
+            }
 
             return true;
         }
@@ -285,13 +321,13 @@ public interface DashboardReader extends
         @Override
         public String toString() {
             return "ProjectStructure{" +
-                    "id=" + id +
-                    ", projectName='" + projectName + '\'' +
-                    ", labName='" + labName + '\'' +
-                    ", owner='" + owner + '\'' +
-                    ", lastModified=" + lastModified +
-                    ", experiments=" + experiments +
-                    '}';
+                "id=" + id +
+                ", projectName='" + projectName + '\'' +
+                ", labName='" + labName + '\'' +
+                ", owner='" + owner + '\'' +
+                ", lastModified=" + lastModified +
+                ", experiments=" + experiments +
+                '}';
         }
     }
 
@@ -304,7 +340,8 @@ public interface DashboardReader extends
         public final long analysisRunCount;
         public final SortedSet<UploadedFile> files = new TreeSet<>();
 
-        public ExperimentStructure(long id, String experimentName, String owner, boolean currentUserOwner, Date lastModified, int analysisRunCount) {
+        public ExperimentStructure(long id, String experimentName, String owner, boolean currentUserOwner,
+                                   Date lastModified, int analysisRunCount) {
             this.id = id;
             this.experimentName = experimentName;
             this.owner = owner;
@@ -321,20 +358,36 @@ public interface DashboardReader extends
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             ExperimentStructure that = (ExperimentStructure) o;
 
-            if (analysisRunCount != that.analysisRunCount) return false;
-            if (currentUserOwner != that.currentUserOwner) return false;
-            if (id != that.id) return false;
-            if (experimentName != null ? !experimentName.equals(that.experimentName) : that.experimentName != null)
+            if (analysisRunCount != that.analysisRunCount) {
                 return false;
-            if (files != null ? !files.equals(that.files) : that.files != null) return false;
-            if (lastModified != null ? !lastModified.equals(that.lastModified) : that.lastModified != null)
+            }
+            if (currentUserOwner != that.currentUserOwner) {
                 return false;
-            if (owner != null ? !owner.equals(that.owner) : that.owner != null) return false;
+            }
+            if (id != that.id) {
+                return false;
+            }
+            if (experimentName != null ? !experimentName.equals(that.experimentName) : that.experimentName != null) {
+                return false;
+            }
+            if (files != null ? !files.equals(that.files) : that.files != null) {
+                return false;
+            }
+            if (lastModified != null ? !lastModified.equals(that.lastModified) : that.lastModified != null) {
+                return false;
+            }
+            if (owner != null ? !owner.equals(that.owner) : that.owner != null) {
+                return false;
+            }
 
             return true;
         }
@@ -354,14 +407,14 @@ public interface DashboardReader extends
         @Override
         public String toString() {
             return "ExperimentStructure{" +
-                    "id=" + id +
-                    ", experimentName='" + experimentName + '\'' +
-                    ", owner='" + owner + '\'' +
-                    ", currentUserOwner=" + currentUserOwner +
-                    ", lastModified=" + lastModified +
-                    ", analysisRunCount=" + analysisRunCount +
-                    ", files=" + files +
-                    '}';
+                "id=" + id +
+                ", experimentName='" + experimentName + '\'' +
+                ", owner='" + owner + '\'' +
+                ", currentUserOwner=" + currentUserOwner +
+                ", lastModified=" + lastModified +
+                ", analysisRunCount=" + analysisRunCount +
+                ", files=" + files +
+                '}';
         }
     }
 
@@ -376,7 +429,8 @@ public interface DashboardReader extends
         public final long ownerId;
 
         public UploadedFile(long id, String name, String instrumentName, String instrumentModel,
-                            Date uploadDate, Date acquisitionDate, long fileSizeBytes, long ownerId) {
+                            Date uploadDate, Date acquisitionDate, long fileSizeBytes,
+                            long ownerId) {
             this.id = id;
             this.name = name;
             this.instrumentName = instrumentName;
@@ -395,22 +449,41 @@ public interface DashboardReader extends
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             UploadedFile that = (UploadedFile) o;
 
-            if (fileSizeBytes != that.fileSizeBytes) return false;
-            if (id != that.id) return false;
-            if (ownerId != that.ownerId) return false;
-            if (acquisitionDate != null ? !acquisitionDate.equals(that.acquisitionDate) : that.acquisitionDate != null)
+            if (fileSizeBytes != that.fileSizeBytes) {
                 return false;
-            if (instrumentModel != null ? !instrumentModel.equals(that.instrumentModel) : that.instrumentModel != null)
+            }
+            if (id != that.id) {
                 return false;
-            if (instrumentName != null ? !instrumentName.equals(that.instrumentName) : that.instrumentName != null)
+            }
+            if (ownerId != that.ownerId) {
                 return false;
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-            if (uploadDate != null ? !uploadDate.equals(that.uploadDate) : that.uploadDate != null) return false;
+            }
+            if (acquisitionDate != null ? !acquisitionDate.equals(that.acquisitionDate) :
+                that.acquisitionDate != null) {
+                return false;
+            }
+            if (instrumentModel != null ? !instrumentModel.equals(that.instrumentModel) :
+                that.instrumentModel != null) {
+                return false;
+            }
+            if (instrumentName != null ? !instrumentName.equals(that.instrumentName) : that.instrumentName != null) {
+                return false;
+            }
+            if (name != null ? !name.equals(that.name) : that.name != null) {
+                return false;
+            }
+            if (uploadDate != null ? !uploadDate.equals(that.uploadDate) : that.uploadDate != null) {
+                return false;
+            }
 
             return true;
         }
@@ -431,15 +504,15 @@ public interface DashboardReader extends
         @Override
         public String toString() {
             return "UploadedFile{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", instrumentName='" + instrumentName + '\'' +
-                    ", instrumentModel='" + instrumentModel + '\'' +
-                    ", uploadDate=" + uploadDate +
-                    ", acquisitionDate=" + acquisitionDate +
-                    ", fileSizeBytes=" + fileSizeBytes +
-                    ", ownerId=" + ownerId +
-                    '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", instrumentName='" + instrumentName + '\'' +
+                ", instrumentModel='" + instrumentModel + '\'' +
+                ", uploadDate=" + uploadDate +
+                ", acquisitionDate=" + acquisitionDate +
+                ", fileSizeBytes=" + fileSizeBytes +
+                ", ownerId=" + ownerId +
+                '}';
         }
     }
 
@@ -459,6 +532,37 @@ public interface DashboardReader extends
         public FeatureItem(boolean enabledGlobally, Set<Long> enabledForLabs) {
             this.enabledGlobally = enabledGlobally;
             this.enabledForLabs = enabledForLabs;
+        }
+    }
+
+    class FileCompound {
+        public final String id;
+        public final String formula;
+        public final double weight;
+
+        public FileCompound(String id, String formula, double weight) {
+            this.id = id;
+            this.formula = formula;
+            this.weight = weight;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            FileCompound that = (FileCompound) o;
+            return Double.compare(that.weight, weight) == 0 &&
+                com.google.common.base.Objects.equal(id, that.id) &&
+                Objects.equal(formula, that.formula);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(id, formula, weight);
         }
     }
 

@@ -20,15 +20,15 @@ public class StartAdvertisementImageUploadRequest {
     @Override
     public String toString() {
         return "StartAdvertisementImageUploadRequest{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
-                ", redirectLink='" + redirectLink + '\'' +
-                ", currentDate=" + currentDate +
-                ", filename='" + filename + '\'' +
-                ", sizeInBytes=" + sizeInBytes +
-                ", isEnabled=" + isEnabled +
-                '}';
+            "id=" + id +
+            ", title='" + title + '\'' +
+            ", startDate=" + startDate +
+            ", endDate=" + endDate +
+            ", redirectLink='" + redirectLink + '\'' +
+            ", currentDate=" + currentDate +
+            ", filename='" + filename + '\'' +
+            ", sizeInBytes=" + sizeInBytes +
+            ", isEnabled=" + isEnabled +
+            '}';
     }
 }

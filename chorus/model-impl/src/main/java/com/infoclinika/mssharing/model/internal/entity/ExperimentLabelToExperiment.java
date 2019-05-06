@@ -22,7 +22,11 @@ public class ExperimentLabelToExperiment extends AbstractPersistable<Long> {
     private ExperimentSampleType experimentLabelMixType;
 
 
-    public ExperimentLabelToExperiment(AbstractExperiment experiment, ExperimentLabel experimentLabel, ExperimentSampleType experimentLabelMixType) {
+    public ExperimentLabelToExperiment(
+        AbstractExperiment experiment,
+        ExperimentLabel experimentLabel,
+        ExperimentSampleType experimentLabelMixType
+    ) {
         this.experiment = experiment;
         this.experimentLabel = experimentLabel;
         this.experimentLabelMixType = experimentLabelMixType;

@@ -3,16 +3,22 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.test.sharing;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.infoclinika.mssharing.model.PaginationItems;
 import com.infoclinika.mssharing.model.PaginationItems.AdvancedFilterQueryParams;
+import com.infoclinika.mssharing.model.features.ApplicationFeature;
 import com.infoclinika.mssharing.model.helper.Data;
 import com.infoclinika.mssharing.model.helper.ExperimentLabelsInfo;
 import com.infoclinika.mssharing.model.read.*;
@@ -27,6 +33,8 @@ import com.infoclinika.mssharing.platform.model.common.items.LabItem;
 import com.infoclinika.mssharing.platform.model.read.AccessLevel;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import java.util.Collections;
@@ -48,6 +56,7 @@ import static org.testng.Assert.*;
  */
 //TODO: [stanislav.kurilin] extract test groups to make test more consistence in single class
 public class SharingTest extends AbstractSharingTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SharingTest.class);
     //Users can share their projects with other users or with theirs group
 
     //sharing projects
@@ -57,7 +66,13 @@ public class SharingTest extends AbstractSharingTest {
         final long paul = uc.createPaul();
         final long group = sharingManagement.createGroup(bob, "Bobs Group", ImmutableSet.of(paul));
         final long project = uc.createProject(bob, uc.getLab3());
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(
+            bob,
+            project,
+            emptySharing,
+            ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE),
+            false
+        );
         final GroupItemTemplate groupItem = detailsReader.readGroup(bob, group);
         assertTrue(Iterables.any(groupItem.sharedProjects, new Predicate<SharedProjectItemTemplate>() {
             @Override
@@ -74,7 +89,13 @@ public class SharingTest extends AbstractSharingTest {
         final String groupName = generateString();
         final long group = sharingManagement.createGroup(bob, groupName, ImmutableSet.of(paul));
         final long project = uc.createProject(bob, uc.getLab3());
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(
+            bob,
+            project,
+            emptySharing,
+            ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE),
+            false
+        );
         final ProjectItem projectItem = detailsReader.readProject(bob, project);
         assertTrue(Iterables.any(projectItem.sharedGroups, new Predicate<DetailsReader.SharedGroup>() {
             @Override
@@ -102,7 +123,13 @@ public class SharingTest extends AbstractSharingTest {
 
         final long group = sharingManagement.createGroup(bob, "gg lab", ImmutableSet.of(kate));
 
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(
+            bob,
+            project,
+            emptySharing,
+            ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE),
+            false
+        );
 
         createInstrumentAndExperimentWithOneFile(kate, uc.getLab2(), project);
     }
@@ -121,7 +148,13 @@ public class SharingTest extends AbstractSharingTest {
         long kate = createKateInLab2();
         final long project = projectByUser(bob, uc.getLab3());
         final long group = sharingManagement.createGroup(bob, "gg lab", ImmutableSet.of(kate));
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(
+            bob,
+            project,
+            emptySharing,
+            ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE),
+            false
+        );
         sharingManagement.removeGroup(bob, group);
     }
 
@@ -182,7 +215,7 @@ public class SharingTest extends AbstractSharingTest {
         updateExperimentFiles(bob, experimentB, file);
     }
 
-   /**
+    /**
      * 1) Kate creates project P
      * 2) Kate use file A in project
      * 3) Kate shares P with Bob
@@ -439,7 +472,7 @@ public class SharingTest extends AbstractSharingTest {
             createInstrumentAndExperimentWithOneFile(joe, uc.getLab3(), project);
             fail("Access denied for case \"Create Experiment in Public Project by not owner user\" was expected");
         } catch (AccessDenied e) {
-
+            LOGGER.error("Error while doing experiment public with no access", e);
         }
     }
 
@@ -475,11 +508,21 @@ public class SharingTest extends AbstractSharingTest {
         assertTrue(fileLines.size() == 1);
         final long id = Iterables.get(fileLines, 0).id;
 
-        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name("Duplicated title").description("area").experimentType(anyExperimentType()).specie(unspecified())
-                .project(publicProject).lab(uc.getLab3()).billLab(uc.getLab3()).is2dLc(false).experimentLabels(new ExperimentLabelsInfo())
-                .restriction(restriction(kate)).factors(NO_FACTORS)
-                .files(of(new FileItem(id, false, 0, preparedSample(id))))
-        .bounds(new AnalysisBounds()).lockMasses(NO_LOCK_MASSES).sampleTypesCount(1);
+        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name("Duplicated title")
+            .description("area")
+            .experimentType(anyExperimentType())
+            .specie(unspecified())
+            .project(publicProject)
+            .lab(uc.getLab3())
+            .billLab(uc.getLab3())
+            .is2dLc(false)
+            .experimentLabels(new ExperimentLabelsInfo())
+            .restriction(restriction(kate))
+            .factors(NO_FACTORS)
+            .files(of(new FileItem(id, false, 0, preparedSample(id))))
+            .bounds(new AnalysisBounds())
+            .lockMasses(NO_LOCK_MASSES)
+            .sampleTypesCount(1);
 
         studyManagement.createExperiment(kate, builder.build());
         assertTrue(fileReader.readFiles(bob, SHARED_WITH_ME).size() == 0);
@@ -492,15 +535,29 @@ public class SharingTest extends AbstractSharingTest {
         final long bob = uc.createLab3AndBob();
         final long sharedProject = projectByUser(kate, uc.getLab3());
 
-        final long fileId = instrumentManagement.createFile(kate, createInstrumentAndApproveIfNeeded(kate, uc.getLab2()), new FileMetaDataInfo("ddd", 222, "String", null, anySpecies(), false));
+        final long fileId = instrumentManagement.createFile(kate,
+            createInstrumentAndApproveIfNeeded(kate, uc.getLab2()),
+            new FileMetaDataInfo("ddd", 222, "String", null, anySpecies(), false)
+        );
         uc.updateFileContent(kate, fileId);
 
-        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name("Duplicated title").description("area").experimentType(anyExperimentType()).specie(unspecified())
-                .project(sharedProject).lab(uc.getLab3()).billLab(uc.getLab3()).is2dLc(false).restriction(restriction(kate))
-                .factors(NO_FACTORS).files(of(new FileItem(fileId, false, 0, preparedSample(fileId))))
-                .bounds(new AnalysisBounds()).lockMasses(NO_LOCK_MASSES).experimentLabels(new ExperimentLabelsInfo()).sampleTypesCount(1);
+        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name("Duplicated title")
+            .description("area")
+            .experimentType(anyExperimentType())
+            .specie(unspecified())
+            .project(sharedProject)
+            .lab(uc.getLab3())
+            .billLab(uc.getLab3())
+            .is2dLc(false)
+            .restriction(restriction(kate))
+            .factors(NO_FACTORS)
+            .files(of(new FileItem(fileId, false, 0, preparedSample(fileId))))
+            .bounds(new AnalysisBounds())
+            .lockMasses(NO_LOCK_MASSES)
+            .experimentLabels(new ExperimentLabelsInfo())
+            .sampleTypesCount(1);
 
-        long expId = studyManagement.createExperiment(kate, builder.build());
+        final long expId = studyManagement.createExperiment(kate, builder.build());
         fileMovingManager.moveToArchiveStorage(fileId);
         uc.sharingWithCollaborator(kate, sharedProject, bob);
         final DownloadFileReader.DownloadFileJob job = downloadFileReader.readJobByFile(fileId);
@@ -510,7 +567,7 @@ public class SharingTest extends AbstractSharingTest {
 
     @Test
     public void testNotCreatingDuplicateDownloadGroup() {
-        setBilling(true);
+        setFeature(ApplicationFeature.GLACIER, true);
 
         final long kate = createKateInLab2and3();
         final long bob = uc.createLab3AndBob();
@@ -518,13 +575,28 @@ public class SharingTest extends AbstractSharingTest {
         billingManagement.makeLabAccountEnterprise(uc.createPaul(), uc.getLab3());
         final long sharedProject = projectByUser(kate, uc.getLab3());
 
-        final long fileId = instrumentManagement.createFile(kate, createInstrumentAndApproveIfNeeded(kate, uc.getLab2()), new FileMetaDataInfo("ddd", 222, "String", null, anySpecies(), false));
+        final long fileId = instrumentManagement.createFile(
+            kate,
+            createInstrumentAndApproveIfNeeded(kate, uc.getLab2()),
+            new FileMetaDataInfo("ddd", 222, "String", null, anySpecies(), false)
+        );
         uc.updateFileContent(kate, fileId);
 
-        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name("Duplicated title").description("area").experimentType(anyExperimentType()).specie(unspecified())
-                .project(sharedProject).lab(uc.getLab3()).billLab(uc.getLab3()).is2dLc(false).restriction(restriction(kate))
-                .factors(NO_FACTORS).files(of(new FileItem(fileId, false, 0, preparedSample(fileId))))
-                .bounds(new AnalysisBounds()).lockMasses(NO_LOCK_MASSES).experimentLabels(new ExperimentLabelsInfo()).sampleTypesCount(1);
+        final ExperimentInfo.Builder builder = new ExperimentInfo.Builder().name("Duplicated title")
+            .description("area")
+            .experimentType(anyExperimentType())
+            .specie(unspecified())
+            .project(sharedProject)
+            .lab(uc.getLab3())
+            .billLab(uc.getLab3())
+            .is2dLc(false)
+            .restriction(restriction(kate))
+            .factors(NO_FACTORS)
+            .files(of(new FileItem(fileId, false, 0, preparedSample(fileId))))
+            .bounds(new AnalysisBounds())
+            .lockMasses(NO_LOCK_MASSES)
+            .experimentLabels(new ExperimentLabelsInfo())
+            .sampleTypesCount(1);
         long expId = studyManagement.createExperiment(kate, builder.build());
 
         uc.sharingWithCollaborator(kate, sharedProject, bob);
@@ -559,39 +631,55 @@ public class SharingTest extends AbstractSharingTest {
         final long head = uc.createPaul();
         billingManagement.makeLabAccountEnterprise(head, uc.getLab3());
         long joe = uc.createJoe();
-        setBilling(true);
+        setFeature(ApplicationFeature.GLACIER, true);
         createExperiment(joe, projectByUser(joe, uc.getLab3()));
-        final ExperimentLine experimentLine = dashboardReader.readExperimentsByLab(head, uc.getLab3(), new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())).items.iterator().next();
+        final ExperimentLine experimentLine = dashboardReader.readExperimentsByLab(
+            head,
+            uc.getLab3(),
+            new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())
+        ).items.iterator().next();
         assertTrue(experimentLine.canArchive);
         archiveExperiment(head, experimentLine.id);
-        assertTrue(from(dashboardReader.readExperimentsByLab(head, uc.getLab3(), new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())))
-                .allMatch(new Predicate<ExperimentLine>() {
-                    @Override
-                    public boolean apply(ExperimentLine input) {
-                        return input.canUnarchive;
-                    }
-                }));
+        assertTrue(from(dashboardReader.readExperimentsByLab(
+            head,
+            uc.getLab3(),
+            new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())
+        ))
+            .allMatch(new Predicate<ExperimentLine>() {
+                @Override
+                public boolean apply(ExperimentLine input) {
+                    return input.canUnarchive;
+                }
+            }));
     }
 
     @Test
     public void testLabHeadCanUnarchivePrivateExperimentsForItsLab() {
-        setBilling(true);
+        setFeature(ApplicationFeature.GLACIER, true);
         uc.createLab3();
         final long head = uc.createPaul();
         billingManagement.makeLabAccountEnterprise(head, uc.getLab3());
         long joe = uc.createJoe();
         final long experiment = createExperiment(joe, projectByUser(joe, uc.getLab3()));
         archiveExperiment(head, experiment);
-        final ExperimentLine experimentLine = dashboardReader.readExperimentsByLab(head, uc.getLab3(), new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())).items.iterator().next();
+        final ExperimentLine experimentLine = dashboardReader.readExperimentsByLab(
+            head,
+            uc.getLab3(),
+            new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())
+        ).items.iterator().next();
         assertTrue(experimentLine.canUnarchive);
         fileOperationsManager.markExperimentFilesToUnarchive(head, experimentLine.id);
-        assertTrue(from(dashboardReader.readExperimentsByLab(head, uc.getLab3(), new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())))
-                .allMatch(new Predicate<ExperimentLine>() {
-                    @Override
-                    public boolean apply(ExperimentLine input) {
-                        return input.canArchive;
-                    }
-                }), "All experiments must be available for archiving for lab head");
+        assertTrue(from(dashboardReader.readExperimentsByLab(
+            head,
+            uc.getLab3(),
+            new PaginationItems.PagedItemInfo(100, 0, "name", false, null, Optional.<AdvancedFilterQueryParams>absent())
+        ))
+            .allMatch(new Predicate<ExperimentLine>() {
+                @Override
+                public boolean apply(ExperimentLine input) {
+                    return input.canArchive;
+                }
+            }), "All experiments must be available for archiving for lab head");
     }
 
     private void archiveExperiment(long head, long experiment) {

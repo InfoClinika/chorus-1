@@ -17,31 +17,47 @@ import java.util.stream.Collectors;
 public class ExperimentTransformer {
 
     public static final Function<ExperimentDetails, ExperimentInfo> TO_EXPERIMENT_INFO = experiment -> {
-            return new ExperimentInfo.Builder().name(experiment.info.name).description(experiment.info.description)
-                    .specie(experiment.info.specie)
-                    .experimentType(experiment.info.experimentType)
-                    .experimentLabels(experiment.experimentLabels)
-                    .project(experiment.project).lab(experiment.lab).billLab(experiment.billLab).is2dLc(experiment.is2dLc)
-                    .restriction(experiment.restriction).factors(experiment.factors).files(experiment.files).bounds(experiment.bounds)
-                    .sampleTypesCount(experiment.mixedSamplesCount)
-                    .channelsCount(experiment.channelsCount)
-                    .labelType(experiment.labelType)
-                    .groupSpecificParametersType(experiment.groupSpecificParametersType)
-                    .reporterMassTol(experiment.reporterMassTol)
-                    .filterByPIFEnabled(experiment.filterByPIFEnabled)
-                    .minReporterPIF(experiment.minReporterPIF)
-                    .minBasePeakRatio(experiment.minBasePeakRatio)
-                    .minReporterFraction(experiment.minReporterFraction)
-                    .lockMasses(experiment.lockMasses)
-                    .ngsRelatedInfo(experiment.ngsRelatedInfo)
-                    .build();
+        return new ExperimentInfo.Builder().name(experiment.info.name)
+            .description(experiment.info.description)
+            .specie(experiment.info.specie)
+            .experimentType(experiment.info.experimentType)
+            .experimentLabels(experiment.experimentLabels)
+            .project(experiment.project)
+            .lab(experiment.lab)
+            .billLab(experiment.billLab)
+            .is2dLc(experiment.is2dLc)
+            .restriction(experiment.restriction)
+            .factors(experiment.factors)
+            .files(experiment.files)
+            .bounds(experiment.bounds)
+            .sampleTypesCount(experiment.mixedSamplesCount)
+            .channelsCount(experiment.channelsCount)
+            .labelType(experiment.labelType)
+            .groupSpecificParametersType(experiment.groupSpecificParametersType)
+            .reporterMassTol(experiment.reporterMassTol)
+            .filterByPIFEnabled(experiment.filterByPIFEnabled)
+            .minReporterPIF(experiment.minReporterPIF)
+            .minBasePeakRatio(experiment.minBasePeakRatio)
+            .minReporterFraction(experiment.minReporterFraction)
+            .lockMasses(experiment.lockMasses)
+            .ngsRelatedInfo(experiment.ngsRelatedInfo)
+            .build();
     };
 
     public static final Function<ExperimentItem, ExperimentDetails> TO_EXPERIMENT_DETAILS = experiment -> {
         final long id = experiment.id;
         ExperimentDetails result = new ExperimentDetails();
-        result.info = new ExperimentInfo.Builder().name(experiment.name).description(experiment.description).specie(experiment.specie).experimentType(experiment.experimentType).build();
-        result.restriction = new ExperimentManagementTemplate.Restriction(experiment.technologyType, experiment.instrumentVendorId, experiment.instrumentType, experiment.instrumentModel, experiment.instrument);
+        result.info = new ExperimentInfo.Builder().name(experiment.name)
+            .description(experiment.description)
+            .specie(experiment.specie)
+            .experimentType(experiment.experimentType)
+            .build();
+        result.restriction = new ExperimentManagementTemplate.Restriction(experiment.technologyType,
+            experiment.instrumentVendorId,
+            experiment.instrumentType,
+            experiment.instrumentModel,
+            experiment.instrument
+        );
         result.project = experiment.project;
         result.is2dLc = experiment.is2dLc;
         result.ownerEmail = experiment.ownerEmail;
@@ -51,15 +67,28 @@ public class ExperimentTransformer {
         result.billLab = experiment.billLab;
 
         result.factors = experiment.factors.stream()
-                .map(input -> new ExperimentManagementTemplate.MetaFactorTemplate(input.name, input.units, input.isNumeric, id))
-                .collect(Collectors.toList());
+            .map(input -> new ExperimentManagementTemplate.MetaFactorTemplate(
+                input.name,
+                input.units,
+                input.isNumeric,
+                id
+            ))
+            .collect(Collectors.toList());
 
         result.files = experiment.files.stream()
-                .map(input -> {
-                    final com.infoclinika.mssharing.model.read.dto.details.FileItem fileItem = (com.infoclinika.mssharing.model.read.dto.details.FileItem) input;
-                    return new FileItem(input.id, input.copy, fileItem.fractionNumber, fileItem.preparedSample);
-                })
-                .collect(Collectors.toList());
+            .map(input -> {
+                final com.infoclinika.mssharing.model.read.dto.details.FileItem fileItem =
+                    (com.infoclinika.mssharing.model.read.dto.details.FileItem) input;
+                return new FileItem(
+                    input.id,
+                    input.name,
+                    input.copy,
+                    fileItem.fractionNumber,
+                    fileItem.pairedEnd,
+                    fileItem.preparedSample
+                );
+            })
+            .collect(Collectors.toList());
 
         result.type = experiment.experimentType;
         result.id = id;
@@ -69,10 +98,10 @@ public class ExperimentTransformer {
 
         final ExperimentLabelsItem labels = experiment.labels;
         result.experimentLabels = new ExperimentLabelsInfo(
-                labels.lightLabels,
-                labels.mediumLabels,
-                labels.heavyLabels,
-                labels.specialLabels
+            labels.lightLabels,
+            labels.mediumLabels,
+            labels.heavyLabels,
+            labels.specialLabels
         );
 
         result.mixedSamplesCount = experiment.sampleTypesCount;

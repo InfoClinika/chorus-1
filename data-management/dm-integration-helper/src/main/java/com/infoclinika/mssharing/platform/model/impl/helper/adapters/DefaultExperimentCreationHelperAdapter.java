@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
  * @author Herman Zamula
  */
 @Component
-public class DefaultExperimentCreationHelperAdapter extends DefaultExperimentCreationHelper<InstrumentTemplate, FileMetaDataTemplate> {
+public class DefaultExperimentCreationHelperAdapter
+    extends DefaultExperimentCreationHelper<InstrumentTemplate, FileMetaDataTemplate> {
 
 }

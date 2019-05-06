@@ -4,11 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.infoclinika.mssharing.model.GlacierDownloadListener;
 import com.infoclinika.mssharing.model.helper.AbstractTest;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
-import com.infoclinika.mssharing.model.read.DownloadFileReader;
 import org.mockito.Matchers;
 import org.testng.annotations.Test;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static com.infoclinika.mssharing.model.read.DownloadFileReader.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
@@ -25,7 +25,7 @@ public class ArchivingTest extends AbstractTest {
         long bob = uc.createLab3AndBob();
         long id = uc.saveFile(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get());
         fileMovingManager.moveToArchiveStorage(id);
-        DownloadFileReader.FileItemLocation location = downloadFileReader.readFileLocation(id);
+        FileItemLocation location = downloadFileReader.readFileLocation(id);
         assertNull(location.contendId);
         assertNotNull(location.archiveId);
     }
@@ -37,8 +37,8 @@ public class ArchivingTest extends AbstractTest {
         long fileId = uc.saveFile(bob);
         fileMovingManager.moveToArchiveStorage(fileId);
         fileMovingManager.requestFilesUnarchiving(newHashSet(fileId), bob);
-        DownloadFileReader.DownloadFileJob job = downloadFileReader.readJobByFile(fileId);
-        ImmutableList<DownloadFileReader.DownloadFileGroup> groups = downloadFileReader.readGroupByJob(job.id);
+        DownloadFileJob job = downloadFileReader.readJobByFile(fileId);
+        ImmutableList<DownloadFileGroup> groups = downloadFileReader.readGroupByJob(job.id);
         assertEquals(job.fileMetaData.longValue(), fileId);
         assertTrue(groups.size() == 1);
         assertTrue(groups.get(0).users.contains(bob));
@@ -52,9 +52,9 @@ public class ArchivingTest extends AbstractTest {
         long fileId = uc.saveFile(bob);
         fileMovingManager.moveToArchiveStorage(fileId);
         fileMovingManager.requestFilesUnarchiving(newHashSet(fileId), bob);
-        DownloadFileReader.DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
+        DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
         fileMovingManager.moveReadyToUnarchiveToAnalysableStorage();
-        DownloadFileReader.FileItemLocation location = downloadFileReader.readFileLocation(fileId);
+        FileItemLocation location = downloadFileReader.readFileLocation(fileId);
         assertNotNull(location.contendId);
     }
 
@@ -65,9 +65,9 @@ public class ArchivingTest extends AbstractTest {
         long fileId = uc.saveFile(bob);
         fileMovingManager.moveToArchiveStorage(fileId);
         fileMovingManager.requestFilesUnarchiving(newHashSet(fileId), bob);
-        DownloadFileReader.DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
+        DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
         fileMovingManager.moveReadyToUnarchiveToAnalysableStorage();
-        DownloadFileReader.DownloadFileJob job1 = downloadFileReader.readJobByFile(fileId);
+        DownloadFileJob job1 = downloadFileReader.readJobByFile(fileId);
         assertNull(job1);
     }
 
@@ -113,8 +113,7 @@ public class ArchivingTest extends AbstractTest {
         fileMovingManager.moveToArchiveStorage(file2);
         fileMovingManager.requestFilesUnarchiving(newHashSet(fileId), bob);
         fileMovingManager.requestFilesUnarchiving(newHashSet(file2), bob);
-        DownloadFileReader.DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
-//        fileMovingManager.downloadToAnalysableStorageRetrievedFile(before.jobId);
+        DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
         reset(notificator());
         fileMovingManager.moveReadyToUnarchiveToAnalysableStorage();
         verify(notificator(), only()).sendFileReadyToDownloadNotification(eq(Long.valueOf(bob)), anyCollection());
@@ -131,8 +130,7 @@ public class ArchivingTest extends AbstractTest {
         fileMovingManager.requestFilesUnarchiving(newHashSet(fileId), bob);
         fileMovingManager.requestFilesUnarchiving(newHashSet(file2), bob);
         fileMovingManager.requestFilesUnarchiving(newHashSet(fileId), joe);
-        DownloadFileReader.DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
-//        fileMovingManager.downloadToAnalysableStorageRetrievedFile(before.jobId);
+        DownloadFileJob before = downloadFileReader.readJobByFile(fileId);
         fileMovingManager.moveReadyToUnarchiveToAnalysableStorage();
         verify(notificator()).sendFileReadyToDownloadNotification(eq(Long.valueOf(bob)), anyCollection());
         verify(notificator()).sendFileReadyToDownloadNotification(eq(Long.valueOf(joe)), anyCollection());
@@ -167,8 +165,8 @@ public class ArchivingTest extends AbstractTest {
         fileMovingManager.requestFilesUnarchiving(newHashSet(cat, dog, mouse), bob);
         fileMovingManager.requestFilesUnarchiving(newHashSet(cat, mouse), bob);
         fileMovingManager.requestFilesUnarchiving(newHashSet(dog, mouse), bob);
-        DownloadFileReader.DownloadFileJob mouseJob = downloadFileReader.readJobByFile(mouse);
-        ImmutableList<DownloadFileReader.DownloadFileGroup> mouseGroups = downloadFileReader.readGroupByJob(mouseJob.id);
+        DownloadFileJob mouseJob = downloadFileReader.readJobByFile(mouse);
+        ImmutableList<DownloadFileGroup> mouseGroups = downloadFileReader.readGroupByJob(mouseJob.id);
         assertTrue(mouseGroups.size() == 3);
     }
 
@@ -189,7 +187,7 @@ public class ArchivingTest extends AbstractTest {
         fileMovingManager.requestFilesUnarchiving(newHashSet(dog, mouse), bob); // will be complete
         fileMovingManager.downloadToAnalysableStorageRetrievedFile(dog);
         fileMovingManager.downloadToAnalysableStorageRetrievedFile(mouse);
-        DownloadFileReader.DownloadFileJob mouseJob = downloadFileReader.readJobByFile(mouse);
+        DownloadFileJob mouseJob = downloadFileReader.readJobByFile(mouse);
         assertTrue(mouseJob != null);
     }
 
@@ -200,11 +198,12 @@ public class ArchivingTest extends AbstractTest {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFile(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get());
         fileMovingManager.moveToArchiveStorage(file);
-        GlacierDownloadListener<ActiveFileMetaData> callback = (GlacierDownloadListener<ActiveFileMetaData>) mock(GlacierDownloadListener.class);
+        GlacierDownloadListener<ActiveFileMetaData> callback =
+            (GlacierDownloadListener<ActiveFileMetaData>) mock(GlacierDownloadListener.class);
 
         final String listenerId = glacierDownloadListeners.addListener(callback);
         fileMovingManager.moveFilesToStorageAndListen(newHashSet(file), listenerId);
-        DownloadFileReader.DownloadFileJob mouseJob = downloadFileReader.readJobByFile(file);
+        DownloadFileJob mouseJob = downloadFileReader.readJobByFile(file);
         fileMovingManager.moveReadyToUnarchiveToAnalysableStorage();
         verify(callback).onFileDownloaded(Matchers.any(ActiveFileMetaData.class));
     }

@@ -2,6 +2,7 @@ package com.infoclinika.mssharing.platform.model.impl.write;
 
 import com.infoclinika.mssharing.platform.entity.InstrumentModel;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.write.InstrumentModelManager;
 import com.infoclinika.mssharing.platform.model.write.InstrumentModelManagementTemplate;
@@ -17,9 +18,9 @@ import javax.inject.Inject;
 @Transactional
 @Component
 public class DefaultInstrumentModelManagement<
-        MODEL_DETAILS extends InstrumentModelManagementTemplate.InstrumentModelDetails,
-        MODEL extends InstrumentModel>
-        implements InstrumentModelManagementTemplate<MODEL_DETAILS> {
+    MODEL_DETAILS extends InstrumentModelManagementTemplate.InstrumentModelDetails,
+    MODEL extends InstrumentModel>
+    implements InstrumentModelManagementTemplate<MODEL_DETAILS> {
 
     @Inject
     protected InstrumentModelManager<MODEL, MODEL_DETAILS> instrumentModelManager;
@@ -45,8 +46,10 @@ public class DefaultInstrumentModelManagement<
         instrumentModelManager.delete(modelId);
     }
 
-
     protected void beforeCreate(long actor, MODEL_DETAILS details) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         if (!ruleValidator.canUserManageInstrumentModels(actor)) {
             throw new AccessDenied("Only admin can create instrument model");
         }
@@ -60,6 +63,9 @@ public class DefaultInstrumentModelManagement<
     }
 
     protected void beforeUpdate(long actor, long modelId, MODEL_DETAILS details) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         if (!ruleValidator.canUserManageInstrumentModels(actor)) {
             throw new AccessDenied("Only admin can create instrument model");
         }
@@ -76,6 +82,9 @@ public class DefaultInstrumentModelManagement<
     }
 
     protected void beforeDelete(long actor, long modelId) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         if (!ruleValidator.canUserManageInstrumentModels(actor)) {
             throw new AccessDenied("Only admin can create instrument model");
         }

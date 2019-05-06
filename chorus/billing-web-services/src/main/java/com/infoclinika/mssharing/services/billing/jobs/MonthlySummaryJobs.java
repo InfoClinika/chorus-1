@@ -1,10 +1,9 @@
 package com.infoclinika.mssharing.services.billing.jobs;
 
-import com.infoclinika.mssharing.services.billing.persistence.helper.MonthlySummaryCsvToS3Saver;
+import com.infoclinika.mssharing.propertiesprovider.BillingPropertiesProvider;
 import com.infoclinika.mssharing.services.billing.persistence.helper.MonthlySummaryUsageLogger;
 import com.infoclinika.mssharing.services.billing.persistence.helper.StorageUsageRemover;
 import org.joda.time.DateTime;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 
@@ -25,24 +24,27 @@ public class MonthlySummaryJobs {
 
     @SuppressWarnings("all")
     private final ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+
     @SuppressWarnings("all")
-    private final TimeZone timeZone;
+    private TimeZone timeZone;
+
     @Inject
     private MonthlySummaryUsageLogger monthlySummaryUsageLogger;
+
     @Inject
     private StorageUsageRemover storageUsageRemover;
+
     @Inject
-    private MonthlySummaryCsvToS3Saver monthlySummaryCsvSaver;
+    private BillingPropertiesProvider billingPropertiesProvider;
 
-
-    protected MonthlySummaryJobs(@Value("${billing.server.timezone}") String timeZoneID) {
-
-        this.timeZone = TimeZone.getTimeZone(timeZoneID);
+    protected MonthlySummaryJobs() {
 
     }
 
     @PostConstruct
+    @SuppressWarnings("FutureReturnValueIgnored")
     public void init() {
+        timeZone = TimeZone.getTimeZone(billingPropertiesProvider.getTimeZoneId());
 
         scheduler.setThreadFactory(new DaemonThreadFactory());
         scheduler.initialize();
@@ -50,12 +52,11 @@ public class MonthlySummaryJobs {
         scheduler.schedule(() -> {
             final Date previousMonth = new DateTime(forTimeZone(timeZone)).minusMonths(1).toDate(); //Previous month
             monthlySummaryUsageLogger.logMonth(previousMonth);
-            monthlySummaryCsvSaver.saveToCloud(previousMonth);
         }, new CronTrigger(SUMMARY_CRON, this.timeZone));
 
         scheduler.schedule(() -> {
             final Date previousMonth = new DateTime(forTimeZone(timeZone)).minusMonths(FULL_MONTHS_TO_SAVE).dayOfMonth()
-                    .withMinimumValue().millisOfDay().withMinimumValue().toDate();
+                .withMinimumValue().millisOfDay().withMinimumValue().toDate();
             storageUsageRemover.removeTillDate(previousMonth); //Remove all befor previous month
         }, new CronTrigger(REMOVE_OLD_CRON));
 

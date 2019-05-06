@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.net.URISyntaxException;
@@ -24,15 +23,17 @@ import java.util.Set;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditions.checkPresence;
+import static com.infoclinika.mssharing.platform.model.write.UserManagementTemplate.LabMembershipRequestActions.*;
 
 /**
  * @author : Alexander Serebriyan
  */
 @Component
 @Transactional
-public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends LabTemplate<?>> implements UserManagementTemplate {
+public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends LabTemplate<?>>
+    implements UserManagementTemplate {
 
-    Logger LOG = LoggerFactory.getLogger(DefaultUserManagement.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUserManagement.class);
     @Inject
     private ChangeEmailRequestRepository changeEmailRequestRepository;
     @Inject
@@ -50,23 +51,24 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
     @Inject
     private RequestsTemplate requests;
     @Inject
-    private UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> userLabMembershipRequestRepository;
+    private UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate>
+        userLabMembershipRequestRepository;
     @Inject
     private UserLabMembershipRepositoryTemplate<USER, LAB> userLabMembershipRepository;
     @Inject
     private UserInvitationLinkRepository userInvitationLinkRepository;
     @Inject
     private InboxNotifierTemplate inboxNotifier;
-    @Inject
-    private InstrumentRepositoryTemplate<InstrumentTemplate> instrumentRepository;
 
     @Override
     public long createPerson(PersonInfo user, String password, Set<Long> labIds, String emailVerificationUrl) {
-        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) throw new AccessDenied("Couldn't create user");
+        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) {
+            throw new AccessDenied("Couldn't create user");
+        }
 
         final USER existingUser = userRepository.findByEmail(user.email);
         if (existingUser != null) {
-            LOG.warn("Attempt to create a user, which already exists: " + user);
+            LOGGER.warn("Attempt to create a user, which already exists: " + user);
             return existingUser.getId();
         }
 
@@ -76,7 +78,8 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
 
     }
 
-    private Long afterCreatePerson(PersonInfo user, String password, Set<Long> labIds, String emailVerificationUrl, USER savedUser) {
+    private Long afterCreatePerson(PersonInfo user, String password, Set<Long> labIds, String emailVerificationUrl,
+                                   USER savedUser) {
         final long userId = savedUser.getId();
         final Set<LabTemplate> labs = transformToLabs(labIds);
 
@@ -89,12 +92,16 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
     }
 
     @Override
-    public long createPersonAndSendEmail(PersonInfo user, String password, Set<Long> labIds, String emailVerificationUrl, LabMembershipConfirmationUrlProvider urlProvider) throws URISyntaxException {
-        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) throw new AccessDenied("Couldn't create user");
+    public long createPersonAndSendEmail(PersonInfo user, String password, Set<Long> labIds,
+                                         String emailVerificationUrl, LabMembershipConfirmationUrlProvider urlProvider)
+        throws URISyntaxException {
+        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) {
+            throw new AccessDenied("Couldn't create user");
+        }
 
         final USER existingUser = userRepository.findByEmail(user.email);
         if (existingUser != null) {
-            LOG.warn("Attempt to create a user, which already exists: " + user);
+            LOGGER.warn("Attempt to create a user, which already exists: {}", user);
             return existingUser.getId();
         }
 
@@ -102,7 +109,10 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
         return afterCreatePersonAndSendEmail(user, password, labIds, emailVerificationUrl, urlProvider, savedUser);
     }
 
-    private Long afterCreatePersonAndSendEmail(PersonInfo user, String password, Set<Long> labIds, String emailVerificationUrl, LabMembershipConfirmationUrlProvider urlProvider, USER savedUser) throws URISyntaxException {
+    private Long afterCreatePersonAndSendEmail(PersonInfo user, String password, Set<Long> labIds,
+                                               String emailVerificationUrl,
+                                               LabMembershipConfirmationUrlProvider urlProvider, USER savedUser)
+        throws URISyntaxException {
         final long userId = savedUser.getId();
         sendRequestToLabs(urlProvider, savedUser, userId, labIds);
         sendUserRegisteredNotification(emailVerificationUrl, userId);
@@ -117,41 +127,39 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
 
 
     private Set<LabTemplate> transformToLabs(Set<Long> labIds) {
-        return from(labIds).filter(new Predicate<Long>() {
-            @Override
-            public boolean apply(@Nullable Long input) {
-                return input != null;
-            }
-        }).transform(new Function<Long, LabTemplate>() {
-            @Override
-            public LabTemplate apply(Long labId) {
-                return labRepository.findOne(labId);
-            }
-        }).toSet();
+        return from(labIds).filter(input -> input != null).transform(
+            (Function<Long, LabTemplate>) labId -> labRepository.findOne(labId)
+        ).toSet();
     }
 
     private UserLabMembershipRequestTemplate fireLabMembershipRequest(LabTemplate lab, USER applicant) {
         //todo[tymchenko]: should we notify the lab head?
-        final UserLabMembershipRequestTemplate request = new UserLabMembershipRequestTemplate<USER, LabTemplate<?>>(applicant, lab, current.get());
-        requests.addOutboxItem(applicant.getId(), lab.getHead().getFullName(), "Requested a membership in " + lab.getName() + " lab.", current.get());
+        final UserLabMembershipRequestTemplate request =
+            new UserLabMembershipRequestTemplate<USER, LabTemplate<?>>(applicant, lab, current.get());
+        requests.addOutboxItem(applicant.getId(), lab.getHead().getFullName(),
+            "Requested a membership in " + lab.getName() + " lab.", current.get()
+        );
         return userLabMembershipRequestRepository.save(request);
     }
 
-    private void sendRequestToLabs(LabMembershipConfirmationUrlProvider urlProvider, USER savedUser, long userId, Set<Long> labIds) throws URISyntaxException {
+    private void sendRequestToLabs(LabMembershipConfirmationUrlProvider urlProvider, USER savedUser, long userId,
+                                   Set<Long> labIds) throws URISyntaxException {
         Set<LabTemplate> labs = transformToLabs(labIds);
         for (LabTemplate lab : labs) {
             UserLabMembershipRequestTemplate request = fireLabMembershipRequest(lab, savedUser);
-            String approveUrl = urlProvider.getUrl(userId, lab.getId(), request.getId(), LabMembershipRequestActions.APPROVE);
-            String refuseUrl = urlProvider.getUrl(userId, lab.getId(), request.getId(), LabMembershipRequestActions.REFUSE);
+            String approveUrl = urlProvider.getUrl(userId, lab.getId(), request.getId(), APPROVE);
+            String refuseUrl = urlProvider.getUrl(userId, lab.getId(), request.getId(), REFUSE);
             notifier.sendLabMembershipRequest(lab.getHead().getId(), lab.getName(), userId, approveUrl, refuseUrl);
         }
     }
 
 
     @Override
-    public long createPersonAndApproveMembership(PersonInfo user, String password, Set<Long> labs, String emailVerificationUrl) {
+    public long createPersonAndApproveMembership(PersonInfo user, String password, Set<Long> labs,
+                                                 String emailVerificationUrl) {
         final long person = createPerson(user, password, labs, emailVerificationUrl);
-        final List<UserLabMembershipRequestTemplate> requests = userLabMembershipRequestRepository.findPendingByUser(person);
+        final List<UserLabMembershipRequestTemplate> requests =
+            userLabMembershipRequestRepository.findPendingByUser(person);
         for (UserLabMembershipRequestTemplate request : requests) {
             approveLabMembershipRequest(request.getLab().getHead().getId(), request.getId());
         }
@@ -160,7 +168,8 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
 
     @Override
     public void approveLabMembershipRequest(long actor, long requestId) {
-        final UserLabMembershipRequestTemplate<USER, LAB> request = checkPresence(userLabMembershipRequestRepository.findOne(requestId));
+        final UserLabMembershipRequestTemplate<USER, LAB> request =
+            checkPresence(userLabMembershipRequestRepository.findOne(requestId));
         LAB targetLab = request.getLab();
         if (!ruleValidator.canModifyLabMembershipRequests(actor, targetLab.getId())) {
             throw new AccessDenied("Current user is not allowed to approve lab membership requests");
@@ -171,76 +180,59 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
 
         request.setDecision(UserLabMembershipRequestTemplate.Decision.APPROVED);
         userLabMembershipRequestRepository.save(request);
-        inboxNotifier.notify(actor, applicant.getId(), "Your lab membership request for lab " + targetLab.getName() + " was approved");
+        inboxNotifier.notify(actor, applicant.getId(),
+            "Your lab membership request for lab " + targetLab.getName() + " was approved"
+        );
         notifier.labMembershipApproved(applicant.getId(), targetLab.getId());
     }
 
     @Override
     public void rejectLabMembershipRequest(long actor, long requestId, String comment) {
-        final UserLabMembershipRequestTemplate<USER, LAB> request = checkPresence(userLabMembershipRequestRepository.findOne(requestId));
+        final UserLabMembershipRequestTemplate<USER, LAB> request =
+            checkPresence(userLabMembershipRequestRepository.findOne(requestId));
         final LAB targetLab = request.getLab();
         if (!ruleValidator.canModifyLabMembershipRequests(actor, targetLab.getId())) {
             throw new AccessDenied("Current user is not allowed to approve lab membership requests");
         }
         request.setDecision(UserLabMembershipRequestTemplate.Decision.REJECTED);
         userLabMembershipRequestRepository.save(request);
-        inboxNotifier.notify(actor, request.getUser().getId(), "Your lab membership request for lab " + targetLab.getName() + " was rejected: " + comment);
+        inboxNotifier.notify(actor, request.getUser().getId(),
+            "Your lab membership request for lab " + targetLab.getName() + " was rejected: " + comment
+        );
         notifier.labMembershipRejected(request.getUser().getId(), targetLab.getId(), comment);
 
     }
 
     @Override
-    public void updatePersonAndSendEmail(long userId, PersonInfo user, final Set<Long> labIds, LabMembershipConfirmationUrlProvider urlProvider) throws URISyntaxException {
+    public void updatePersonAndSendEmail(long userId, PersonInfo user, final Set<Long> labIds,
+                                         LabMembershipConfirmationUrlProvider urlProvider) throws URISyntaxException {
         USER savedUser = userManagementHelper.updatePersonInfo(userId, user);
-        final Set<Long> existingLabs = from(savedUser.getLabs()).transform(new Function<LabTemplate<?>, Long>() {
-            @Nullable
-            @Override
-            public Long apply(@Nullable LabTemplate<?> input) {
-                return input.getId();
-            }
-        }).toSet();
+        final Set<Long> existingLabs = from(savedUser.getLabs()).transform(input -> input.getId()).toSet();
 
-        final Set<Long> labsToApplyTo = from(labIds).filter(new Predicate<Long>() {
-            @Override
-            public boolean apply(Long input) {
-                return !existingLabs.contains(input);
-            }
-        }).toSet();
+        final Set<Long> labsToApplyTo = from(labIds).filter(input -> !existingLabs.contains(input)).toSet();
 
         sendRequestToLabs(urlProvider, savedUser, savedUser.getId(), labsToApplyTo);
 
         afterUpdatePersonAndSendEmail(userId, user, labIds, urlProvider, savedUser);
     }
 
-    protected void afterUpdatePersonAndSendEmail(long userId, PersonInfo user, final Set<Long> labIds, LabMembershipConfirmationUrlProvider urlProvider, USER savedUser) {
+    protected void afterUpdatePersonAndSendEmail(long userId, PersonInfo user, final Set<Long> labIds,
+                                                 LabMembershipConfirmationUrlProvider urlProvider, USER savedUser) {
         // remove user from labs
         Set<LAB> existingLabs = savedUser.getLabs();
-        final FluentIterable<LAB> labsToLeave = from(existingLabs).filter(new Predicate<LAB>() {
-            @Override
-            public boolean apply(LabTemplate input) {
-                return !labIds.contains(input.getId());
-            }
-        });
+        final FluentIterable<LAB> labsToLeave = from(existingLabs).filter(input -> !labIds.contains(input.getId()));
         //todo[tymchenko]: think of a more safe solution
         for (LabTemplate lab : labsToLeave) {
-            UserLabMembership<USER, LAB> membership = userLabMembershipRepository.findByLabAndUser(lab.getId(), savedUser.getId());
+            UserLabMembership<USER, LAB> membership =
+                userLabMembershipRepository.findByLabAndUser(lab.getId(), savedUser.getId());
             final boolean removedFromUser = membership.getUser().removeLabMembership(membership);
             if (removedFromUser) {
                 final boolean removedFromLab = membership.getLab().removeLabMembership(membership);
                 if (removedFromLab) {
                     userLabMembershipRepository.delete(membership);
-                    removeUserFromInstrumentOperators(savedUser, lab);
                 }
             }
         }
-    }
-
-    private void removeUserFromInstrumentOperators(USER savedUser, LabTemplate lab) {
-        final List<InstrumentTemplate> instruments = instrumentRepository.findWhereOperatorIsByLab(lab.getId(), savedUser.getId());
-        for (InstrumentTemplate instrument : instruments) {
-            instrument.getOperators().remove(savedUser);
-        }
-        instrumentRepository.save(instruments);
     }
 
     @Override
@@ -259,25 +251,31 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
     }
 
     @Override
-    public String handleLabMembershipRequest(long labId, long requestId, LabMembershipRequestActions action) throws RequestAlreadyHandledException {
+    public String handleLabMembershipRequest(long labId, long requestId, LabMembershipRequestActions action)
+        throws RequestAlreadyHandledException {
         checkRequest(requestId);
         long labHeadId = labRepository.findOne(labId).getHead().getId();
         String labName = labRepository.findOne(labId).getName();
 
-        if (LabMembershipRequestActions.APPROVE.equals(action)) {
+        if (APPROVE.equals(action)) {
             approveLabMembershipRequest(labHeadId, requestId);
             return labName;
         }
-        if (LabMembershipRequestActions.REFUSE.equals(action)) {
+        if (REFUSE.equals(action)) {
             String comment = "Direct link used";
             rejectLabMembershipRequest(labHeadId, requestId, comment);
             return labName;
-        } else throw new ObjectNotFoundException("Wrong request");
+        } else {
+            throw new ObjectNotFoundException("Wrong request");
+        }
     }
 
     @Override
-    public long saveInvited(PersonInfo user, String passwordHash, Set<Long> labIds, String emailVerificationUrl, LabMembershipConfirmationUrlProvider urlProvider) throws URISyntaxException {
-        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) throw new AccessDenied("Couldn't create user");
+    public long saveInvited(PersonInfo user, String passwordHash, Set<Long> labIds, String emailVerificationUrl,
+                            LabMembershipConfirmationUrlProvider urlProvider) throws URISyntaxException {
+        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) {
+            throw new AccessDenied("Couldn't create user");
+        }
         final USER existingUser = userRepository.findByEmail(user.email);
         if (existingUser != null) {
             USER userWithUpdatedPersonInfo = userManagementHelper.updatePersonInfo(existingUser.getId(), user);
@@ -308,7 +306,9 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
 
     @Override
     public void updatePerson(long userId, PersonInfo user, Set<Long> labIds) {
-        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) throw new AccessDenied("Couldn't update user");
+        if (!ruleValidator.canBeCreatedOrUpdated(user, labIds)) {
+            throw new AccessDenied("Couldn't update user");
+        }
         USER updatedUser = userManagementHelper.updatePersonInfo(userId, user);
         afterUpdatePerson(userId, user, labIds, updatedUser);
     }
@@ -345,7 +345,8 @@ public class DefaultUserManagement<USER extends UserTemplate<LAB>, LAB extends L
 
     @Override
     public void checkRequest(long requestId) throws RequestAlreadyHandledException {
-        final UserLabMembershipRequestTemplate request = checkPresence(userLabMembershipRequestRepository.findOne(requestId));
+        final UserLabMembershipRequestTemplate request =
+            checkPresence(userLabMembershipRequestRepository.findOne(requestId));
         if (request.getDecision() != null) {
             String labName = userLabMembershipRequestRepository.findOne(requestId).getLab().getName();
             throw new RequestAlreadyHandledException(labName);

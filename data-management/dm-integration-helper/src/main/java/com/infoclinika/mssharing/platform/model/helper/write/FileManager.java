@@ -4,6 +4,7 @@ import com.infoclinika.mssharing.platform.entity.Species;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import com.infoclinika.mssharing.platform.model.EntityFactories;
 import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate;
+import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate.FileMetaDataInfoTemplate;
 import com.infoclinika.mssharing.platform.repository.FileRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.SpeciesRepositoryTemplate;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,7 @@ public class FileManager<FILE extends FileMetaDataTemplate> {
     private SpeciesRepositoryTemplate<Species> speciesRepository;
 
     @SuppressWarnings("unchecked")
-    public FILE setCreationValues(FILE toUpdate, long actor, long instrument, FileManagementTemplate.FileMetaDataInfoTemplate file) {
+    public FILE setCreationValues(FILE toUpdate, long actor, long instrument, FileMetaDataInfoTemplate file) {
 
         toUpdate.setInstrument(factories.instrumentFromId.apply(instrument));
         toUpdate.setOwner(factories.userFromId.apply(actor));
@@ -53,11 +54,15 @@ public class FileManager<FILE extends FileMetaDataTemplate> {
         fileMetaDataRepository.delete(id);
     }
 
-    public void setTemplateProperties(FileMetaDataTemplate metaDataTemplate, FileManagementTemplate.FileMetaDataInfoTemplate file) {
+    public void setTemplateProperties(FileMetaDataTemplate metaDataTemplate,
+                                      FileMetaDataInfoTemplate file) {
         metaDataTemplate.setName(file.fileName);
         metaDataTemplate.setSpecie(speciesRepository.findOne(file.species));
         metaDataTemplate.setLabels(file.labels);
         metaDataTemplate.setDestinationPath(file.destinationPath);
         metaDataTemplate.setSizeInBytes(file.sizeInBytes);
+        metaDataTemplate.setBucket(file.bucket);
+        metaDataTemplate.setContentId(file.storedKey);
+        metaDataTemplate.setReadOnly(file.readOnly);
     }
 }

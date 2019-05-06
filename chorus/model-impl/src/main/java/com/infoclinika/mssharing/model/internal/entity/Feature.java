@@ -21,8 +21,8 @@ public class Feature {
 
     @ManyToMany
     @JoinTable(name = "feature_lab",
-            joinColumns = @JoinColumn(name = "feature_id"),
-            inverseJoinColumns = @JoinColumn(name = "lab_id"))
+        joinColumns = @JoinColumn(name = "feature_id"),
+        inverseJoinColumns = @JoinColumn(name = "lab_id"))
     private Set<Lab> enabledLabs = newHashSet();
 
     public Feature() {
@@ -53,6 +53,8 @@ public class Feature {
     }
 
     public enum FeatureState {
-        DISABLED, ENABLED, ENABLED_PER_LAB
+        DISABLED,
+        ENABLED,
+        ENABLED_PER_LAB
     }
 }

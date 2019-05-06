@@ -1,8 +1,6 @@
 package com.infoclinika.mssharing.platform.repository;
 
 import com.infoclinika.mssharing.platform.entity.LabTemplate;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,13 +20,6 @@ public interface LabRepositoryTemplate<LAB extends LabTemplate> extends JpaRepos
 
     @Query("select count(*) from UserLabMembership m where m.lab.id = :labId")
     long membersCount(@Param("labId") long labId);
-
-    @Query("select l from #{#entityName} l ")
-    Page<LAB> finaPagedAll(Pageable request);
-
-    @Query("select sum(f.sizeInBytes) " +
-            "from FileMetaDataTemplate f join f.instrument i join i.lab l where l.id = :labId")
-    Long uploadedDataSize(@Param("labId") long labId);
 
     @Query("select l from #{#entityName} l join l.labMemberships lm where lm.user.id=:user ")
     List<LAB> findForUser(@Param("user") long user);

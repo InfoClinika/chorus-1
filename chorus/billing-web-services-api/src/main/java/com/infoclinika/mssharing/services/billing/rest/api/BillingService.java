@@ -5,7 +5,9 @@ import com.infoclinika.mssharing.services.billing.rest.api.model.*;
 import javax.annotation.Nullable;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author andrii.loboda
@@ -16,11 +18,6 @@ public interface BillingService {
     @GET
     @Path("healthCheck")
     String healthCheck();
-
-    @POST
-    @Path("logProteinIDSearchUsage")
-    void logProteinIDSearchUsage(@FormParam("user") long user,
-                                 @FormParam("experiment") long experiment);
 
     @POST
     @Path("depositStoreCredit")
@@ -52,7 +49,8 @@ public interface BillingService {
 
     @GET
     @Path("readMonthsReferences")
-    HistoryForMonthReference readMonthsReferences(@QueryParam("actor") long actor, @QueryParam("lab") long lab, @QueryParam("month") long month);
+    HistoryForMonthReference readMonthReference(@QueryParam("actor") long actor, @QueryParam("lab") long lab,
+                                                @QueryParam("month") long month);
 
     @GET
     @Path("readLabDetails")
@@ -82,10 +80,10 @@ public interface BillingService {
     long calculateTotalToPayForLabForDay(@QueryParam("lab") long lab,
                                          @QueryParam("day") long day);
 
-    /*Returns Nullable instead of Optional. Should be converted to Optional. Such functionality is not supported in web services*/
+    /*Returns Nullable instead of Optional. Should be converted to Optional. Such functionality is not supported in
+    web services*/
     @GET
     @Path("calculateStoreBalanceForDay")
-    @Nullable
     Long calculateStoreBalanceForDay(@QueryParam("lab") long lab,
                                      @QueryParam("day") long day);
 
@@ -95,24 +93,23 @@ public interface BillingService {
                                    @QueryParam("from") long from,
                                    @QueryParam("to") long to);
 
-    /*Returns Nullable instead of Optional. Should be converted to Optional. Such functionality is not supported in web services*/
+    /*Returns Nullable instead of Optional. Should be converted to Optional. Such functionality is not supported in
+    web services*/
     @GET
     @Path("calculateStoreBalance")
-    @Nullable
     Long calculateStoreBalance(@QueryParam("lab") long lab,
                                @QueryParam("current") long current,
                                @QueryParam("nextDay") long nextDay);
 
     @GET
     @Path("getDailyUsageLine")
-    @Nullable
     DailyUsageLine getDailyUsageLine(@QueryParam("lab") long lab, @QueryParam("day") long day);
 
     @POST
     @Path("logLabBecomeEnterprise")
     void logLabBecomeEnterprise(@FormParam("actor") long actor,
-                               @FormParam("lab") long lab,
-                               @FormParam("time") long time);
+                                @FormParam("lab") long lab,
+                                @FormParam("time") long time);
 
     @POST
     @Path("logLabBecomeFree")
@@ -121,21 +118,15 @@ public interface BillingService {
                           @FormParam("time") long time);
 
     @POST
-    @Path("logProcessingUsage")
-    void logProcessingUsage(@FormParam("actor") long actor,
-                            @FormParam("lab")long lab,
-                            @FormParam("time") long time);
-
-    @POST
     @Path("storeCreditForLab")
     void storeCreditForLab(@FormParam("admin") long admin,
-                           @FormParam("lab")long lab,
+                           @FormParam("lab") long lab,
                            @FormParam("amount") long amount);
 
     @GET
     @Path("getPendingChargesForLab")
-    @Nullable
-    List<PendingCharge> getPendingChargesForLab(@QueryParam("actor") long actor,@QueryParam("lab") long lab, @QueryParam("timestamp") long timestamp);
+    List<PendingCharge> getPendingChargesForLab(@QueryParam("actor") long actor, @QueryParam("lab") long lab,
+                                                @QueryParam("timestamp") long timestamp);
 
     @PUT
     @Path("runMigration")
@@ -145,10 +136,10 @@ public interface BillingService {
     @Path("readStorageUsage")
     StorageUsage readStorageUsage(@QueryParam("actor") long actor, @QueryParam("lab") long lab);
 
-   /* @GET
+    /* @GET
     @Path("checkIfFeatureIsActiveForLab")
     boolean checkIfFeatureIsActiveForLab(@QueryParam("lab") long lab, @QueryParam("feature") String feature);
-*/
+    */
 
     class DepositStoreCreditRequest {
         public Map<String, String> paramsMap;

@@ -2,14 +2,11 @@ package com.infoclinika.mssharing.model.internal.entity;
 
 import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractExperiment;
 import com.infoclinika.mssharing.platform.entity.ExperimentFileTemplate;
-import com.infoclinika.mssharing.platform.entity.LevelTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.ExperimentTemplate;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -36,15 +33,15 @@ public class SampleCondition extends AbstractPersistable<Long> {
 
     @ManyToMany(targetEntity = Level.class)
     @JoinTable(name = "sample_condition_to_level",
-            joinColumns = @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "level_id", referencedColumnName = "id", nullable = false)
+        joinColumns = @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
+        inverseJoinColumns = @JoinColumn(name = "level_id", referencedColumnName = "id", nullable = false)
     )
     private List<Level> levels = new ArrayList<>();
 
     @ManyToMany(targetEntity = ExperimentSample.class)
     @JoinTable(name = "sample_condition_to_sample",
-            joinColumns = @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
-            inverseJoinColumns = @JoinColumn(name = "sample_id", referencedColumnName = "id", nullable = false)
+        joinColumns = @JoinColumn(name = "condition_id", referencedColumnName = "id", nullable = false),
+        inverseJoinColumns = @JoinColumn(name = "sample_id", referencedColumnName = "id", nullable = false)
     )
     private List<ExperimentSample> samples = new ArrayList<>();
 
@@ -52,7 +49,11 @@ public class SampleCondition extends AbstractPersistable<Long> {
     public SampleCondition() {
     }
 
-    public SampleCondition(boolean baseLineFlag, String name, AbstractExperiment experiment, List<Level> levels, List<ExperimentSample> samples) {
+    public SampleCondition(boolean baseLineFlag,
+                           String name,
+                           AbstractExperiment experiment,
+                           List<Level> levels,
+                           List<ExperimentSample> samples) {
         this.baseLineFlag = baseLineFlag;
         this.name = name;
         this.experiment = experiment;
@@ -62,30 +63,19 @@ public class SampleCondition extends AbstractPersistable<Long> {
 
     @Transient
     public static <E extends ExperimentTemplate<?, ?, ?, ?, ?, ?>, F extends ExperimentFileTemplate<?, ?, ?>>
-    SampleCondition createUndefinedCondition(AbstractExperiment experiment, Iterable<ExperimentSample> samples) {
-        final SampleCondition undefined = new SampleCondition(false, UNDEFINED_CONDITION_NAME, experiment, null, newArrayList(samples));
+        SampleCondition createUndefinedCondition(AbstractExperiment experiment, Iterable<ExperimentSample> samples) {
+        final SampleCondition undefined = new SampleCondition(
+            false,
+            UNDEFINED_CONDITION_NAME,
+            experiment,
+            null,
+            newArrayList(samples)
+        );
         undefined.setId(UNDEFINED_CONDITION_ID);
+
         return undefined;
     }
 
-    @Transient
-    private static String getNameFromLevels(List<? extends LevelTemplate<?>> levels) {
-        final StringBuilder sb = new StringBuilder();
-        final Iterator<? extends LevelTemplate<?>> iterator = levels.iterator();
-        while (iterator.hasNext()) {
-            final LevelTemplate l = iterator.next();
-
-            String units = l.getFactor().getUnits();
-            sb.append(l.getFactor().getName()).append(":").append(l.getName());
-            if (!StringUtils.isBlank(units)) {
-                sb.append("(").append(units).append(")");
-            }
-            if (iterator.hasNext()) {
-                sb.append(", ");
-            }
-        }
-        return sb.toString();
-    }
     /*automatically generated getters, setters*/
 
     public boolean isBaseLineFlag() {

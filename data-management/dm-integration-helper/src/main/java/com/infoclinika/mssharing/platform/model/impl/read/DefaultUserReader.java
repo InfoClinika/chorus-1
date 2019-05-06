@@ -16,21 +16,16 @@ import java.util.List;
  * @author : Alexander Serebriyan
  */
 @Transactional(readOnly = true)
-public abstract class DefaultUserReader<USER extends UserTemplate, USER_LINE extends UserReaderTemplate.UserLineTemplate>
-        implements UserReaderTemplate<USER_LINE>, DefaultTransformingTemplate<USER, USER_LINE> {
+public abstract class DefaultUserReader<USER extends UserTemplate,
+    USER_LINE extends UserReaderTemplate.UserLineTemplate>
+    implements UserReaderTemplate<USER_LINE>, DefaultTransformingTemplate<USER, USER_LINE> {
 
     @Inject
     protected UserReaderHelper<USER, USER_LINE> userReaderHelper;
 
     @PostConstruct
     private void setup() {
-        userReaderHelper.setTransformer(new Function<USER, USER_LINE>() {
-            @Nullable
-            @Override
-            public USER_LINE apply(USER user) {
-                return transform(user);
-            }
-        });
+        userReaderHelper.setTransformer(user -> transform(user));
     }
 
     @Override

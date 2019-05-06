@@ -1,41 +1,43 @@
-var CommonLogging = function(tags){
+"use strict";
+
+var CommonLogging = function (tags) {
 
     var that = this;
     this.tags = tags ? tags : [];
 
-    CommonLogging.prototype.setTags = function(tags){
+    CommonLogging.prototype.setTags = function (tags) {
         that.tags = tags ? tags : [];
     };
 
-    CommonLogging.prototype.log = function(message){
+    CommonLogging.prototype.log = function (message) {
         console.log.apply(console, arguments);
     };
 
-    CommonLogging.prototype.info = function(message){
+    CommonLogging.prototype.info = function (message) {
         console.info.apply(console, arguments);
     };
 
-    CommonLogging.prototype.warn = function(message){
+    CommonLogging.prototype.warn = function (message) {
         console.warn.apply(console, arguments);
     };
 
-    CommonLogging.prototype.error = function(message){
+    CommonLogging.prototype.error = function (message) {
         console.error.apply(console, arguments);
     };
 
-    CommonLogging.prototype.exception = function(ex){
+    CommonLogging.prototype.exception = function (ex) {
         console.error.apply(console, arguments);
     };
 
-    function getMessage(){
+    function getMessage() {
 
         var message = "";
 
-        for(var i = 0 ; i < arguments.length ; ++i){
+        for (var i = 0; i < arguments.length; ++i) {
 
             message += JSON.stringify(arguments[i]);
 
-            if(i + 1 < arguments.length){
+            if (i + 1 < arguments.length) {
                 message += " ";
             }
         }
@@ -43,8 +45,8 @@ var CommonLogging = function(tags){
         return message;
     }
 
-    function getTags(){
-        return  that.tags ? that.tags : [];
+    function getTags() {
+        return that.tags ? that.tags : [];
     }
 
 };

@@ -32,14 +32,18 @@ public class FileAccessLogReaderImpl implements FileAccessLogReader {
     @Inject
     private FileAccessLogRepository fileAccessLogRepository;
 
-    private final Function<FileAccessLog, FileAccessLogDTO> fileAccessLogTransformer = new Function<FileAccessLog, FileAccessLogDTO>() {
-        @Override
-        public FileAccessLogDTO apply(FileAccessLog input) {
-            return new FileAccessLogDTO(
-                    input.getId(), input.getUserEmail(), input.getUserLabName(), input.getFileSize(), input.getFileContentId(),
-                    input.getFileArchiveId(), input.getFileName(), input.getOperationType().toString(), input.getOperationDate());
-        }
-    };
+    private final Function<FileAccessLog, FileAccessLogDTO> fileAccessLogTransformer =
+        input -> new FileAccessLogDTO(
+            input.getId(),
+            input.getUserEmail(),
+            input.getUserLabName(),
+            input.getFileSize(),
+            input.getFileContentId(),
+            input.getFileArchiveId(),
+            input.getFileName(),
+            input.getOperationType().toString(),
+            input.getOperationDate()
+        );
 
     @Override
     public PagedItem<FileAccessLogDTO> readLogs(long actor, PagedItemInfo pagedItem) {
@@ -50,10 +54,12 @@ public class FileAccessLogReaderImpl implements FileAccessLogReader {
         final PageRequest pageRequest = pagedItemsTransformer.toPageRequest(FileAccessLog.class, pagedItem);
         final Page<FileAccessLog> logs = fileAccessLogRepository.findAll(pageRequest);
 
-        return new PagedItem<>(logs.getTotalPages(),
-                logs.getTotalElements(),
-                logs.getNumber(),
-                logs.getNumberOfElements(),
-                from(logs).transform(fileAccessLogTransformer).toList());
+        return new PagedItem<>(
+            logs.getTotalPages(),
+            logs.getTotalElements(),
+            logs.getNumber(),
+            logs.getNumberOfElements(),
+            from(logs).transform(fileAccessLogTransformer).toList()
+        );
     }
 }

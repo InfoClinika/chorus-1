@@ -4,7 +4,8 @@ import com.infoclinika.mssharing.helper.AbstractBillingTest;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Elena Kurilina
@@ -18,7 +19,6 @@ public class FeatureTest extends AbstractBillingTest {
         assertTrue(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.ANALYSE_STORAGE));
         assertTrue(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.DOWNLOAD));
         assertTrue(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.PUBLIC_DOWNLOAD));
-        assertTrue(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.PROTEIN_ID_SEARCH));
     }
 
     @Test
@@ -29,6 +29,5 @@ public class FeatureTest extends AbstractBillingTest {
         assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.ARCHIVE_STORAGE));
         assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.ARCHIVE_STORAGE_VOLUMES));
         assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.STORAGE_VOLUMES));
-        assertFalse(billingFeaturesHelper.isFeatureEnabled(labId, BillingFeature.PROCESSING));
     }
 }

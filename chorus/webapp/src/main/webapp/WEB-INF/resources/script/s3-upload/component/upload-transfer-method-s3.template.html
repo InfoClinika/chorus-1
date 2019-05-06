@@ -1,0 +1,105 @@
+<div class="s3-upload-dialog">
+    <div class="row-fluid margin-bottom-20 clearfix">
+        <div class="span3">
+            <label>File Masks</label>
+        </div>
+        <div class="span9">
+            <div class="row-fluid">
+                <div class="span8 file-ext-holder">
+                    <div ng-repeat="fileMask in masks" class="inline-block margin-right-5">
+                        <span ng-bind="fileMask"></span>
+                        <span><i ng-click="removeFileMask($index)" class="icon item-delete"></i></span>
+                    </div>
+                    <div ng-show="data.masks.length == 0">No file masks specified. All files allowed.</div>
+                </div>
+                <div class="span4">
+                    <div>
+                        <input class="file-ext-input" placeholder="Mask (*.*)" type="text" ng-model="nextFileMask"
+                               on-enter="addFileMask(nextFileMask); nextFileMask='';"/>
+                        <button class="btn secondary-action add-file-ext-button" ng-disabled="!nextFileMask"
+                                ng-click="addFileMask(nextFileMask); nextFileMask='';">+
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row-fluid margin-bottom-20 clearfix">
+        <div class="span3">
+            <label for="recursive">Recursive</label>
+        </div>
+        <div class="span9">
+            <input id="recursive" ng-model="data.recursive" type="checkbox"/>
+            <label for="recursive" class="optional inline-block margin-left-10">(Recursively traverse
+                subfolders)</label>
+        </div>
+    </div>
+
+    <div class="row-fluid margin-bottom-20 clearfix"
+         data-ng-class="{error: form.ftpUrl.$error.inputValidator && (form.ftpUrl.$error.required || form.ftpUrl.$error.url)}">
+        <div class="span3">
+            <label for="src-url">URL</label>
+        </div>
+        <div class="span9">
+            <input type="text" ng-model="data.url" placeholder="s3://"
+                   class="dialog-text-input dont-hide" id="src-url"
+                   name="url"
+                   input-validator required/>
+        </div>
+    </div>
+
+    <div ng-switch="type" style="height: 70px">
+        <div ng-switch-when="S3_COPY" class="row-fluid">
+            <div class="control-group span6 clearfix"
+                 data-ng-class="{error: form.ftpLogin.$error.inputValidator && form.ftpLogin.$error.required}">
+                <label for="src-login">AWS Access Key</label>
+                <input class="dialog-text-input dont-hide" id="src-login" name="login" ng-model="data.login"
+                       input-validator required/>
+            </div>
+            <div class="control-group span6 clearfix"
+                 data-ng-class="{error: form.ftpPassword.$error.inputValidator && form.ftpPassword.$error.required}">
+                <label for="src-password">AWS Secret Key</label>
+                <input type="password" class="dialog-text-input dont-hide" id="src-password" name="passwd"
+                       ng-model="data.password" input-validator required/>
+            </div>
+        </div>
+
+        <div ng-switch-when="S3_LINK">
+            <div class="row-fluid clearfix">
+                <div class="span3">
+                    <label for="app-arn">Application ARN</label>
+                </div>
+                <div class="span9">
+                    <input id="app-arn" type="text" value="{{ awsUser }}" readonly class="dialog-text-input">
+                    <p class="text-info">Please, grant an access to your files</p>
+                </div>
+            </div>
+
+            <div class="row-fluid clearfix">
+                <div class="span3">
+                    <label for="workflow-arn">Workflow ARN</label>
+                </div>
+                <div class="span9">
+                    <input id="workflow-arn" type="text" value="{{ workflowArn }}" readonly class="dialog-text-input">
+                    <p class="text-info">Please, grant an access to your files</p>
+                </div>
+            </div>
+
+            <div class="row-fluid margin-bottom-20 clearfix">
+                <div class="control-group span12 clearfix policy-label">
+                    <a href class="text-info" ng-click="getPolicyJson()">Get policy JSON</a>
+                    <p ng-show="showEmptyS3UrlError" class="text-error">Please Enter S3 URL</p>
+                    <a ng-show="!!bucketPolicy" href class="copy-to-clipboard text-info" ng-click="copyPolicy()">Copy to clipboard</a>
+                </div>
+
+                <div ng-show="!!bucketPolicy" class="control-group policy-input clearfix">
+                    <textarea id="policy-input" class="policy-input" readonly rows="10" ng-bind="bucketPolicy"></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+</div>

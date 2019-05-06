@@ -1,0 +1,12 @@
+<div class="upload-preview" ng-init="showExistedFiles = false">
+
+    <div ag-grid="gridOptions" style="height: 220px; width: 100%"></div>
+    <div class="upload-preview-footer" ng-show="newFilesCount + countExistedFiles > 0">
+        Selected {{selectedFilesCount}} of {{newFilesCount}} files
+
+        <label class="upload-preview-existed" ng-show="countExistedFiles > 0">
+            <input type="checkbox" ng-model="showExistedFiles" ng-checked="showExistedFiles">
+            show {{countExistedFiles}} registered files
+        </label>
+    </div>
+</div>

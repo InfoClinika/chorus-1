@@ -27,7 +27,7 @@ select:focus:required:invalid:focus{
     color: #8f0000;
     font: normal 13px/24px "Open Sans Semibold", Arial, sans-serif;
     text-align: left;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .required-field{

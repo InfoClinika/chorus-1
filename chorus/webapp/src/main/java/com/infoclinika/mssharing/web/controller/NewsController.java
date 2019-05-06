@@ -27,8 +27,8 @@ public class NewsController extends ErrorHandler {
     @ResponseBody
     @RequestMapping(method = RequestMethod.GET)
     public ImmutableSortedSet<NewsReader.NewsItem> getNews(@RequestParam(required = false) Long count) {
-        if(count != null) {
-           return newsReader.readLatest(count.intValue());
+        if (count != null) {
+            return newsReader.readLatest(count.intValue());
         }
         return newsReader.readList();
     }
@@ -42,20 +42,31 @@ public class NewsController extends ErrorHandler {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void createNews(@RequestBody NewsRequest newsRequest, Principal principal) {
-        newsManagement.createNews(getUserId(principal), new NewsManagement.NewsInfo(newsRequest.title, newsRequest.author, newsRequest.introduction, newsRequest.text));
+        newsManagement.createNews(
+            getUserId(principal),
+            new NewsManagement.NewsInfo(newsRequest.title,
+                newsRequest.author,
+                newsRequest.introduction,
+                newsRequest.text
+            )
+        );
     }
 
     @RequestMapping(method = RequestMethod.PUT)
     @ResponseStatus(HttpStatus.OK)
     public void updateNews(@RequestBody NewsRequest newsRequest, Principal principal) {
-        final NewsManagement.NewsInfo info = new NewsManagement.NewsInfo(newsRequest.title, newsRequest.author, newsRequest.introduction, newsRequest.text);
-        newsManagement.updateNews(getUserId(principal),newsRequest.id, info);
+        final NewsManagement.NewsInfo info = new NewsManagement.NewsInfo(newsRequest.title,
+            newsRequest.author,
+            newsRequest.introduction,
+            newsRequest.text
+        );
+        newsManagement.updateNews(getUserId(principal), newsRequest.id, info);
     }
 
     @RequestMapping(value = "{id}", method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.OK)
-    public void deleteNews(@PathVariable long id, Principal principal){
-         newsManagement.deleteNews(getUserId(principal), id);
+    public void deleteNews(@PathVariable long id, Principal principal) {
+        newsManagement.deleteNews(getUserId(principal), id);
     }
 
 }

@@ -1,0 +1,39 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <profiles>
+
+        <profile>
+            <id>production</id>
+            <properties>
+                <deployment.manager.url>http://ec2-54-211-108-187.compute-1.amazonaws.com:8080/manager/text</deployment.manager.url>
+                <deployment.manager.username>admin</deployment.manager.username>
+                <deployment.manager.password>al812*hdnx</deployment.manager.password>
+                <deployment.path>/</deployment.path>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>production-backup</id>
+            <properties>
+                <deployment.manager.url>http://ec2-50-16-34-60.compute-1.amazonaws.com:8080/manager/text</deployment.manager.url>
+                <deployment.manager.username>admin</deployment.manager.username>
+                <deployment.manager.password>al812*hdnx</deployment.manager.password>
+                <deployment.path>/</deployment.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>staging</id>
+            <properties>
+                <deployment.manager.url>http://ec2-54-163-179-216.compute-1.amazonaws.com:8080/manager/text</deployment.manager.url>
+                <deployment.manager.username>admin</deployment.manager.username>
+                <deployment.manager.password>al812*hdnx</deployment.manager.password>
+                <deployment.path>/</deployment.path>
+            </properties>
+        </profile>
+
+
+    </profiles>
+
+</settings>

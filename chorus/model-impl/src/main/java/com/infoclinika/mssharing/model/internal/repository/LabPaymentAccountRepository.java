@@ -23,17 +23,18 @@ public interface LabPaymentAccountRepository extends CrudRepository<LabPaymentAc
     Long accountIdForLab(@Param("lab") long labId);
 
     @Query("SELECT fd " +
-            "FROM LabPaymentAccount l join l.billingData.featuresData fd join fetch fd.chargeableItem WHERE l.lab.id= :lab")
+        " FROM LabPaymentAccount l join l.billingData.featuresData fd join " +
+        " fetch fd.chargeableItem WHERE l.lab.id= :lab")
     Set<AccountChargeableItemData> findFeaturesDataByLab(@Param("lab") long labId);
 
     @Query("SELECT l FROM LabPaymentAccount l join l.lab a WHERE a.id in " +
-            "(select m.lab.id from UserLabMembership m where m.user.id = :head and m.head = true)")
+        "(select m.lab.id from UserLabMembership m where m.user.id = :head and m.head = true)")
     List<LabPaymentAccount> findByLabHeadId(@Param("head") long head);
 
     @Query("select m from LabPaymentAccount m ")
     Page<LabPaymentAccount> finaPagedAll(Pageable request);
 
     @Query("select a from LabPaymentAccount a join a.lab lab where a.type = " +
-            "com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount$LabPaymentAccountType.ENTERPRISE")
+        "com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount$LabPaymentAccountType.ENTERPRISE")
     List<LabPaymentAccount> findEnterprise();
 }

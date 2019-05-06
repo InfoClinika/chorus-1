@@ -1,7 +1,6 @@
 package com.infoclinika.mssharing.platform.model.helper.write;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.infoclinika.mssharing.platform.entity.AbstractPersistable;
 import com.infoclinika.mssharing.platform.entity.Attachment;
@@ -22,8 +21,10 @@ import javax.inject.Inject;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * @author Herman Zamula
@@ -100,7 +101,10 @@ public class AttachmentsManager<ATTACHMENT extends Attachment> {
 
     }
 
-    private <E extends AbstractPersistable> void processAttachmentsUpdate(Iterable<Long> attachmentsIdsToUpdate, List<ATTACHMENT> currentEntityAttachments, E entity, CrudRepository<E, Long> repository) {
+    private <E extends AbstractPersistable> void processAttachmentsUpdate(Iterable<Long> attachmentsIdsToUpdate,
+                                                                          List<ATTACHMENT> currentEntityAttachments,
+                                                                          E entity,
+                                                                          CrudRepository<E, Long> repository) {
         final Sets.SetView<Long> idsToRemove = doUpdateAttachments(attachmentsIdsToUpdate, currentEntityAttachments);
         //explicit save to avoid implicit merge problems on the future transaction commit
         repository.save(entity);
@@ -115,15 +119,20 @@ public class AttachmentsManager<ATTACHMENT extends Attachment> {
         }
     }
 
-    private Sets.SetView<Long> doUpdateAttachments(Iterable<Long> attachmentsIdsToUpdate, List<ATTACHMENT> currentEntityAttachments) {
-        final List<Long> existingIds = Lists.transform(currentEntityAttachments, EntityUtil.ENTITY_TO_ID);
+    private Sets.SetView<Long> doUpdateAttachments(Iterable<Long> attachmentsIdsToUpdate,
+                                                   List<ATTACHMENT> currentEntityAttachments) {
+        final List<Long> existingIds = currentEntityAttachments.stream()
+            .map(EntityUtil.ENTITY_TO_ID::apply)
+            .collect(Collectors.toList());
 
         final HashSet<Long> oldIds = Sets.newHashSet(existingIds);
         final HashSet<Long> newIds = Sets.newHashSet(attachmentsIdsToUpdate);
 
         final Sets.SetView<Long> idsToRemove = Sets.difference(oldIds, newIds);
 
-        final List<ATTACHMENT> newAttachments = Lists.transform(Lists.newArrayList(attachmentsIdsToUpdate), attachmentFromId);
+        final List<ATTACHMENT> newAttachments = newArrayList(attachmentsIdsToUpdate).stream()
+            .map(attachmentFromId::apply)
+            .collect(Collectors.toList());
         currentEntityAttachments.clear();
         currentEntityAttachments.addAll(newAttachments);
         return idsToRemove;

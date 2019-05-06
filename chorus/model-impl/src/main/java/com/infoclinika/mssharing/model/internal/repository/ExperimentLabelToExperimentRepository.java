@@ -13,9 +13,11 @@ import java.util.List;
  */
 public interface ExperimentLabelToExperimentRepository extends JpaRepository<ExperimentLabelToExperiment, Long> {
     @Modifying
-    @Query("delete from ExperimentLabelToExperiment exLabel where exLabel.experiment=(select ex from ActiveExperiment ex where ex.id=:experiment)")
+    @Query("delete from ExperimentLabelToExperiment exLabel where exLabel.experiment=(select ex " +
+        " from ActiveExperiment ex where ex.id=:experiment)")
     void deleteAllByExperiment(@Param("experiment") long experiment);
 
-    @Query("select exLabel from ExperimentLabelToExperiment exLabel join exLabel.experiment ex where ex.id=:experiment")
+    @Query("select exLabel from ExperimentLabelToExperiment exLabel join exLabel.experiment ex " +
+        " where ex.id=:experiment")
     List<ExperimentLabelToExperiment> findLabelsById(@Param("experiment") long experiment);
 }

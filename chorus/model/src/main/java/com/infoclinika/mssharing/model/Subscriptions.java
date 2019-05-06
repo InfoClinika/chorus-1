@@ -6,12 +6,18 @@ import java.util.Date;
  * @author Pavel Kaplin
  */
 public interface Subscriptions {
+
     Subscription get(long actor);
 
     void update(long actor, Subscription.Status status);
 
     class Subscription {
-        public enum Status {NOT_SUBSCRIBED, SUBSCRIBED, PENDING}
+
+        public enum Status {
+            NOT_SUBSCRIBED,
+            SUBSCRIBED,
+            PENDING
+        }
 
         public final Status status;
 

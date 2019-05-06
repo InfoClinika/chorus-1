@@ -1,7 +1,6 @@
 package com.infoclinika.sso.chorus;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.infoclinika.auth.ChorusAuthenticationService;
 import com.infoclinika.auth.ChorusAuthenticationService.GetAttributesRequest;
@@ -30,7 +29,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 @Service
 public class ChorusAttributesPopulator implements AuthenticationMetaDataPopulator {
-    private static final Logger LOG = LoggerFactory.getLogger(ChorusAttributesPopulator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChorusAttributesPopulator.class);
 
     @Inject
     private UserDetailsReader userDetailsReader;
@@ -40,8 +39,12 @@ public class ChorusAttributesPopulator implements AuthenticationMetaDataPopulato
     @Override
     public void populateAttributes(AuthenticationBuilder builder, Credential credential) {
         final UserCredentialInForm userCredentials = (UserCredentialInForm) credential;
-        final Optional<UserDetails> details = userDetailsReader.getDetails(userCredentials.getApplicationType(), userCredentials.getUsername());
-        checkState(details.isPresent(), "User is not present in the system, applicationType: %s, username: %s", userCredentials.getApplicationType(), userCredentials.getUsername());
+        final Optional<UserDetails> details =
+            userDetailsReader.getDetails(userCredentials.getApplicationType(), userCredentials.getUsername());
+        checkState(
+            details.isPresent(), "User is not present in the system, applicationType: %s, username: %s",
+            userCredentials.getApplicationType(), userCredentials.getUsername()
+        );
 
         final UserDetails userDetails = details.get();
         /*Prepares attributes only when user account is fully linked(it is redundant while they are not linked). */
@@ -59,7 +62,8 @@ public class ChorusAttributesPopulator implements AuthenticationMetaDataPopulato
     private void specifyChorusAttributes(AuthenticationBuilder builder, UserDetails userDetails) {
         try {
             final ApplicationCredential chorusCredential = findChorusCredential(userDetails);
-            final GetAttributesRequest request = new GetAttributesRequest(chorusCredential.username, new UserSecretKey(chorusCredential.secretToken));
+            final GetAttributesRequest request =
+                new GetAttributesRequest(chorusCredential.username, new UserSecretKey(chorusCredential.secretToken));
 
             final GetAttributesResponse response = chorusAuthenticationService.getAttributes(request);
 
@@ -67,18 +71,19 @@ public class ChorusAttributesPopulator implements AuthenticationMetaDataPopulato
                 builder.addAttribute(attributeToAdd.getKey(), String.valueOf(attributeToAdd.getValue()));
             }
         } catch (RuntimeException e) {
-            LOG.error("Exception occurred while retrieving attributes from Chorus endpoint, message: " + e.getMessage(), e);
+            LOGGER.error(
+                "Exception occurred while retrieving attributes from Chorus endpoint, message: {}",
+                e.getMessage(),
+                e
+            );
             builder.getSuccesses().clear();
             builder.addFailure(this.getClass().getName(), e.getClass());
         }
     }
 
     private static ApplicationCredential findChorusCredential(UserDetails userDetails) {
-        return Iterables.find(userDetails.credentials, new Predicate<ApplicationCredential>() {
-            @Override
-            public boolean apply(ApplicationCredential credential) {
-                return credential.applicationType == ApplicationType.CHORUS;
-            }
-        });
+        return Iterables.find(userDetails.credentials,
+            credential -> credential.applicationType == ApplicationType.CHORUS
+        );
     }
 }

@@ -1,10 +1,11 @@
 package com.infoclinika.mssharing.web.controller;
 
+import com.infoclinika.mssharing.propertiesprovider.ChorusPropertiesProvider;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * @author Pavel Kaplin
@@ -15,7 +16,7 @@ public class EmailVerificationCryptoTest {
 
     @BeforeMethod
     public void initCrypto() {
-        crypto = new EmailVerificationCrypto();
+        crypto = new EmailVerificationCrypto(new ChorusPropertiesProvider());
         crypto.setKey("1,2,3");
         crypto.initMac();
     }

@@ -10,7 +10,8 @@ import java.util.List;
 /**
  * @author Herman Zamula
  */
-public class ExperimentInfo extends ExperimentManagementTemplate.ExperimentInfoTemplate<ExperimentManagementTemplate.MetaFactorTemplate, FileItem> {
+public class ExperimentInfo extends
+    ExperimentManagementTemplate.ExperimentInfoTemplate<ExperimentManagementTemplate.MetaFactorTemplate, FileItem> {
     public final AnalysisBounds bounds;
     public final List<LockMzItem> lockMasses;
     public final Long billLab;
@@ -48,31 +49,31 @@ public class ExperimentInfo extends ExperimentManagementTemplate.ExperimentInfoT
     }
 
     public ExperimentInfo(
-            String name,
-            String description,
-            long experimentType,
-            long specie,
-            long project,
-            Long lab,
-            Long billLab,
-            List<ExperimentManagementTemplate.MetaFactorTemplate> factors,
-            List<FileItem> files,
-            boolean is2dLc,
-            StudyManagement.Restriction restriction,
-            AnalysisBounds bounds,
-            List<LockMzItem> lockMasses,
-            ExperimentLabelsInfo experimentLabels,
-            int sampleTypesCount,
-            int channelsCount,
-            String labelType,
-            String groupSpecificParametersType,
-            double reporterMassTol,
-            boolean filterByPIFEnabled,
-            double minReporterPIF,
-            double minBasePeakRatio,
-            double minReporterFraction,
-            ExperimentCategory experimentCategory,
-            NgsRelatedExperimentInfo ngsRelatedExperimentInfo
+        String name,
+        String description,
+        long experimentType,
+        long specie,
+        long project,
+        Long lab,
+        Long billLab,
+        List<ExperimentManagementTemplate.MetaFactorTemplate> factors,
+        List<FileItem> files,
+        boolean is2dLc,
+        StudyManagement.Restriction restriction,
+        AnalysisBounds bounds,
+        List<LockMzItem> lockMasses,
+        ExperimentLabelsInfo experimentLabels,
+        int sampleTypesCount,
+        int channelsCount,
+        String labelType,
+        String groupSpecificParametersType,
+        double reporterMassTol,
+        boolean filterByPIFEnabled,
+        double minReporterPIF,
+        double minBasePeakRatio,
+        double minReporterFraction,
+        ExperimentCategory experimentCategory,
+        NgsRelatedExperimentInfo ngsRelatedExperimentInfo
     ) {
 
         super(lab, name, description, project, factors, files, specie, is2dLc, restriction, experimentType);
@@ -247,31 +248,31 @@ public class ExperimentInfo extends ExperimentManagementTemplate.ExperimentInfoT
 
         public ExperimentInfo build() {
             return new ExperimentInfo(
-                    name,
-                    description,
-                    experimentType,
-                    specie,
-                    project,
-                    lab,
-                    billLab,
-                    factors,
-                    files,
-                    is2dLc,
-                    restriction,
-                    bounds,
-                    lockMasses,
-                    experimentLabels,
-                    sampleTypesCount,
-                    channelsCount,
-                    labelType,
-                    groupSpecificParametersType,
-                    reporterMassTol,
-                    filterByPIFEnabled,
-                    minReporterPIF,
-                    minBasePeakRatio,
-                    minReporterFraction,
-                    experimentCategory,
-                    ngsRelatedExperimentInfo
+                name,
+                description,
+                experimentType,
+                specie,
+                project,
+                lab,
+                billLab,
+                factors,
+                files,
+                is2dLc,
+                restriction,
+                bounds,
+                lockMasses,
+                experimentLabels,
+                sampleTypesCount,
+                channelsCount,
+                labelType,
+                groupSpecificParametersType,
+                reporterMassTol,
+                filterByPIFEnabled,
+                minReporterPIF,
+                minBasePeakRatio,
+                minReporterFraction,
+                experimentCategory,
+                ngsRelatedExperimentInfo
             );
         }
     }
@@ -279,21 +280,21 @@ public class ExperimentInfo extends ExperimentManagementTemplate.ExperimentInfoT
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("bounds", bounds)
-                .add("lockMasses", lockMasses)
-                .add("billLab", billLab)
-                .add("experimentLabels", experimentLabels)
-                .add("sampleTypesCount", sampleTypesCount)
-                .add("channelsCount", channelsCount)
-                .add("labelType", labelType)
-                .add("groupSpecificParametersType", groupSpecificParametersType)
-                .add("reporterMassTol", reporterMassTol)
-                .add("filterByPIFEnabled", filterByPIFEnabled)
-                .add("minReporterPIF", minReporterPIF)
-                .add("minBasePeakRatio", minBasePeakRatio)
-                .add("minReporterFraction", minReporterFraction)
-                .add("experimentCategory", experimentCategory)
-                .add("ngsRelatedInfo", ngsRelatedExperimentInfo)
-                .toString();
+            .add("bounds", bounds)
+            .add("lockMasses", lockMasses)
+            .add("billLab", billLab)
+            .add("experimentLabels", experimentLabels)
+            .add("sampleTypesCount", sampleTypesCount)
+            .add("channelsCount", channelsCount)
+            .add("labelType", labelType)
+            .add("groupSpecificParametersType", groupSpecificParametersType)
+            .add("reporterMassTol", reporterMassTol)
+            .add("filterByPIFEnabled", filterByPIFEnabled)
+            .add("minReporterPIF", minReporterPIF)
+            .add("minBasePeakRatio", minBasePeakRatio)
+            .add("minReporterFraction", minReporterFraction)
+            .add("experimentCategory", experimentCategory)
+            .add("ngsRelatedInfo", ngsRelatedExperimentInfo)
+            .toString();
     }
 }

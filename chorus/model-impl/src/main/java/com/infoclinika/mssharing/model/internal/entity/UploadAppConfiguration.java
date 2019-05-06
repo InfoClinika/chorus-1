@@ -29,8 +29,9 @@ public class UploadAppConfiguration extends Dictionary {
     @Column(nullable = false)
     private boolean started;
     @Fields({
-            @Field(analyze = Analyze.NO),
-            @Field(boost = @Boost(3000f), name = "labels.sort", analyze = Analyze.NO, bridge = @FieldBridge(impl = LowerCaseStringBridge.class))
+        @Field(analyze = Analyze.NO),
+        @Field(boost = @Boost(3000f), name = "labels.sort", analyze = Analyze.NO,
+            bridge = @FieldBridge(impl = LowerCaseStringBridge.class))
     })
     private String labels;
     @ManyToOne(optional = false)
@@ -51,15 +52,17 @@ public class UploadAppConfiguration extends Dictionary {
     public UploadAppConfiguration() {
     }
 
-    public UploadAppConfiguration(String name,
-                                  String folder,
-                                  boolean started,
-                                  String labels,
-                                  Instrument instrument,
-                                  User user,
-                                  Species specie,
-                                  UploadCompleteAction completeAction,
-                                  String folderToMoveFiles) {
+    public UploadAppConfiguration(
+        String name,
+        String folder,
+        boolean started,
+        String labels,
+        Instrument instrument,
+        User user,
+        Species specie,
+        UploadCompleteAction completeAction,
+        String folderToMoveFiles
+    ) {
         super(name);
         this.folder = folder;
         this.started = started;

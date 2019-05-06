@@ -2,6 +2,8 @@ package com.infoclinika.mssharing.platform.model.common.items;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Objects;
+
 /**
  * @author Herman Zamula
  */
@@ -16,28 +18,23 @@ public class LabItem extends NamedItem {
     }
 
     @Override
-    @SuppressWarnings("all")
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        LabItem labItem = (LabItem) o;
-
-        if (id != labItem.id) return false;
-        if (labHead != labItem.labHead) return false;
-        if (instruments != null ? !instruments.equals(labItem.instruments) : labItem.instruments != null)
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof LabItem)) {
             return false;
-        if (name != null ? !name.equals(labItem.name) : labItem.name != null) return false;
-
-        return true;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        LabItem labItem = (LabItem) o;
+        return labHead == labItem.labHead &&
+            Objects.equals(instruments, labItem.instruments);
     }
 
     @Override
     public int hashCode() {
-        int result = (int) (id ^ (id >>> 32));
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (instruments != null ? instruments.hashCode() : 0);
-        result = 31 * result + (int) (labHead ^ (labHead >>> 32));
-        return result;
+        return Objects.hash(super.hashCode(), instruments, labHead);
     }
 }

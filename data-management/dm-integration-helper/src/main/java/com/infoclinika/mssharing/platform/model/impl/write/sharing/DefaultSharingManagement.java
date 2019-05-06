@@ -6,6 +6,7 @@ import com.infoclinika.mssharing.platform.entity.UserProjectAccess;
 import com.infoclinika.mssharing.platform.entity.UserTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.ProjectTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.EntityFactories;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.write.SharingManager;
@@ -21,6 +22,8 @@ import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import static com.infoclinika.mssharing.platform.entity.Sharing.Access.valueOf;
 
 /**
  * @author Herman Zamula
@@ -49,6 +52,9 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
     }
 
     protected void beforeCreateGroup(long actor, String name, Iterable<Long> collaborators) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         checkGroupName(name, null);
         if (!collaborators.iterator().hasNext()) {
             throw new IllegalArgumentException("No members were supplied for the new group '" + name + "'");
@@ -62,8 +68,12 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
     }
 
     protected void beforeRemoveGroup(long actor, long groupId) {
-        if (!ruleValidator.canRemoveGroup(actor, groupId))
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        if (!ruleValidator.canRemoveGroup(actor, groupId)) {
             throw new AccessDenied("User isn't permitted to remove group");
+        }
     }
 
     @Override
@@ -73,8 +83,12 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
     }
 
     protected void beforeRenameGroup(long actor, long groupId, String newName) {
-        if (!ruleValidator.userHasReadPermissionsToEditGroup(actor, groupId))
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        if (!ruleValidator.userHasReadPermissionsToEditGroup(actor, groupId)) {
             throw new AccessDenied("Couldn't edit group");
+        }
         checkGroupName(newName, groupId);
     }
 
@@ -88,8 +102,12 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
     }
 
     private void beforeSetCollaborators(long actor, long group, Iterable<Long> collaborators) {
-        if (!ruleValidator.userHasReadPermissionsToEditGroup(actor, group))
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        if (!ruleValidator.userHasReadPermissionsToEditGroup(actor, group)) {
             throw new AccessDenied("Couldn't edit group");
+        }
 
         if (!collaborators.iterator().hasNext()) {
             throw new IllegalArgumentException("No members were supplied for the group");
@@ -97,19 +115,30 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
     }
 
     @Override
-    public void updateSharingPolicy(long actor, long project, Map<Long, Access> colleagues, Map<Long, Access> groups, boolean withEmailNotification) {
+    public void updateSharingPolicy(long actor, long project,
+                                    Map<Long, Access> colleagues,
+                                    Map<Long, Access> groups,
+                                    boolean withEmailNotification) {
         beforeUpdateSharingPolicy(actor, project, colleagues, groups, withEmailNotification);
-        final Map newAllCollaborators = managementHelper.updateSharingPolicy(actor, project, colleagues, groups, withEmailNotification);
+        final Map newAllCollaborators =
+            managementHelper.updateSharingPolicy(actor, project, colleagues, groups, withEmailNotification);
         afterUpdateSharingPolicy(actor, project, colleagues, groups, withEmailNotification, newAllCollaborators);
     }
 
-    protected void afterUpdateSharingPolicy(long actor, long project, Map<Long, Access> colleagues, Map<Long, Access> groups, boolean withEmailNotification, Map newAllCollaborators) {
+    protected void afterUpdateSharingPolicy(long actor, long project, Map<Long, Access> colleagues,
+                                            Map<Long, Access> groups, boolean withEmailNotification,
+                                            Map newAllCollaborators) {
 
     }
 
-    private void beforeUpdateSharingPolicy(long actor, long project, Map<Long, Access> colleagues, Map<Long, Access> groups, boolean withEmailNotification) {
-        if (!ruleValidator.hasWriteAccessOnProject(actor, project))
+    private void beforeUpdateSharingPolicy(long actor, long project, Map<Long, Access> colleagues,
+                                           Map<Long, Access> groups, boolean withEmailNotification) {
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        if (!ruleValidator.hasWriteAccessOnProject(actor, project)) {
             throw new AccessDenied("User have no permission to share project");
+        }
     }
 
 
@@ -120,8 +149,12 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
     }
 
     protected void beforeMakeProjectPublic(long actor, long projectId) {
-        if (!ruleValidator.hasWriteAccessOnProject(actor, projectId))
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        if (!ruleValidator.hasWriteAccessOnProject(actor, projectId)) {
             throw new AccessDenied("User have no permission to make project public");
+        }
     }
 
     @Override
@@ -143,7 +176,7 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
         for (Long userId : sharedTo.keySet()) {
             final UserTemplate user = entityFactories.userFromId.apply(userId);
             final ProjectTemplate project = entityFactories.projectFromId.apply(projectId);
-            userProjectAccesses.add(new UserProjectAccess<>(user, project, Sharing.Access.valueOf(sharedTo.get(userId).name())));
+            userProjectAccesses.add(new UserProjectAccess<>(user, project, valueOf(sharedTo.get(userId).name())));
         }
 
         userProjectAccessRepository.save(userProjectAccesses);
@@ -151,8 +184,12 @@ public class DefaultSharingManagement<GROUP extends GroupTemplate> implements Sh
 
 
     protected void beforeMakeProjectPrivate(long actor, long projectId) {
-        if (!ruleValidator.hasWriteAccessOnProject(actor, projectId))
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        if (!ruleValidator.hasWriteAccessOnProject(actor, projectId)) {
             throw new AccessDenied("User have no permission to make project private");
+        }
     }
 
 

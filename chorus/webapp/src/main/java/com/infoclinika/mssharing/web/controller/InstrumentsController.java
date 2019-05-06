@@ -24,8 +24,10 @@ import javax.inject.Inject;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.infoclinika.mssharing.platform.model.helper.InstrumentCreationHelperTemplate.*;
 import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId;
 
 /**
@@ -64,6 +66,20 @@ public class InstrumentsController extends PagedItemsController {
         return newArrayList(dashboardReader.readInstruments(getUserId(principal)));
     }
 
+    @RequestMapping(value = "/paged", method = RequestMethod.GET)
+    @ResponseBody
+    public PagedItem<InstrumentLine> getInstruments(
+        Principal principal,
+        @RequestParam int page, @RequestParam int items,
+        @RequestParam String sortingField, @RequestParam boolean asc,
+        @RequestParam(required = false) @Nullable String filterQuery
+    ) {
+        return dashboardReader.readInstruments(
+            getUserId(principal),
+            createPagedInfo(page, items, sortingField, asc, filterQuery)
+        );
+    }
+
     @RequestMapping(value = "/bylab/{labId}", method = RequestMethod.GET)
     @ResponseBody
     public List<InstrumentLine> getInstrumentsByLab(@PathVariable("labId") long labId, Principal principal) {
@@ -72,21 +88,34 @@ public class InstrumentsController extends PagedItemsController {
 
     @RequestMapping(value = "/paged/bylab/{labId}", method = RequestMethod.GET)
     @ResponseBody
-    public PagedItem<InstrumentLine> getInstrumentsByLab(@PathVariable("labId") long labId,
-                                                         Principal principal,
-                                                         @RequestParam int page, @RequestParam int items,
-                                                         @RequestParam String sortingField, @RequestParam boolean asc,
-                                                         @RequestParam(required = false) @Nullable String filterQuery) {
-        return dashboardReader.readInstrumentsByLab(getUserId(principal), labId, createPagedInfo(page, items, sortingField, asc, filterQuery));
+    public PagedItem<InstrumentLine> getInstrumentsByLab(
+        @PathVariable("labId") long labId,
+        Principal principal,
+        @RequestParam int page, @RequestParam int items,
+        @RequestParam String sortingField, @RequestParam boolean asc,
+        @RequestParam(required = false) @Nullable String filterQuery
+    ) {
+        return dashboardReader.readInstrumentsByLab(
+            getUserId(principal),
+            labId,
+            createPagedInfo(page, items, sortingField, asc, filterQuery)
+        );
     }
 
-    @RequestMapping(value = "/paged", method = RequestMethod.GET)
+    @RequestMapping(value = "/byLabAndStudyType/{labId}")
     @ResponseBody
-    public PagedItem<InstrumentLine> getInstruments(Principal principal,
-                                                    @RequestParam int page, @RequestParam int items,
-                                                    @RequestParam String sortingField, @RequestParam boolean asc,
-                                                    @RequestParam(required = false) @Nullable String filterQuery) {
-        return dashboardReader.readInstruments(getUserId(principal), createPagedInfo(page, items, sortingField, asc, filterQuery));
+    public List<InstrumentLine> getInstrumentsByLabAndStudyType(
+        Principal principal,
+        @PathVariable("labId") long labId,
+        @RequestParam("studyTypeId") long studyTypeId
+    ) {
+
+        final Set<InstrumentLine> instruments = dashboardReader.readInstrumentsByLabAndStudyType(
+            getUserId(principal),
+            labId,
+            studyTypeId
+        );
+        return newArrayList(instruments);
     }
 
     @RequestMapping("/operated")
@@ -118,7 +147,7 @@ public class InstrumentsController extends PagedItemsController {
 
     @RequestMapping("/operators")
     @ResponseBody
-    public ImmutableSortedSet<InstrumentCreationHelperTemplate.PotentialOperator> getOperators(@RequestParam long lab) {
+    public ImmutableSortedSet<PotentialOperator> getOperators(@RequestParam long lab) {
         //noinspection unchecked
         return helper.availableOperators(lab);
     }
@@ -132,10 +161,14 @@ public class InstrumentsController extends PagedItemsController {
 
     @RequestMapping(value = "/createDefaultInstrument", method = RequestMethod.POST)
     @ResponseBody
-    public ValueResponse createDefaultInstrument(@RequestBody CreateDefaultInstrumentRequest request, Principal principal) {
+    public ValueResponse createDefaultInstrument(
+        @RequestBody CreateDefaultInstrumentRequest request,
+        Principal principal
+    ) {
 
         final long userId = getUserId(principal);
-        final Optional<InstrumentLine> defaultInstrumentOpt = instrumentReader.readDefaultInstrument(userId, request.labId, request.modelId);
+        final Optional<InstrumentLine> defaultInstrumentOpt =
+            instrumentReader.readDefaultInstrument(userId, request.labId, request.modelId);
 
         if (defaultInstrumentOpt.isPresent()) {
             return new ValueResponse<>(defaultInstrumentOpt.get().id);
@@ -152,36 +185,27 @@ public class InstrumentsController extends PagedItemsController {
         final boolean labHead = labManagement.isLabHead(userId, instrument.lab);
 
         if (labHead) {
-
             try {
-                long instrumentId = management.createInstrument(userId, instrument.lab, instrument.model, instrument.details);
-                for (long operator : instrument.operators) {
-                    management.addOperatorDirectly(userId, instrumentId, operator);
-                }
+                management.createInstrument(userId, instrument.lab, instrument.model, instrument.details);
             } catch (AccessDenied e) {
                 return new SuccessErrorResponse(e.getMessage(), null);
             }
+
             return new SuccessErrorResponse(null, "Instrument saved");
-
         } else {
-
             try {
-
                 management.newInstrumentRequest(
-                        userId,
-                        instrument.lab,
-                        instrument.model,
-                        instrument.details,
-                        instrument.operators
+                    userId,
+                    instrument.lab,
+                    instrument.model,
+                    instrument.details
                 );
-
             } catch (AccessDenied e) {
                 return new SuccessErrorResponse(e.getMessage(), null);
             }
+
             return new SuccessErrorResponse(null, "Instrument creation request saved");
         }
-
-
     }
 
     @RequestMapping(method = RequestMethod.PUT)
@@ -190,17 +214,19 @@ public class InstrumentsController extends PagedItemsController {
         long userId = getUserId(principal);
         try {
             management.editInstrument(userId, instrument.id, instrument.details);
-            management.setInstrumentOperators(userId, instrument.id, instrument.operators);
         } catch (Exception e) {
             return new SuccessErrorResponse(e.getMessage(), null);
         }
+
         return new SuccessErrorResponse(null, "Instrument updated");
     }
 
     @RequestMapping("/{id}")
     @ResponseBody
     public DetailsResponse details(@PathVariable long id, Principal principal) {
-        final com.infoclinika.mssharing.model.read.dto.details.InstrumentItem instrument = detailsReader.readInstrument(getUserId(principal), id);
+        final com.infoclinika.mssharing.model.read.dto.details.InstrumentItem instrument =
+            detailsReader.readInstrument(getUserId(principal), id);
+
         return DetailsResponse.ok(instrument);
     }
 

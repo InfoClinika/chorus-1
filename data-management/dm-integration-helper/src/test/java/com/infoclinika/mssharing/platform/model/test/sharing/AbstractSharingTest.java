@@ -3,18 +3,18 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.test.sharing;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.model.common.items.DictionaryItem;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
-import com.infoclinika.mssharing.platform.model.read.FileReaderTemplate.FileLineTemplate;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.test.helper.AbstractTest;
 import com.infoclinika.mssharing.platform.model.write.ProjectManagementTemplate;
@@ -36,18 +36,17 @@ abstract class AbstractSharingTest extends AbstractTest {
     public Map<Long, SharingManagementTemplate.Access> emptySharing = emptyMap();
 
     public void checkHasAccessToSharedFile(long user, long lab, final long file) {
-        if (!Iterables.any(fileReader.readFiles(user, Filter.SHARED_WITH_ME), new Predicate<FileLineTemplate>() {
-            @Override
-            public boolean apply(FileLineTemplate input) {
-                return input.id == file;
-            }
-        })) throw new AccessDenied("asserting");
+        if (!Iterables.any(fileReader.readFiles(user, Filter.SHARED_WITH_ME), input -> input.id == file)) {
+            throw new AccessDenied("asserting");
+        }
         checkHasAccessToFile(user, lab, file);
         reuseFile(user, lab, file);
     }
 
     public long projectByUser(long user, long lab) {
-        return projectManagement.createProject(user, new ProjectManagementTemplate.ProjectInfoTemplate(lab, generateString(), "DNA", "Some proj"));
+        return projectManagement.createProject(user,
+            new ProjectManagementTemplate.ProjectInfoTemplate(lab, generateString(), "DNA", "Some proj")
+        );
     }
 
     public long createKateInLab2() {
@@ -65,12 +64,7 @@ abstract class AbstractSharingTest extends AbstractTest {
 
     public boolean isGroupMember(long groupOwner, long group, final long testUser) {
         final DetailsReaderTemplate.GroupItemTemplate groupItem = detailsReader.readGroup(groupOwner, group);
-        return Iterables.any(groupItem.members, new Predicate<DetailsReaderTemplate.MemberItemTemplate>() {
-            @Override
-            public boolean apply(DetailsReaderTemplate.MemberItemTemplate input) {
-                return Long.valueOf(testUser).equals(input.id);
-            }
-        });
+        return Iterables.any(groupItem.members, input -> Long.valueOf(testUser).equals(input.id));
     }
 
     public long createKateInLab2and3() {
