@@ -16,28 +16,25 @@ import javax.inject.Inject;
  */
 @Component
 @Scope("prototype")
-public class LabRequestDetailsReaderHelper<LAB_CREATION_ENTITY extends LabCreationRequestTemplate, LAB_CREATION extends LabItemTemplate>
-        extends AbstractReaderHelper<LAB_CREATION_ENTITY, LAB_CREATION, LabItemTemplate> {
+public class LabRequestDetailsReaderHelper<LAB_CREATION_ENTITY extends LabCreationRequestTemplate,
+    LAB_CREATION extends LabItemTemplate>
+    extends AbstractReaderHelper<LAB_CREATION_ENTITY, LAB_CREATION, LabItemTemplate> {
 
     @Inject
     private LabCreationRequestRepositoryTemplate<LAB_CREATION_ENTITY> labCreationRequestRepository;
 
     @Override
     public Function<LAB_CREATION_ENTITY, LabItemTemplate> getDefaultTransformer() {
-        return new Function<LAB_CREATION_ENTITY, LabItemTemplate>() {
-            @Override
-            public LabItemTemplate apply(LAB_CREATION_ENTITY request) {
-
-                return new LabItemTemplate(request.getId(),
-                        request.getLabName(),
-                        request.getInstitutionUrl(),
-                        request.getHeadData().getFirstName(),
-                        request.getHeadData().getLastName(),
-                        request.getHeadData().getEmail(),
-                        request.getContactEmail(),
-                        request.getLastModification());
-            }
-        };
+        return request -> new LabItemTemplate(
+            request.getId(),
+            request.getLabName(),
+            request.getInstitutionUrl(),
+            request.getHeadData().getFirstName(),
+            request.getHeadData().getLastName(),
+            request.getHeadData().getEmail(),
+            request.getContactEmail(),
+            request.getLastModification()
+        );
     }
 
     public SingleResultBuilder<LAB_CREATION_ENTITY, LAB_CREATION> readRequest(long request) {

@@ -1,0 +1,60 @@
+<div class="experiment-design-from-csv-popup">
+    <button class="btn secondary-action" ng-click="showDialog()">
+        Load from csv-file
+    </button>
+
+    <div id="experiment-design-from-csv-popup" class="modal hide" role="dialog">
+        <div class="modal-holder">
+            <div class="modal-frame">
+                <div class="modal-header">
+                    <a class='close' ng-click="closeDialog()">&nbsp;</a>
+                    <h3>Load experiment design</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="dialog-container">
+                        <div class="control-group exp-design-csv-file">
+                            <span class="select-file-btn btn secondary-action">
+                                Browse&hellip;
+                                <input file-content="readFile" type="file" accept=".csv" id="exp-design-csv-file-input">
+                            </span>
+                            <label ng-show="!vm.filename" for="exp-design-csv-file-input">Choose a *.csv file</label>
+                            <span ng-show="vm.filename" class="selected-file-name">{{vm.filename}}</span>
+                        </div>
+                        <p ng-repeat="error in vm.errors"
+                           class="text-error">
+                            {{error}}
+                        </p>
+                        <table class="exp-design-csv-columns table-hover">
+                            <tr ng-repeat="column in vm.columns">
+                                <td>{{$index + 1}}</td>
+                                <td class="column-name" ng-class="{'column-ignore': column.isIgnored()}">
+                                    <span title="{{column.name}}" ng-class="{'annotation-mark': column.isAnnotation()}">{{column.name}}</span>
+                                </td>
+                                <td>
+                                    <select ng-model="column.type"
+                                    <!--ui-select2="{minimumResultsForSearch: 5}" class="dialog-select">-->
+                                        <option ng-repeat="type in vm.types"
+                                                ng-selected="type==column.type"
+                                                ng-disabled="isMappingKeyOptionDisabled(type, column)"
+                                                value="{{type}}">{{type}}</option>
+                                    </select>
+                                </td>
+                                <td ng-class="{'column-hidden': !column.isKey()}">
+                                    <select ng-model="column.mappedKey"
+                                            ui-select2="{minimumResultsForSearch: 5}" class="dialog-select">
+                                        <option ng-repeat="key in vm.keys">{{key}}</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn secondary-action" ng-click="finishMapping()">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

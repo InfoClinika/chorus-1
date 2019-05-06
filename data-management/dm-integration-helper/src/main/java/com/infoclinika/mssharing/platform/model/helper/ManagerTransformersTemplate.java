@@ -9,6 +9,8 @@ import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTempla
  */
 public interface ManagerTransformersTemplate {
 
-    Function<ExperimentManagementTemplate.AnnotationTemplate, AnnotationTemplate> annotationTransformer(final boolean persist);
+    Function<ExperimentManagementTemplate.AnnotationTemplate, AnnotationTemplate> annotationTransformer(
+        boolean persist
+    );
 
 }

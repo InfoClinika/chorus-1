@@ -1,6 +1,9 @@
-(function() {
-    "use strict";
+"use strict";
+(function () {
 
-    angular.module("instrument-models", ["dashboard-common-directives", "front-end", "instruments-back", "instrument-models-back"]);
+    angular.module(
+        "instrument-models",
+        ["dashboard-common-directives", "front-end", "instruments-back", "instrument-models-back"]
+    );
 
 })();

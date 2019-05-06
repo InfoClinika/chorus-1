@@ -1,11 +1,11 @@
 package com.infoclinika.mssharing.model.internal.helper;
 
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.infoclinika.mssharing.model.helper.CloudFileHelper;
 import com.infoclinika.mssharing.model.helper.StoredObjectPaths;
-import org.apache.log4j.Logger;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -16,35 +16,38 @@ import javax.inject.Inject;
 @Component
 public class CloudFileHelperImpl implements CloudFileHelper {
 
-    private final static Logger LOGGER = Logger.getLogger(CloudFileHelperImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CloudFileHelperImpl.class);
 
     @Inject
     private StoredObjectPaths storedObjectPaths;
+    @Inject
+    private CloudStorageClientsProvider cloudStorageClientsProvider;
 
     @Override
     public long getFileSize(String fileKey) {
 
-        final String amazonKey = storedObjectPaths.getAmazonKey();
-        final String amazonSecret = storedObjectPaths.getAmazonSecret();
-        final BasicAWSCredentials credentials = new BasicAWSCredentials(amazonKey, amazonSecret);
-        final AmazonS3 amazonS3 = new AmazonS3Client(credentials);
+        final AmazonS3 amazonS3 = cloudStorageClientsProvider.getAmazonS3Client();
 
         try {
             return amazonS3.getObjectMetadata(
-                    storedObjectPaths.getRawFilesBucket(),
-                    fileKey
+                storedObjectPaths.getRawFilesBucket(),
+                fileKey
             ).getContentLength();
-        } catch (Exception ignore) {
-            LOGGER.warn("Couldn't get file from active bucket. Will try archive bucket. File path: " + fileKey, ignore);
+        } catch (Exception e) {
+            LOGGER.warn(
+                "Couldn't get file from active bucket. Will try archive bucket. File path: {}",
+                fileKey,
+                e
+            );
         }
 
         try {
             return amazonS3.getObjectMetadata(
-                    storedObjectPaths.getArchiveBucket(),
-                    fileKey
+                storedObjectPaths.getArchiveBucket(),
+                fileKey
             ).getContentLength();
-        } catch (Exception ignore) {
-            LOGGER.warn("Couldn't get file from archive bucket either. File path: " + fileKey, ignore);
+        } catch (Exception e) {
+            LOGGER.warn("Couldn't get file from archive bucket either. File path: {}", fileKey, e);
         }
 
         throw new RuntimeException("Couldn't get file size. File path: " + fileKey);

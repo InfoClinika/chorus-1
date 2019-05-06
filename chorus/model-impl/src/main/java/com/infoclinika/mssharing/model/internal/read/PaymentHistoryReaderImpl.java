@@ -12,9 +12,9 @@ import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.services.billing.rest.api.BillingService;
 import com.infoclinika.mssharing.services.billing.rest.api.model.DailyUsageLine;
 import com.infoclinika.mssharing.services.billing.rest.api.model.HistoryForMonthReference;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
@@ -52,14 +52,14 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
     private LabPaymentAccountRepository labPaymentAccountRepository;
     @Inject
     private FeatureLogRepository featureLogRepository;
-    @Resource(name = "billingRestService")
+    @Resource(name = "billingService")
     private BillingService billingService;
     @Inject
     private Transformers transformers;
     @Inject
     private RuleValidator ruleValidator;
 
-    private static final Logger LOG = Logger.getLogger(PaymentHistoryReaderImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PaymentHistoryReaderImpl.class);
 
     @Override
     public HistoryForLab readAll(long actor, long lab) {
@@ -79,8 +79,9 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
         ImmutableSortedSet<HistoryForMonth> months = groupByMonth(copyOf(HISTORY_LINES_BY_DATE_REVERSED, lines));
         final LabPaymentAccount byLab = labPaymentAccountRepository.findByLab(lab);
         return new HistoryForLab(labRepository.findOne(lab).getName(),
-                billingService.calculateRoundedPriceByUnscaled(byLab.getStoreBalance(), byLab.getScaledToPayValue()),
-                months, false);
+            billingService.calculateRoundedPriceByUnscaled(byLab.getStoreBalance(), byLab.getScaledToPayValue()),
+            months, false
+        );
     }
 
     @Override
@@ -89,7 +90,8 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
             throw new AccessDenied(String.format("User {%d} has not permission on lab {%d}", actor, lab));
         }
         List<StoreLogEntry> storeLogEntries = storeCreditLogEntryRepository.findInByLab(lab);
-        Collection<PaymentHistoryLine> lines = Collections2.transform(storeLogEntries, transformers.storeHistoryLineTransformFunction);
+        Collection<PaymentHistoryLine> lines =
+            Collections2.transform(storeLogEntries, transformers.storeHistoryLineTransformFunction);
         return groupByMonth(copyOf(HISTORY_LINES_BY_DATE_REVERSED, lines));
     }
 
@@ -116,58 +118,85 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
         List<StoreLogEntry> storeInLogEntries = storeCreditLogEntryRepository.findInByLab(lab, fromTime, toTime);
         Collection<PaymentHistoryLine> lines = new HashSet<>();
         lines.addAll(Collections2.transform(storeInLogEntries, transformers.storeHistoryLineTransformFunction));
-        final Collection<? extends PaymentHistoryLine> paymentHistoryLines = readHistoryReversed(lab, previousCount, nextCount);
+        final Collection<? extends PaymentHistoryLine> paymentHistoryLines =
+            readHistoryReversed(lab, previousCount, nextCount);
         lines.addAll(paymentHistoryLines);
 
         ImmutableSortedSet<HistoryForMonth> months = groupByMonth(copyOf(HISTORY_LINES_BY_DATE_REVERSED, lines));
 
         return new HistoryForLab(labRepository.findOne(lab).getName(),
-                billingService.calculateRoundedPriceByUnscaled(byLab.getStoreBalance(), byLab.getScaledToPayValue()),
-                months, Iterables.getLast(paymentHistoryLines).hasNext);
+            billingService.calculateRoundedPriceByUnscaled(byLab.getStoreBalance(), byLab.getScaledToPayValue()),
+            months, Iterables.getLast(paymentHistoryLines).hasNext
+        );
     }
 
     @Override
-    public Optional<HistoryForMonthReference> readMonthsReferences(long userId, long lab, Date month) {
-        return Optional.ofNullable(billingService.readMonthsReferences(userId, lab, month.getTime()));
+    public HistoryForMonthReference readMonthReference(long userId, long lab, Date month) {
+        return billingService.readMonthReference(userId, lab, month.getTime());
     }
 
     private Collection<? extends PaymentHistoryLine> readHistoryReversed(long lab, long previousCount, long nextCount) {
         ImmutableSortedSet.Builder<PaymentHistoryLine> invoices = orderedBy(HISTORY_LINES_BY_DATE_REVERSED);
 
-        LOG.debug(String.format("Reading history for lab {%d}. Previous count: {%d}, next: {%d}", lab, previousCount, nextCount));
+        LOGGER.debug(
+
+            "Reading history for lab {}. Previous count: {}, next: {}",
+            lab,
+            previousCount,
+            nextCount
+        );
         final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
 
         Date current = getPrevDay(new Date(), (int) previousCount);
-        final Date endLoggingDate = new DateTime(forTimeZone(transformers.serverTimezone)).minusMonths(1).dayOfMonth().withMinimumValue().millisOfDay().withMinimumValue().toDate();
+        final Date endLoggingDate = new DateTime(forTimeZone(transformers.serverTimezone)).minusMonths(1)
+            .dayOfMonth()
+            .withMinimumValue()
+            .millisOfDay()
+            .withMinimumValue()
+            .toDate();
         final Date endDate = getPrevDay(new Date(), (int) (previousCount + nextCount));
         long balance = 0;
 
         do {
             final Date prevDay = getPrevDay(current);
-            LOG.info(String.format("Reading daily history from {%s} to {%s}", prevDay, current));
+            LOGGER.info(String.format("Reading daily history from {%s} to {%s}", prevDay, current));
 
             final long fBalance = balance;
             final Date fCurrent = current;
 
             final long dayInMls = middleDate(prevDay, fCurrent).getTime();
-            LOG.info("Going to get daily usage line for " + dayInMls);
+            LOGGER.info("Going to get daily usage line for {}", dayInMls);
             final DailyUsageLine dailyUsageLine = nullIfEmpty(billingService.getDailyUsageLine(lab, dayInMls));
-            LOG.info("Got result: " + dailyUsageLine);
+            LOGGER.info("Got result: {}", dailyUsageLine);
             final PaymentHistoryLine paymentHistoryLine = ofNullable(dailyUsageLine)
-                    .map(line -> createPaymentHistoryLine(line, fCurrent, prevDay, fBalance, endLoggingDate.before(endDate)))
-                    .orElseGet(() -> createPaymentHistoryLine(fCurrent, prevDay, lab, fBalance, endLoggingDate.before(endDate)));
+                .map(line -> createPaymentHistoryLine(
+                    line,
+                    fCurrent,
+                    prevDay,
+                    fBalance,
+                    endLoggingDate.before(endDate)
+                ))
+                .orElseGet(() -> createPaymentHistoryLine(
+                    fCurrent,
+                    prevDay,
+                    lab,
+                    fBalance,
+                    endLoggingDate.before(endDate)
+                ));
 
             invoices.add(paymentHistoryLine);
 
             balance = paymentHistoryLine.balance;
             current = prevDay;
 
-            LOG.info("current:"  + current);
-            LOG.info("endDate:"  + endDate);
-            LOG.info("endLoggingDate:"  + endLoggingDate);
-            LOG.info("account.getAccountCreationDate():"  + account.getAccountCreationDate());
-        }
-        while (current.after(endDate) && current.after(endLoggingDate) && current.after(account.getAccountCreationDate()));
+            LOGGER.info("current: {}", current);
+            LOGGER.info("endDate: {}", endDate);
+            LOGGER.info("endLoggingDate: {}", endLoggingDate);
+            LOGGER.info("account.getAccountCreationDate(): {}", account.getAccountCreationDate());
+        } while (current.after(endDate)
+            && current.after(endLoggingDate)
+            &&
+            current.after(account.getAccountCreationDate()));
 
         return invoices.build();
     }
@@ -196,57 +225,70 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
 
             final DailyUsageLine dailyUsageLine = nullIfEmpty(billingService.getDailyUsageLine(lab, current.getTime()));
             final PaymentHistoryLine paymentHistoryLine = ofNullable(dailyUsageLine)
-                    .map(line -> createPaymentHistoryLine(line, fCurrent, nextDay, fBalance, true))
-                    .orElseGet(() -> createPaymentHistoryLine(fCurrent, nextDay, lab, fBalance, true));
+                .map(line -> createPaymentHistoryLine(line, fCurrent, nextDay, fBalance, true))
+                .orElseGet(() -> createPaymentHistoryLine(fCurrent, nextDay, lab, fBalance, true));
 
             invoices.add(paymentHistoryLine);
 
             balance = paymentHistoryLine.balance;
             current = nextDay;
-        }
-        while (current.before(today));
+        } while (current.before(today));
 
         return invoices.build();
     }
 
-    private PaymentHistoryLine createPaymentHistoryLine(DailyUsageLine line, Date fCurrent, Date nextDay, long fBalance, boolean hasNext) {
+    private PaymentHistoryLine createPaymentHistoryLine(
+        DailyUsageLine line,
+        Date current,
+        Date nextDay,
+        long balance,
+        boolean hasNext
+    ) {
         return new PaymentHistoryLine(
-                fCurrent,
-                nextDay,
-                transformers.historyLineDateFormat.format(fCurrent),
-                FEATURES_USAGE,
-                line.amount,
-                fromNullable(line.balance).or(fBalance),
-                USAGE,
-                line.timeZoneId,
-                hasNext
+            current,
+            nextDay,
+            transformers.historyLineDateFormat.format(current),
+            FEATURES_USAGE,
+            line.amount,
+            fromNullable(line.balance).or(balance),
+            USAGE,
+            line.timeZoneId,
+            hasNext
         );
     }
 
-    private PaymentHistoryLine createPaymentHistoryLine(Date fCurrent, Date nextDay, long lab, long fBalance, boolean hasNext) {
-        final long dayInMls = middleDate(fCurrent, nextDay).getTime();
-        LOG.info("Going to calculate total pay for lab for day: " + dayInMls);
+    private PaymentHistoryLine createPaymentHistoryLine(
+        Date current,
+        Date nextDay,
+        long lab,
+        long balance,
+        boolean hasNext
+    ) {
+        final long dayInMls = middleDate(current, nextDay).getTime();
+        LOGGER.info("Going to calculate total pay for lab for day: {}", dayInMls);
         final long toPay = billingService.calculateTotalToPayForLabForDay(lab, dayInMls);
-        final Long currentBalance = fromNullable(billingService.calculateStoreBalanceForDay(lab, dayInMls)).or(fBalance);
+        final Long storageBalance = billingService.calculateStoreBalanceForDay(lab, dayInMls);
+        final Long currentBalance = fromNullable(storageBalance).or(balance);
 
         return new PaymentHistoryLine(
-                fCurrent,
-                nextDay,
-                transformers.historyLineDateFormat.format(fCurrent),
-                FEATURES_USAGE,
-                toPay,
-                currentBalance,
-                USAGE,
-                transformers.historyLineDateFormat.getTimeZone().getID(),
-                hasNext);
+            current,
+            nextDay,
+            transformers.historyLineDateFormat.format(current),
+            FEATURES_USAGE,
+            toPay,
+            currentBalance,
+            USAGE,
+            transformers.historyLineDateFormat.getTimeZone().getID(),
+            hasNext
+        );
     }
 
     private Date getNextDay(Date date) {
         return new DateTime(date)
-                .withZone(forTimeZone(transformers.serverTimezone))
-                .plusDays(1)
-                .withTimeAtStartOfDay()
-                .toDate();
+            .withZone(forTimeZone(transformers.serverTimezone))
+            .plusDays(1)
+            .withTimeAtStartOfDay()
+            .toDate();
     }
 
     private Date getPrevDay(Date date) {
@@ -255,15 +297,16 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
 
     private Date getPrevDay(Date date, int count) {
         return new DateTime(date)
-                .withZone(forTimeZone(transformers.serverTimezone))
-                .minusDays(count)
-                .withTime(23, 59, 59, 999) // End of day
-                .toDate();
+            .withZone(forTimeZone(transformers.serverTimezone))
+            .minusDays(count)
+            .withTime(23, 59, 59, 999) // End of day
+            .toDate();
     }
 
     private ImmutableSortedSet<HistoryForMonth> groupByMonth(ImmutableSortedSet<PaymentHistoryLine> lines) {
 
-        final ImmutableSortedSet.Builder<HistoryForMonth> historyForMonths = ImmutableSortedSet.orderedBy(historyForMonthComparator);
+        final ImmutableSortedSet.Builder<HistoryForMonth> historyForMonths =
+            ImmutableSortedSet.orderedBy(historyForMonthComparator);
 
         final ImmutableListMultimap<Integer, PaymentHistoryLine> groupedByMonth = Multimaps.index(lines, line -> {
             return getServerTime(line.date).getMonthOfYear();
@@ -274,8 +317,10 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
             final Collection<PaymentHistoryLine> paymentHistoryLines = linesEntries.getValue();
             final DateTime date = getServerTime(paymentHistoryLines.iterator().next().date);
 
-            historyForMonths.add(new HistoryForMonth(date.toLocalDate().toDate(),
-                    ImmutableSortedSet.copyOf(HISTORY_LINES_BY_DATE_REVERSED, paymentHistoryLines)));
+            historyForMonths.add(new HistoryForMonth(
+                date.toLocalDate().toDate(),
+                ImmutableSortedSet.copyOf(HISTORY_LINES_BY_DATE_REVERSED, paymentHistoryLines)
+            ));
 
         }
 
@@ -288,7 +333,7 @@ public class PaymentHistoryReaderImpl implements PaymentHistoryReader {
 
     @Nullable
     private static DailyUsageLine nullIfEmpty(DailyUsageLine dailyUsageLine) {
-        if (dailyUsageLine == null || dailyUsageLine.labId < 1){
+        if (dailyUsageLine == null || dailyUsageLine.labId < 1) {
             return null;
         }
         return dailyUsageLine;

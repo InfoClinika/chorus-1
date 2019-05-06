@@ -1,6 +1,5 @@
 package com.infoclinika.sso.account.linking;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
@@ -10,10 +9,10 @@ import com.infoclinika.sso.model.read.UserDetailsReader;
 import com.infoclinika.sso.model.read.UserDetailsReader.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -25,16 +24,19 @@ import static com.google.common.collect.Sets.newHashSet;
  */
 @Service
 public class LinkingDetailsProviderImpl implements LinkingDetailsProvider {
-    private static final String USER_NOT_FOUND_MESSAGE = "User is not saved in system(type: %s, username: %s), it is illegal state. Please debug.";
+    private static final String USER_NOT_FOUND_MESSAGE =
+        "User is not saved in system(type: %s, username: %s), it is illegal state. Please debug.";
     @Inject
     private UserDetailsReader userDetailsReader;
 
     @Override
     public boolean isAccountLinked(UserCredentialInForm credentials) {
-        final Optional<UserDetails> details = userDetailsReader.getDetails(credentials.getApplicationType(), credentials.getUsername());
+        final Optional<UserDetails> details =
+            userDetailsReader.getDetails(credentials.getApplicationType(), credentials.getUsername());
 
         checkState(details.isPresent(), USER_NOT_FOUND_MESSAGE,
-                credentials.getUsername(), credentials.getApplicationType());
+            credentials.getUsername(), credentials.getApplicationType()
+        );
 
         final UserDetails user = details.get();
         return user.linked;
@@ -42,10 +44,12 @@ public class LinkingDetailsProviderImpl implements LinkingDetailsProvider {
 
     @Override
     public LinkingUserDetails getUserDetailsForLinking(UserCredentialInForm credentials) {
-        final Optional<UserDetails> details = userDetailsReader.getDetails(credentials.getApplicationType(), credentials.getUsername());
+        final Optional<UserDetails> details =
+            userDetailsReader.getDetails(credentials.getApplicationType(), credentials.getUsername());
 
         checkState(details.isPresent(), USER_NOT_FOUND_MESSAGE,
-                credentials.getUsername(), credentials.getApplicationType());
+            credentials.getUsername(), credentials.getApplicationType()
+        );
 
         final UserDetails user = details.get();
 
@@ -54,14 +58,12 @@ public class LinkingDetailsProviderImpl implements LinkingDetailsProvider {
     }
 
     private static List<ApplicationType> extractNotLinkedApplications(UserDetails user) {
-        final Set<ApplicationType> linkedApplications = newHashSet(Collections2.transform(user.credentials, new Function<UserDetails.ApplicationCredential, ApplicationType>() {
-            @Nullable
-            @Override
-            public ApplicationType apply(UserDetails.ApplicationCredential input) {
-                return input.applicationType;
-            }
-        }));
-        final List<ApplicationType> applicationsToLink = newArrayList(Sets.difference(newHashSet(ApplicationType.values()), linkedApplications));
+        final Set<ApplicationType> linkedApplications = newHashSet(Collections2
+            .transform(
+                user.credentials, i -> Objects.requireNonNull(i).applicationType
+            ));
+        final List<ApplicationType> applicationsToLink =
+            newArrayList(Sets.difference(newHashSet(ApplicationType.values()), linkedApplications));
         Collections.sort(applicationsToLink);
         return applicationsToLink;
     }

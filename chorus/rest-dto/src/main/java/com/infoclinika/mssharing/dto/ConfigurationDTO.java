@@ -26,7 +26,8 @@ public class ConfigurationDTO {
     private String folderToMoveFiles;
     private boolean started;
 
-    public ConfigurationDTO(){}
+    public ConfigurationDTO() {
+    }
 
     public ConfigurationDTO(long id,
                             String name,

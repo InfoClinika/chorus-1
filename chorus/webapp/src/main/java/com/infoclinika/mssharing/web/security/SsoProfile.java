@@ -6,12 +6,7 @@ package com.infoclinika.mssharing.web.security;
  * @author Andrii Loboda
  */
 public enum SsoProfile {
-    SSO_PANORAMA("sso-enabled"),
-    SSO_DISABLED("sso-disabled"),
-    SSO_CELGENE("sso-celgene"),
-    SSO_BMS("sso-bms"),
-    SSO_MERCK("sso-merck"),
-    SSO_MERCK_PROD("sso-merck-prod");
+    SSO_DISABLED("sso-disabled");
 
     private final String profileName;
 

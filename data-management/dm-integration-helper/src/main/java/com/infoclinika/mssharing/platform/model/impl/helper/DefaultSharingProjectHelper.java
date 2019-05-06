@@ -24,19 +24,12 @@ import static com.google.common.collect.FluentIterable.from;
  * @author Herman Zamula
  */
 @Transactional(readOnly = true)
-public abstract class DefaultSharingProjectHelper<USER extends UserTemplate, GROUP extends GroupTemplate> implements SharingProjectHelperTemplate {
+public abstract class DefaultSharingProjectHelper<USER extends UserTemplate, GROUP extends GroupTemplate>
+    implements SharingProjectHelperTemplate {
 
-    private final Function<USER, UserDetails> userTransformer = new Function<USER, UserDetails>() {
-        public UserDetails apply(USER input) {
-            return transformUser(input);
-        }
-    };
-    private final Function<GROUP, GroupDetails> groupTransformer = new Function<GROUP, GroupDetails>() {
-        @Override
-        public GroupDetails apply(GROUP input) {
-            return transformGroup(input);
-        }
-    };
+    private final Function<USER, UserDetails> userTransformer = input -> transformUser(input);
+    private final Function<GROUP, GroupDetails> groupTransformer = input -> transformGroup(input);
+
     @Inject
     protected UserRepositoryTemplate<USER> userRepository;
     @Inject
@@ -49,27 +42,24 @@ public abstract class DefaultSharingProjectHelper<USER extends UserTemplate, GRO
 
         final List<USER> all = userRepository.findAll();
         return from(all)
-                .transform(userTransformer)
-                .toList();
+            .transform(userTransformer)
+            .toList();
 
     }
 
     @Override
     public List<UserDetails> getAvailableUsersStartingWith(String query) {
-        throw new NotImplementedException("Method 'DefaultSharingProjectHelper#getAvailableUsersStartingWith(String query)' is not implemented yet");
+        throw new NotImplementedException(
+            "Method 'DefaultSharingProjectHelper#getAvailableUsersStartingWith(String query)' is not implemented yet"
+        );
     }
 
     @Override
     public ImmutableSortedSet<GroupDetails> getAvailableGroups(long actor) {
 
         return from(groupRepository.findByOwner(actor, true))
-                .transform(groupTransformer)
-                .toSortedSet(new Comparator<GroupDetails>() {
-                    @Override
-                    public int compare(GroupDetails o1, GroupDetails o2) {
-                        return o1.name.compareTo(o2.name);
-                    }
-                });
+            .transform(groupTransformer)
+            .toSortedSet(Comparator.comparing(o -> o.name));
 
     }
 
@@ -79,8 +69,8 @@ public abstract class DefaultSharingProjectHelper<USER extends UserTemplate, GRO
         final ProjectTemplate project = checkNotNull(experimentRepository.findOne(experiment)).getProject();
         //noinspection unchecked
         return from(project.getSharing().getAllCollaborators().keySet())
-                .transform(userTransformer)
-                .toList();
+            .transform(userTransformer)
+            .toList();
 
     }
 

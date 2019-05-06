@@ -59,11 +59,13 @@ public class UserManagementShouldTest extends AbstractTest {
         final String chorusSecretKey = "fakechorus_secret_key_for_andrey";
 
         final long userID = userManagement.addApplicationForUser(
-                Optional.<Long>absent(),
-                CHORUS,
-                chorusUsername,
-                chorusSecretKey);
-        final long userIDAfterLinking = userManagement.addApplicationForUser(Optional.of(userID), PANORAMA, panoramaUsername, panoramaSecretKey);
+            Optional.absent(),
+            CHORUS,
+            chorusUsername,
+            chorusSecretKey
+        );
+        final long userIDAfterLinking =
+            userManagement.addApplicationForUser(Optional.of(userID), PANORAMA, panoramaUsername, panoramaSecretKey);
 
         assertEquals(userID, userIDAfterLinking, "ID of user shouldn't change after linking.");
         final Optional<UserDetails> userDetailsOpt = userDetailsReader.getDetails(userIDAfterLinking);
@@ -79,16 +81,18 @@ public class UserManagementShouldTest extends AbstractTest {
         final String chorusSecretKey = "fakechorus_secret_key_for_andrey";
 
         final long userID = userManagement.addApplicationForUser(
-                Optional.<Long>absent(),
-                CHORUS,
-                chorusUsername,
-                chorusSecretKey);
+            Optional.<Long>absent(),
+            CHORUS,
+            chorusUsername,
+            chorusSecretKey
+        );
 
         final long userIDAfterSecond = userManagement.addApplicationForUser(
-                Optional.<Long>absent(),
-                CHORUS,
-                chorusUsername,
-                "new secret key");
+            Optional.absent(),
+            CHORUS,
+            chorusUsername,
+            "new secret key"
+        );
 
 
         assertEquals(userID, userIDAfterSecond, "ID of user shouldn't change after linking.");
@@ -113,13 +117,17 @@ public class UserManagementShouldTest extends AbstractTest {
         final String chorusSecretKey = "fakechorus_secret_key_for_andrey";
 
         final long andriiID = userManagement.addApplicationForUser(
-                Optional.<Long>absent(),
-                CHORUS,
-                chorusUsername,
-                chorusSecretKey);
+            Optional.<Long>absent(),
+            CHORUS,
+            chorusUsername,
+            chorusSecretKey
+        );
         userManagement.addApplicationForUser(Optional.of(andriiID), PANORAMA, panoramaUsername, panoramaSecretKey);
 
-        final long yevhenID = userManagement.addApplicationForUser(Optional.<Long>absent(), PANORAMA, "yevhen.panko@fakepanorama.com", "fakepanorama_secret_key_for_yevhen.panko");
+        final long yevhenID = userManagement
+            .addApplicationForUser(Optional.<Long>absent(), PANORAMA, "yevhen.panko@fakepanorama.com",
+                "fakepanorama_secret_key_for_yevhen.panko"
+            );
         userManagement.addApplicationForUser(Optional.of(yevhenID), CHORUS, chorusUsername, chorusSecretKey);
     }
 
@@ -132,13 +140,17 @@ public class UserManagementShouldTest extends AbstractTest {
         final String chorusSecretKey = "fakechorus_secret_key_for_andrey";
 
         final long andriiID = userManagement.addApplicationForUser(
-                Optional.<Long>absent(),
-                CHORUS,
-                chorusUsername,
-                chorusSecretKey);
+            Optional.<Long>absent(),
+            CHORUS,
+            chorusUsername,
+            chorusSecretKey
+        );
         userManagement.addApplicationForUser(Optional.of(andriiID), PANORAMA, panoramaUsername, panoramaSecretKey);
 
-        final long yevhenID = userManagement.addApplicationForUser(Optional.<Long>absent(), CHORUS, "yevhen.panko@fakechorus.com", "fakechorus_secret_key_for_yevhen.panko");
+        final long yevhenID = userManagement
+            .addApplicationForUser(Optional.<Long>absent(), CHORUS, "yevhen.panko@fakechorus.com",
+                "fakechorus_secret_key_for_yevhen.panko"
+            );
         userManagement.addApplicationForUser(Optional.of(yevhenID), PANORAMA, panoramaUsername, panoramaSecretKey);
     }
 
@@ -151,15 +163,12 @@ public class UserManagementShouldTest extends AbstractTest {
 
     @Test(expectedExceptions = NullPointerException.class)
     public void throw_exception_when_creating_user_with_null_app_type() {
-        userManagement.addApplicationForUser(Optional.<Long>absent(), null, "yevhen.panko@fakepanorama.com", "akepanorama_secret_key_for_yevhen.panko");
+        userManagement.addApplicationForUser(Optional.<Long>absent(), null, "yevhen.panko@fakepanorama.com",
+            "akepanorama_secret_key_for_yevhen.panko"
+        );
     }
 
     private static ApplicationCredential findChorusCredential(Iterable<ApplicationCredential> credentials) {
-        return Iterables.find(credentials, new Predicate<ApplicationCredential>() {
-            @Override
-            public boolean apply(ApplicationCredential input) {
-                return input.applicationType == CHORUS;
-            }
-        });
+        return Iterables.find(credentials, input -> input.applicationType == CHORUS);
     }
 }

@@ -22,12 +22,13 @@ public class ArchiveStorageUsage extends ChargeableItemUsage {
         super();
     }
 
-    public ArchiveStorageUsage(long lab, long user, long file1, long bytes, Date timestamp, String ownerName, String instrument,
-                               long price, String file) {
+    public ArchiveStorageUsage(long lab, long user, long file1, long bytes, Date timestamp, String ownerName,
+                               String instrument, long price, String file) {
         super(lab, user, file1, bytes, timestamp, ownerName, instrument, price, file);
     }
 
-    public ArchiveStorageUsage(long lab, long user, Long file, long bytes, long timestamp, String ownerName, String instrument, long price, String fileName, int hours, long balance) {
+    public ArchiveStorageUsage(long lab, long user, Long file, long bytes, long timestamp, String ownerName,
+                               String instrument, long price, String fileName, int hours, long balance) {
         super(lab, user, file, bytes, new Date(timestamp), ownerName, instrument, price, fileName);
         this.hours = hours;
         super.setBalance(balance);

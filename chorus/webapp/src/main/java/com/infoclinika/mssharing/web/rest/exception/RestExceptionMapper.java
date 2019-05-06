@@ -1,11 +1,12 @@
 package com.infoclinika.mssharing.web.rest.exception;
 
 import com.google.gson.Gson;
-import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.model.UploadLimitException;
 import com.infoclinika.mssharing.model.UploadUnavailable;
+import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.web.rest.RestExceptionType;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -16,12 +17,12 @@ import static com.google.common.collect.Maps.newHashMap;
 
 /**
  * @author timofey.kasyanov
- *         date: 07.05.2014
+ *     date: 07.05.2014
  */
 @Provider
 public class RestExceptionMapper implements ExceptionMapper<Exception> {
 
-    private static final Logger LOGGER = Logger.getLogger(RestExceptionMapper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestExceptionMapper.class);
 
     private final Map<Class<? extends Exception>, RestExceptionType> exceptionTypeMap = newHashMap();
     private final RestExceptionType defaultExceptionType = RestExceptionType.SERVER_ERROR;
@@ -39,17 +40,18 @@ public class RestExceptionMapper implements ExceptionMapper<Exception> {
 
         final Class<? extends Exception> exceptionClass = exception.getClass();
 
-        LOGGER.debug(" *** Exception occurred. Exception class: " + exceptionClass);
+        LOGGER.debug(" *** Exception occurred. Exception class: {}", exceptionClass);
 
         final RestExceptionType restExceptionType = exceptionTypeMap.containsKey(exceptionClass) ?
-                exceptionTypeMap.get(exceptionClass) :
-                defaultExceptionType;
-        final RestExceptionResponse responseEntity = new RestExceptionResponse(restExceptionType, exception.getMessage());
+            exceptionTypeMap.get(exceptionClass) :
+            defaultExceptionType;
+        final RestExceptionResponse responseEntity =
+            new RestExceptionResponse(restExceptionType, exception.getMessage());
 
         return Response
-                .serverError()
-                .entity(gson.toJson(responseEntity))
-                .build();
+            .serverError()
+            .entity(gson.toJson(responseEntity))
+            .build();
     }
 
     public static class RestExceptionResponse {

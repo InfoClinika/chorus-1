@@ -20,8 +20,8 @@ public interface UserDetailsReader {
         public final boolean linked;
         public final Set<ApplicationCredential> credentials;
 
-        public UserDetails(long ID, boolean linked, Set<ApplicationCredential> credentials) {
-            this.ID = ID;
+        public UserDetails(long id, boolean linked, Set<ApplicationCredential> credentials) {
+            this.ID = id;
             this.linked = linked;
             this.credentials = credentials;
         }
@@ -29,10 +29,10 @@ public interface UserDetailsReader {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                    .add("ID", ID)
-                    .add("linked", linked)
-                    .add("credentials", credentials)
-                    .toString();
+                .add("ID", ID)
+                .add("linked", linked)
+                .add("credentials", credentials)
+                .toString();
         }
 
         public static class ApplicationCredential {
@@ -48,12 +48,16 @@ public interface UserDetailsReader {
 
             @Override
             public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
+                if (this == o) {
+                    return true;
+                }
+                if (o == null || getClass() != o.getClass()) {
+                    return false;
+                }
                 ApplicationCredential that = (ApplicationCredential) o;
                 return Objects.equal(applicationType, that.applicationType) &&
-                        Objects.equal(username, that.username) &&
-                        Objects.equal(secretToken, that.secretToken);
+                    Objects.equal(username, that.username) &&
+                    Objects.equal(secretToken, that.secretToken);
             }
 
             @Override
@@ -64,9 +68,9 @@ public interface UserDetailsReader {
             @Override
             public String toString() {
                 return MoreObjects.toStringHelper(this)
-                        .add("applicationType", applicationType)
-                        .add("username", username)
-                        .toString();
+                    .add("applicationType", applicationType)
+                    .add("username", username)
+                    .toString();
             }
         }
 

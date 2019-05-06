@@ -10,21 +10,4 @@
     <beans profile="sso-disabled">
         <import resource="classpath:security-default.cfg.xml"/>
     </beans>
-    <beans profile="sso-panorama">
-        <import resource="classpath:security-sso.cfg.xml"/>
-        <import resource="chorus-auth-server.cfg.xml"/>
-    </beans>
-    <beans profile="sso-celgene">
-        <import resource="security-celgene.cfg.xml"/>
-    </beans>
-    <beans profile="sso-bms">
-        <import resource="security-bms.cfg.xml"/>
-    </beans>
-    <beans profile="sso-merck">
-        <import resource="security-merck.cfg.xml"/>
-    </beans>
-    <beans profile="sso-merck-prod">
-        <import resource="security-merck-prod.cfg.xml"/>
-    </beans>
-
 </beans>

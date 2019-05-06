@@ -27,7 +27,7 @@ import java.security.GeneralSecurityException;
  * @author andrii.loboda
  */
 public abstract class AbstractAuthenticationHandler<I extends Credential, C extends Credentials>
-        extends AbstractPac4jAuthenticationHandler {
+    extends AbstractPac4jAuthenticationHandler {
 
     /**
      * The pac4j profile creator used for authentication.
@@ -42,7 +42,8 @@ public abstract class AbstractAuthenticationHandler<I extends Credential, C exte
     protected abstract boolean supportsCredential(I credential);
 
     @Override
-    protected HandlerResult doAuthentication(final Credential credential) throws GeneralSecurityException, PreventedException {
+    protected HandlerResult doAuthentication(final Credential credential)
+        throws GeneralSecurityException, PreventedException {
         CommonHelper.assertNotNull("profileCreator", this.profileCreator);
 
         final C credentials = convertToPac4jCredentials((I) credential);
@@ -83,8 +84,8 @@ public abstract class AbstractAuthenticationHandler<I extends Credential, C exte
      * @throws GeneralSecurityException On authentication failure.
      * @throws PreventedException       On the indeterminate case when authentication is prevented.
      */
-    protected abstract C convertToPac4jCredentials(final I casCredential) throws GeneralSecurityException,
-            PreventedException;
+    protected abstract C convertToPac4jCredentials(final I casCredential)
+        throws GeneralSecurityException, PreventedException;
 
     /**
      * Return the CAS credential supported by this handler (to be converted in a pac4j credentials

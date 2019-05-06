@@ -304,37 +304,126 @@
                         id="ngs-experiment-type" class="dialog-select" data-placeholder="-- Select One --"
                         ui-select2-validator=""
                         required>
-                    <option value="DNA_SEQ">DNAseq</option>
-                    <option value="RNA_SEQ">RNAseq</option>
-
-                 <!--   <option value="{{experimentType.id}}" ng-repeat="experimentType in vm.experimentTypes">
-                        {{experimentType.name}}
-                    </option>-->
-                </select>
-            </div>
-            <div class="control-group span6" data-ng-class="{error: form.multiplexing.$error.uiSelect2Validator}">
-                <label class="control-label" for="labeledYesNo">Multiplexing<span
-                        class="error-message">is required to fill</span></label>
-                <select check-ui-selection ui-select2 ng-model="vm.selected.ngsRelatedInfo.multiplexing" name="multiplexing" style="width:70px"
-                        id="multiplexing" class="dialog-select"
-                        data-placeholder="-- Select One --" ui-select2-validator=""
-                        required>
-                <!--    <option value="{{true}}">Yes</option>
-                    <option value="{{false}}">No</option>-->
-                    <option value="{{multiplexingType.id}}" ng-repeat="multiplexingType in vm.multiplexingTypes">
-                        {{multiplexingType.name}}
+                    <option value="{{ngsExperimentType.id}}" ng-repeat="ngsExperimentType in vm.ngsExperimentTypes">
+                        {{ngsExperimentType.name}}
                     </option>
                 </select>
             </div>
         </div>
 
-        <div ng-show="vm.isMultiplexing()">
+        <div class="row-fluid ">
+            <div class="control-group span6" data-ng-class="{error: form.multiplexing.$error.uiSelect2Validator}">
+                <label class="control-label" for="labeledYesNo">Multiplexing<span
+                        class="error-message">is required to fill</span></label>
+                <select check-ui-selection ui-select2 ng-model="vm.selected.ngsRelatedInfo.multiplexing"
+                        name="multiplexing"
+                        id="multiplexing" class="dialog-select"
+                        data-placeholder="-- Select One --" ui-select2-validator=""
+                        required>
+                    <option value="{{multiplexingType.id}}" ng-repeat="multiplexingType in vm.multiplexingTypes">
+                        {{multiplexingType.name}}
+                    </option>
+                </select>
+            </div>
+
+            <div ng-show="vm.isMultiplexing()">
              <div class="row-fluid ">
                 <div class="control-group span6" data-ng-class="{error: form.technologyType.$error.uiSelect2Validator}">
                     <label class="control-label" for="number-of-samples">Number of Samples<span
                             class="error-message">is required</span></label>
                     <input id="number-of-samples" ng-model="vm.selected.ngsRelatedInfo.samplesCount" type="number"/>
                 </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-fluid">
+            <div class="control-group span6">
+                <label class="control-label" for="pairedEnd">
+                    Paired End</label>
+                <div class="input-prepend">
+                    <span class="add-on">
+                        <input type="checkbox" class="checkbox"
+                               ng-model="vm.pairedEndEnabled"
+                               ng-change="enablePairedEnd(peEnabled)">
+                    </span>
+                    <select id="pairedEnd" class="dialog-select"
+                            ui-select2="{ allowClear: true, minimumResultsForSearch: 10 }"
+                            check-ui-selection
+                            ng-model="vm.selected.ngsRelatedInfo.pairedEnd"
+                            ng-required="vm.pairedEndEnabled"
+                            ng-disabled="!vm.pairedEndEnabled">
+                        <option ng-repeat="pairedEndType in vm.pairedEndTypes"
+                                value="{{pairedEndType.id}}">{{pairedEndType.name}}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-fluid">
+            <div class="control-group span6" data-ng-class="{error: form.ngsExperimentPrep.$error.uiSelect2Validator}">
+                <label class="control-label" for="ngs-experiment-prep">Experiment Prep Method<span
+                        class="error-message">is required</span></label>
+                <select check-ui-selection ui-select2="{ minimumResultsForSearch: 10 }"
+                        ng-model="vm.selected.ngsRelatedInfo.experimentPrepMethod"
+                        name="ngsExperimentPrep"
+                        id="ngs-experiment-prep" class="dialog-select" data-placeholder="-- Select One --"
+                        ui-select2-validator=""
+                        required>
+                    <option value="{{experimentPrepMethod.id}}"
+                            ng-repeat="experimentPrepMethod in vm.experimentPrepMethods">
+                        {{experimentPrepMethod.name}}
+                    </option>
+                </select>
+            </div>
+
+            <div class="control-group span6" data-ng-class="{error: form.ngsLibraryPrep.$error.uiSelect2Validator}">
+                <label class="control-label" for="ngs-library-prep">Library Prep <span
+                        class="error-message">is required</span></label>
+                <select check-ui-selection ui-select2="{ minimumResultsForSearch: 10 }"
+                        ng-model="vm.selected.ngsRelatedInfo.libraryPrep"
+                        name="ngsLibraryPrep"
+                        id="ngs-library-prep" class="dialog-select" data-placeholder="-- Select One --"
+                        ui-select2-validator=""
+                        required>
+                    <option value="{{libraryPrepType.id}}" ng-repeat="libraryPrepType in vm.libraryPrepTypes">
+                        {{libraryPrepType.name}}
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row-fluid">
+
+            <div class="control-group span6" data-ng-class="{error: form.ntExtractionMethod.$error.uiSelect2Validator}">
+                <label class="control-label" for="nt-extraction-method">NT Extraction Method<span
+                        class="error-message">is required</span></label>
+                <select check-ui-selection ui-select2="{ minimumResultsForSearch: 10 }"
+                        ng-model="vm.selected.ngsRelatedInfo.ntExtractionMethod"
+                        name="ntExtractionMethod"
+                        id="nt-extraction-method" class="dialog-select" data-placeholder="-- Select One --"
+                        ui-select2-validator=""
+                        required>
+                    <option value="{{ntExtractionMethod.id}}"
+                            ng-repeat="ntExtractionMethod in vm.ntExtractionMethods">
+                        {{ntExtractionMethod.name}}
+                    </option>
+                </select>
+            </div>
+
+            <div class="control-group span6" data-ng-class="{error: form.ngsXenograft.$error.uiSelect2Validator}">
+                <label class="control-label" for="ngs-xenograft">Xenograft <span
+                        class="error-message">is required</span></label>
+                <select check-ui-selection ui-select2="{ minimumResultsForSearch: 10 }"
+                        ng-model="vm.selected.ngsRelatedInfo.xenograft"
+                        name="ngsXenograft"
+                        id="ngs-xenograft" class="dialog-select" data-placeholder="-- Select One --"
+                        ui-select2-validator=""
+                        required>
+                    <option value="{{yesNoType.id}}" ng-repeat="yesNoType in vm.allLabeledYesNoTypes">
+                        {{yesNoType.name}}
+                    </option>
+                </select>
             </div>
         </div>
     </div>

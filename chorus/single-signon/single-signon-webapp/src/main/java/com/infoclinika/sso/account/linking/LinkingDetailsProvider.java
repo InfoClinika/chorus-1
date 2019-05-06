@@ -19,11 +19,11 @@ public interface LinkingDetailsProvider {
 
     class LinkingUserDetails implements Serializable {
         private static final long serialVersionUID = -6978150321154360218L;
-        public final long ID;
+        public final long id;
         public final List<ApplicationType> applicationTypesToLink = newLinkedList();
 
-        public LinkingUserDetails(long ID, Collection<ApplicationType> applicationTypesToLink) {
-            this.ID = ID;
+        public LinkingUserDetails(long id, Collection<ApplicationType> applicationTypesToLink) {
+            this.id = id;
             this.applicationTypesToLink.addAll(applicationTypesToLink);
         }
 

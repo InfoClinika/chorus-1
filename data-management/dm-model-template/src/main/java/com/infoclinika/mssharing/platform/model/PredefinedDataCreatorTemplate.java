@@ -17,6 +17,7 @@ public interface PredefinedDataCreatorTemplate {
 
     void experimentType(String name, boolean allowed2DLC, boolean allowLabels);
 
-    long instrumentModel(String vendor, String type, String studyType, String name, boolean isFolderArchiveSupport, boolean isMultipleFiles, Set<FileExtensionItem> extensions);
+    long instrumentModel(String vendor, String type, String studyType, String name, boolean isFolderArchiveSupport,
+                         boolean isMultipleFiles, Set<FileExtensionItem> extensions);
 
 }

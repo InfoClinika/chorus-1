@@ -1,0 +1,50 @@
+<div class="usage-statistics-component">
+    <h2>Usage Statistics</h2>
+    <div class="statistics">
+        <div class="section wide">
+            <div class="frame">
+                <i class="icon users"></i>
+            </div>
+            <strong class="info" ng-bind="usage.usersCount | number"></strong>
+            <p>Users</p>
+        </div>
+        <div class="section">
+            <div class="frame">
+                <i class="icon volume"></i>
+            </div>
+            <strong class="info" ng-bind="usage.filesSize | sizeInTB"></strong>
+            <p>Data<br/>volume (TB)</p>
+        </div>
+        <div class="section">
+            <div class="frame">
+                <i class="icon files"></i>
+            </div>
+            <strong class="info" ng-bind="usage.filesCount | number"></strong>
+            <p>Data<br/>files</p>
+        </div>
+        <div class="section">
+            <div class="frame">
+                <i class="icon projects"></i>
+            </div>
+            <strong class="info" ng-bind="usage.projectsCount | number"></strong>
+            <p><span hide-if-private-installation>Public</span><br/>projects</p>
+        </div>
+        <div class="section">
+            <div class="frame">
+                <i class="icon experiments"></i>
+            </div>
+            <strong class="info" ng-bind="usage.experimentsCount | number"></strong>
+            <p><span hide-if-private-installation>Public</span><br/>Experiments</p>
+        </div>
+    </div>
+    <span ng-switch="ssoProperties.enabled">
+        <span ng-switch-when="false">
+            <a ng-show="!isUserLoggedIn()" href="register.html" class="btn-get-started">
+                <em class="arrow"></em><span>Get Started <strong>Now</strong></span>
+            </a>
+            <a ng-show="isUserLoggedIn()" href="dashboard.html" class="btn-get-started">
+                <em class="arrow"></em><span>Get Started <strong>Now</strong></span>
+            </a>
+        </span>
+    </span>
+</div>

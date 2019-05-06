@@ -1,23 +1,18 @@
 package com.infoclinika.mssharing.model.internal.write;
 
-import com.infoclinika.analysis.storage.cloud.CloudStorageFactory;
 import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import com.infoclinika.analysis.storage.cloud.CloudStorageService;
 import com.infoclinika.mssharing.model.helper.StoredObjectPaths;
 import com.infoclinika.mssharing.model.internal.RuleValidator;
-import com.infoclinika.mssharing.model.internal.entity.FileReference;
-import com.infoclinika.mssharing.model.internal.entity.NewsItem;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
 import com.infoclinika.mssharing.model.internal.entity.ad.Advertisement;
 import com.infoclinika.mssharing.model.internal.repository.AdvertisementRepository;
 import com.infoclinika.mssharing.model.internal.repository.ApplicationSettingsRepository;
-import com.infoclinika.mssharing.model.read.AdvertisementReader;
 import com.infoclinika.mssharing.model.write.AdvertisementManagement;
 import com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditions;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import java.util.Date;
 
 import static com.google.common.base.Preconditions.*;
@@ -37,31 +32,43 @@ public class AdvertisementManagementImpl implements AdvertisementManagement {
     private ApplicationSettingsRepository applicationSettingsRepository;
     @Inject
     private StoredObjectPaths storedObjectPaths;
-
-    private static final CloudStorageService CLOUD = CloudStorageFactory.service();
+    @Inject
+    private CloudStorageClientsProvider cloudStorageClientsProvider;
 
     @Override
     public long createAdvertisement(long actor, AdvertisementInfo advertisementInfo) {
-        ValidatorPreconditions.checkAccess(ruleValidator.hasAdminRights(actor), "User has no permission to create advertisement");
+        ValidatorPreconditions.checkAccess(
+            ruleValidator.hasAdminRights(actor),
+            "User has no permission to create advertisement"
+        );
         checkArgument(advertisementInfo.startDate.before(advertisementInfo.endDate));
         checkNotNull(advertisementInfo.title);
         checkNotNull(advertisementInfo.redirectLink);
         checkState(advertisementInfo.currentDate.before(advertisementInfo.endDate));
         checkNotNull(advertisementInfo.imageName);
-        checkNotNull(advertisementInfo.imageSize);
-        checkNotNull(advertisementInfo.isEnabled);
-        return advertisementRepository.save(new Advertisement(advertisementInfo.title, advertisementInfo.redirectLink, advertisementInfo.startDate, advertisementInfo.endDate, advertisementInfo.imageName, advertisementInfo.imageSize, advertisementInfo.isEnabled)).getId();
+
+        return advertisementRepository.save(new Advertisement(
+            advertisementInfo.title,
+            advertisementInfo.redirectLink,
+            advertisementInfo.startDate,
+            advertisementInfo.endDate,
+            advertisementInfo.imageName,
+            advertisementInfo.imageSize,
+            advertisementInfo.isEnabled
+        )).getId();
     }
 
     @Override
     public void updateAdvertisement(long actor, long id, AdvertisementInfo advertisementInfo) {
-        ValidatorPreconditions.checkAccess(ruleValidator.hasAdminRights(actor), "User has no permission to update advertisement");
+        ValidatorPreconditions.checkAccess(
+            ruleValidator.hasAdminRights(actor),
+            "User has no permission to update advertisement"
+        );
         final Advertisement advertisement = checkPresence(advertisementRepository.findOne(id));
         checkArgument(advertisementInfo.startDate.before(advertisementInfo.endDate));
         checkNotNull(advertisementInfo.title);
         checkNotNull(advertisementInfo.redirectLink);
         checkState(advertisementInfo.currentDate.before(advertisementInfo.endDate));
-        checkNotNull(advertisementInfo.isEnabled);
         advertisement.setTitle(advertisementInfo.title);
         advertisement.setStartRollDate(advertisementInfo.startDate);
         advertisement.setEndRollDate(advertisementInfo.endDate);
@@ -69,7 +76,7 @@ public class AdvertisementManagementImpl implements AdvertisementManagement {
         if (advertisementInfo.imageName != null) {
             advertisement.setImageName(advertisementInfo.imageName);
         }
-        if (advertisementInfo.imageSize != 0l) {
+        if (advertisementInfo.imageSize != 0L) {
             advertisement.setImageSize(advertisementInfo.imageSize);
         }
         advertisement.setEnabled(advertisementInfo.isEnabled);
@@ -78,11 +85,18 @@ public class AdvertisementManagementImpl implements AdvertisementManagement {
 
     @Override
     public void deleteAdvertisement(long actor, long advertisement) {
-        ValidatorPreconditions.checkAccess(ruleValidator.hasAdminRights(actor), "User has no permission to delete advertisement");
+        final CloudStorageService cloudStorageService = cloudStorageClientsProvider.getCloudStorageService();
+        ValidatorPreconditions.checkAccess(
+            ruleValidator.hasAdminRights(actor),
+            "User has no permission to delete advertisement"
+        );
         final Advertisement ad = advertisementRepository.findOne(advertisement);
         checkNotNull(ad);
         advertisementRepository.delete(ad);
-        CLOUD.deleteFromCloud(new CloudStorageItemReference(storedObjectPaths.getRawFilesBucket(), ad.getImageToDisplayRef()));
+        cloudStorageService.deleteFromCloud(new CloudStorageItemReference(
+            storedObjectPaths.getRawFilesBucket(),
+            ad.getImageToDisplayRef()
+        ));
     }
 
     @Override
@@ -91,8 +105,20 @@ public class AdvertisementManagementImpl implements AdvertisementManagement {
         checkNotNull(ad);
         final Date endDate = ad.getEndRollDate();
         final Date startDate = ad.getStartRollDate();
-        checkState(currentDate.before(endDate), "Ad %s is expired. Its endDate: %s, now: %s", ad.getId(), currentDate, endDate);
-        checkState(currentDate.after(startDate), "Ad %s is not in timeframe to display. Its startDate: %s, now: %s", ad.getId(), currentDate, startDate);
+        checkState(
+            currentDate.before(endDate),
+            "Ad %s is expired. Its endDate: %s, now: %s",
+            ad.getId(),
+            currentDate,
+            endDate
+        );
+        checkState(
+            currentDate.after(startDate),
+            "Ad %s is not in timeframe to display. Its startDate: %s, now: %s",
+            ad.getId(),
+            currentDate,
+            startDate
+        );
         ad.setDisplayedCount(ad.getDisplayedCount() + 1);
         advertisementRepository.save(ad);
     }
@@ -103,15 +129,30 @@ public class AdvertisementManagementImpl implements AdvertisementManagement {
         checkNotNull(ad);
         final Date endDate = ad.getEndRollDate();
         final Date startDate = ad.getStartRollDate();
-        checkState(currentDate.before(endDate), "Ad %s is expired. Its endDate: %s, now: %s", ad.getId(), currentDate, endDate);
-        checkState(currentDate.after(startDate), "Ad %s is not in timeframe to display. Its startDate: %s, now: %s", ad.getId(), currentDate, startDate);
+        checkState(
+            currentDate.before(endDate),
+            "Ad %s is expired. Its endDate: %s, now: %s",
+            ad.getId(),
+            currentDate,
+            endDate
+        );
+        checkState(
+            currentDate.after(startDate),
+            "Ad %s is not in timeframe to display. Its startDate: %s, now: %s",
+            ad.getId(),
+            currentDate,
+            startDate
+        );
         ad.setClickedCount(ad.getClickedCount() + 1);
         advertisementRepository.save(ad);
     }
 
     @Override
     public void specifyAdvertisementContent(long actor, long id, String contentUrl) {
-        ValidatorPreconditions.checkAccess(ruleValidator.hasAdminRights(actor), "User has no permission to update advertisement");
+        ValidatorPreconditions.checkAccess(
+            ruleValidator.hasAdminRights(actor),
+            "User has no permission to update advertisement"
+        );
         final Advertisement advertisement = checkPresence(advertisementRepository.findOne(id));
         advertisement.setImageToDisplayRef(contentUrl);
         advertisementRepository.save(advertisement);
@@ -119,8 +160,6 @@ public class AdvertisementManagementImpl implements AdvertisementManagement {
 
     @Override
     public long getMaxAttachmentSize() {
-        return applicationSettingsRepository.findMaxSize().value;
+        return applicationSettingsRepository.findMaxSize().getValue();
     }
-
-
 }

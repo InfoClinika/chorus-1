@@ -2,7 +2,7 @@ package com.infoclinika.mssharing.web.rest;
 
 /**
  * @author timofey.kasyanov
- *         date: 07.05.2014
+ *     date: 07.05.2014
  */
 public enum RestExceptionType {
 

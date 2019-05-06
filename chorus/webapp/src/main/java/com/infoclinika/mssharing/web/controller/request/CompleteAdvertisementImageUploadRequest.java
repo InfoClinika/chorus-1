@@ -11,8 +11,8 @@ public class CompleteAdvertisementImageUploadRequest {
     @Override
     public String toString() {
         return "CompleteAdvertisementImageUploadRequest{" +
-                "advertisementId=" + advertisementId +
-                ", contentUrl='" + contentUrl + '\'' +
-                '}';
+            "advertisementId=" + advertisementId +
+            ", contentUrl='" + contentUrl + '\'' +
+            '}';
     }
 }

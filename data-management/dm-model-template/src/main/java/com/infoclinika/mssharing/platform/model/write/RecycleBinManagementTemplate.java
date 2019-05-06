@@ -4,7 +4,8 @@ import java.util.Set;
 
 /**
  * User can remove projects, experiments and files temporarily or permanently.
- * Temporarily removed items are placed in the Trash List. User can restore them or they will be automatically removed permanently
+ * Temporarily removed items are placed in the Trash List. User can restore them or they will be automatically
+ * removed permanently
  * after one week.
  *
  * @author Herman Zamula

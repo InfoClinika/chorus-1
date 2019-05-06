@@ -1,7 +1,9 @@
 package com.infoclinika.mssharing.web.appearance;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.propertiesprovider.AppearancePropertiesProvider;
 import org.springframework.stereotype.Component;
+
+import javax.inject.Inject;
 
 /**
  * @author : Alexander Serebriyan
@@ -9,58 +11,26 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppearanceSettings {
 
-    @Value("${appearance.links.forum.show}")
-    private boolean showForumLink;
-
-    @Value("${appearance.links.news.show}")
-    private boolean showNewsLink;
-
-    @Value("${appearance.links.blogs.show}")
-    private boolean showBlogsLink;
-
-    @Value("${appearance.links.about.show}")
-    private boolean showAboutLink;
-
-    @Value("${appearance.logo}")
-    private String logo;
+    @Inject
+    AppearancePropertiesProvider appearancePropertiesProvider;
 
     public boolean isShowForumLink() {
-        return showForumLink;
-    }
-
-    public void setShowForumLink(boolean showForumLink) {
-        this.showForumLink = showForumLink;
+        return appearancePropertiesProvider.isAppearanceShowForumLink();
     }
 
     public boolean isShowNewsLink() {
-        return showNewsLink;
-    }
-
-    public void setShowNewsLink(boolean showNewsLink) {
-        this.showNewsLink = showNewsLink;
+        return appearancePropertiesProvider.isAppearanceShowNewsLink();
     }
 
     public boolean isShowBlogsLink() {
-        return showBlogsLink;
-    }
-
-    public void setShowBlogsLink(boolean showBlogsLink) {
-        this.showBlogsLink = showBlogsLink;
+        return appearancePropertiesProvider.isAppearanceShowBlogsLink();
     }
 
     public boolean isShowAboutLink() {
-        return showAboutLink;
-    }
-
-    public void setShowAboutLink(boolean showAboutLink) {
-        this.showAboutLink = showAboutLink;
+        return appearancePropertiesProvider.isAppearanceShowAboutLink();
     }
 
     public String getLogo() {
-        return logo;
-    }
-
-    public void setLogo(String logo) {
-        this.logo = logo;
+        return appearancePropertiesProvider.getAppearanceLogo();
     }
 }

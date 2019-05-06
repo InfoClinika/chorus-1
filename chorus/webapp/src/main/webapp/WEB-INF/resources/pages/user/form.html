@@ -51,7 +51,8 @@
                     <span class="error-message" ng-show="form.password.$error.inputValidator">is required</span>
                     <span class="error-message" ng-show="!form.password.$error.inputValidator && form.password.$error.passwordStrength">
                         doesn't meet requirements
-                        <i class="icon validation-message-warning" title="Should be at least 8 characters long.&#10;Must contain both letters and digits."></i>
+                        <i class="icon validation-message-warning"
+                           title="Should be at least 8 characters long.&#10;Must contain both letters and digits.&#10;Must contain at least one capital letter"></i>
                     </span>
                     <span class="error-message" ng-show="!form.password.$error.passwordStrength && form.password.$error.passwordBlackList">is in black list</span>
                 </label>

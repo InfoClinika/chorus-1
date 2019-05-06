@@ -6,7 +6,7 @@ import java.util.Date;
 
 
 @Transactional
-public interface NewsManagement  {
+public interface NewsManagement {
 
     void updateNews(long actor, long newsId, NewsInfo newsInfo);
 
@@ -14,7 +14,7 @@ public interface NewsManagement  {
 
     void deleteNews(long actor, long newsId);
 
-    public static class NewsInfo {
+    class NewsInfo {
         public String title;
         public String creatorEmail;
         public String text;

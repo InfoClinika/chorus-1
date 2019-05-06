@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.web.controller;
 
@@ -21,7 +23,8 @@ import com.infoclinika.mssharing.web.controller.request.StartAttachmentUploadReq
 import com.infoclinika.mssharing.web.controller.response.StartAttachmentUploadResponse;
 import com.infoclinika.mssharing.web.controller.response.UploadFilePathResponse;
 import com.infoclinika.mssharing.web.controller.response.ValueResponse;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -42,15 +45,25 @@ import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId
 @RequestMapping("/attachments/project")
 public class ProjectAttachmentsController extends AbstractAttachmentsController {
 
-    private static final Logger LOGGER = Logger.getLogger(ProjectAttachmentsController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProjectAttachmentsController.class);
 
     @Inject
-    public ProjectAttachmentsController(ProjectAttachmentsUploadHelper asyncUploadHelper,
-                                        DetailsReader detailsReader,
-                                        AttachmentsReaderTemplate attachmentsReaderTemplate, AttachmentManagement attachmentManagement,
-                                        StoredObjectPaths storedObjectPaths,
-                                        DashboardReader dashboardReader) {
-        super(attachmentsReaderTemplate, attachmentManagement, asyncUploadHelper, storedObjectPaths, dashboardReader, detailsReader);
+    public ProjectAttachmentsController(
+        ProjectAttachmentsUploadHelper asyncUploadHelper,
+        DetailsReader detailsReader,
+        AttachmentsReaderTemplate attachmentsReaderTemplate,
+        AttachmentManagement attachmentManagement,
+        StoredObjectPaths storedObjectPaths,
+        DashboardReader dashboardReader
+    ) {
+        super(
+            attachmentsReaderTemplate,
+            attachmentManagement,
+            asyncUploadHelper,
+            storedObjectPaths,
+            dashboardReader,
+            detailsReader
+        );
     }
 
     /**
@@ -62,8 +75,11 @@ public class ProjectAttachmentsController extends AbstractAttachmentsController 
      */
     @RequestMapping(value = "/attach", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
-    public void attachToProject(@RequestBody final CompleteProjectAttachmentRequest request, final Principal principal) {
-        LOGGER.debug("Attaching the binary files to the project:" + request);
+    public void attachToProject(
+        @RequestBody final CompleteProjectAttachmentRequest request,
+        final Principal principal
+    ) {
+        LOGGER.debug("Attaching the binary files to the project: {}", request);
         final long userId = getUserId(principal);
         attachmentManagement.updateProjectAttachments(userId, request.projectId, request.attachmentIds);
     }
@@ -74,12 +90,16 @@ public class ProjectAttachmentsController extends AbstractAttachmentsController 
      *
      * @param request   the request containing the attachment metadata
      * @param principal the user performing the request
-     * @return the attachment ID along with the filename so that client is able to match the filename with the attachment ID
+     * @return the attachment ID along with the filename so that client is able to match the filename with the
+     *     attachment ID
      */
     @RequestMapping(value = "/items", method = RequestMethod.POST)
     @ResponseBody
-    public StartAttachmentUploadResponse save(@RequestBody final StartAttachmentUploadRequest request, final Principal principal) {
-        LOGGER.debug("Saving the metadata for the attachment: " + request);
+    public StartAttachmentUploadResponse save(
+        @RequestBody final StartAttachmentUploadRequest request,
+        final Principal principal
+    ) {
+        LOGGER.debug("Saving the metadata for the attachment: {}", request);
         final long userId = getUserId(principal);
         final long attachmentId = attachmentManagement.newAttachment(userId, request.filename, request.sizeInBytes);
         return new StartAttachmentUploadResponse(request.filename, attachmentId);
@@ -87,23 +107,45 @@ public class ProjectAttachmentsController extends AbstractAttachmentsController 
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public List<AttachmentsReaderTemplate.AttachmentItem> attachmentsForProject(@PathVariable final Long id, Principal principal) {
-        return attachmentsReader.readAttachments(AttachmentsReaderTemplate.AttachmentType.PROJECT, getUserId(principal), id);
+    public List<AttachmentsReaderTemplate.AttachmentItem> attachmentsForProject(
+        @PathVariable final Long id,
+        Principal principal
+    ) {
+        return attachmentsReader.readAttachments(
+            AttachmentsReaderTemplate.AttachmentType.PROJECT,
+            getUserId(principal),
+            id
+        );
     }
 
     @RequestMapping(value = "/download/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public void attachmentDownload(@PathVariable("id") final long attachmentId, HttpServletRequest request, HttpServletResponse response, Principal principal) {
+    public void attachmentDownload(
+        @PathVariable("id") final long attachmentId,
+        HttpServletRequest request,
+        HttpServletResponse response,
+        Principal principal
+    ) {
         try {
             final long userId = getUserId(principal);
-            LOGGER.debug("Got the download request for the project attachment with ID = " + attachmentId + " from user with ID" + userId);
-            final AttachmentsReaderTemplate.AttachmentItem attachmentItem = attachmentsReader.readAttachment(userId, attachmentId);
-            postAttachmentToResponse(attachmentItem, request, response, new Function<Long, AttachmentsReaderTemplate.AttachmentItem>() {
-                @Override
-                public AttachmentsReaderTemplate.AttachmentItem apply(Long input) {
-                    return attachmentsReader.readAttachment(userId, attachmentId);
+            LOGGER.debug(
+                "Got the download request for the project attachment with ID = {} from user with ID {}",
+                attachmentId,
+                userId
+            );
+            final AttachmentsReaderTemplate.AttachmentItem attachmentItem =
+                attachmentsReader.readAttachment(userId, attachmentId);
+            postAttachmentToResponse(
+                attachmentItem,
+                request,
+                response,
+                new Function<Long, AttachmentsReaderTemplate.AttachmentItem>() {
+                    @Override
+                    public AttachmentsReaderTemplate.AttachmentItem apply(Long input) {
+                        return attachmentsReader.readAttachment(userId, attachmentId);
+                    }
                 }
-            });
+            );
         } catch (IOException e) {
             LOGGER.error("Error writing file to output stream.", e);
             throw new RuntimeException("IOError writing file to output stream");
@@ -119,7 +161,10 @@ public class ProjectAttachmentsController extends AbstractAttachmentsController 
 
     @RequestMapping(value = "/destination/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public UploadFilePathResponse composeProjectAttachmentDestination(@PathVariable("id") long attachmentId, Principal principal) {
+    public UploadFilePathResponse composeProjectAttachmentDestination(
+        @PathVariable("id") long attachmentId,
+        Principal principal
+    ) {
         final long userId = getUserId(principal);
         //TBD: should we verify attachment exists?
         final NodePath nodePath = storedObjectPaths.projectAttachmentPath(userId, attachmentId);

@@ -2,16 +2,12 @@
     <div class="center-frame">
         <div class="logo-holder">
             <h1><a href="index.html" ng-cloak>
-                <img src="../img/{{appearance.logo || 'chorus-logo.png'}}" alt="Chorus Logo"/>
+                <img ng-src="../img/{{appearance.logo || 'chorus-logo.png'}}" alt="Chorus Logo"/>
             </a></h1>
         </div>
         <ul id="menu">
-            <li ng-class="{active: activePage == 'news'}" ng-show="appearance.showNewsLink"><a href="news.html">News</a></li>
-            <li ng-class="{active: activePage == 'blog'}" ng-show="appearance.showBlogsLink"><a href="blog.html">Blogs</a></li>
-            <li ng-class="{active: activePage == 'dashboard'}"><a href="dashboard.html">Application</a></li>
-            <li ng-class="{active: activePage == 'about'}" ng-show="appearance.showAboutLink"><a href="about.html">About</a></li>
-            <li ng-class="{active: activePage == 'support'}"><a href="support.html">Support</a></li>
-            <li><forum-url><span class="forum-url">Forum</span><span class="icon external"></span></forum-url></li>
+            <li ng-class="{active: activePage == 'dashboard'}"><a href="dashboard.html">Platform</a></li>
+            <li ng-class="{active: activePage == 'support'}"><a href="support.html">Knowledge Center</a></li>
         </ul>
         <div ng-switch="isDashboard">
             <div ng-switch-when="true">
@@ -54,10 +50,10 @@
                                 <li ng-show="showBilling"><a title="Billing details" HREF="../pages/billing.html#/list">Billing</a></li>
                                 <li ng-show="showAdminBilling"><a title="Billing details" HREF="../pages/billing.html#/labInvoices">Admin Billing</a></li>
                                 <li><a title="Account details" profile-dialog-link>My Profile</a></li>
-                                <li><a title="Click to report issue" href="mailto:support@infoclinika.com">
-                                    Report Issue
-                                </a></li>
+                                <li><a title="Click to report issue" href="../pages/dashboard.html#/report-issue">Report Issue</a></li>
+                                <li><a title="User Preferences" href="../pages/dashboard.html#/preferences">Interface Preferences</a></li>
                                 <li><a title="Clients API Token" href="../pages/dashboard.html#/client-token">Clients API Token</a></li>
+                                <li ng-show="isAdmin()"><a title="Storage Usage Statistics" href="../pages/dashboard.html#/aggregate-statistics">Storage Usage Statistics</a></li>
                                 <li><a id="logout" href="../j_spring_security_logout" title="Click to sign out">Sign out</a></li>
                             </ul>
                         </div>

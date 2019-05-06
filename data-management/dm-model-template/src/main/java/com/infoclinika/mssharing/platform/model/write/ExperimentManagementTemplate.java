@@ -4,11 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Herman Zamula
  */
-public interface ExperimentManagementTemplate<EXPERIMENT_INFO extends ExperimentManagementTemplate.ExperimentInfoTemplate> {
+public interface ExperimentManagementTemplate<
+    EXPERIMENT_INFO extends ExperimentManagementTemplate.ExperimentInfoTemplate> {
 
     long createExperiment(long actor, EXPERIMENT_INFO experimentInfo);
 
@@ -22,6 +24,7 @@ public interface ExperimentManagementTemplate<EXPERIMENT_INFO extends Experiment
     void updateExperiment(long actor, long experiment, EXPERIMENT_INFO experimentInfo);
 
     class ExperimentInfoTemplate<META_FACTOR extends MetaFactorTemplate, FILE_ITEM extends FileItemTemplate> {
+
         public final Long lab;
         public final long project;
         public final String name;
@@ -77,8 +80,15 @@ public interface ExperimentManagementTemplate<EXPERIMENT_INFO extends Experiment
         public MetaFactorTemplate(String name, String units, boolean numeric, long experimentId) {
             this.name = name;
             this.units = units;
-            isNumeric = numeric;
+            this.isNumeric = numeric;
             this.experimentId = experimentId;
+        }
+
+        public MetaFactorTemplate(String name) {
+            this.name = name;
+            this.units = null;
+            this.isNumeric = false;
+            this.experimentId = 0;
         }
     }
 
@@ -95,27 +105,25 @@ public interface ExperimentManagementTemplate<EXPERIMENT_INFO extends Experiment
             this.isNumeric = isNumeric;
         }
 
+
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof AnnotationTemplate)) {
+                return false;
+            }
             AnnotationTemplate that = (AnnotationTemplate) o;
-
-            if (isNumeric != that.isNumeric) return false;
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-            if (value != null ? !value.equals(that.value) : that.value != null) return false;
-            return !(units != null ? !units.equals(that.units) : that.units != null);
-
+            return isNumeric == that.isNumeric &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(value, that.value) &&
+                Objects.equals(units, that.units);
         }
 
         @Override
         public int hashCode() {
-            int result = name != null ? name.hashCode() : 0;
-            result = 31 * result + (value != null ? value.hashCode() : 0);
-            result = 31 * result + (units != null ? units.hashCode() : 0);
-            result = 31 * result + (isNumeric ? 1 : 0);
-            return result;
+            return Objects.hash(name, value, units, isNumeric);
         }
     }
 
@@ -128,8 +136,10 @@ public interface ExperimentManagementTemplate<EXPERIMENT_INFO extends Experiment
         public final List<AnnotationTemplate> annotationValues;
         public final boolean copy;
 
-
-        public FileItemTemplate(long id, List<String> factorValues, List<AnnotationTemplate> annotations, boolean copy) {
+        public FileItemTemplate(long id,
+                                List<String> factorValues,
+                                List<AnnotationTemplate> annotations,
+                                boolean copy) {
             this.id = id;
             this.factorValues = factorValues;
             this.annotationValues = annotations;
@@ -162,7 +172,11 @@ public interface ExperimentManagementTemplate<EXPERIMENT_INFO extends Experiment
             this.instrumentType = null;
         }
 
-        public Restriction(long technologyType, long vendor, long instrumentType, long instrumentModel, Optional<Long> instrument) {
+        public Restriction(long technologyType,
+                           long vendor,
+                           long instrumentType,
+                           long instrumentModel,
+                           Optional<Long> instrument) {
             this.technologyType = technologyType;
             this.vendor = vendor;
             this.instrumentModel = instrumentModel;

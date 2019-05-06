@@ -8,7 +8,8 @@ public class ConfirmMultipartUploadDTO {
     private long fileId;
     private String remoteDestination;
 
-    public ConfirmMultipartUploadDTO(){}
+    public ConfirmMultipartUploadDTO() {
+    }
 
     public ConfirmMultipartUploadDTO(long fileId, String remoteDestination) {
         this.fileId = fileId;

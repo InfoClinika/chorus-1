@@ -18,38 +18,32 @@ public class StorageUsageHelper {
     private DailyArchiveStorageUsageRepository dailyArchiveStorageUsageRepository;
 
     public long getRawFilesSize(long lab, Long daySinceEpoch) {
-        if(daySinceEpoch != null) {
+        if (daySinceEpoch != null) {
             return retrieveValue(dailyAnalyseStorageUsageRepository.getRawStorageUsageForDay(lab, daySinceEpoch));
         } else {
-            final Long lastProcessedDaySinceEpoch = dailyAnalyseStorageUsageRepository.getLastProcessedDaySinceEpoch(lab);
-            if(lastProcessedDaySinceEpoch == null) {
+            final Long lastProcessedDaySinceEpoch =
+                dailyAnalyseStorageUsageRepository.getLastProcessedDaySinceEpoch(lab);
+            if (lastProcessedDaySinceEpoch == null) {
                 return 0;
             }
-            return retrieveValue(dailyAnalyseStorageUsageRepository.getRawStorageUsageForDay(lab, lastProcessedDaySinceEpoch));
-        }
-    }
-
-    public long getTranslatedFilesSize(long lab, Long daySinceEpoch) {
-        if(daySinceEpoch != null) {
-            return retrieveValue(dailyAnalyseStorageUsageRepository.getTranslationStorageUsageForDay(lab, daySinceEpoch));
-        } else {
-            final Long lastProcessedDaySinceEpoch = dailyAnalyseStorageUsageRepository.getLastProcessedDaySinceEpoch(lab);
-            if(lastProcessedDaySinceEpoch == null) {
-                return 0;
-            }
-            return retrieveValue(dailyAnalyseStorageUsageRepository.getTranslationStorageUsageForDay(lab, lastProcessedDaySinceEpoch));
+            return retrieveValue(
+                dailyAnalyseStorageUsageRepository.getRawStorageUsageForDay(lab, lastProcessedDaySinceEpoch)
+            );
         }
     }
 
     public long getArchivedFilesSize(long lab, Long daySinceEpoch) {
-        if(daySinceEpoch != null) {
+        if (daySinceEpoch != null) {
             return retrieveValue(dailyArchiveStorageUsageRepository.getStorageUsageForDay(lab, daySinceEpoch));
         } else {
-            final Long lastProcessedDaySinceEpoch = dailyArchiveStorageUsageRepository.getLastProcessedDaySinceEpoch(lab);
-            if(lastProcessedDaySinceEpoch == null) {
+            final Long lastProcessedDaySinceEpoch =
+                dailyArchiveStorageUsageRepository.getLastProcessedDaySinceEpoch(lab);
+            if (lastProcessedDaySinceEpoch == null) {
                 return 0;
             }
-            return retrieveValue(dailyArchiveStorageUsageRepository.getStorageUsageForDay(lab, lastProcessedDaySinceEpoch));
+            return retrieveValue(
+                dailyArchiveStorageUsageRepository.getStorageUsageForDay(lab, lastProcessedDaySinceEpoch)
+            );
         }
     }
 

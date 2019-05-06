@@ -3,9 +3,14 @@ package com.infoclinika.mssharing.platform.entity;
 import org.hibernate.annotations.Index;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static javax.persistence.CascadeType.*;
+import static javax.persistence.FetchType.*;
 import static javax.persistence.InheritanceType.TABLE_PER_CLASS;
 
 /**
@@ -18,10 +23,11 @@ public abstract class LabTemplate<U extends UserTemplate<?>> extends AbstractAgg
     @Index(name = "NAME_IDX")
     @Basic(optional = false)
     private String name;
+
     @Basic(optional = false)
     private String institutionUrl;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, targetEntity = UserLabMembership.class)
+    @OneToMany(cascade = ALL, orphanRemoval = true, fetch = LAZY, targetEntity = UserLabMembership.class)
     @JoinColumn(name = "lab_id")
     private Set<UserLabMembership<U, ? extends LabTemplate<U>>> labMemberships = newHashSet();
 
@@ -83,7 +89,6 @@ public abstract class LabTemplate<U extends UserTemplate<?>> extends AbstractAgg
         }
         if (!found) {
             final UserLabMembership<U, ? extends LabTemplate<U>> m = new UserLabMembership<>(head, this, true);
-            head.addLabMembership(m);
             labMemberships.add(m);
         }
     }
@@ -123,15 +128,21 @@ public abstract class LabTemplate<U extends UserTemplate<?>> extends AbstractAgg
         }
     }
 
+    @Transient
+    public Collection<U> getUsers() {
+        return getLabMemberships().stream()
+            .map(UserLabMembership::getUser)
+            .collect(Collectors.toCollection(() -> new ArrayList<>(getLabMemberships().size())));
+    }
 
     @Override
     public String toString() {
         return "Lab{" +
-                "id='" + getId() + "'" +
-                "name='" + name + '\'' +
-                ", institutionUrl='" + institutionUrl + '\'' +
-                ", contactEmail='" + contactEmail + '\'' +
-                '}';
+            "id='" + getId() + "'" +
+            "name='" + name + '\'' +
+            ", institutionUrl='" + institutionUrl + '\'' +
+            ", contactEmail='" + contactEmail + '\'' +
+            '}';
     }
 
 }

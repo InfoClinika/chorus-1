@@ -38,7 +38,8 @@ public interface NotifierTemplate {
     void instrumentRequestRefuse(long actor, long initiator, long instrument, String comment);
 
     /**
-     * If there are several different request processing result, like one operator approve adding operator and second one refuse
+     * If there are several different request processing result, like one operator approve adding operator and second
+     * one refuse
      * First one wins. Second should be notified.
      */
     void staleOnInstrumentRequest(long actor, long instrument, long initiator);
@@ -57,7 +58,11 @@ public interface NotifierTemplate {
 
     void sendExperimentPrivateDownloadLink(long actor, long experiment, String sendToEmail, String downloadLink);
 
-    void sendLabCreationRequestNotification(long admin, String requesterEmail, String headName, String labName, String headEmail);
+    void sendLabCreationRequestNotification(long admin,
+                                            String requesterEmail,
+                                            String headName,
+                                            String labName,
+                                            String headEmail);
 
     void sendLabCreatedNotification(long head, String labName);
 
@@ -67,15 +72,25 @@ public interface NotifierTemplate {
 
     void sendIssueToEmail(long actor, String issueTitle, String issueContents, String destinationEmail);
 
-    void sendInstrumentCreationRequestNotification(long labHead, String requesterEmail, String labName, String instrumentName);
+    void sendInstrumentCreationRequestNotification(long labHead,
+                                                   String requesterEmail,
+                                                   String labName,
+                                                   String instrumentName);
 
     void staleOnNewInstrumentRequest(long actor, long request);
 
-    void sendLabMembershipRequest(long labHeadId, String labName, long applicantId, String approveUrl, String refuseUrl);
+    void sendLabMembershipRequest(long labHeadId,
+                                  String labName,
+                                  long applicantId,
+                                  String approveUrl,
+                                  String refuseUrl);
 
     void sendInstrumentCreationApprovedNotification(long requester, String labName, String instrumentName);
 
-    void sendInstrumentCreationRejectedNotification(long requester, String comment, String labName, String instrumentName);
+    void sendInstrumentCreationRejectedNotification(long requester,
+                                                    String comment,
+                                                    String labName,
+                                                    String instrumentName);
 
     void sendInvitationEmail(long invitedBy, String destinationEmail, String link);
 }

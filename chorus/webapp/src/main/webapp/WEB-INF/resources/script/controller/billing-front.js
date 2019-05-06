@@ -1,18 +1,19 @@
+"use strict";
+
 var defaultPage = "/pages/dashboard.html";
 (function () {
-    angular.module("invoice", ["billing-back", "lab-head-back", "formatters", "sessionTimeoutHandler", "security-front", 
-        "security-back", "front-end", "modals", "watchFighters", "ui", "error-catcher", "infinite-scroll", 
-        "dashboard-common-directives", "current-year"],
-        function ($locationProvider) {
+    angular
+        .module("invoice", ["billing-back", "lab-head-back", "formatters", "sessionTimeoutHandler", "security-front",
+                "security-back", "front-end", "modals", "watchFighters", "ui", "error-catcher", "infinite-scroll",
+                "dashboard-common-directives", "template-components"],
+            function ($locationProvider) {
 //        $locationProvider.html5Mode(true);
-        })
+            }
+        )
         .config(["$routeProvider", function ($routeProvider) {
             $routeProvider
                 .when("/subscription/:labId", {
                     controller: "subscription", templateUrl: "../pages/billing/subscription.html"
-                })
-                .when("/processing/:labId", {
-                    controller: "processingManagementController", templateUrl: "../pages/billing/processing.html"
                 })
                 .when("/history/:labId", {
                     controller: "history", templateUrl: "../pages/billing/history.html"
@@ -25,12 +26,11 @@ var defaultPage = "/pages/dashboard.html";
                 })
                 .when("/", {
                     templateUrl: "../pages/billing/list.html", controller: "list"
-                })
+                });
         }])
         .controller("mainBillingController", mainBillingController)
         .controller("history", historyController)
         .controller("subscription", subscriptionController)
-        .controller("processingManagementController", processingManagementController)
         .controller("list", listController)
         .controller("adminList", adminListController)
         .controller("navigation", navigationController)
@@ -73,8 +73,20 @@ var defaultPage = "/pages/dashboard.html";
 
     }
 
-    function historyController($scope, $rootScope, $window, $location, $routeParams, Security, Billing, BillingSecurity, Navigation) {
+    function historyController($scope,
+                               $rootScope,
+                               $window,
+                               $location,
+                               $routeParams,
+                               Security,
+                               Billing,
+                               BillingSecurity,
+                               Navigation) {
         CommonLogger.setTags(["BILLING", "HISTORY-CONTROLLER"]);
+
+        const PAY_PAL_NOTIFICATION_DIALOG_SELECTOR = "#pay-pal-notification-dialog";
+        var payPalRedirectConfirmation = new Confirmation(PAY_PAL_NOTIFICATION_DIALOG_SELECTOR);
+
         BillingSecurity($scope);
         isUserAdmin(Security, function (result) {
             $scope.isAdmin = result;
@@ -91,7 +103,6 @@ var defaultPage = "/pages/dashboard.html";
 
         $scope.history = [];
         $scope.pendingCharges = [];
-        $scope.processingIsOn = processingIsOn;
         $scope.loadMoreHistory = loadMoreHistory;
         $scope.downloadHistory = downloadHistory;
         $scope.loadHistoryReference = loadHistoryReference;
@@ -101,23 +112,7 @@ var defaultPage = "/pages/dashboard.html";
         $scope.openProcessing = openProcessing;
         $scope.getPendingChargeDaySummary = getPendingChargeDaySummary;
         $scope.hasDetails = hasDetails;
-
-
-        function processingIsOn() {
-            if(!$scope.details || !$scope.details.labAccountFeatures) {
-                return false;
-            }
-
-            var processingFeature = $scope.details.labAccountFeatures.filter(function (feature) {
-                return feature.name == "PROCESSING";
-            })[0];
-
-            if(!processingFeature || !processingFeature.active) {
-                return false;
-            } else {
-                return true;
-            }
-        }
+        $scope.showPayPalRedirectNotification = showPayPalRedirectNotification;
 
         function loadMoreHistory() {
 
@@ -138,22 +133,22 @@ var defaultPage = "/pages/dashboard.html";
             Billing.getPendingCharges({lab: lab}, function (response) {
 
                 function findChargeDay(list, serverDate) {
-                    for(var i = 0; i < list.length; ++i) {
-                        if(list[i].serverDate == serverDate) {
+                    for (var i = 0; i < list.length; ++i) {
+                        if (list[i].serverDate == serverDate) {
                             return list[i];
                         }
                     }
                     return null;
                 }
 
-                
+
                 var charges = response.value;
                 var pendingCharges = [];
                 var totalPendingCharge = 0;
 
                 angular.forEach(charges, function (charge) {
                     var chargeDay = findChargeDay(pendingCharges, charge.serverDateFormatted);
-                    if(!chargeDay) {
+                    if (!chargeDay) {
                         chargeDay = {
                             amount: 0,
                             timestamp: charge.timestamp,
@@ -166,14 +161,14 @@ var defaultPage = "/pages/dashboard.html";
                     totalPendingCharge += charge.charge;
                     chargeDay.charges.push(charge);
                 });
-                
+
                 $scope.pendingCharges = pendingCharges;
                 $scope.showPendingCharges = totalPendingCharge != 0;
-                
+
             });
-            
+
             Billing.getStorageUsage({lab: lab}, function (response) {
-               $scope.storageUsage = response.value;
+                $scope.storageUsage = response.value;
             });
 
             Billing.moreHistory({lab: lab, previousCount: $scope.previousCount}, function (data) {
@@ -191,7 +186,8 @@ var defaultPage = "/pages/dashboard.html";
                     }
                 } else {
                     $scope.history = data;
-                    $scope.previousMonth = new Date($scope.history.months[$scope.history.months.length - 1].monthYear).getMonth();
+                    $scope.previousMonth =
+                        new Date($scope.history.months[$scope.history.months.length - 1].monthYear).getMonth();
                 }
 
                 $scope.currentMonthDate = new Date(data.months[data.months.length - 1].monthYear);
@@ -206,9 +202,6 @@ var defaultPage = "/pages/dashboard.html";
             var date = new Date($scope.currentMonthDate);
             date.setMonth($scope.currentMonthDate.getMonth() - 1);
             Billing.moreMonthlyHistoryReference({lab: lab, month: date.getTime()}, function (data) {
-                if (!data) {
-                    $scope.currentMonth = {hasNext: false};
-                }
                 $scope.currentMonthDate = new Date(data.monthYear);
                 $scope.history.months.push(data);
                 $scope.currentMonth = data;
@@ -250,39 +243,44 @@ var defaultPage = "/pages/dashboard.html";
         };
         $scope.details = Billing.labDetails({lab: lab});
         $scope.filterByDescription = function (line) {
-            if ($scope.activeFilter.filter == "") return true;
-            if ($scope.activeFilter.filter == "Charge") return line.description == "Charge from credit card" || line.description == "Charge from balance";
+            if ($scope.activeFilter.filter == "") {
+                return true;
+            }
+            if ($scope.activeFilter.filter == "Charge") {
+                return line.description == "Charge from credit card" || line.description == "Charge from balance";
+            }
             return line.description == $scope.activeFilter.filter;
         };
         $scope.openMonth = function (month) {
             month.selected = !month.selected;
-            $scope.lastMonthOpen = !(!month.selected && $scope.history.months.indexOf(month) == ($scope.history.months.length - 1));
+            $scope.lastMonthOpen =
+                !(!month.selected && $scope.history.months.indexOf(month) == $scope.history.months.length - 1);
         };
-        
+
         function showPendingChargeDetails(pendingCharge) {
             pendingCharge.showDetails = !pendingCharge.showDetails;
         }
-        
+
         function getPendingChargeDaySummary(dayCharge) {
             var summary = "";
-            var chargesWithAmount = $.grep(dayCharge.charges, function(c) {
+            var chargesWithAmount = $.grep(dayCharge.charges, function (c) {
                 return c.charge > 0;
             });
-            for(var i = 0; i < chargesWithAmount.length; ++i) {
+            for (var i = 0; i < chargesWithAmount.length; ++i) {
                 var charge = chargesWithAmount[i];
                 summary += charge.feature + " Monthly Charge";
-                if(i < chargesWithAmount.length - 1) {
+                if (i < chargesWithAmount.length - 1) {
                     summary += ", ";
                 }
             }
             return summary;
         }
-        
+
         function hasDetails(pendingChargeDay) {
-            var chargesWithAmount = $.grep(pendingChargeDay.charges, function(c) {
+            var chargesWithAmount = $.grep(pendingChargeDay.charges, function (c) {
                 return c.charge > 0;
             });
-            if(pendingChargeDay.amount == 0
+            if (pendingChargeDay.amount == 0
                 || chargesWithAmount.length == 0
                 || chargesWithAmount.length == 1 && chargesWithAmount[0].feature == "Processing") {
                 return false;
@@ -301,12 +299,24 @@ var defaultPage = "/pages/dashboard.html";
                     dateTo: dateTo.getTime()
                 }, function (responce) {
                     line.invoice = responce;
-                })
+                });
             }
+        }
+
+        function showPayPalRedirectNotification() {
+            payPalRedirectConfirmation.showPopup();
         }
     }
 
-    function listController($scope, $rootScope, $window, $location, Billing, Security, expandMenuLab, BillingSecurity, Navigation) {
+    function listController($scope,
+                            $rootScope,
+                            $window,
+                            $location,
+                            Billing,
+                            Security,
+                            expandMenuLab,
+                            BillingSecurity,
+                            Navigation) {
         CommonLogger.setTags(["BILLING", "LIST-CONTROLLER"]);
         BillingSecurity($scope);
         Navigation.setShowInvoiceHistory(false);
@@ -336,7 +346,16 @@ var defaultPage = "/pages/dashboard.html";
         };
     }
 
-    function adminListController($scope, $rootScope, $window, $location, Billing, Security, expandMenuLab, Navigation, BillingSecurity, contentRequestParameters,
+    function adminListController($scope,
+                                 $rootScope,
+                                 $window,
+                                 $location,
+                                 Billing,
+                                 Security,
+                                 expandMenuLab,
+                                 Navigation,
+                                 BillingSecurity,
+                                 contentRequestParameters,
                                  PaginationPropertiesSettingService) {
         CommonLogger.setTags(["BILLING", "ADMIN-LIST-CONTROLLER"]);
         BillingSecurity($scope);
@@ -380,8 +399,8 @@ var defaultPage = "/pages/dashboard.html";
                         lab: $scope.adminTopUpBalance.item.labId,
                         amount: $scope.adminTopUpBalance.amount * 100
                     };
-                    Billing.adminTopUp(request, function(){
-                        $scope.adminTopUpBalance.item.storeBalance += (request.amount);
+                    Billing.adminTopUp(request, function () {
+                        $scope.adminTopUpBalance.item.storeBalance += request.amount;
                         $scope.adminTopUpBalance.hidePopup();
                         $scope.adminTopUpBalance.confirmation.showPopup();
                     });
@@ -453,30 +472,33 @@ var defaultPage = "/pages/dashboard.html";
                     }
                     return featureItem.balance;
                 };
-                $scope.getFeatureItemDescription = function(item) {
-                    if(MONTHLY_CHARGED_FEATURE_TYPES.indexOf(item.type) >= 0) {
-                        if(item.type == PROCESSING_FEATURE) {
+                $scope.getFeatureItemDescription = function (item) {
+                    if (MONTHLY_CHARGED_FEATURE_TYPES.indexOf(item.type) >= 0) {
+                        if (item.type == PROCESSING_FEATURE) {
                             return " (enabled for one month)";
                         }
-                        return " (" + item.totalLoggedChargeValue + " volume" + (item.totalLoggedChargeValue != 1 ? "s" : "") + " used in the previous month)";
-                    } else {
-                        var itemDescription = " (";
-                        itemDescription += item.totalUsers;
-                        itemDescription += item.totalUsers == 1 ? " user " : " users ";
-                        itemDescription += item.totalFiles;
-                        itemDescription += " files ";
-                        itemDescription += FILES_SIZE_FILTER(item.totalLoggedChargeValue);
-                        itemDescription += " size)";
-                        return itemDescription;
+                        return " (" + item.totalLoggedChargeValue + " volume" + (item.totalLoggedChargeValue != 1 ?
+                            "s" :
+                            "") + " used in the previous month)";
                     }
+
+                    var itemDescription = " (";
+                    itemDescription += item.totalUsers;
+                    itemDescription += item.totalUsers == 1 ? " user " : " users ";
+                    itemDescription += item.totalFiles;
+                    itemDescription += " files ";
+                    itemDescription += FILES_SIZE_FILTER(item.totalLoggedChargeValue);
+                    itemDescription += " size)";
+                    return itemDescription;
+
                 };
-                $scope.itemWithUsages = function(item) {
+                $scope.itemWithUsages = function (item) {
                     return WITH_USAGES_FEATURE_TYPES.indexOf(item.type) >= 0;
                 };
                 $scope.message = "";
 
             }
-        }
+        };
     }
 
     function chargesTableController($filter) {
@@ -490,20 +512,26 @@ var defaultPage = "/pages/dashboard.html";
                 console.log("charges table", $scope.charges);
                 const FILES_SIZE_FILTER = $filter("fileSize");
 
-                $scope.getChargeItemDescription = function(charge) {
-                    if(charge.feature == "Processing") {
+                $scope.getChargeItemDescription = function (charge) {
+                    if (charge.feature == "Processing") {
                         return "Processing: for one month";
-                    } else if(charge.feature == "Storage") {
-                        return "Active Storage: " + charge.featureAmountUsed + " volume" + (charge.featureAmountUsed != 1 ? "s" : "") + " (" + FILES_SIZE_FILTER(charge.sizeInBytes) + ")";
-                    } else if(charge.feature == "Archive storage") {
-                        return "Archive Storage: " + charge.featureAmountUsed + " volume" + (charge.featureAmountUsed != 1 ? "s" : "") + " (" + FILES_SIZE_FILTER(charge.sizeInBytes) + ")";
-                    } else {
-                        return "No Description";
                     }
+
+                    let size = FILES_SIZE_FILTER(charge.sizeInBytes);
+                    if (charge.feature == "Storage") {
+                        return "Active Storage: " + charge.featureAmountUsed + " volume" +
+                            (charge.featureAmountUsed != 1 ? "s" : "") + " (" + size + ")";
+                    } else if (charge.feature == "Archive storage") {
+                        return "Archive Storage: " + charge.featureAmountUsed + " volume" +
+                            (charge.featureAmountUsed != 1 ? "s" : "") + " (" + size + ")";
+                    }
+                    return "No Description";
+
+
                 };
                 $scope.message = "";
             }
-        }
+        };
     }
 
     function usageItemController(expandMenuChargeItem) {
@@ -526,7 +554,7 @@ var defaultPage = "/pages/dashboard.html";
                 expandMenuChargeItem($scope);
             }
 
-        }
+        };
     }
 
     function BillingSecurity($window, $routeParams, Security) {
@@ -540,7 +568,7 @@ var defaultPage = "/pages/dashboard.html";
                     });
                 }
             });
-        }
+        };
     }
 
     function processingManagementController($scope, $routeParams, Billing) {
@@ -578,9 +606,9 @@ var defaultPage = "/pages/dashboard.html";
 
                 $scope.canChangeProcessing = !processingFeature || !processingFeature.active;
             });
-            Billing.getBillingProperties({}, function(response) {
+            Billing.getBillingProperties({}, function (response) {
                 $scope.processingFeaturePrice = response[PROCESSING_PROPERTY_NAME];
-            })
+            });
         }
 
         function getProcessingFormattedInfo() {
@@ -602,6 +630,7 @@ var defaultPage = "/pages/dashboard.html";
                 $scope.details.autoprolongateProcessing = false;
             }
         }
+
         function getTotalPrice() {
             if (!$scope.details) {
                 return 0;
@@ -661,7 +690,7 @@ var defaultPage = "/pages/dashboard.html";
                 };
                 $scope.accountType = details.accountType;
             });
-            Billing.getBillingProperties({}, function(response) {
+            Billing.getBillingProperties({}, function (response) {
                 $scope.billingProperties = response;
             });
             Billing.checkCanMakeAccountFree({lab: $routeParams.labId}, function (response) {
@@ -685,7 +714,7 @@ var defaultPage = "/pages/dashboard.html";
                 var request = {
                     labId: $routeParams.labId
                 };
-                requestFn(request, function() {
+                requestFn(request, function () {
                     hideModal();
                 });
             } else {
@@ -733,7 +762,7 @@ var defaultPage = "/pages/dashboard.html";
             setBackName: function (string) {
                 this.backName = string;
             }
-        }
+        };
     }
 
     function expandMenuLab(Billing) {
@@ -800,7 +829,9 @@ var defaultPage = "/pages/dashboard.html";
     }
 
     function convertPrice(cents) {
-        if (cents == undefined /*|| cents < 0*/) return " ";
+        if (cents == undefined /*|| cents < 0*/) {
+            return " ";
+        }
         var result = (parseFloat(cents) / 100).toFixed(2);
         return result < 0 ? "-$" + Math.abs(result) : "$" + result;
     }
@@ -819,9 +850,9 @@ var defaultPage = "/pages/dashboard.html";
         return function (input) {
             if (input) {
                 return "Enabled";
-            } else {
-                return "Disabled"
             }
+
+            return "Disabled";
         };
     }
 
@@ -829,9 +860,9 @@ var defaultPage = "/pages/dashboard.html";
         return function (hours) {
             if (hours >= 24) {
                 return (parseFloat(hours) / 24).toFixed(1);
-            } else {
-                return hours + " h";
             }
+
+            return hours + " h";
         };
     }
 
@@ -861,11 +892,8 @@ var defaultPage = "/pages/dashboard.html";
     }
 
     function storageVolumeSize() {
-        return function(input) {
-            return (input / Math.pow(1024, 3)).toFixed(0) + " GB"
-        }
+        return function (input) {
+            return (input / Math.pow(1024, 3)).toFixed(0) + " GB";
+        };
     }
 })();
-
-
-

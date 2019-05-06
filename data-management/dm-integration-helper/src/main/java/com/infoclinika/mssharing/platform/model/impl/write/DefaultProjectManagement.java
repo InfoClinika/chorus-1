@@ -8,6 +8,7 @@ import com.infoclinika.mssharing.platform.entity.restorable.ExperimentTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.FileMetaDataTemplate;
 import com.infoclinika.mssharing.platform.entity.restorable.ProjectTemplate;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.NotifierTemplate;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.write.CopyManager;
@@ -30,7 +31,9 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  */
 @Component
 @Transactional
-public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_INFO extends ProjectManagementTemplate.ProjectInfoTemplate> implements ProjectManagementTemplate<PROJECT_INFO> {
+public class DefaultProjectManagement<PROJECT extends ProjectTemplate,
+    PROJECT_INFO extends ProjectManagementTemplate.ProjectInfoTemplate>
+    implements ProjectManagementTemplate<PROJECT_INFO> {
 
     @Inject
     protected ProjectManager<PROJECT, PROJECT_INFO> projectManager;
@@ -61,6 +64,9 @@ public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_I
     }
 
     protected void beforeCreateProject(long creator, PROJECT_INFO projectInfo) {
+        if (!ruleValidator.canUserPerformActions(creator)) {
+            throw new ActionsNotAllowedException(creator);
+        }
         if (!ruleValidator.canUserCreateProjectWithTitle(creator, projectInfo.name)) {
             throw new IllegalArgumentException("Can not create project with name: \"" + projectInfo.name + "\"");
         }
@@ -81,9 +87,10 @@ public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_I
     }
 
     protected void beforeRemoveProject(long actor, long projectId) {
-
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
         checkAccess(ruleValidator.canRemoveProject(actor, projectId), "Couldn't remove project");
-
     }
 
     protected void afterRemoveProject(long projectId) {
@@ -98,7 +105,8 @@ public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_I
     private void removeCopiedFiles(ExperimentTemplate e) {
         List<ExperimentFileTemplate> rawFiles = e.rawFiles.getData();
         for (ExperimentFileTemplate file : rawFiles) {
-            if (file.getFileMetaData().isCopy() && experimentFileRepository.findByMetaData(file.getFileMetaData()).size() == 1) {
+            if (file.getFileMetaData().isCopy() &&
+                experimentFileRepository.findByMetaData(file.getFileMetaData()).size() == 1) {
                 experimentFileRepository.delete(file);
                 fileMetaDataRepository.delete(file.getFileMetaData());
             }
@@ -106,13 +114,16 @@ public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_I
     }
 
     public void removeProjectSharingRequests(long projectId) {
-        final List<ProjectSharingRequestTemplate> projectSharingRequests = projectSharingRequestRepository.findByProject(projectId);
+        final List<ProjectSharingRequestTemplate> projectSharingRequests =
+            projectSharingRequestRepository.findByProject(projectId);
         projectSharingRequestRepository.delete(projectSharingRequests);
     }
 
     @Override
     public void updateProject(long actor, long projectId, PROJECT_INFO projectInfo) {
-        if (!ruleValidator.hasWriteAccessOnProject(actor, projectId)) throw new AccessDenied("Couldn't update");
+        if (!ruleValidator.hasWriteAccessOnProject(actor, projectId)) {
+            throw new AccessDenied("Couldn't update");
+        }
         if (!ruleValidator.canUserUpdateProjectWithTitle(actor, projectId, projectInfo.name)) {
             throw new IllegalArgumentException("User already has project with this name: \"" + projectInfo.name + "\"");
         }
@@ -132,7 +143,8 @@ public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_I
         UserTemplate newOwner = userRepository.findOne(copyInfo.getNewOwner());
         for (ExperimentTemplate originalExperiment : originalExperiments) {
             if (originalProject.getCreator().getEmail().contentEquals(originalExperiment.getCreator().getEmail())) {
-                ExperimentTemplate experimentCopy = onCopyExperiment(copyOfProject, newOwner, originalExperiment, copyInfo);
+                ExperimentTemplate experimentCopy =
+                    onCopyExperiment(copyOfProject, newOwner, originalExperiment, copyInfo);
                 onCopyExperimentRawFiles(newOwner, originalExperiment, experimentCopy, copyInfo);
             }
         }
@@ -144,14 +156,23 @@ public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_I
     }
 
     protected void beforeCopyProject(long actor, CopyProjectInfoTemplate copyInfo) {
-        checkAccess(ruleValidator.hasWriteAccessOnProject(copyInfo.getOwner(), copyInfo.getProject()), "Couldn't create a copy");
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        checkAccess(
+            ruleValidator.hasWriteAccessOnProject(copyInfo.getOwner(), copyInfo.getProject()),
+            "Couldn't create a copy"
+        );
     }
 
-    protected void onCopyExperimentRawFiles(UserTemplate newOwner, ExperimentTemplate originalExperiment, ExperimentTemplate experimentCopy, CopyProjectInfoTemplate copyInfo) {
+    protected void onCopyExperimentRawFiles(UserTemplate newOwner, ExperimentTemplate originalExperiment,
+                                            ExperimentTemplate experimentCopy, CopyProjectInfoTemplate copyInfo) {
         projectManager.copyExperimentRawFiles(originalExperiment, experimentCopy, createCopyMetaDataFn(newOwner));
     }
 
-    protected ExperimentTemplate onCopyExperiment(PROJECT copyOfProject, UserTemplate newOwner, ExperimentTemplate originalProjectExperiment, CopyProjectInfoTemplate copyInfo) {
+    protected ExperimentTemplate onCopyExperiment(PROJECT copyOfProject, UserTemplate newOwner,
+                                                  ExperimentTemplate originalProjectExperiment,
+                                                  CopyProjectInfoTemplate copyInfo) {
         return projectManager.copyProjectExperiment(newOwner, copyOfProject, originalProjectExperiment);
     }
 
@@ -159,16 +180,14 @@ public class DefaultProjectManagement<PROJECT extends ProjectTemplate, PROJECT_I
 
         final Map<FileMetaDataTemplate, FileMetaDataTemplate> originalCopyMap = newHashMap();
 
-        return new Function<FileMetaDataTemplate, FileMetaDataTemplate>() {
-            @Override
-            public FileMetaDataTemplate apply(FileMetaDataTemplate originalMeta) {
-                if (originalCopyMap.containsKey(originalMeta)) {
-                    return originalCopyMap.get(originalMeta);
-                }
-                final FileMetaDataTemplate copied = fileMetaDataRepository.save(copyManager.copyFileMetaData(originalMeta, newOwner));
-                originalCopyMap.put(originalMeta, copied);
-                return copied;
+        return originalMeta -> {
+            if (originalCopyMap.containsKey(originalMeta)) {
+                return originalCopyMap.get(originalMeta);
             }
+            final FileMetaDataTemplate copied =
+                fileMetaDataRepository.save(copyManager.copyFileMetaData(originalMeta, newOwner));
+            originalCopyMap.put(originalMeta, copied);
+            return copied;
         };
     }
 

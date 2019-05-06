@@ -16,21 +16,17 @@ import static com.google.common.collect.FluentIterable.from;
 @Transactional(readOnly = true)
 public abstract class DefaultSharingProjectShortRecordHelper
 
-        <USER_SHORT_RECORD extends UserShortRecord, USER extends UserTemplate, GROUP extends GroupTemplate>
+    <USER_SHORT_RECORD extends UserShortRecord, USER extends UserTemplate, GROUP extends GroupTemplate>
 
-        extends DefaultSharingProjectHelper<USER, GROUP> {
+    extends DefaultSharingProjectHelper<USER, GROUP> {
 
     @Override
     public List<UserDetails> getAvailableUsers() {
 
         final List<USER_SHORT_RECORD> all = userRepository.findShortRecordsAll();
         return from(all)
-                .transform(new Function<USER_SHORT_RECORD, UserDetails>() {
-                    public UserDetails apply(USER_SHORT_RECORD input) {
-                        return transformUserDetails(input);
-                    }
-                })
-                .toList();
+            .transform(input -> transformUserDetails(input))
+            .toList();
 
     }
 

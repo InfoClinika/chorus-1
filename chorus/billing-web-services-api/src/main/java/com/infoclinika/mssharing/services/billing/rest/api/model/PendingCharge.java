@@ -11,7 +11,8 @@ public class PendingCharge {
     public long charge;
     public long timestamp;
 
-    public PendingCharge(BillingFeature feature, String serverDateFormatted, long featureAmountUsed, long sizeInBytes, long charge, long timestamp) {
+    public PendingCharge(BillingFeature feature, String serverDateFormatted, long featureAmountUsed, long sizeInBytes,
+                         long charge, long timestamp) {
         this.feature = feature;
         this.serverDateFormatted = serverDateFormatted;
         this.featureAmountUsed = featureAmountUsed;

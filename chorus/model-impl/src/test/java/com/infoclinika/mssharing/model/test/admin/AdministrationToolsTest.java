@@ -3,7 +3,6 @@ package com.infoclinika.mssharing.model.test.admin;
 import com.infoclinika.mssharing.model.AdminNotifier;
 import com.infoclinika.mssharing.model.helper.AbstractTest;
 import com.infoclinika.mssharing.model.write.AdministrationToolsManagement;
-import org.apache.log4j.Logger;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;

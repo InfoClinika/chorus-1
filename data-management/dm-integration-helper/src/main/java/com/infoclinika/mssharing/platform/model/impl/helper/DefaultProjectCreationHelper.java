@@ -25,12 +25,7 @@ public abstract class DefaultProjectCreationHelper implements ProjectCreationHel
 
         //noinspection unchecked
         return from(projectRepositoryTemplate.findMy(actor))
-                .transform(new Function<ProjectTemplate, NamedItem>() {
-                    @Override
-                    public NamedItem apply(ProjectTemplate input) {
-                        return new NamedItem(input.getId(), input.getName());
-                    }
-                })
-                .toSet();
+            .transform((Function<ProjectTemplate, NamedItem>) input -> new NamedItem(input.getId(), input.getName()))
+            .toSet();
     }
 }

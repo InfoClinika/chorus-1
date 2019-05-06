@@ -6,10 +6,14 @@ import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.entity.restorable.DeletedExperiment;
 import com.infoclinika.mssharing.model.internal.entity.restorable.DeletedFileMetaData;
 import com.infoclinika.mssharing.model.internal.entity.restorable.DeletedProject;
-import com.infoclinika.mssharing.model.internal.repository.*;
+import com.infoclinika.mssharing.model.internal.repository.DeletedExperimentRepository;
+import com.infoclinika.mssharing.model.internal.repository.DeletedFileMetaDataRepository;
+import com.infoclinika.mssharing.model.internal.repository.DeletedItem;
+import com.infoclinika.mssharing.model.internal.repository.DeletedProjectRepository;
 import com.infoclinika.mssharing.model.read.TrashReader;
 import com.infoclinika.mssharing.model.write.LabHeadManagement;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -24,7 +28,7 @@ import java.util.Set;
 @Service
 public class TrashReaderImpl implements TrashReader {
 
-    private static final Logger LOG = Logger.getLogger(TrashReaderImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrashReaderImpl.class);
 
     @Inject
     private DeletedFileMetaDataRepository deletedFileRepository;
@@ -47,7 +51,11 @@ public class TrashReaderImpl implements TrashReader {
         return ImmutableSet.copyOf(all);
     }
 
-    private Set<TrashLine> getTrashLines(Set<TrashLine> deletedFileMetaDatas, Set<TrashLine> deletedExperiments, Set<TrashLine> deletedProjects) {
+    private Set<TrashLine> getTrashLines(
+        Set<TrashLine> deletedFileMetaDatas,
+        Set<TrashLine> deletedExperiments,
+        Set<TrashLine> deletedProjects
+    ) {
         Set<TrashLine> all = new HashSet<TrashLine>();
         all.addAll(deletedFileMetaDatas);
         all.addAll(deletedExperiments);
@@ -60,14 +68,14 @@ public class TrashReaderImpl implements TrashReader {
         final Collection<Long> labs = labHeadManagement.findLabsForLabHead(actor);
         Set<TrashLine> all;
 
-        if(!labs.isEmpty()){
-            LOG.debug("Trash was read for lab head: " + actor);
+        if (!labs.isEmpty()) {
+            LOGGER.debug("Trash was read for lab head: {}", actor);
             Set<TrashLine> deletedFileMetaDatas = convertToTrashLine(deletedFileRepository.findByLabs(labs));
             Set<TrashLine> deletedExperiments = convertToTrashLine(deletedExperimentRepository.findByLabs(labs));
             Set<TrashLine> deletedProjects = convertToTrashLine(deletedProjectRepository.findByLabs(labs));
             all = getTrashLines(deletedFileMetaDatas, deletedExperiments, deletedProjects);
         } else {
-            LOG.debug("Trash was read for user " + actor);
+            LOGGER.debug("Trash was read for user {}", actor);
             all = readByOwner(actor);
         }
 
@@ -119,11 +127,11 @@ public class TrashReaderImpl implements TrashReader {
     }
 
     private final Function<DeletedItem, TrashLine> trashLineTransformer =
-            new Function<DeletedItem, TrashLine>() {
-                @Override
-                public TrashLine apply(DeletedItem item) {
-                    return new TrashLine(item.deletionDate, item.labName, item.title, item.id, item.type);
-                }
-            };
+        new Function<DeletedItem, TrashLine>() {
+            @Override
+            public TrashLine apply(DeletedItem item) {
+                return new TrashLine(item.deletionDate, item.labName, item.title, item.id, item.type);
+            }
+        };
 
 }

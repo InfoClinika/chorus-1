@@ -25,7 +25,8 @@ public interface NewsReader {
         public final Date dateCreated;
         public final Date lastUpdated;
 
-        public NewsItem(long id, String title, String introduction, String text, String creator, Date dateCreated, Date lastUpdated) {
+        public NewsItem(long id, String title, String introduction, String text, String creator, Date dateCreated,
+                        Date lastUpdated) {
             this.id = id;
             this.title = title;
             this.introduction = introduction;

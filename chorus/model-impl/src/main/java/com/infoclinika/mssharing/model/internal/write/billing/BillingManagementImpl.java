@@ -4,19 +4,19 @@ import com.infoclinika.mssharing.model.internal.RuleValidator;
 import com.infoclinika.mssharing.model.internal.entity.payment.AccountChargeableItemData;
 import com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem;
 import com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount;
-import com.infoclinika.mssharing.model.internal.helper.billing.BillingPropertiesProvider;
+import com.infoclinika.mssharing.model.internal.helper.billing.DatabaseBillingPropertiesProvider;
 import com.infoclinika.mssharing.model.internal.repository.AccountChargeableItemDataRepository;
 import com.infoclinika.mssharing.model.internal.repository.ChargeableItemRepository;
 import com.infoclinika.mssharing.model.internal.repository.LabPaymentAccountRepository;
 import com.infoclinika.mssharing.model.write.billing.BillingManagement;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.propertiesprovider.BillingPropertiesProvider;
 import com.infoclinika.mssharing.services.billing.rest.api.BillingService;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
 import com.infoclinika.mssharing.services.billing.rest.api.model.StorageUsage;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -30,6 +30,8 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem.ChargeType.GB;
+import static com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount.LabPaymentAccountType.ENTERPRISE;
+import static com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount.LabPaymentAccountType.FREE;
 import static com.infoclinika.mssharing.model.internal.read.Transformers.transformFeature;
 import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditions.checkAccess;
 
@@ -38,28 +40,29 @@ import static com.infoclinika.mssharing.platform.model.impl.ValidatorPreconditio
  */
 @Service
 public class BillingManagementImpl implements BillingManagement {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BillingManagementImpl.class);
+    private static final long ENTERPRISE_ACCOUNT_AVAILABLE_STORAGE_SIZE = Long.MAX_VALUE;
+
     @Inject
     private LabPaymentAccountRepository labPaymentAccountRepository;
+
     @Inject
     private ChargeableItemRepository chargeableItemRepository;
-    @Resource
-    @Qualifier("billingRestService")
+
+    @Resource(name = "billingService")
     private BillingService billingService;
+
     @Inject
-    private BillingPropertiesProvider propertiesProvider;
+    private DatabaseBillingPropertiesProvider propertiesProvider;
+
     @Inject
     private AccountChargeableItemDataRepository accountChargeableItemDataRepository;
+
     @Inject
     private RuleValidator ruleValidator;
-    @Value("${billing.server.timezone}")
-    private String timeZoneId;
-    @Value("${billing.planChangeDuration}")
-    private String planChangeDuration;
-    @Value("${billing.planChangeDurationMonths}")
-    private String planChangeDurationMonths;
 
-
-    private static final Logger LOG = Logger.getLogger(BillingManagementImpl.class);
+    @Inject
+    private BillingPropertiesProvider billingPropertiesProvider;
 
     @Override
     public long createChargeableItem(int price, BillingFeature feature, int chargeValue, BillingChargeType type) {
@@ -67,11 +70,13 @@ public class BillingManagementImpl implements BillingManagement {
         if (item != null) {
             return item.getId();
         }
-        return chargeableItemRepository.save(new ChargeableItem(price,
-                transformFeature(feature),
-                chargeValue,
-                transformChargeType(type)))
-                .getId();
+        return chargeableItemRepository.save(new ChargeableItem(
+            price,
+            transformFeature(feature),
+            chargeValue,
+            transformChargeType(type)
+
+        )).getId();
     }
 
     @Override
@@ -83,13 +88,13 @@ public class BillingManagementImpl implements BillingManagement {
 
         final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
 
-        if (account.getType() == LabPaymentAccount.LabPaymentAccountType.ENTERPRISE) {
+        if (account.getType() == ENTERPRISE) {
             throw new RuntimeException("Lab account is already Enterprise. Lab ID: " + lab);
         }
 
         final Date now = new Date();
 
-        account.setType(LabPaymentAccount.LabPaymentAccountType.ENTERPRISE);
+        account.setType(ENTERPRISE);
         account.setLastTypeUpdateDate(now);
 
         activateFeature(account, ChargeableItem.Feature.ARCHIVE_STORAGE_VOLUMES);
@@ -109,19 +114,22 @@ public class BillingManagementImpl implements BillingManagement {
 
         final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
 
-        if (account.getType() == LabPaymentAccount.LabPaymentAccountType.FREE) {
+        if (account.getType() == FREE) {
             throw new RuntimeException("Lab account is already Free. Lab ID: " + lab);
         }
 
         final MakeAccountFreeCheckResult checkResult = checkCanMakeAccountFree(actor, lab);
 
         if (!checkResult.canChange) {
-            throw new RuntimeException("Not sufficient amount of time passed since becoming enterprise to become free again or storage usage exceeds limits. Lab ID: " + lab + " Expected time to pass: " + planChangeDuration);
+            throw new RuntimeException(
+                "Not sufficient amount of time passed since becoming enterprise to become " +
+                    "free again or storage usage exceeds limits. Lab ID: " +
+                    lab + " Expected time to pass: " + billingPropertiesProvider.getPlanChangeDuration());
         }
 
         final Date now = new Date();
 
-        account.setType(LabPaymentAccount.LabPaymentAccountType.FREE);
+        account.setType(FREE);
         account.setLastTypeUpdateDate(now);
 
         deactivateFeature(account, ChargeableItem.Feature.ARCHIVE_STORAGE_VOLUMES);
@@ -151,135 +159,61 @@ public class BillingManagementImpl implements BillingManagement {
         final boolean planChangeDurationPassed = isPlanChangeDurationPassed(account);
         long allowedAfterTimestamp = 0;
 
-        if(!planChangeDurationPassed) {
+        if (!planChangeDurationPassed) {
             final Instant instant = account.getLastTypeUpdateDate().toInstant();
-            final ZonedDateTime lastUpdateDate = ZonedDateTime.from(instant.atZone(ZoneId.of(timeZoneId)));
-            final Duration preciseDuration = Duration.parse(planChangeDuration);
-            final ZonedDateTime whenAllowed = lastUpdateDate.plusMonths(Long.valueOf(planChangeDurationMonths)).plusNanos(preciseDuration.toNanos());
+            final ZonedDateTime lastUpdateDate =
+                ZonedDateTime.from(instant.atZone(ZoneId.of(billingPropertiesProvider.getTimeZoneId())));
+            final Duration preciseDuration = Duration.parse(billingPropertiesProvider.getPlanChangeDuration());
+            final int planChangeDurationMonths = billingPropertiesProvider.getPlanChangeDurationMonths();
+            final ZonedDateTime whenAllowed = lastUpdateDate
+                .plusMonths((long) planChangeDurationMonths)
+                .plusNanos(preciseDuration.toNanos());
             allowedAfterTimestamp = whenAllowed.toInstant().toEpochMilli();
         }
 
-        final boolean canChange = analyzableStorageLimitExceeded <= 0 && archiveStorageLimitExceeded <= 0 && planChangeDurationPassed;
+        final boolean canChange =
+            analyzableStorageLimitExceeded <= 0 && archiveStorageLimitExceeded <= 0 && planChangeDurationPassed;
 
-        return new MakeAccountFreeCheckResult(canChange, allowedAfterTimestamp, analyzableStorageLimitExceeded, archiveStorageLimitExceeded);
-    }
-
-
-    @Override
-    public void updateProcessingFeatureState(long actor, long lab, boolean processingIsActive, boolean prolongateAutomatically) {
-        if (!ruleValidator.canUserManageLabAccount(actor, lab)) {
-            throw new RuntimeException("Access Denied");
-        }
-
-        final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
-
-        final Optional<AccountChargeableItemData> processingFeatureOptional = getFeatureForAccount(account, ChargeableItem.Feature.PROCESSING);
-
-        if (processingIsActive) {
-            if (processingFeatureOptional.isPresent() && processingFeatureOptional.get().isActive()) {
-                // just update prolongation state
-                final AccountChargeableItemData processingFeature = processingFeatureOptional.get();
-                processingFeature.setAutoProlongate(prolongateAutomatically);
-                accountChargeableItemDataRepository.save(processingFeature);
-            } else if (!processingFeatureOptional.isPresent() || !processingFeatureOptional.get().isActive()) {
-                enableProcessingForLabAccount(actor, lab, prolongateAutomatically);
-            }
-        }
-    }
-
-    @Override
-    public void enableProcessingForLabAccount(long actor, long lab, boolean prolongateAutomatically) {
-
-        if (!ruleValidator.canUserManageLabAccount(actor, lab)) {
-            throw new RuntimeException("Access Denied");
-        }
-
-        final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
-
-        if (!canLabAccountAffordProcessing(account)) {
-            throw new RuntimeException("Lab account has insufficient balance");
-        }
-
-        final AccountChargeableItemData featureUsage = activateFeature(account, ChargeableItem.Feature.PROCESSING);
-        featureUsage.setAutoProlongate(prolongateAutomatically);
-        accountChargeableItemDataRepository.save(featureUsage);
-
-        labPaymentAccountRepository.save(account);
-
-        billingService.logProcessingUsage(
-                actor,
-                lab,
-                featureUsage.getChangeDate().getTime()
+        return new MakeAccountFreeCheckResult(
+            canChange,
+            allowedAfterTimestamp,
+            analyzableStorageLimitExceeded,
+            archiveStorageLimitExceeded
         );
     }
 
     @Override
-    public void disableProcessingForLabAccount(long actor, long lab) {
+    public long availableStorageSize(long actor, long lab) {
+
         final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
-        deactivateFeature(account, ChargeableItem.Feature.PROCESSING);
-        labPaymentAccountRepository.save(account);
-    }
 
-    @Override
-    public UploadLimitCheckResult checkUploadLimit(long actor, long lab) {
-        LOG.debug("Checking upload limit for lab: " + lab);
-        final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
-        final LabPaymentAccount.LabPaymentAccountType type = account.getType();
-
-        if (LabPaymentAccountType.FREE.name().equals(type.name())) {
-            LOG.debug("Lab is free. Checking upload limit for free lab");
-            final long uploadLimitForLab = propertiesProvider.getFreeAccountStorageLimit();
-            final StorageUsage storageUsage = billingService.readStorageUsage(actor, lab);
-            final long totalFilesSizeForLab = storageUsage.rawFilesSize + storageUsage.translatedFilesSize + storageUsage.searchResultsFilesSize;
-
-            if (totalFilesSizeForLab > uploadLimitForLab) {
-                final long limitInGb = uploadLimitForLab / 1024 / 1024 / 1024;
-                LOG.debug("Billing Service: upload limit is exceeded. Allowed: " + limitInGb + ". Current size: " + totalFilesSizeForLab);
-                return new UploadLimitCheckResult(true, "Upload storage limit is reached. Your limit is " + limitInGb + "GB");
+        if (account.getType() == FREE) {
+            try {
+                final long uploadLimitForLab = propertiesProvider.getFreeAccountStorageLimit();
+                final StorageUsage storageUsage = billingService.readStorageUsage(actor, lab);
+                final long totalFilesSizeForLab = storageUsage.rawFilesSize;
+                return uploadLimitForLab - totalFilesSizeForLab;
+            } catch (Exception ex) {
+                LOGGER.warn("Error occurred when retrieve available storage size", ex);
             }
         }
 
-        return new UploadLimitCheckResult(false, "all is okay");
+        return ENTERPRISE_ACCOUNT_AVAILABLE_STORAGE_SIZE;
     }
 
     @Override
     public void updateLabAccountSubscriptionDetails(long actor, SubscriptionInfo subscriptionInfo) {
-        LOG.debug("Updating account subscription details using next info: " + subscriptionInfo);
+        LOGGER.debug("Updating account subscription details using next info: {}", subscriptionInfo);
 
         final long lab = subscriptionInfo.labId;
         final LabPaymentAccount account = labPaymentAccountRepository.findByLab(lab);
-
-        final Optional<AccountChargeableItemData> processingFeatureOptional = getFeatureForAccount(account, ChargeableItem.Feature.PROCESSING);
-        final boolean processingIsActive = processingFeatureOptional.isPresent() && processingFeatureOptional.get().isActive();
 
         // handle lab account type change
         if (!account.getType().name().equals(subscriptionInfo.accountType.name())) {
             if (LabPaymentAccountType.ENTERPRISE.equals(subscriptionInfo.accountType)) {
                 makeLabAccountEnterprise(actor, lab);
             } else {
-
-                if (processingIsActive) {
-                    throw new RuntimeException("Lab with enabled processing can't become free.");
-                }
-
                 makeLabAccountFree(actor, lab);
-            }
-        }
-
-        /**
-         * Handle processing feature.
-         * It CAN NOT be turned off manually. Only autoprolongate flag should be turned on/off.
-         */
-        if (LabPaymentAccountType.ENTERPRISE.equals(subscriptionInfo.accountType) && subscriptionInfo.enableProcessing) {
-            if (!processingIsActive) {
-                enableProcessingForLabAccount(actor, lab, subscriptionInfo.autoprolongateProcessing);
-            } else {
-
-                // turn on/off autoprolongate for processing
-                final AccountChargeableItemData processing = processingFeatureOptional.get();
-                if (processing.isAutoProlongate() != subscriptionInfo.autoprolongateProcessing) {
-                    updateFeatureUsage(account, ChargeableItem.Feature.PROCESSING, true, 1, subscriptionInfo.autoprolongateProcessing);
-                }
             }
         }
     }
@@ -287,27 +221,33 @@ public class BillingManagementImpl implements BillingManagement {
     @Override
     public void topUpLabBalance(long admin, long lab, long amountCents) {
 
-        checkAccess(ruleValidator.hasAdminRights(admin),
-                "User has no admin rights to Top Up lab balance. User=" + admin + ", lab=" + lab);
+        checkAccess(
+            ruleValidator.hasAdminRights(admin),
+            "User has no admin rights to Top Up lab balance. User=" + admin + ", lab=" + lab
+        );
         checkArgument(amountCents > 0, "Top up amount less than 0!");
 
         billingService.storeCreditForLab(admin, lab, amountCents);
 
     }
 
-    private Optional<AccountChargeableItemData> getFeatureForAccount(LabPaymentAccount account, ChargeableItem.Feature featureType) {
+    private Optional<AccountChargeableItemData> getFeatureForAccount(
+        LabPaymentAccount account,
+        ChargeableItem.Feature featureType
+    ) {
         return account.getBillingData().getFeaturesData()
-                .stream()
-                .filter(f -> f.getChargeableItem().getFeature().equals(featureType))
-                .findFirst();
+            .stream()
+            .filter(f -> f.getChargeableItem().getFeature().equals(featureType))
+            .findFirst();
     }
 
     private ChargeableItem.ChargeType transformChargeType(BillingChargeType type) {
         switch (type) {
             case PER_GB:
                 return GB;
+            default:
+                throw new AssertionError("Unknown type: " + type);
         }
-        throw new AssertionError("Unknown type: " + type);
     }
 
     private boolean canLabAccountAffordProcessing(LabPaymentAccount account) {
@@ -319,17 +259,26 @@ public class BillingManagementImpl implements BillingManagement {
         updateFeatureUsage(account, billingFeature, false, 0, false);
     }
 
-    private AccountChargeableItemData activateFeature(LabPaymentAccount account, ChargeableItem.Feature billingFeature) {
+    private AccountChargeableItemData activateFeature(
+        LabPaymentAccount account,
+        ChargeableItem.Feature billingFeature
+    ) {
         return updateFeatureUsage(account, billingFeature, true, 0, true);
     }
 
-    private AccountChargeableItemData updateFeatureUsage(LabPaymentAccount account, ChargeableItem.Feature billingFeature, boolean isActive, int quantity, boolean autoProlongate) {
+    private AccountChargeableItemData updateFeatureUsage(
+        LabPaymentAccount account,
+        ChargeableItem.Feature billingFeature,
+        boolean isActive,
+        int quantity,
+        boolean autoProlongate
+    ) {
 
         final ChargeableItem chargeableItem = chargeableItemRepository.findByFeature(billingFeature);
         final Optional<AccountChargeableItemData> featureUsageOptional = account.getBillingData().getFeaturesData()
-                .stream()
-                .filter(f -> f.getChargeableItem().getId().equals(chargeableItem.getId()))
-                .findFirst();
+            .stream()
+            .filter(f -> f.getChargeableItem().getId().equals(chargeableItem.getId()))
+            .findFirst();
 
         final AccountChargeableItemData featureUsage;
 
@@ -348,7 +297,8 @@ public class BillingManagementImpl implements BillingManagement {
     }
 
     private long analyzableStorageLimitExceededSizeForFreeAccount(StorageUsage usage) {
-        final long analyzableStorageSize = usage.rawFilesSize + usage.searchResultsFilesSize + usage.translatedFilesSize;
+        final long analyzableStorageSize =
+            usage.rawFilesSize + usage.searchResultsFilesSize;
         return analyzableStorageSize - propertiesProvider.getFreeAccountStorageLimit();
     }
 
@@ -358,10 +308,13 @@ public class BillingManagementImpl implements BillingManagement {
 
     private boolean isPlanChangeDurationPassed(LabPaymentAccount account) {
         final Instant instant = account.getLastTypeUpdateDate().toInstant();
+        final String timeZoneId = billingPropertiesProvider.getTimeZoneId();
         final ZonedDateTime lastUpdateDate = ZonedDateTime.from(instant.atZone(ZoneId.of(timeZoneId)));
         final ZonedDateTime now = ZonedDateTime.from(Instant.now().atZone(ZoneId.of(timeZoneId)));
-        final Duration preciseDuration = Duration.parse(planChangeDuration);
-        return lastUpdateDate.plus(preciseDuration).plusMonths(Long.valueOf(planChangeDurationMonths)).isBefore(now);
+        final Duration preciseDuration = Duration.parse(billingPropertiesProvider.getPlanChangeDuration());
+        final int planChangeDurationMonths = billingPropertiesProvider.getPlanChangeDurationMonths();
+
+        return lastUpdateDate.plus(preciseDuration).plusMonths((long) planChangeDurationMonths).isBefore(now);
     }
 
 }

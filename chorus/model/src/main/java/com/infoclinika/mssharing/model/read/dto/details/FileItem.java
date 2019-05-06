@@ -12,13 +12,15 @@ public class FileItem extends FileItemTemplate {
     public final String archiveId;
     public final StorageStatus storageStatus;
     public final int fractionNumber;
+    public final Integer pairedEnd;
     public final ExperimentPreparedSampleItem preparedSample;
 
     public FileItem(FileItemTemplate fileItemTemplate, String archiveId, StorageStatus storageStatus,
-                    int fractionNumber, ExperimentPreparedSampleItem preparedSample) {
+                    Integer pairedEnd, int fractionNumber, ExperimentPreparedSampleItem preparedSample) {
         super(fileItemTemplate);
         this.archiveId = archiveId;
         this.storageStatus = storageStatus;
+        this.pairedEnd = pairedEnd;
         this.fractionNumber = fractionNumber;
         this.preparedSample = preparedSample;
     }

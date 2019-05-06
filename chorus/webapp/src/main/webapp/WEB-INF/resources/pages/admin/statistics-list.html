@@ -1,0 +1,147 @@
+<div id="aggregate-statistics-dialog" class="client-token-dialog" modal-dialog>
+    <div class="modal-holder">
+        <div class="modal-frame" style="width: 70%; height: 75%">
+            <div class="modal-header">
+                <a ng-click="close()" class="close">&times;</a>
+
+                <h3>
+                    <span>Storage Usage Statistics</span>
+                </h3>
+            </div>
+
+            <div ng-class="{'loading-in-progress': loadingInProgress}" style="height: 100%">
+                <div class="loading-overlay">
+                    <div class="background"></div>
+                    <div class="spinner"></div>
+                </div>
+
+                <div class="modal-body-resizable">
+                    <div class="container-fluid" style="margin-left: 30px; margin-right: 30px; height: 100%">
+                        <div class="row-fluid" style="height: 100%">
+                            <div class="span9 statistics-content-box">
+                                <div>
+                                <button class="btn btn-primary statistics-run-button" ng-click="aggregateStatistics()">
+                                    Run
+                                </button>
+
+                                <div class="control-group input-append" style="float: right; margin: 10px 0 10px 10px">
+                                    <label class="control-label tooltip-label" for="toDateInput">To:
+                                        <a href enable-tooltip data-placement="top"
+                                           title="Aggregate statistics to selected date.">
+                                            <i class="icon details"></i>
+                                        </a>
+                                    </label>
+                                    <input id="toDateInput" type="text" input-validator
+                                           ng-model="toDate"
+                                           chorus-end-datepicker="fromDate"
+                                           chorus-start-datepicker-from-today="false"
+                                           style="width: 100px"/>
+                                    <label for="toDateInput" class="add-on"><i class="icon-calendar"></i>
+                                    </label>
+                                </div>
+                                <div class="control-group input-append" style="float: right; margin: 10px">
+                                    <label class="control-label tooltip-label" for="fromDateInput">From:
+                                        <a href enable-tooltip data-placement="top" class="tolerance-tooltip"
+                                           title="Aggregate statistics from selected date.">
+                                            <i class="icon details"></i>
+                                        </a>
+                                    </label>
+                                    <input id="fromDateInput" type="text" input-validator
+                                           ng-model="fromDate"
+                                           chorus-start-datepicker="toDate"
+                                           chorus-start-datepicker-from-today="false"
+                                           style="width: 100px"/>
+                                    <label for="fromDateInput" class="add-on"><i class="icon-calendar"></i>
+                                    </label>
+                                </div>
+
+                                <h6 style="float: right; margin-top: 38px">Compute (~1$ per run)</h6>
+                                </div>
+
+                                <div class="dashboard-box-resizable laboratory-info clearfix">
+                                    <div class="heading clearfix">
+                                        <div class="cell cell-lab-name-statistics" unroute-sorting="labName">Lab Name
+                                        </div>
+                                        <div class="cell cell-number-statistics" unroute-sorting="rawFilesCount">Raw
+                                            Files
+                                            Count
+                                        </div>
+                                        <div class="cell cell-number-statistics" unroute-sorting="rawFilesSize">Raw
+                                            Files
+                                            Size, GB
+                                        </div>
+                                        <div class="cell cell-number-statistics" unroute-sorting="translatedFilesCount">
+                                            Translated Files Count
+                                        </div>
+                                        <div class="cell cell-number-statistics" unroute-sorting="translatedFilesSize">
+                                            Translated Files Size, GB
+                                        </div>
+                                        <div class="cell cell-number-statistics" unroute-sorting="otherFilesCount">
+                                            Other Files Count
+                                        </div>
+                                        <div class="cell cell-number-statistics" unroute-sorting="otherFilesSize">
+                                            Other Files Size, GB
+                                        </div>
+                                        <div class="cell cell-number-statistics" unroute-sorting="totalFilesSize">
+                                            Total Files Size, GB
+                                        </div>
+                                    </div>
+                                    <div class="content clearfix">
+                                        <div class="row clearfix not-select"
+                                             ng-repeat="statistics in statisticsSummaryList">
+                                            <div class="row-holder relative clearfix not-select">
+                                                <div class="cell cell-lab-name-statistics table-link">
+                                                    <strong>{{statistics.labName}}</strong>
+                                                </div>
+                                                <div class="cell cell-number-statistics">{{statistics.rawFilesCount}}
+                                                </div>
+                                                <div class="cell cell-number-statistics">
+                                                    {{formatToGBs(statistics.rawFilesSize)}}
+                                                </div>
+                                                <div class="cell cell-number-statistics">
+                                                    {{statistics.translatedFilesCount}}
+                                                </div>
+                                                <div class="cell cell-number-statistics">
+                                                    {{formatToGBs(statistics.translatedFilesSize)}}
+                                                </div>
+                                                <div class="cell cell-number-statistics">{{statistics.otherFilesCount}}
+                                                </div>
+                                                <div class="cell cell-number-statistics">
+                                                    {{formatToGBs(statistics.otherFilesSize)}}
+                                                </div>
+                                                <div class="cell cell-number-statistics">
+                                                    {{formatToGBs(statistics.totalFilesSize)}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="span3 saved-searches-box">
+                                <div style="padding: 20px;">
+                                    <h5><span>Saved Statistics Searches</span></h5>
+                                    <ul class="nav nav-list" id="statisticsSearches">
+                                        <li class="menu-option"
+                                            ng-class="{'active': isActive(getStatisticsSearchItem(statisticsSearch.deadline))}"
+                                            ng-model="deadline"
+                                            ng-repeat="statisticsSearch in statisticsSearches"
+                                            ng-click="onStatisticsSearchSelected(getStatisticsSearchItem(statisticsSearch.deadline))">
+                                            <a>{{getStatisticsSearchItem(statisticsSearch.deadline)}}</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn"
+                            ng-class="{'secondary-action inline' : statisticsSummaryList.length == 0, 'btn-primary' : statisticsSummaryList.length > 0}"
+                            ng-disabled="statisticsSummaryList.length == 0" ng-click="exportToCSV()">Export to CSV
+                    </button>
+                    <button class="btn secondary-action inline" ng-click="close()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

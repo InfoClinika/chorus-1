@@ -60,7 +60,8 @@ public abstract class AnnotationTemplate extends AbstractPersistable {
 
     @Transient
     public String getNameWithUnits() {
-        return StringUtils.isEmpty(this.getUnits()) ? this.getName() : format("%s(%s)", this.getName(), this.getUnits());
+        return StringUtils.isEmpty(this.getUnits()) ? this.getName() :
+            format("%s(%s)", this.getName(), this.getUnits());
     }
 
     public enum Type {

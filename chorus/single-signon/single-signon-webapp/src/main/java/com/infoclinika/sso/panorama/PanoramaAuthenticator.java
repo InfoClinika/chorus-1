@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
  */
 @Service
 public final class PanoramaAuthenticator implements Authenticator<UserCredentials> {
-    private static final Logger LOG = LoggerFactory.getLogger(PanoramaAuthenticator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PanoramaAuthenticator.class);
     @Inject
     private UserManagement userManagement;
     @Resource(name = "panoramaAuthenticationService")
@@ -40,25 +40,31 @@ public final class PanoramaAuthenticator implements Authenticator<UserCredential
         try {
             final AuthenticateUserResponse response = authenticatePanoramaUser(credentials);
             if (!response.success) {
-                throw new NotAuthorizedException("Authentication failed: success flag is false, error message: " + response.errorMessage);
+                throw new NotAuthorizedException(
+                    "Authentication failed: success flag is false, error message: " + response.errorMessage
+                );
             }
             userManagement.addApplicationForUser(
-                    Optional.fromNullable(credentials.getUniqueID()),
-                    ApplicationType.PANORAMA,
-                    credentials.getUsername(),
-                    credentials.getPassword());//change password to real secret token once it available.
+                Optional.fromNullable(credentials.getUniqueID()),
+                ApplicationType.PANORAMA,
+                credentials.getUsername(),
+                credentials.getPassword()   //change password to real secret token once it available.
+            );
         } catch (NotAuthorizedException notAuthorized) {
-            final String errorMessage = "Panorama: credentials don't match to authenticate, login: " + credentials.getUsername() + ", message:" + notAuthorized.getMessage();
+            final String errorMessage =
+                "Panorama: credentials don't match to authenticate, login: " + credentials.getUsername() +
+                    ", message:" + notAuthorized.getMessage();
             throw new CredentialsException(errorMessage, notAuthorized);
         } catch (RuntimeException e) {
-            LOG.error("Exception during authenticating at Panorama endpoint, message:" + e.getMessage(), e);
+            LOGGER.error("Exception during authenticating at Panorama endpoint, message:" + e.getMessage(), e);
             throw Throwables.propagate(e);
         }
     }
 
     private AuthenticateUserResponse authenticatePanoramaUser(UserCredentials credentials) {
         try {
-            final AuthenticateUserRequest request = new AuthenticateUserRequest(credentials.getUsername(), credentials.getPassword());
+            final AuthenticateUserRequest request =
+                new AuthenticateUserRequest(credentials.getUsername(), credentials.getPassword());
             final AuthenticateUserResponse response = panoramaAuthenticationService.authenticateUser(request);
             return response;
         } catch (BadRequestException e) {
@@ -68,7 +74,7 @@ public final class PanoramaAuthenticator implements Authenticator<UserCredential
                 return new AuthenticateUserResponse(bodyInString);
             } catch (IOException e1) {
                 final String errorMessage = "Cannot read response, error message: " + e1.getMessage();
-                LOG.error(errorMessage, e1);
+                LOGGER.error(errorMessage, e1);
                 return new AuthenticateUserResponse(errorMessage);
             }
         }

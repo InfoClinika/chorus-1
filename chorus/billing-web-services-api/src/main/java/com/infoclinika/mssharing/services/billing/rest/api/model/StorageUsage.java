@@ -6,13 +6,12 @@ package com.infoclinika.mssharing.services.billing.rest.api.model;
 public class StorageUsage {
     public long rawFilesSize;
     public long archivedFilesSize;
-    public long translatedFilesSize;
     public long searchResultsFilesSize;
 
-    public StorageUsage(long rawFilesSize, long archivedFilesSize, long translatedFilesSize, long searchResultsFilesSize) {
+    public StorageUsage(long rawFilesSize, long archivedFilesSize,
+                        long searchResultsFilesSize) {
         this.rawFilesSize = rawFilesSize;
         this.archivedFilesSize = archivedFilesSize;
-        this.translatedFilesSize = translatedFilesSize;
         this.searchResultsFilesSize = searchResultsFilesSize;
     }
 

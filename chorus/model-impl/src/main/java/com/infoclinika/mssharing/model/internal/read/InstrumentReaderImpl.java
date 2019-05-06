@@ -1,11 +1,10 @@
 package com.infoclinika.mssharing.model.internal.read;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.infoclinika.mssharing.model.internal.entity.Instrument;
-import com.infoclinika.mssharing.model.internal.helper.InstrumentsDefaults;
 import com.infoclinika.mssharing.model.read.InstrumentLine;
 import com.infoclinika.mssharing.model.read.InstrumentReader;
+import com.infoclinika.mssharing.platform.model.InstrumentsDefaults;
 import com.infoclinika.mssharing.platform.model.common.items.InstrumentItem;
 import com.infoclinika.mssharing.platform.model.common.items.VendorItem;
 import com.infoclinika.mssharing.platform.model.helper.read.ResultBuilder;
@@ -23,7 +22,8 @@ import java.util.SortedSet;
  */
 @Component
 @Transactional(readOnly = true)
-public class InstrumentReaderImpl extends DefaultAccessedInstrumentReader<Instrument, InstrumentLine> implements InstrumentReader {
+public class InstrumentReaderImpl extends DefaultAccessedInstrumentReader<Instrument, InstrumentLine>
+    implements InstrumentReader {
 
     @Override
     public InstrumentLine transform(AccessedInstrument<Instrument> accessed) {
@@ -34,32 +34,60 @@ public class InstrumentReaderImpl extends DefaultAccessedInstrumentReader<Instru
     public SortedSet<? extends InstrumentItem> readInstrumentItemsWhereUserIsOperator(long actor) {
         //noinspection unchecked
         return instrumentReaderHelper.readOperatedInstruments(actor)
-                .transform(new Function<AccessedInstrument<Instrument>, InstrumentItem>() {
-                    @Override
-                    public InstrumentItem apply(AccessedInstrument<Instrument> input) {
-                        return transformers.instrumentItemTransformer().apply(input.instrument);
-                    }
-                })
-                .toSortedSet(transformers.instrumentItemComparator());
+            .transform(input -> {
+                final InstrumentItem in = transformers.instrumentItemTransformer().apply(input.instrument);
+
+                return new InstrumentItemImpl(
+                    in.id,
+                    in.name,
+                    in.vendor,
+                    in.lab,
+                    in.serial,
+                    in.creator
+                );
+            })
+            .toSortedSet(transformers.instrumentItemComparator());
     }
 
     @Override
     public List<InstrumentLine> findByInstrumentModel(long actor, long instrumentModel) {
-        final FluentIterable<AccessedInstrument<Instrument>> entities = instrumentReaderHelper.readOperatedInstruments(actor).getEntities();
+        final FluentIterable<AccessedInstrument<Instrument>> entities =
+            instrumentReaderHelper.readOperatedInstruments(actor).getEntities();
         return entities
-                .filter(input -> input.instrument.getModel().getId().equals(instrumentModel))
-                .transform(input -> new InstrumentLine(instrumentReaderHelper.getDefaultTransformer().apply(input)))
-                .toList();
+            .filter(input -> input.instrument.getModel().getId().equals(instrumentModel))
+            .transform(input -> new InstrumentLine(
+                instrumentReaderHelper.getDefaultTransformer().apply(input)
+            ))
+            .toList();
     }
 
     @Override
     public Optional<InstrumentLine> readDefaultInstrument(long actor, long lab, long instrumentModel) {
         final ResultBuilder<AccessedInstrument<Instrument>, InstrumentLine> instrumentsResult =
-                instrumentReaderHelper.readInstrumentLinesByLabModelAndName(actor, lab, instrumentModel, InstrumentsDefaults.DEFAULT_INSTRUMENT_NAME);
+            instrumentReaderHelper.readInstrumentLinesByLabModelAndName(
+                actor,
+                lab,
+                instrumentModel,
+                InstrumentsDefaults.DEFAULT_INSTRUMENT_NAME
+            );
         final FluentIterable<InstrumentLine> instruments = instrumentsResult.transform();
         return instruments.size() > 0 ?
-                Optional.of(instruments.get(0)) :
-                Optional.empty();
+            Optional.of(instruments.get(0)) :
+            Optional.empty();
+
+    }
+
+    public static class InstrumentItemImpl extends InstrumentItem {
+        public InstrumentItemImpl(
+            long id,
+            String name,
+            VendorItem vendorItem,
+            long lab,
+            String serial,
+            long creator
+        ) {
+            super(id, name, vendorItem, lab, serial, creator);
+        }
 
     }
 

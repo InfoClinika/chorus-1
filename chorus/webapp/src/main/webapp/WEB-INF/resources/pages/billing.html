@@ -22,21 +22,31 @@
     <link rel="stylesheet" href="../lib/angular-ui/angular-ui.min.css">
 
     <script type="text/javascript" src="../script/enums.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/error-catcher.js"></script>
-    <script type="text/javascript" src="../script/service/protein-search-back.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/error-catcher.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/header/header.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/header/header.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/footer/footer.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/footer/footer.controller.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/appearance/appearance.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/appearance/appearance.service.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/experiments-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript"
             src="../script/dashboard-common-directives.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript"
-            src="../../../../../../../viewers-webapp/src/main/webapp/WEB-INF/resources/script/protein-search/protein-search-front.js?_version=${static.resources.version}"></script>
 
     <script type="text/javascript" src="../lib/detect-js/detect.js"></script>
 
     <script type="text/javascript" src="../script/util/popup-util.js"></script>
     <script type="text/javascript" src="../script/ajax.js"></script>
     <script type="text/javascript"
+            src="../script/service/feature.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
+            src="../script/service/user-details.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript"
             src="../script/controller/security-front.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/formatters.js?_version=${static.resources.version}"></script>
     <script type="text/javascript"
             src="../script/service/security-back.js?_version=${static.resources.version}"></script>
@@ -51,39 +61,26 @@
             src="../script/service/billing-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript"
             src="../script/service/lab-head-back.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
 
     <!-- Custom Fonts -->
     <link rel="stylesheet" href="../fonts/fonts.css">
-
+    <link rel="stylesheet" href="../lib/jquery-ui/jquery-ui.css"/>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dialogs.css">
-    <link rel="stylesheet" href="../lib/jquery-ui/jquery-ui.css"/>
 
-    <script>
-        (function (i, s, o, g, r, a, m) {
-            i['GoogleAnalyticsObject'] = r;
-            i[r] = i[r] || function () {
-                        (i[r].q = i[r].q || []).push(arguments)
-                    }, i[r].l = 1 * new Date();
-            a = s.createElement(o),
-                    m = s.getElementsByTagName(o)[0];
-            a.async = 1;
-            a.src = g;
-            m.parentNode.insertBefore(a, m)
-        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-
-        ga('create', 'UA-41329240-1', 'chorusproject.org');
-        ga('send', 'pageview');
-
-    </script>
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 </head>
 
 <body>
 <!--<img class="white-overlay" src="../img/home-page-overlay.png" alt=""/>-->
 <div class="hor-scroll" ng-cloak>
     <div class="fixed-area">
-        <div ng-init="activePage = 'billing'; isDashboard = false;" class="ng-include: 'header.html'"></div>
+        <div ng-init="activePage = 'billing'; isDashboard = false; showConsent = true"
+             class="ng-include: 'header.html'"></div>
         <div ng-include="'../pages/billing/navigation.html'"></div>
     </div>
 

@@ -3,18 +3,23 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.helper;
 
 import com.google.common.base.Joiner;
 import com.infoclinika.mssharing.platform.fileserver.StoredObjectPathsTemplate;
 import com.infoclinika.mssharing.platform.fileserver.model.NodePath;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.propertiesprovider.AmazonPropertiesProvider;
+import com.infoclinika.mssharing.propertiesprovider.BillingPropertiesProvider;
+import com.infoclinika.mssharing.propertiesprovider.ChorusPropertiesProvider;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.infoclinika.mssharing.platform.fileserver.StorageService.DELIMITER;
@@ -24,68 +29,62 @@ import static com.infoclinika.mssharing.platform.fileserver.StorageService.DELIM
  */
 @Service
 public class StoredObjectPaths extends StoredObjectPathsTemplate {
+    private final AmazonPropertiesProvider amazonPropertiesProvider;
+    private final ChorusPropertiesProvider chorusPropertiesProvider;
+    private final BillingPropertiesProvider billingPropertiesProvider;
 
-    @Value("${raw.files.temp.folder}")
-    private String tempRawFilesPrefix;
+    @Inject
+    public StoredObjectPaths(AmazonPropertiesProvider amazonPropertiesProvider,
+                             ChorusPropertiesProvider chorusPropertiesProvider,
+                             BillingPropertiesProvider billingPropertiesProvider) {
+        this.amazonPropertiesProvider = amazonPropertiesProvider;
+        this.chorusPropertiesProvider = chorusPropertiesProvider;
+        this.billingPropertiesProvider = billingPropertiesProvider;
 
-    @Value("${raw.files.temp.ftp.folder}")
-    private String tempFilesFtpPrefix;
+        setRawFilesPrefix(chorusPropertiesProvider.getRawFilesTargetFolder());
+        setProjectAttachmentsPrefix(chorusPropertiesProvider.getProjectAttachmentsTargetFolder());
+        setExperimentsAttachmentsPrefix(chorusPropertiesProvider.getExperimentsAttachmentsTargetFolder());
+    }
 
-    @Value("${experiment.annotation.target.folder}")
-    private String experimentsAnnotationsPrefix;
-
-    @Value("${protein.attachments.target.folder}")
-    private String processingRunPluginAttachmentPrefix;
-
-    @Value("${protein.search.attachments.target.folder}")
-    private String proteinSearchAttachmentPrefix;
-
-    @Value("${protein.dbs.target.folder}")
-    private String proteinDatabasesPrefix;
-
-    @Value("${unfinished.chunks.target.folder}")
-    private String unfinishedChunksPrefix;
-
-    @Value("${advertisement.images.target.folder}")
-    private String advertisementImagesPrefix;
-
-    @Value("${amazon.key}")
-    private String amazonKey;
-
-    @Value("${amazon.secret}")
-    private String amazonSecret;
-
-    @Value("${amazon.active.bucket}")
-    private String rawFilesBucket;
-
-    @Value("${amazon.archive.bucket}")
-    private String archiveBucket;
-
-    @Value("${amazon.billing.prefix}")
-    private String billingPrefix;
+    public NodePath hdf5FilePath(long user, long timestamp, String fileName) {
+        return new NodePath(Joiner.on(DELIMITER).join(
+            chorusPropertiesProvider.getHdf5FilesFolder(),
+            user,
+            timestamp,
+            fileName
+        ));
+    }
 
     public NodePath proteinDatabasePath(long user, long proteinDatabaseId, String proteinDbName) {
-        return new NodePath(Joiner.on(DELIMITER).join(proteinDatabasesPrefix, user, proteinDatabaseId + "-" + proteinDbName));
+        return new NodePath(Joiner.on(DELIMITER).join(
+            chorusPropertiesProvider.getProteinDatabasesTargetFolder(),
+            user,
+            proteinDatabaseId + "-" + proteinDbName
+        ));
     }
 
     public NodePath tempFilePath(long user, long lab, String realFileContentId) {
-        return new NodePath(Joiner.on(DELIMITER).join(tempRawFilesPrefix, lab, user, realFileContentId));
+        return new NodePath(Joiner.on(DELIMITER).join(
+            chorusPropertiesProvider.getRawFilesTempFolder(),
+            lab,
+            user,
+            realFileContentId
+        ));
     }
 
     public NodePath experimentAnnotationAttachmentPath(long actor, long annotationAttachmentID) {
-        return new NodePath(Joiner.on(DELIMITER).join(experimentsAnnotationsPrefix, actor, annotationAttachmentID));
+        return new NodePath(Joiner.on(DELIMITER).join(
+            chorusPropertiesProvider.getExperimentsAnnotationsTargetFolder(),
+            actor,
+            annotationAttachmentID
+        ));
     }
 
-    public NodePath processingRunPluginAttachmentPath(long actor, long processingRunPluginAttachmentID) {
-        return new NodePath(Joiner.on(DELIMITER).join(processingRunPluginAttachmentPrefix, actor, processingRunPluginAttachmentID));
-    }
-
-    public NodePath proteinSearchAttachmentPath(long actor, String searchPrefix, String attachmentPrefix, String filename) {
-        return new NodePath(Joiner.on(DELIMITER).skipNulls().join(proteinSearchAttachmentPrefix, actor, searchPrefix, attachmentPrefix, filename));
-    }
-
-    public NodePath advertisementImagesPath(long advertisementId){
-        return new NodePath(Joiner.on(DELIMITER).join(advertisementImagesPrefix, advertisementId ));
+    public NodePath advertisementImagesPath(long advertisementId) {
+        return new NodePath(Joiner.on(DELIMITER).join(
+            chorusPropertiesProvider.getAdvertisementImagesTargetFolder(),
+            advertisementId
+        ));
     }
 
     public NodePath labBillingDataPath(long lab) {
@@ -93,11 +92,19 @@ public class StoredObjectPaths extends StoredObjectPathsTemplate {
     }
 
     public NodePath ftpFilesPath(long actor, long instrument) {
-        return new NodePath(Joiner.on(DELIMITER).join(tempFilesFtpPrefix, actor, instrument));
+        return new NodePath(Joiner.on(DELIMITER).join(
+            chorusPropertiesProvider.getRawFilesTempFtpFolder(),
+            actor,
+            instrument
+        ));
     }
 
     public NodePath ftpFilesPath(long actor, String accessionNumber) {
-        return new NodePath(Joiner.on(DELIMITER).join(tempFilesFtpPrefix, actor, accessionNumber));
+        return new NodePath(Joiner.on(DELIMITER).join(
+            chorusPropertiesProvider.getRawFilesTempFtpFolder(),
+            actor,
+            accessionNumber
+        ));
     }
 
     private static String checkHasNowDelimiter(String toCheck) {
@@ -106,39 +113,45 @@ public class StoredObjectPaths extends StoredObjectPathsTemplate {
     }
 
     public String getAmazonKey() {
-        return amazonKey;
+        return amazonPropertiesProvider.getAccessKey();
     }
 
     public String getAmazonSecret() {
-        return amazonSecret;
+        return amazonPropertiesProvider.getSecretKey();
     }
 
     public String getRawFilesBucket() {
-        return rawFilesBucket;
+        return amazonPropertiesProvider.getActiveBucket();
+    }
+
+    public String getRawFilesBucket(String fileBucket) {
+        return StringUtils.isEmpty(fileBucket) ? getRawFilesBucket() : fileBucket;
     }
 
     public String getArchiveBucket() {
-        return archiveBucket;
+        return amazonPropertiesProvider.getArchiveBucket();
     }
 
     public String getBillingPrefix() {
-        return billingPrefix;
+        return billingPropertiesProvider.getBillingPrefix();
     }
 
+    public String getHdf5FilesPrefix() {
+        return chorusPropertiesProvider.getHdf5FilesFolder();
+    }
+
+
     @Override
-    @Value("${experiment.attachment.target.folder}")
     public void setExperimentsAttachmentsPrefix(String experimentsAttachmentsPrefix) {
         super.setExperimentsAttachmentsPrefix(experimentsAttachmentsPrefix);
     }
 
     @Override
-    @Value("${raw.files.target.folder}")
     public void setRawFilesPrefix(String rawFilesPrefix) {
         super.setRawFilesPrefix(rawFilesPrefix);
     }
 
     @Override
-    @Value("${project.attachments.target.folder}")
     public void setProjectAttachmentsPrefix(String projectAttachmentsPrefix) {
         super.setProjectAttachmentsPrefix(projectAttachmentsPrefix);
     }

@@ -34,9 +34,6 @@
                                 <div class="pull-right amount-link"><span ng-click="openSubscription()" ng-bind="details.isFree && 'Free' || 'Enterprise'"></span></div>
                                 <div class="pull-right amount-title">Subscription: </div>
 
-                                <div class="pull-right amount-link"><span ng-click="openProcessing()" ng-bind="processingIsOn() && 'On' || 'Off'"></span></div>
-                                <div class="pull-right amount-title">Processing: </div>
-
                                 <div class="pull-right">
                                     <a class="amount-link" data-target="#billing-storage-usage" data-toggle="modal" title="Show storage usage">Storage Usage</a>
                                 </div>
@@ -87,8 +84,11 @@
                         </button>
                         <p class="title pull-left">{{month.monthYear | formatMonth}}</p>
                         <span ng-show="!month.lines.length">
-                            Usages are archived. You can download history for the selected month as .csv files
-                            <a class="btn secondary-action" ng-click="downloadHistory(month)">Download history</a>
+                            <span ng-show="month.csvDataReference">
+                                &nbsp;&nbsp;&nbsp;Usages are archived. You can download history for the selected month as .csv files
+                                <a class="btn secondary-action" ng-click="downloadHistory(month)">Download history</a>
+                            </span>
+                            <span ng-show="!month.csvDataReference">&nbsp;&nbsp;&nbsp; There is no history for the month</span>
                         </span>
                         <div class="history-filter clearfix" ng-show="$index == 0">
                             <div class="filter-holder clearfix">
@@ -104,27 +104,10 @@
                         </div>
                         <div ng-show="$index == 0" class="amount">
                             <div class="pull-right pp-button-holder">
-                                <!-- Andrey's button -->
-                                <!--  <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-                                      <input type="hidden" name="cmd" value="_s-xclick">
-                                      <input type="hidden" name="custom" value="{{labId}}">
-                                      <input type="hidden" name="hosted_button_id" value="Z2FZ3JC4NQ9CQ">
-                                      <button class="btn main-action" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-                                          <i class="icon pp"></i>
-                                          Top Up Balance
-                                      </button>
-                                  </form>-->
-
-                                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-                                    <input type="hidden" name="cmd" value="_s-xclick">
-                                    <input type="hidden" name="custom" value="{{labId}}">
-                                    <input type="hidden" name="encrypted"
-                                           value="-----BEGIN PKCS7-----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-----END PKCS7----- ">
-                                    <button border="0" name="submit"
-                                            alt="PayPal - The safer, easier way to pay online!">
-                                        <span ng-bind="history.storeBalance | price"></span>
-                                    </button>
-                                </form>
+                                <button border="0" ng-click="showPayPalRedirectNotification();"
+                                        alt="PayPal - The safer, easier way to pay online!">
+                                    <span ng-bind="history.storeBalance | price"></span>
+                                </button>
                             </div>
                             <div class="pull-right amount-title pp-icon-holder"><i class="icon pp"></i>Balance:</div>
                             <div ng-show="$index == 0 && !showPendingCharges" class="amount pull-right">
@@ -140,9 +123,6 @@
 
                                 <div class="pull-right amount-link"><span ng-click="openSubscription()" ng-bind="details.isFree && 'Free' || 'Enterprise'"></span></div>
                                 <div class="pull-right amount-title">Subscription: </div>
-
-                                <div class="pull-right amount-link"><span ng-click="openProcessing()" ng-bind="processingIsOn() && 'On' || 'Off'"></span></div>
-                                <div class="pull-right amount-title">Processing: </div>
 
                                 <div class="pull-right">
                                     <a class="amount-link" data-target="#billing-storage-usage" data-toggle="modal" title="Show storage usage">Storage Usage</a>
@@ -207,7 +187,8 @@
                         <span ng-show="!loadingHistory">Load more history</span>
                         <span ng-show="loadingHistory">Loading...</span>
                     </button>
-                    <button ng-switch-when="false" ng-hide="currentMonth && !currentMonth.hasNext"
+                    <button ng-switch-when="false"
+                            ng-hide="currentMonth && (!currentMonth.hasNext || !currentMonth.csvDataReference)"
                             ng-click="loadHistoryReference()" class="btn more-history">
                         <span>Load more history</span>
                     </button>
@@ -239,7 +220,7 @@
                                 Due to technical issues "Load More History" is unavailable at the moment.
                                 Don't worry, all your history data will be available soon.
                                 Contact <strong><a
-                                    href="mailto:&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#064;&#099;&#104;&#111;&#114;&#117;&#115;&#112;&#114;&#111;&#106;&#101;&#099;&#116;&#046;&#111;&#114;&#103;">support@chorusproject.org</a></strong>
+                                    href="mailto:&#115;&#117;&#112;&#112;&#111;&#114;&#116;&#064;&#099;&#104;&#111;&#114;&#117;&#115;&#112;&#114;&#111;&#106;&#101;&#099;&#116;&#046;&#111;&#114;&#103;">support@infoclinika.com</a></strong>
                                 for more details.
                                 <br/>
                                 Thank You for understanding.
@@ -247,29 +228,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Close</button>
-                <button type="submit" class="btn secondary-action"
-                        data-dismiss="modal"
-                        ng-show="popups.translationStatusPopup.canDelete"
-                        ng-click="popups.translationStatusPopup.remove()">
-                    Delete
-                </button>
-                <button type="submit"
-                        ng-show="popups.translationStatusPopup.canTranslate"
-                        ng-bind="popups.translationStatusPopup.status == 'FAILURE' && 'Re-Translate' || 'Translate'"
-                        data-dismiss="modal"
-                        class="btn btn-primary main-action"
-                        ng-click="popups.translationStatusPopup.translate()">
-                    Translate
-                </button>
-                <a class="btn btn-primary main-action" target="_blank"
-                   ng-show="popups.translationStatusPopup.canView"
-                   data-dismiss="modal"
-                   ng-click="openChartWindow(popups.translationStatusPopup.item.msChartsUrl)">
-                    View
-                </a>
             </div>
         </div>
     </div>
@@ -410,6 +368,36 @@
             </div>
             <div class="modal-footer">
                 <button type="button" data-dismiss="modal" class="btn secondary-action">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="pay-pal-notification-dialog" class="modal hide" tabindex="-1" role="dialog">
+    <div class="modal-holder">
+        <div class="modal-frame">
+            <div class="modal-header">
+                <h1>NOTICE</h1>
+            </div>
+            <div class="modal-body">
+                <div class="dialog-container">
+                    <div>
+                        You have clicked on a link which leaves Chorus website, and you will be redirected to Paypal.
+                        Chorus redirects you to Paypal, so that you can make a payment for Chorus services. Chorus makes
+                        no representations nor has any supervision or control over the quality, content, reliability or
+                        security of the third party website, nor shall Chorus be liable for its use.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+                    <input type="hidden" name="cmd" value="_s-xclick">
+                    <input type="hidden" name="custom" value="{{labId}}">
+                    <input type="hidden" name="encrypted"
+                           value="-----BEGIN PKCS7-----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-----END PKCS7----- ">
+                    <button type="button" data-dismiss="modal" class="btn secondary-action">Cancel</button>
+                    <button type="submit" name="submit" class="btn main-action">To PayPal</button>
+                </form>
             </div>
         </div>
     </div>

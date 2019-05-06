@@ -5,8 +5,9 @@ import com.infoclinika.mssharing.platform.repository.InstrumentCreationRequestRe
 
 /**
  * @author timofey.kasyanov
- *         date: 12.05.2014
+ *     date: 12.05.2014
  */
-public interface InstrumentCreationRequestRepository extends InstrumentCreationRequestRepositoryTemplate<InstrumentCreationRequest> {
+public interface InstrumentCreationRequestRepository
+    extends InstrumentCreationRequestRepositoryTemplate<InstrumentCreationRequest> {
 
 }

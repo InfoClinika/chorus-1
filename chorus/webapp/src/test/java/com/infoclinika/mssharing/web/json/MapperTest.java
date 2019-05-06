@@ -3,6 +3,7 @@ package com.infoclinika.mssharing.web.json;
 import com.google.common.io.Resources;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleTypeItem;
+import com.infoclinika.mssharing.model.write.AnnotationItem;
 import com.infoclinika.mssharing.model.write.ExperimentInfo;
 import com.infoclinika.mssharing.model.write.FileItem;
 import com.infoclinika.mssharing.model.write.ProjectInfo;
@@ -10,26 +11,24 @@ import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTempla
 import com.infoclinika.mssharing.web.controller.SecurityController;
 import com.infoclinika.mssharing.web.controller.request.CreateInstrumentRequest;
 import com.infoclinika.mssharing.web.controller.request.ExperimentDetails;
-import com.infoclinika.mssharing.web.helper.AbstractDataBasedTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
-import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.*;
 
 /**
  * @author Pavel Kaplin
  */
-public class MapperTest extends AbstractDataBasedTest{
+public class MapperTest {
 
     private static final String EMAIL = "pavel@example.com";
     private static final String PASSWORD = "pwd";
@@ -37,25 +36,25 @@ public class MapperTest extends AbstractDataBasedTest{
     private static final String LAST_NAME = "Kaplin";
     private MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
 
+    public MapperTest() {
+    }
 
     @BeforeMethod
     public void setUpConverter() {
         converter.setObjectMapper(new Mapper());
     }
 
-    @DataProvider
-    public static Object[][] getClassesToCheck() {
-        return new Class[][]{{ProjectInfo.class}, {SecurityController.AccountDetails.class}, {ExperimentInfo.class}};
-    }
-
-    @Test(dataProvider = "getClassesToCheck")
-    public void testCouldBeDeserialized(Class classToCheck) {
-        assertThat("Can read " + classToCheck, converter.canRead(classToCheck, MediaType.APPLICATION_JSON), is(true));
+    @Test
+    public void testCouldBeDeserialized() {
+        assertThat(converter.canRead(ProjectInfo.class, MediaType.APPLICATION_JSON), is(true));
+        assertThat(converter.canRead(SecurityController.AccountDetails.class, MediaType.APPLICATION_JSON), is(true));
+        assertThat(converter.canRead(ExperimentInfo.class, MediaType.APPLICATION_JSON), is(true));
     }
 
     @Test
     public void testCreateAccount() throws IOException {
-        SecurityController.AccountDetails result = readJson("createAccount.json", SecurityController.AccountDetails.class);
+        SecurityController.AccountDetails result =
+            readJson("createAccount.json", SecurityController.AccountDetails.class);
         assertNotNull(result);
         assertEquals(FIRST_NAME, result.firstName);
         assertEquals(LAST_NAME, result.lastName);
@@ -68,8 +67,10 @@ public class MapperTest extends AbstractDataBasedTest{
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         byte[] json = Resources.toByteArray(Resources.getResource(MapperTest.class, resourceName));
         servletRequest.setContent(json);
-        return (T) converter.read(clazz,
-                new ServletServerHttpRequest(servletRequest));
+        return (T) converter.read(
+            clazz,
+            new ServletServerHttpRequest(servletRequest)
+        );
     }
 
     @Test
@@ -134,8 +135,52 @@ public class MapperTest extends AbstractDataBasedTest{
         assertEquals(sample2.factorValues.get(0), "sick");
         assertEquals(sample2.factorValues.get(1), "500");
         assertThat(sample2.name, is("sample_2"));
+    }
 
+    @Test
+    public void testCreateExperimentWithSamplesAndAnnotations() throws Exception {
+        ExperimentDetails experiment =
+            readJson("createExperimentWithSamplesAndAnnotations.json", ExperimentDetails.class);
+        assertThat(experiment.files.size(), is(2));
 
+        FileItem first = experiment.files.get(0);
+        assertThat(first.preparedSample.samples.size(), is(1));
+        assertThat(first.preparedSample.name, is("prepared_sample_for_file_7"));
+        ExperimentSampleItem sample1 = first.preparedSample.samples.iterator().next();
+        assertThat(sample1.type, is(ExperimentSampleTypeItem.LIGHT));
+        assertThat(sample1.name, is("sample_1"));
+
+        AnnotationItem annotation;
+        annotation = sample1.annotationValues.get(0);
+        assertEquals(annotation.name, "AT");
+        assertEquals(annotation.value, "a10");
+        assertEquals(annotation.isNumeric, false);
+        assertNull(annotation.units);
+
+        annotation = sample1.annotationValues.get(1);
+        assertEquals(annotation.name, "AN");
+        assertEquals(annotation.value, "10");
+        assertEquals(annotation.isNumeric, true);
+        assertEquals(annotation.units, "au");
+
+        FileItem secondFile = experiment.files.get(1);
+        assertThat(secondFile.preparedSample.samples.size(), is(1));
+        assertThat(secondFile.preparedSample.name, is("prepared_sample_for_file_8"));
+        ExperimentSampleItem sample2 = secondFile.preparedSample.samples.iterator().next();
+        assertThat(sample2.type, is(ExperimentSampleTypeItem.LIGHT));
+        assertThat(sample2.name, is("sample_2"));
+
+        annotation = sample2.annotationValues.get(0);
+        assertEquals(annotation.name, "AT");
+        assertEquals(annotation.value, "a20");
+        assertEquals(annotation.isNumeric, false);
+        assertNull(annotation.units);
+
+        annotation = sample2.annotationValues.get(1);
+        assertEquals(annotation.name, "AN");
+        assertEquals(annotation.value, "20");
+        assertEquals(annotation.isNumeric, true);
+        assertEquals(annotation.units, "au");
     }
 
     @Test

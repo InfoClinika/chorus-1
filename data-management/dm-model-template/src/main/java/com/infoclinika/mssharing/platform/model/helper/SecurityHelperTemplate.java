@@ -29,7 +29,16 @@ public interface SecurityHelperTemplate<USER_DETAILS extends SecurityHelperTempl
         public final ImmutableSet<Long> labs;
         public final String emailRequest;
 
-        public UserDetails(long id, String firstName, String lastName, String email, String password, boolean admin, boolean emailVerified, Date lastModification, Set<Long> labs, String emailRequest) {
+        public UserDetails(long id,
+                           String firstName,
+                           String lastName,
+                           String email,
+                           String password,
+                           boolean admin,
+                           boolean emailVerified,
+                           Date lastModification,
+                           Set<Long> labs,
+                           String emailRequest) {
             super(firstName, lastName, email);
             this.id = id;
             this.password = password;

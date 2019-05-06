@@ -9,7 +9,11 @@ import com.infoclinika.sso.model.ApplicationType;
 public interface UserManagement {
 
     /**
-     * @throws com.infoclinika.sso.model.exception.AccountIsAlreadyLinkedException
+     * Links user account with the specified ID to an application.
+     * @throws com.infoclinika.sso.model.exception.AccountIsAlreadyLinkedException if account is already linked
      */
-    long addApplicationForUser(Optional<Long> userID, ApplicationType applicationType, String username, String userSecretKey);
+    long addApplicationForUser(Optional<Long> userID,
+                               ApplicationType applicationType,
+                               String username,
+                               String userSecretKey);
 }

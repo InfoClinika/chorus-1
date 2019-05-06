@@ -29,15 +29,14 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.model.internal.read.AdvancedFilterCreationHelper.*;
 import static com.infoclinika.mssharing.model.internal.read.Transformers.PagedItemsTransformer.toFilterQuery;
+import static com.infoclinika.mssharing.model.internal.repository.ExperimentRepository.*;
 import static com.infoclinika.mssharing.platform.model.helper.read.PagedResultBuilder.builder;
 import static com.infoclinika.mssharing.platform.model.helper.read.ResultBuilder.builder;
 
@@ -65,52 +64,72 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
 
     @Override
     public ExperimentLine transform(ActiveExperiment activeExperiment) {
+        final Optional<Lab> labOpt = fromNullable(
+            activeExperiment.getLab() == null ? activeExperiment.getBillLaboratory() : activeExperiment.getLab()
+        );
 
-        final Optional<Lab> labOpt = fromNullable(activeExperiment.getLab() == null ? activeExperiment.getBillLaboratory() : activeExperiment.getLab());
-
-        //TODO: Set proper values
+        final Long experimentTypeId = activeExperiment.getExperimentType() != null ?
+            activeExperiment.getExperimentType().getId() : null;
         return new ExperimentLine(experimentReaderHelper.getDefaultTransformer().apply(activeExperiment),
-                false,
-                transformers.getChartsLink(activeExperiment),
-                false,
-                false, false, false,
-                false,
-                false,
-                0,
-                labOpt.transform(EntityUtil.ENTITY_TO_ID).orNull(),
-                new DashboardReader.ExperimentColumns(
-                        activeExperiment.getName(),
-                        activeExperiment.getCreator().getFullName(),
-                        labOpt.isPresent() ? labOpt.get().getName() : "",
-                        activeExperiment.getProject().getName(),
-                        activeExperiment.getNumberOfFiles(),
-                        activeExperiment.getLastModification())
+            false,
+            false,
+            false, false, false,
+            false,
+            false,
+            0,
+            labOpt.transform(EntityUtil.ENTITY_TO_ID).orNull(),
+
+            new DashboardReader.ExperimentColumns(
+                activeExperiment.getName(),
+                activeExperiment.getCreator().getFullName(),
+                labOpt.isPresent() ? labOpt.get().getName() : "",
+                activeExperiment.getProject().getName(),
+                activeExperiment.getNumberOfFiles(),
+                activeExperiment.getLastModification(),
+                activeExperiment.isFailed()
+            ),
+            experimentTypeId
         );
     }
 
     @Override
     public SortedSet<ExperimentLine> readExperiments(long actor, Filter filter) {
-
-        //TODO: Method applies very complex operations. Check performance
         final ImmutableSet.Builder<ExperimentDashboardRecord> builder = ImmutableSet.builder();
         final User actorUser = userRepository.findOne(actor);
         final FluentIterable<ActiveProject> projects = from(projectRepository.findAllAvailable(actor));
 
         for (ActiveProject project : projects) {
-            final FluentIterable<ExperimentDashboardRecord> filteredExperiments = filterExperimentsByProject(actorUser, project, filter);
-            builder.addAll(filteredExperiments); 
+            final FluentIterable<ExperimentDashboardRecord> filteredExperiments =
+                filterExperimentsByProject(actorUser, project, filter);
+            builder.addAll(filteredExperiments);
         }
-        
+
         return toResultSet(actor, builder.build());
-        
     }
 
-    private FluentIterable<ExperimentDashboardRecord> filterExperimentsByProject(User actor, ActiveProject project, Filter filter) {
+    @Override
+    public PagedItem<ExperimentLine> readExperiments(
+        long actor,
+        Filter filter,
+        PagedItemInfo pagedItemInfo
+    ) {
+        return toResult(actor, filterPageableExperiment(actor, filter, (PaginationItems.PagedItemInfo) pagedItemInfo));
+    }
+
+    private FluentIterable<ExperimentDashboardRecord> filterExperimentsByProject(
+        User actor,
+        ActiveProject project,
+        Filter filter
+    ) {
         return from(experimentRepository.findDashboardItemsByProject(project))
-                .filter(getFilteredExperimentDashboardRecords(project, actor, filter));
+            .filter(getFilteredExperimentDashboardRecords(project, actor, filter));
     }
 
-    private Predicate<ExperimentDashboardRecord> getFilteredExperimentDashboardRecords(final ActiveProject project, final User actor, final Filter filter) {
+    private Predicate<ExperimentDashboardRecord> getFilteredExperimentDashboardRecords(
+        final ActiveProject project,
+        final User actor,
+        final Filter filter
+    ) {
         return new Predicate<ExperimentDashboardRecord>() {
             @Override
             public boolean apply(ExperimentDashboardRecord input) {
@@ -118,10 +137,13 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
                     case ALL:
                         return true;
                     case SHARED_WITH_ME:
-                        return (project.getSharing().getType() == Sharing.Type.SHARED && !input.getCreator().equals(actor)) &&
-                                (project.getSharing().getAllCollaborators().keySet().contains(actor) || project.getCreator().equals(actor));
+                        return (project.getSharing().getType() == Sharing.Type.SHARED &&
+                            !input.getCreator().equals(actor)) &&
+                            (project.getSharing().getAllCollaborators().keySet().contains(actor) ||
+                                project.getCreator().equals(actor));
                     case PUBLIC:
-                        return !input.getCreator().equals(actor) && project.getSharing().getType() == Sharing.Type.PUBLIC;
+                        return !input.getCreator().equals(actor) &&
+                            project.getSharing().getType() == Sharing.Type.PUBLIC;
                     case MY:
                         return input.getCreator().equals(actor);
                     default:
@@ -133,25 +155,20 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
 
     @Override
     public SortedSet<ExperimentLine> readExperimentsByProject(long actor, long projectId) {
-        
         final List<ExperimentDashboardRecord> dashboardRecords = experimentRepository.findRecordsByProject(projectId);
-        
+
         return toResultSet(actor, dashboardRecords);
-        
+
     }
 
-    private ImmutableSortedSet<ExperimentLine> toResultSet(long actor, Iterable<ExperimentDashboardRecord> dashboardRecords) {
-        
+    private ImmutableSortedSet<ExperimentLine> toResultSet(
+        long actor,
+        Iterable<ExperimentDashboardRecord> dashboardRecords
+    ) {
         return builder(dashboardRecords, transformers.experimentLineTransformerFn(actor, dashboardRecords))
-                .transform()
-                .toSortedSet(comparator());
-        
-    }
-    
+            .transform()
+            .toSortedSet(comparator());
 
-    @Override
-    public PagedItem<ExperimentLine> readExperiments(long actor, Filter filter, PagedItemInfo pagedItemInfo) {
-        return toResult(actor, filterPageableExperiment(actor, filter, (PaginationItems.PagedItemInfo) pagedItemInfo));
     }
 
     @Override
@@ -159,15 +176,19 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
         final Page<ExperimentDashboardRecord> experiments;
 
         PaginationItems.PagedItemInfo pageInfo = (PaginationItems.PagedItemInfo) pagedItemInfo;
-        final PageRequest pageRequest = pagedItemsTransformer.toPageRequest(ExperimentDashboardRecord.class, pagedItemInfo);
+        final PageRequest pageRequest =
+            pagedItemsTransformer.toPageRequest(ExperimentDashboardRecord.class, pagedItemInfo);
 
         if (pageInfo.advancedFilter.isPresent()) {
 
-            final String predicatesQueryString = getAdvancedFilterQueryStringWithCondition(ExperimentDashboardRecord.class, pageInfo);
+            final String predicatesQueryString =
+                getAdvancedFilterQueryStringWithCondition(ExperimentDashboardRecord.class, pageInfo);
             final String orderingString = getOrderingString(ExperimentDashboardRecord.class, pageRequest);
 
-            final Query query = em.createQuery(ExperimentRepository.FIND_ALL_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-            final Query countQuery = em.createQuery(ExperimentRepository.COUNT_ALL_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+            final Query query = em.createQuery(
+                FIND_ALL_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+            final Query countQuery = em.createQuery(
+                COUNT_ALL_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
             query.setParameter("lab", labId);
             countQuery.setParameter("lab", labId);
 
@@ -175,31 +196,37 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
 
         } else {
 
-            experiments = experimentRepository.findAllRecordsByLab(labId, pagedItemsTransformer.toPageRequest(ExperimentDashboardRecord.class, pagedItemInfo), pagedItemsTransformer.toFilterQuery(pagedItemInfo));
+            experiments = experimentRepository.findAllRecordsByLab(
+                labId,
+                pagedItemsTransformer.toPageRequest(ExperimentDashboardRecord.class, pagedItemInfo),
+                pagedItemsTransformer.toFilterQuery(pagedItemInfo)
+            );
 
         }
 
         return toResult(actor, experiments);
-
     }
 
     @Override
     public PagedItem<ExperimentLine> readPagedExperimentsByProject(long actor, long projectId, PagedItemInfo pageInfo) {
-
         ActiveProject project = projectRepository.findOne(projectId);
 
         PaginationItems.PagedItemInfo pagedItemInfo = (PaginationItems.PagedItemInfo) pageInfo;
-        final PageRequest pageRequest = pagedItemsTransformer.toPageRequest(ExperimentDashboardRecord.class, pagedItemInfo);
+        final PageRequest pageRequest =
+            pagedItemsTransformer.toPageRequest(ExperimentDashboardRecord.class, pagedItemInfo);
         final Page<ExperimentDashboardRecord> experiments;
         if (!pagedItemInfo.advancedFilter.isPresent()) {
             experiments = experimentRepository.findByProject(project, pageRequest, toFilterQuery(pagedItemInfo));
 
         } else {
-            final String predicatesQueryString = getAdvancedFilterQueryStringWithCondition(ExperimentDashboardRecord.class, pagedItemInfo);
+            final String predicatesQueryString =
+                getAdvancedFilterQueryStringWithCondition(ExperimentDashboardRecord.class, pagedItemInfo);
             final String orderingString = getOrderingString(ExperimentDashboardRecord.class, pageRequest);
 
-            final Query query = em.createQuery(ExperimentRepository.FIND_BY_PROJECT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-            final Query countQuery = em.createQuery(ExperimentRepository.COUNT_BY_PROJECT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+            final Query query = em.createQuery(
+                FIND_BY_PROJECT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+            final Query countQuery = em.createQuery(
+                COUNT_BY_PROJECT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
             query.setParameter("project", project);
             countQuery.setParameter("project", project);
             experiments = getPageOfItemsByQuery(pageRequest, query, countQuery);
@@ -213,8 +240,10 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
         return builder(result, transformers.experimentLineTransformerFn(actor, result.getContent())).transform();
     }
 
-    private Page<ExperimentDashboardRecord> filterPageableExperiment(long user, Filter
-            filter, PaginationItems.PagedItemInfo pagedInfo) {
+    private Page<ExperimentDashboardRecord> filterPageableExperiment(
+        long user, Filter
+        filter, PaginationItems.PagedItemInfo pagedInfo
+    ) {
 
         Pageable request = pagedItemsTransformer.toPageRequest(ExperimentDashboardRecord.class, pagedInfo);
         if (!pagedInfo.advancedFilter.isPresent()) {
@@ -231,7 +260,8 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
                     throw new AssertionError(filter);
             }
         } else {
-            final String predicatesQueryString = getAdvancedFilterQueryStringWithCondition(ExperimentDashboardRecord.class, pagedInfo);
+            final String predicatesQueryString =
+                getAdvancedFilterQueryStringWithCondition(ExperimentDashboardRecord.class, pagedInfo);
             final String orderingString = getOrderingString(ExperimentDashboardRecord.class, request);
 
             final Query query;
@@ -239,26 +269,38 @@ public class ExperimentReaderImpl extends DefaultExperimentReader<ActiveExperime
             switch (filter) {
                 case ALL:
                     //findAllAvailableRecords but with advancedFiltering
-                    query = em.createQuery(ExperimentRepository.FIND_ALL_AVAILABLE_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(ExperimentRepository.COUNT_ALL_AVAILABLE_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FIND_ALL_AVAILABLE_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
+                    countQuery = em.createQuery(
+                        COUNT_ALL_AVAILABLE_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
                     query.setParameter("user", user);
                     countQuery.setParameter("user", user);
                     break;
                 case SHARED_WITH_ME:
-                    query = em.createQuery(ExperimentRepository.FIND_SHARED_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(ExperimentRepository.COUNT_SHARED_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FIND_SHARED_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    countQuery = em.createQuery(
+                        COUNT_SHARED_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
                     query.setParameter("user", user);
                     countQuery.setParameter("user", user);
                     break;
                 case MY:
-                    query = em.createQuery(ExperimentRepository.FIND_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(ExperimentRepository.COUNT_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FIND_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    countQuery = em.createQuery(
+                        COUNT_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
                     query.setParameter("user", user);
                     countQuery.setParameter("user", user);
                     break;
                 case PUBLIC:
-                    query = em.createQuery(ExperimentRepository.FIND_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(ExperimentRepository.COUNT_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FIND_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    countQuery = em.createQuery(
+                        COUNT_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
                     break;
                 default:
                     throw new AssertionError(filter);

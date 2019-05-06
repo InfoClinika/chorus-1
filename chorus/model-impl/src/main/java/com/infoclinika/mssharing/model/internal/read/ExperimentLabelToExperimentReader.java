@@ -12,23 +12,23 @@ import java.util.List;
 public interface ExperimentLabelToExperimentReader {
     /**
      * @return object with light, medium, heavy label IDS of experiment
-     * Please note, that those IDs obtained from common ExperimentLabel, not assigned to experiment
+     *     Please note, that those IDs obtained from common ExperimentLabel, not assigned to experiment
      */
     ExperimentLabelsItem readLabels(long experiment);
 
     ExperimentLabelsDetails readLabelsDetails(long experiment);
 
-    final class ExperimentLabelsDetails{
+    final class ExperimentLabelsDetails {
         public final List<ExperimentLabelItem> lightLabels;
         public final List<ExperimentLabelItem> mediumLabels;
         public final List<ExperimentLabelItem> heavyLabels;
         public final List<ExperimentLabelItem> specialLabels;
 
         public ExperimentLabelsDetails(
-                List<ExperimentLabelItem> lightLabels,
-                List<ExperimentLabelItem> mediumLabels,
-                List<ExperimentLabelItem> heavyLabels,
-                List<ExperimentLabelItem> specialLabels
+            List<ExperimentLabelItem> lightLabels,
+            List<ExperimentLabelItem> mediumLabels,
+            List<ExperimentLabelItem> heavyLabels,
+            List<ExperimentLabelItem> specialLabels
         ) {
             this.lightLabels = lightLabels;
             this.mediumLabels = mediumLabels;
@@ -37,7 +37,7 @@ public interface ExperimentLabelToExperimentReader {
         }
     }
 
-    final class ExperimentLabelItem{
+    final class ExperimentLabelItem {
         public final long id;
         public final String name;
 

@@ -8,8 +8,7 @@ import javax.inject.Inject;
 import java.util.Date;
 
 /**
- * @author timofey.kasyanov
- *         date: 27.02.14.
+ * @author timofey.kasyanov 2/27/14
  */
 @Service
 public class AbortMultipartUploadsJob {
@@ -17,8 +16,12 @@ public class AbortMultipartUploadsJob {
     @Inject
     private AbortMultipartHelper abortMultipartHelper;
 
-    @Scheduled(fixedRate = 7 * 24 * 60 * 60 * 1000)
-    public void abortMultipartUploads(){
+    /**
+     * Scheduled task to abort multipart uploads.
+     * Default cron rate - one week (7 * 24 * 60 * 60 * 1000).
+     */
+    @Scheduled(fixedRateString = "${scheduled.multipart.upload.abort.rate:604800000}")
+    public void abortMultipartUploads() {
 
         final long week = 7 * 24 * 60 * 60 * 1000;
         final long currentTime = System.currentTimeMillis();

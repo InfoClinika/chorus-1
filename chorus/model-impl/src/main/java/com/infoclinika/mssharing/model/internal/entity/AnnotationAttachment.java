@@ -3,7 +3,6 @@ package com.infoclinika.mssharing.model.internal.entity;
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import java.util.Date;
 
 /**
@@ -19,8 +18,7 @@ public class AnnotationAttachment extends AbstractAggregate {
     @Basic(optional = true)
     private long sizeInBytes;
 
-    public AnnotationAttachment(){
-
+    AnnotationAttachment() {
     }
 
 

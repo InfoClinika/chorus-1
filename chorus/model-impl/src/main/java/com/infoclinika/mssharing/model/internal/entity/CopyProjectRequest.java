@@ -14,7 +14,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "copy_project_request")
-public class CopyProjectRequest extends AbstractPersistable<Long>{
+public class CopyProjectRequest extends AbstractPersistable<Long> {
 
     @ManyToOne
     private User receiver;

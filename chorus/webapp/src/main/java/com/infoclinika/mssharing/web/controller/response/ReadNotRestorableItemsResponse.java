@@ -12,7 +12,11 @@ public class ReadNotRestorableItemsResponse {
     public final Set<TrashReader.TrashLineShort> experiments;
     public final Set<TrashReader.TrashLineShort> files;
 
-    public ReadNotRestorableItemsResponse(Set<TrashReader.TrashLineShort> projects, Set<TrashReader.TrashLineShort> experiments, Set<TrashReader.TrashLineShort> files) {
+    public ReadNotRestorableItemsResponse(
+        Set<TrashReader.TrashLineShort> projects,
+        Set<TrashReader.TrashLineShort> experiments,
+        Set<TrashReader.TrashLineShort> files
+    ) {
         this.projects = projects;
         this.experiments = experiments;
         this.files = files;

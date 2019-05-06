@@ -1,7 +1,7 @@
 package com.infoclinika.mssharing.services.billing.persistence.repository;
 
-import com.infoclinika.mssharing.services.billing.persistence.enity.ChargeableItemUsage;
 import com.infoclinika.mssharing.model.internal.repository.FeatureUsageByUser;
+import com.infoclinika.mssharing.services.billing.persistence.enity.ChargeableItemUsage;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -37,7 +37,6 @@ public interface FeatureUsageRepository<T extends ChargeableItemUsage> {
 
     Long countFiles(long lab, long day);
 
-    <S extends T>
-    Iterable<S> save(Iterable<S> usages);
+    <S extends T> Iterable<S> save(Iterable<S> usages);
 
 }

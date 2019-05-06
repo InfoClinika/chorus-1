@@ -13,7 +13,6 @@ import com.infoclinika.mssharing.platform.repository.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Date;
@@ -30,7 +29,8 @@ import static com.google.common.collect.Lists.transform;
 @Component
 @Transactional
 @SuppressWarnings("unchecked")
-public class ProjectManager<PROJECT extends ProjectTemplate, PROJECT_INFO extends ProjectManagementTemplate.ProjectInfoTemplate> {
+public class ProjectManager<PROJECT extends ProjectTemplate,
+    PROJECT_INFO extends ProjectManagementTemplate.ProjectInfoTemplate> {
 
     @Inject
     private ProjectRepositoryTemplate<PROJECT> projectRepository;
@@ -97,20 +97,29 @@ public class ProjectManager<PROJECT extends ProjectTemplate, PROJECT_INFO extend
 
         final UserTemplate newOwner = userRepository.findOne(newOwnerId);
 
-        final String copyProjName = copyManager.createCopyName(original.getName(), projectRepository.findOneByName(newOwner.getId(), original.getName()) != null);
+        final String copyProjName = copyManager.createCopyName(
+            original.getName(),
+            projectRepository.findOneByName(newOwner.getId(), original.getName()) != null
+        );
 
         return saveProject(copyProjectFor(newOwner, original, copyProjName));
     }
 
-    public ExperimentTemplate copyProjectExperiment(UserTemplate newOwner, PROJECT copyOfProject, ExperimentTemplate originalExperiment) {
-        final boolean isNameUsed = experimentRepository.findOneByName(newOwner.getId(), originalExperiment.getName()) != null;
+    public ExperimentTemplate copyProjectExperiment(UserTemplate newOwner,
+                                                    PROJECT copyOfProject,
+                                                    ExperimentTemplate originalExperiment) {
+        final boolean isNameUsed =
+            experimentRepository.findOneByName(newOwner.getId(), originalExperiment.getName()) != null;
         String experimentCopyName = copyManager.createCopyName(originalExperiment.getName(), isNameUsed);
-        ExperimentTemplate copy = saveExperiment(copyExperimentData(copyOfProject, originalExperiment, experimentCopyName));
+        ExperimentTemplate copy =
+            saveExperiment(copyExperimentData(copyOfProject, originalExperiment, experimentCopyName));
         setDownloadToken(projectRepository.findOne(copyOfProject.getId()).getSharing().getType(), copy);
         return copy;
     }
 
-    public ExperimentTemplate copyExperimentData(PROJECT copyOfProject, ExperimentTemplate originalExperiment, String experimentCopyName) {
+    public ExperimentTemplate copyExperimentData(PROJECT copyOfProject,
+                                                 ExperimentTemplate originalExperiment,
+                                                 String experimentCopyName) {
         final ExperimentTemplate copy = factories.experiment.get();
         final UserTemplate creator = copyOfProject.getCreator();
         copy.setCreator(creator);
@@ -128,14 +137,11 @@ public class ProjectManager<PROJECT extends ProjectTemplate, PROJECT_INFO extend
         return copy;
     }
 
-    private ImmutableSet<Attachment> copyAttachments(final UserTemplate creator, List<Attachment> attachments, final boolean isProject) {
-        return from(attachments).transform(new Function<Attachment, Attachment>() {
-            @Override
-            public Attachment apply(Attachment attachment) {
-                return attachmentRepository.findOne(attachmentManagement.copyAttachment(attachment.getId(),
-                        creator.getId(), isProject));
-            }
-        }).toSet();
+    private ImmutableSet<Attachment> copyAttachments(final UserTemplate creator, List<Attachment> attachments,
+                                                     final boolean isProject) {
+        return from(attachments)
+            .transform(attachment -> attachmentRepository
+                .findOne(attachmentManagement.copyAttachment(attachment.getId(), creator.getId(), isProject))).toSet();
     }
 
     public void setDownloadToken(Sharing.Type type, ExperimentTemplate experiment) {
@@ -146,6 +152,9 @@ public class ProjectManager<PROJECT extends ProjectTemplate, PROJECT_INFO extend
             case SHARED:
             case PRIVATE:
                 experiment.setDownloadToken(null);
+                break;
+            default:
+                throw new IllegalArgumentException("Unrecognized sharing type: " + type);
         }
     }
 
@@ -154,9 +163,11 @@ public class ProjectManager<PROJECT extends ProjectTemplate, PROJECT_INFO extend
         return experimentRepository.save(experiment);
     }
 
-    public void copyExperimentRawFiles(ExperimentTemplate from, ExperimentTemplate to, final Function<FileMetaDataTemplate, FileMetaDataTemplate> copyMetaFn) {
+    public void copyExperimentRawFiles(ExperimentTemplate from, ExperimentTemplate to,
+                                       final Function<FileMetaDataTemplate, FileMetaDataTemplate> copyMetaFn) {
 
-        final List<ExperimentFileTemplate> copiedFiles = transform(from.rawFiles.getData(), copyExperimentFileFn(copyMetaFn));
+        final List<ExperimentFileTemplate> copiedFiles =
+            transform(from.rawFiles.getData(), copyExperimentFileFn(copyMetaFn));
         final List<FactorTemplate> factors = transform(from.rawFiles.getFactors(), copyFactorFn());
 
         to.rawFiles.getData().clear();
@@ -170,14 +181,11 @@ public class ProjectManager<PROJECT extends ProjectTemplate, PROJECT_INFO extend
 
     }
 
-    protected Function<ExperimentFileTemplate, ExperimentFileTemplate> copyExperimentFileFn(final Function<FileMetaDataTemplate, FileMetaDataTemplate> copyMetaFn) {
-        return new Function<ExperimentFileTemplate, ExperimentFileTemplate>() {
-            @Nullable
-            @Override
-            public ExperimentFileTemplate apply(ExperimentFileTemplate input) {
-                final ExperimentFileTemplate apply = copyManager.copyExperimentFileData(copyMetaFn).apply(input);
-                return experimentFileRepository.save(apply);
-            }
+    protected Function<ExperimentFileTemplate, ExperimentFileTemplate> copyExperimentFileFn(
+        final Function<FileMetaDataTemplate, FileMetaDataTemplate> copyMetaFn) {
+        return input -> {
+            final ExperimentFileTemplate apply = copyManager.copyExperimentFileData(copyMetaFn).apply(input);
+            return experimentFileRepository.save(apply);
         };
     }
 
@@ -186,16 +194,12 @@ public class ProjectManager<PROJECT extends ProjectTemplate, PROJECT_INFO extend
     }
 
     private Function<FactorTemplate, FactorTemplate> copyFactorFn() {
-        return new Function<FactorTemplate, FactorTemplate>() {
-            @SuppressWarnings("unchecked")
-            @Override
-            public FactorTemplate apply(FactorTemplate origin) {
-                final Function<FactorTemplate, FactorTemplate> copyFactorData = copyManager.copyFactorData();
-                final FactorTemplate factor = copyFactorData.apply(origin);
-                final Function<LevelTemplate, LevelTemplate> copyLevelData = copyManager.copyLevelData(factor);
-                factor.getLevels().addAll(from(origin.getLevels()).transform(copyLevelData).toSet());
-                return factorRepository.save(factor);
-            }
+        return origin -> {
+            final Function<FactorTemplate, FactorTemplate> copyFactorData = copyManager.copyFactorData();
+            final FactorTemplate factor = copyFactorData.apply(origin);
+            final Function<LevelTemplate, LevelTemplate> copyLevelData = copyManager.copyLevelData(factor);
+            factor.getLevels().addAll(from(origin.getLevels()).transform(copyLevelData).toSet());
+            return factorRepository.save(factor);
         };
     }
 

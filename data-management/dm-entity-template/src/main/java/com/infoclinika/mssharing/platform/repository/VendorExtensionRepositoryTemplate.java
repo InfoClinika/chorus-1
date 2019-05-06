@@ -5,12 +5,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 /**
  * @author timofei.kasianov 12/6/16
  */
 public interface VendorExtensionRepositoryTemplate<T extends VendorExtension> extends CrudRepository<T, Long> {
 
-    @Query("select ve from #{#entityName} ve where ve.extension = :extension and (ve.zipExtension is null or ve.zipExtension = '')")
-    T findByExtensionWithEmptyZipExtension(@Param("extension") String extension);
+    @Query("select ve from #{#entityName} ve " +
+        "where ve.extension = :extension and (ve.zipExtension is null or ve.zipExtension = '')")
+    List<T> findByExtensionWithEmptyZipExtension(@Param("extension") String extension);
 
 }

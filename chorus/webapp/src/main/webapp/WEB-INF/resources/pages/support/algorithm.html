@@ -1,0 +1,10 @@
+<div ng-show="algorithms.length != 0">
+    <ul class="faq-list">
+        <li ng-repeat="algorithm in algorithms">
+            <h3><span ng-click="toggleOpened($event)" class="title" ng-bind="algorithm.title"></span><em class="arrow"></em></h3>
+            <div class="hide">
+                <p ng-bind-html-unsafe="algorithm.content"></p>
+            </div>
+        </li>
+    </ul>
+</div>

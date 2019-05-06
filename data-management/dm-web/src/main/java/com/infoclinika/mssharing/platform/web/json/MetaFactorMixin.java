@@ -12,9 +12,10 @@ public abstract class MetaFactorMixin {
     @JsonCreator
     @SuppressWarnings("unused")
     public MetaFactorMixin(
-            @JsonProperty("name") String name,
-            @JsonProperty("units") String units,
-            @JsonProperty("numeric") boolean numeric,
-            @JsonProperty("experimentId") long experimentId) {
+        @JsonProperty("name") String name,
+        @JsonProperty("units") String units,
+        @JsonProperty("numeric") boolean numeric,
+        @JsonProperty("experimentId") long experimentId
+    ) {
     }
 }

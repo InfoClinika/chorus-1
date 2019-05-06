@@ -1,0 +1,24 @@
+<div class="side-by-side-tables-block">
+    <div class="side-by-side-tables" style="height: 100%;">
+
+        <div class="table-left" ag-grid="gridFiltered" ng-class="{'hide-pagination': filesFound <= defaultPageSize}">
+            <span class="caption">Found Files: {{ totalItems }}</span>
+        </div>
+
+        <div class="table-splitter">
+            <i class="icon-circle-arrow-right" ng-click="addSelectedItems()"></i>
+            <br>
+            <i class="icon-circle-arrow-left" ng-click="removeFromSelected()"></i>
+            <br>
+            <i class="glyphicon glyphicon-forward" ng-click="addPageToSelected()"></i>
+            <br>
+            <br>
+            <i class="icon-remove-circle" ng-click="clearSelected()"></i>
+        </div>
+
+        <div class="table-right" ag-grid="gridSelected" ng-class="{'hide-pagination': files.length <= defaultPageSize}">
+            <span class="caption">Selected Files: {{files.length}}</span>
+        </div>
+
+    </div>
+</div>

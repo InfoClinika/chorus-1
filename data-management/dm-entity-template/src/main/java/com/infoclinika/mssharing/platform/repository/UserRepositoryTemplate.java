@@ -13,29 +13,35 @@ import java.util.Set;
  * @author : Alexander Serebriyan
  */
 public interface UserRepositoryTemplate<T extends UserTemplate> extends JpaRepository<T, Long> {
-    @Query("select u from #{#entityName} u left join u.changeEmailRequest where u.personData.email = :email")
+
+    @Query("select u from #{#entityName} u where u.deleted = false")
+    List<T> findAll();
+
+    @Query("select u from #{#entityName} u where u.id in(:ids) and u.deleted = false")
+    List<T> findAll(@Param("ids") Iterable<Long> ids);
+
+    @Query("select u from #{#entityName} u where u.personData.email = :email and u.deleted = false")
     @Nullable
     T findByEmail(@Param("email") String email);
 
-    @Query("select u.id from #{#entityName} u where u.personData.email = :email and u.passwordHash = :hash")
-    Long findByCredentials(@Param("email") String email, @Param("hash") String passwordHash);
-
-    @Query("select distinct u from #{#entityName} u join u.labMemberships ship where ship.lab.id=:labId")
+    @Query(
+        "select distinct u from #{#entityName} u join u.labMemberships ship " +
+            "where ship.lab.id=:labId and u.deleted = false")
     List<T> findAllUsersByLab(@Param("labId") Long labId);
 
-    @Query("select u from #{#entityName} u where u.admin = true")
+    @Query("select u from #{#entityName} u where u.admin = true and u.deleted = false")
     List<T> findAdmins();
 
-    @Query("select u.id from #{#entityName} u")
+    @Query("select u.id from #{#entityName} u where u.deleted = false")
     Set<Long> findAllIds();
 
 
-    @Query("select c.id from GroupTemplate g join g.collaborators c where g.id=:groupId")
+    @Query("select c.id from GroupTemplate g join g.collaborators c where g.id=:groupId and c.deleted = false")
     Set<Long> findUserIdsByGroup(@Param("groupId") Long groupId);
 
     @Query("select new com.infoclinika.mssharing.platform.repository.UserRepositoryTemplate$UserShortRecord(" +
-            "u.id, u.personData.firstName, u.personData.lastName, u.personData.email" +
-            ") from #{#entityName} u")
+        "u.id, u.personData.firstName, u.personData.lastName, u.personData.email) " +
+        "from #{#entityName} u where u.deleted = false")
     <S extends UserShortRecord> List<S> findShortRecordsAll();
 
     /**

@@ -25,11 +25,11 @@ public class StatisticsController {
     @ResponseBody
     public StatisticsReader.UsageStatisticsInfo getUsageStatistics() {
         return new StatisticsReader.UsageStatisticsInfo(
-                statisticsReader.readUsersCount(),
-                statisticsReader.readFilesSize(),
-                statisticsReader.readFilesCount(),
-                statisticsReader.readPublicProjectsCount(),
-                statisticsReader.readPublicExperimentsCount()
+            statisticsReader.readUsersCount(),
+            statisticsReader.readFilesSize(),
+            statisticsReader.readFilesCount(),
+            statisticsReader.readPublicProjectsCount(),
+            statisticsReader.readPublicExperimentsCount()
         );
     }
 

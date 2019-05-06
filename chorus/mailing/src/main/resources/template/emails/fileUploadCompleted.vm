@@ -1,0 +1,10 @@
+${projectTitle}: File transfer is completed
+Hello, ${laboratory} member!
+
+File transfer is completed.
+The following files have been uploaded:
+#foreach ($fileName in $fileNames)
+    ${foreach.count}. $fileName
+#end
+
+Thank you!

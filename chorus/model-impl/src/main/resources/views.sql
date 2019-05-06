@@ -15,7 +15,9 @@ e.lastModification,
 e.downloadToken,
 e.experimentCategory,
 (select l.name from Lab l where l.id = e.lab_id) as labName,
-  (e.deletionDate is not null) as deleted
+(e.deletionDate is not null) as deleted,
+e.failed,
+e.experimentType_id
 from ExperimentTemplate e
 LEFT join RawFile rf on rf.experiment_id=e.id
 left outer join ProjectTemplate p on e.project_id=p.id
@@ -34,14 +36,13 @@ join USER u on u.id = p.creator_id;
 
 drop table if exists project_access_view;
 
-create or replace view project_access_view as select distinct u.id USER_id, p.id projectsWithReadAccess_id from USER u 
-  left join project_user_collaborator puc on puc.user_id = u.id 
+create or replace view project_access_view as select distinct u.id USER_id, p.id projectsWithReadAccess_id from USER u
+  left join project_user_collaborator puc on puc.user_id = u.id
   left join GroupTemplate_UserTemplate sgu on collaborators_id = u.id
   left join project_group_collaborator pgc on pgc.group_id = sgu.GroupTemplate_id join ProjectTemplate p on (p.creator_id = u.id or p.type = 0 or puc.project_id = p.id or pgc.project_id = p.id);
 
 
 DROP TABLE IF EXISTS billing_user_function_item_view;
-
 
 DROP TABLE IF EXISTS billing_file_view;
 

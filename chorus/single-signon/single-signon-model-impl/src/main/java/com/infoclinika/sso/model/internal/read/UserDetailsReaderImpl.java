@@ -15,6 +15,8 @@ import javax.inject.Inject;
 import java.util.Set;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static com.infoclinika.sso.model.ApplicationType.CHORUS;
+import static com.infoclinika.sso.model.ApplicationType.PANORAMA;
 
 /**
  * @author andrii.loboda
@@ -48,10 +50,15 @@ public class UserDetailsReaderImpl implements UserDetailsReader {
         }
         final Set<ApplicationCredential> appCredentials = newHashSet();
         if (user.getChorusSecretKey() != null) {
-            appCredentials.add(new ApplicationCredential(ApplicationType.CHORUS, user.getChorusUsername(), user.getChorusSecretKey()));
+            appCredentials.add(
+                new ApplicationCredential(CHORUS, user.getChorusUsername(), user.getChorusSecretKey())
+            );
         }
         if (user.getPanoramaSecretKey() != null) {
-            appCredentials.add(new ApplicationCredential(ApplicationType.PANORAMA, user.getPanoramaUsername(), user.getPanoramaSecretKey()));
+            appCredentials.add(new ApplicationCredential(
+                PANORAMA, user.getPanoramaUsername(),
+                user.getPanoramaSecretKey()
+            ));
         }
         final boolean linked = appCredentials.size() == APPLICATIONS_SUPPORTED_COUNT;
         final UserDetails userLinkingDetails = new UserDetails(user.getId(), linked, appCredentials);

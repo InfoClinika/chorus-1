@@ -1,7 +1,0 @@
-Chorus:  Analysis(ID:${proteinSearchId}:"${proteinSearchName}") has been successfully completed
-Hello, ${user}!
-
-Analysis created by you has been ${proteinSearchId}:"${proteinSearchName}" successfully completed of "${experimentName}"Experiment
-Please visit search results page: <a href="${analysisUrl}">Protein Search Results</a>
-
-Thank you!

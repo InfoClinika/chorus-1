@@ -48,13 +48,13 @@ public class InstrumentModelReaderImpl implements InstrumentModelReader {
         final Page<InstrumentModel> page = instrumentModelRepository.findPage(query, pageRequest);
         final List<InstrumentModel> instrumentModels = page.getContent();
 
-        if(instrumentModels.isEmpty()) {
+        if (instrumentModels.isEmpty()) {
             return new PagedItem<>(
-                    page.getTotalPages(),
-                    page.getTotalElements(),
-                    page.getNumber(),
-                    page.getSize(),
-                    new ArrayList<>()
+                page.getTotalPages(),
+                page.getTotalElements(),
+                page.getNumber(),
+                page.getSize(),
+                new ArrayList<>()
             );
         }
 
@@ -63,28 +63,28 @@ public class InstrumentModelReaderImpl implements InstrumentModelReader {
         final List<InstrumentModelLine> modelLines = getTransformer(instrumentCounts).apply(instrumentModels);
 
         return new PagedItem<>(
-                page.getTotalPages(),
-                page.getTotalElements(),
-                page.getNumber(),
-                page.getSize(),
-                modelLines
+            page.getTotalPages(),
+            page.getTotalElements(),
+            page.getNumber(),
+            page.getSize(),
+            modelLines
         );
     }
 
     @Override
     public boolean isNameUnique(long actor, String name, Long vendor, Long model) {
 
-        if(!ruleValidator.canUserReadInstrumentModels(actor)) {
+        if (!ruleValidator.canUserReadInstrumentModels(actor)) {
             throw new AccessDenied("User with ID: " + actor + " is not allowed to read instrument models");
         }
 
-        if(vendor == null) {
+        if (vendor == null) {
             return true;
         }
 
         final Vendor vendorEntity = vendorRepository.findOne(vendor);
 
-        if(model == null) {
+        if (model == null) {
             return ruleValidator.canInstrumentModelBeCreatedWithName(name, vendorEntity.getName());
         } else {
             return ruleValidator.canInstrumentModelBeUpdatedWithName(model, name, vendorEntity.getName());
@@ -92,25 +92,27 @@ public class InstrumentModelReaderImpl implements InstrumentModelReader {
 
     }
 
-    private Function<List<InstrumentModel>, List<InstrumentModelLine>> getTransformer(List<Map<String, Long>> idToInstrumentCountList) {
+    private Function<List<InstrumentModel>, List<InstrumentModelLine>> getTransformer(
+        List<Map<String, Long>> idToInstrumentCountList
+    ) {
 
         final Map<Long, Long> itToInstrumentCount = idToInstrumentCountList
-                .stream()
-                .collect(Collectors.toMap(m -> m.get("id"), m -> m.get("count")));
+            .stream()
+            .collect(Collectors.toMap(m -> m.get("id"), m -> m.get("count")));
 
         return instrumentModels -> instrumentModels
-                .stream()
-                .map(imi -> new InstrumentModelLine(
-                        imi.getId(),
-                        imi.getName(),
-                        new DictionaryItem(imi.getStudyType().getId(), imi.getStudyType().getName()),
-                        new DictionaryItem(imi.getVendor().getId(), imi.getVendor().getName()),
-                        new DictionaryItem(imi.getType().getId(), imi.getType().getName()),
-                        imi.getExtensions().stream().map(VendorExtension::getExtension).collect(Collectors.toSet()),
-                        imi.isAdditionalFiles(),
-                        imi.isFolderArchiveSupport(),
-                        itToInstrumentCount.get(imi.getId())
-                ))
-                .collect(Collectors.toList());
+            .stream()
+            .map(imi -> new InstrumentModelLine(
+                imi.getId(),
+                imi.getName(),
+                new DictionaryItem(imi.getStudyType().getId(), imi.getStudyType().getName()),
+                new DictionaryItem(imi.getVendor().getId(), imi.getVendor().getName()),
+                new DictionaryItem(imi.getType().getId(), imi.getType().getName()),
+                imi.getExtensions().stream().map(VendorExtension::getExtension).collect(Collectors.toSet()),
+                imi.isAdditionalFiles(),
+                imi.isFolderArchiveSupport(),
+                itToInstrumentCount.get(imi.getId())
+            ))
+            .collect(Collectors.toList());
     }
 }

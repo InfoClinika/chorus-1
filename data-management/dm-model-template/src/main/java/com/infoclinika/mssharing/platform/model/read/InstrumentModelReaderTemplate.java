@@ -9,7 +9,8 @@ import java.util.Set;
 /**
  * @author timofei.kasianov 12/6/16
  */
-public interface InstrumentModelReaderTemplate<MODEL_LINE extends InstrumentModelReaderTemplate.InstrumentModelLineTemplate> {
+public interface InstrumentModelReaderTemplate<
+    MODEL_LINE extends InstrumentModelReaderTemplate.InstrumentModelLineTemplate> {
 
     MODEL_LINE readById(long actor, long modelId);
 

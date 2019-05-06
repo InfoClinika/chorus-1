@@ -2,7 +2,7 @@ package com.infoclinika.mssharing.web.controller.request;
 
 /**
  * @author timofey.kasyanov
- *         date: 08.05.2014
+ *     date: 08.05.2014
  */
 public class CheckUploadLimitRequest {
     private long instrumentId;

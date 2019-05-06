@@ -7,11 +7,13 @@ import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMeta
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
 import com.infoclinika.mssharing.model.internal.repository.UserRepository;
 import com.infoclinika.mssharing.model.read.FileLine;
+import com.infoclinika.mssharing.model.read.FileReader;
 import com.infoclinika.mssharing.platform.entity.ExperimentFileTemplate;
 import com.infoclinika.mssharing.platform.model.PagedItem;
 import com.infoclinika.mssharing.platform.model.PagedItemInfo;
 import com.infoclinika.mssharing.platform.model.impl.read.DefaultFileReader;
 import com.infoclinika.mssharing.platform.model.read.Filter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -25,7 +27,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.Set;
 
-import static com.google.common.collect.FluentIterable.from;
 import static com.infoclinika.mssharing.model.internal.read.AdvancedFilterCreationHelper.*;
 import static com.infoclinika.mssharing.model.internal.read.Transformers.PagedItemsTransformer.toFilterQuery;
 import static com.infoclinika.mssharing.platform.model.helper.read.PagedResultBuilder.builder;
@@ -35,10 +36,8 @@ import static com.infoclinika.mssharing.platform.model.helper.read.PagedResultBu
  */
 @Service
 @Transactional(readOnly = true)
-public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLine> {
-
-    @SuppressWarnings("unused")
-    private final Logger LOGGER = LoggerFactory.getLogger(FileReaderImpl.class);
+public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLine> implements FileReader<FileLine> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileReaderImpl.class);
 
     @Inject
     private Transformers transformers;
@@ -82,11 +81,16 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
 
             //TODO: Write tests on this condition
             request = pagedItemsTransformer.toPageRequest(ActiveFileMetaData.class, pageInfo);
-            final String predicatesQueryString = getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pageInfo);
+            final String predicatesQueryString =
+                getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pageInfo);
             final String orderingString = getOrderingString(ActiveFileMetaData.class, request);
 
-            final Query query = em.createQuery(FileMetaDataRepository.FIND_BY_EXPERIMENT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-            final Query countQuery = em.createQuery(FileMetaDataRepository.COUNT_BY_EXPERIMENT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+            final Query query = em.createQuery(
+                FileMetaDataRepository.FIND_BY_EXPERIMENT_WITH_ADVANCED_FILTER + predicatesQueryString +
+                    orderingString);
+            final Query countQuery = em.createQuery(
+                FileMetaDataRepository.COUNT_BY_EXPERIMENT_WITH_ADVANCED_FILTER + predicatesQueryString +
+                    orderingString);
             query.setParameter("experiment", experiment);
             countQuery.setParameter("experiment", experiment);
 
@@ -95,14 +99,23 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
         }
 
         return toResult(userEntity, files);
+    }
 
+    @Override
+    public Set<FileLine> readFilesByExperiment(long actor, long experiment) {
+        beforeReadFilesByExperiment(actor, experiment);
+
+        return fileReaderHelper
+            .filesByExperiment(actor, experiment)
+            .transform(customTransformerWithUser(actor))
+            .toSortedSet(fileComparator());
     }
 
     @Override
     public PagedItem<FileLine> readFiles(long actor, Filter filter, PagedItemInfo pagedItemInfo) {
         long ts1 = System.currentTimeMillis();
         final User userEntity = userRepository.findOne(actor);
-        Page<ActiveFileMetaData> result = filterPageableFile(actor, filter, (PaginationItems.PagedItemInfo) pagedItemInfo);
+        Page<ActiveFileMetaData> result = filterFile(actor, filter, (PaginationItems.PagedItemInfo) pagedItemInfo);
         long ts2 = System.currentTimeMillis();
         LOGGER.debug("*** Result retrieved in " + (ts2 - ts1));
         long ts3 = System.currentTimeMillis();
@@ -115,8 +128,8 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
     public Set<FileLine> readFiles(long actor, Filter genericFilter) {
 
         return fileReaderHelper.filesByFilter(actor, genericFilter)
-                .transform(customTransformerWithUser(actor))
-                .toSortedSet(fileComparator());
+            .transform(customTransformerWithUser(actor))
+            .toSortedSet(fileComparator());
 
     }
 
@@ -124,48 +137,66 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
     public Set<FileLine> readUnfinishedFiles(long user) {
 
         return fileReaderHelper
-                .readUnfinishedFilesByUser(user)
-                .transform(customTransformerWithUser(user))
-                .toSortedSet(fileComparator());
+            .readUnfinishedFilesByUser(user)
+            .transform(customTransformerWithUser(user))
+            .toSortedSet(fileComparator());
 
     }
 
     @Override
     public Set<FileLine> readFilesByInstrument(long actor, long instrument) {
-
         return fileReaderHelper
-                .readFilesByInstrument(actor, instrument)
-                .transform(customTransformerWithUser(actor))
-                .toSortedSet(fileComparator());
+            .readFilesByInstrument(actor, instrument)
+            .transform(customTransformerWithUser(actor))
+            .toSortedSet(fileComparator());
+    }
+
+    @Override
+    public PagedItem<FileLine> readFilesByInstrument(long actor, long instrument, PagedItemInfo pagedItemInfo) {
+        PaginationItems.PagedItemInfo pagedInfo = (PaginationItems.PagedItemInfo) pagedItemInfo;
+        Pageable request = pagedItemsTransformer.toPageRequest(ActiveFileMetaData.class, pagedInfo);
+        final User userEntity = userRepository.findOne(actor);
+
+        final Page<ActiveFileMetaData> files;
+
+        if (!pagedInfo.advancedFilter.isPresent()) {
+            files = fileMetaDataRepository.findByInstrument(instrument, actor, request, toFilterQuery(pagedInfo));
+        } else {
+            final String predicatesQueryString =
+                getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pagedInfo);
+            final String orderingString = getOrderingString(ActiveFileMetaData.class, request);
+
+            final Query query = em.createQuery(
+                FileMetaDataRepository.FIND_BY_INSTRUMENT_WITH_ADVANCED_FILTER + predicatesQueryString +
+                    orderingString);
+            final Query countQuery = em.createQuery(
+                FileMetaDataRepository.COUNT_BY_INSTRUMENT_WITH_ADVANCED_FILTER + predicatesQueryString +
+                    orderingString);
+            query.setParameter("user", actor);
+            countQuery.setParameter("user", actor);
+            query.setParameter("instrument", instrument);
+            countQuery.setParameter("instrument", instrument);
+            files = getPageOfItemsByQuery(request, query, countQuery);
+        }
+
+        return toResult(userEntity, files);
     }
 
     @Override
     public Set<FileLine> readByNameForInstrument(long actor, long instrument, String fileName) {
         return fileReaderHelper
-                .readByNameForInstrument(actor, instrument, fileName)
-                .transform(customTransformerWithUser(actor))
-                .toSortedSet(fileComparator());
+            .readByNameForInstrument(actor, instrument, fileName)
+            .transform(customTransformerWithUser(actor))
+            .toSortedSet(fileComparator());
     }
 
     @Override
     public Set<FileLine> readFilesByLab(long userId, long labId) {
 
         return fileReaderHelper
-                .readFilesByLab(userId, labId)
-                .transform(customTransformerWithUser(userId))
-                .toSortedSet(fileComparator());
-    }
-
-    @Override
-    public Set<FileLine> readFilesByExperiment(long actor, long experiment) {
-
-        beforeReadFilesByExperiment(actor, experiment);
-
-        return fileReaderHelper
-                .filesByExperiment(actor, experiment)
-                .transform(customTransformerWithUser(actor))
-                .toSortedSet(fileComparator());
-
+            .readFilesByLab(userId, labId)
+            .transform(customTransformerWithUser(userId))
+            .toSortedSet(fileComparator());
     }
 
     @Override
@@ -180,11 +211,14 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
         if (!pagedInfo.advancedFilter.isPresent()) {
             result = fileMetaDataRepository.findByLab(labId, userId, request, toFilterQuery(pagedInfo));
         } else {
-            final String predicatesQueryString = getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pagedInfo);
+            final String predicatesQueryString =
+                getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pagedInfo);
             final String orderingString = getOrderingString(ActiveFileMetaData.class, request);
 
-            final Query query = em.createQuery(FileMetaDataRepository.FIND_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-            final Query countQuery = em.createQuery(FileMetaDataRepository.COUNT_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+            final Query query = em.createQuery(
+                FileMetaDataRepository.FIND_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+            final Query countQuery = em.createQuery(
+                FileMetaDataRepository.COUNT_BY_LAB_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
             query.setParameter("lab", labId);
             countQuery.setParameter("lab", labId);
             query.setParameter("user", userId);
@@ -196,38 +230,18 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
 
     }
 
-    @Override
-    public PagedItem<FileLine> readFilesByInstrument(long actor, long instrument, PagedItemInfo pagedItemInfo) {
-
-        PaginationItems.PagedItemInfo pagedInfo = (PaginationItems.PagedItemInfo) pagedItemInfo;
-        Pageable request = pagedItemsTransformer.toPageRequest(ActiveFileMetaData.class, pagedInfo);
-        final User userEntity = userRepository.findOne(actor);
-
-        final Page<ActiveFileMetaData> files;
-
-        if (!pagedInfo.advancedFilter.isPresent()) {
-            files = fileMetaDataRepository.findByInstrument(instrument, actor, request, toFilterQuery(pagedInfo));
-        } else {
-            final String predicatesQueryString = getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pagedInfo);
-            final String orderingString = getOrderingString(ActiveFileMetaData.class, request);
-
-            final Query query = em.createQuery(FileMetaDataRepository.FIND_BY_INSTRUMENT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-            final Query countQuery = em.createQuery(FileMetaDataRepository.COUNT_BY_INSTRUMENT_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-            query.setParameter("user", actor);
-            countQuery.setParameter("user", actor);
-            query.setParameter("instrument", instrument);
-            countQuery.setParameter("instrument", instrument);
-            files = getPageOfItemsByQuery(request, query, countQuery);
-        }
-
-        return toResult(userEntity, files);
-    }
-
     private PagedItem<FileLine> toResult(User actor, Page<ActiveFileMetaData> result) {
         return builder(result, transformers.transformFilesFn(actor, result)).transform();
     }
 
-    private Page<ActiveFileMetaData> filterPageableFile(long user, Filter filter, PaginationItems.PagedItemInfo pagedInfo) {
+    @Override
+    public PagedItem<FileLine> filterPageableFile(long user, Filter filter, PaginationItems.PagedItemInfo pagedInfo) {
+        final User userEntity = userRepository.findOne(user);
+        final Page<ActiveFileMetaData> activeFileMetaDatas = filterFile(user, filter, pagedInfo);
+        return toResult(userEntity, activeFileMetaDatas);
+    }
+
+    private Page<ActiveFileMetaData> filterFile(long user, Filter filter, PaginationItems.PagedItemInfo pagedInfo) {
 
         Pageable request = pagedItemsTransformer.toPageRequest(ActiveFileMetaData.class, pagedInfo);
 
@@ -247,7 +261,13 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
             }
 
         } else {
-            final String predicatesQueryString = getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pagedInfo);
+
+            boolean filterQuery = StringUtils.isNotEmpty(pagedInfo.filterQuery);
+            String predicatesQueryString =
+                getAdvancedFilterQueryStringWithCondition(ActiveFileMetaData.class, pagedInfo);
+            if (filterQuery) {
+                predicatesQueryString += FileMetaDataRepository.FILTER_CLAUSE;
+            }
 
             final String orderingString = getOrderingString(ActiveFileMetaData.class, request);
 
@@ -255,30 +275,48 @@ public class FileReaderImpl extends DefaultFileReader<ActiveFileMetaData, FileLi
             final Query countQuery;
             switch (filter) {
                 case ALL:
-                    query = em.createQuery(FileMetaDataRepository.FIND_ALL_STARTING_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(FileMetaDataRepository.COUNT_ALL_STARTING_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FileMetaDataRepository.FIND_ALL_STARTING_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
+                    countQuery = em.createQuery(
+                        FileMetaDataRepository.COUNT_ALL_STARTING_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
                     query.setParameter("user", user);
                     countQuery.setParameter("user", user);
                     break;
                 case SHARED_WITH_ME:
-                    query = em.createQuery(FileMetaDataRepository.FIND_SHARED_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(FileMetaDataRepository.COUNT_SHARED_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FileMetaDataRepository.FIND_SHARED_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    countQuery = em.createQuery(
+                        FileMetaDataRepository.COUNT_SHARED_ADVANCED_FILTER + predicatesQueryString + orderingString);
                     query.setParameter("user", user);
                     countQuery.setParameter("user", user);
                     break;
                 case MY:
-                    query = em.createQuery(FileMetaDataRepository.FIND_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(FileMetaDataRepository.COUNT_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FileMetaDataRepository.FIND_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    countQuery = em.createQuery(
+                        FileMetaDataRepository.COUNT_MY_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
                     query.setParameter("user", user);
                     countQuery.setParameter("user", user);
                     break;
                 case PUBLIC:
-                    query = em.createQuery(FileMetaDataRepository.FIND_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
-                    countQuery = em.createQuery(FileMetaDataRepository.COUNT_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString + orderingString);
+                    query = em.createQuery(
+                        FileMetaDataRepository.FIND_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
+                    countQuery = em.createQuery(
+                        FileMetaDataRepository.COUNT_PUBLIC_WITH_ADVANCED_FILTER + predicatesQueryString +
+                            orderingString);
                     break;
                 default:
                     throw new AssertionError(filter);
             }
+
+            if (filterQuery) {
+                query.setParameter("query", toFilterQuery(pagedInfo));
+                countQuery.setParameter("query", toFilterQuery(pagedInfo));
+            }
+
             return getPageOfItemsByQuery(request, query, countQuery);
         }
 

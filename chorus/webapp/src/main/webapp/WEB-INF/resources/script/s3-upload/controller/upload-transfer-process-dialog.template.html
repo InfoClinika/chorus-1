@@ -1,0 +1,48 @@
+<div modal-dialog class="upload-progress-dialog">
+
+    <div class="modal-holder">
+        <div class="modal-frame">
+            <form name="form">
+                <div class="modal-header">
+                    <a class="close" data-dismiss="modal"
+                       ng-show="vm.uploadFinished">&times;</a>
+                    <a class="rollup" data-dismiss="modal"
+                       ng-show="!vm.uploadFinished"
+                       ng-click="goBackground()">_</a>
+
+                    <h3>Upload</h3>
+                </div>
+
+                <div class="modal-body">
+
+                    <upload-transfer-process upload-items="vm.uploadItems">
+                    </upload-transfer-process>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button class="btn secondary-action"
+                            ng-show="!vm.uploadFinished"
+                            ng-click="cancel()">Cancel
+                    </button>
+
+                    <button class="btn btn-primary main-action"
+                            ng-show="!vm.uploadFinished"
+                            ng-click="goBackground()">
+                        Background
+                    </button>
+
+                    <button class="btn btn-primary main-action"
+                            data-dismiss="modal"
+                            ng-show="vm.uploadFinished">
+                        Close
+                    </button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>

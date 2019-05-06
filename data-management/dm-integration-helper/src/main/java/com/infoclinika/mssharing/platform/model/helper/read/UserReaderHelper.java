@@ -19,20 +19,14 @@ import static com.infoclinika.mssharing.platform.model.read.UserReaderTemplate.U
 @Component
 @Scope(value = "prototype")
 public class UserReaderHelper<USER extends UserTemplate, USER_LINE extends UserLineTemplate>
-        extends AbstractReaderHelper<USER, USER_LINE, UserLineTemplate> {
+    extends AbstractReaderHelper<USER, USER_LINE, UserLineTemplate> {
 
     @Inject
     private UserRepositoryTemplate<USER> userRepositoryTemplate;
 
     @Override
     public Function<USER, UserLineTemplate> getDefaultTransformer() {
-        return new Function<USER, UserLineTemplate>() {
-            @Nullable
-            @Override
-            public UserLineTemplate apply(USER user) {
-                return new UserLineTemplate(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName());
-            }
-        };
+        return user -> new UserLineTemplate(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName());
     }
 
     public ResultBuilder<USER, USER_LINE> readUsersByLab(long labId) {

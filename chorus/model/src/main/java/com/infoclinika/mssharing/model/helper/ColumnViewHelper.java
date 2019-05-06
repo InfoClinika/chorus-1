@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,7 +34,7 @@ public interface ColumnViewHelper {
 
     void removeView(long actor, long viewId);
 
-    static class Column {
+    class Column {
         public final Long id;
         public final String name;
         public final String dataType;
@@ -54,7 +53,7 @@ public interface ColumnViewHelper {
     }
 
     //TODO: separate
-    static class ColumnInfo{
+    class ColumnInfo {
         public final String name;
         public final String modelViewName;
         public final Integer order;
@@ -64,7 +63,8 @@ public interface ColumnViewHelper {
         public final String dataType;
         public final Long units;
 
-        public ColumnInfo(String name, String modelViewName, Integer order, boolean hideable, boolean sortable, Long originalColumn, String dataType, long units) {
+        public ColumnInfo(String name, String modelViewName, Integer order, boolean hideable, boolean sortable,
+                          Long originalColumn, String dataType, long units) {
             this.name = name;
             this.modelViewName = modelViewName;
             this.order = order;
@@ -107,24 +107,24 @@ public interface ColumnViewHelper {
     class ColumnView {
         public final Long id;
         public final String name;
-        public final boolean isDefault;
+        public final boolean aDefault;
         public final boolean isPrimary;
         public final ColumnViewType type;
 
-        public ColumnView(long id, String name, boolean aDefault, boolean primary, ColumnViewType type) {
+        public ColumnView(long id, String name, boolean isDefault, boolean primary, ColumnViewType type) {
             this.id = id;
             this.name = name;
-            isDefault = aDefault;
-            isPrimary = primary;
+            this.aDefault = isDefault;
+            this.isPrimary = primary;
             this.type = type;
         }
 
         public ColumnView(Long id, String name, boolean primary, ColumnViewType type) {
             this.id = id;
             this.name = name;
-            isPrimary = primary;
+            this.isPrimary = primary;
             this.type = type;
-            isDefault = false;
+            this.aDefault = false;
         }
     }
 }

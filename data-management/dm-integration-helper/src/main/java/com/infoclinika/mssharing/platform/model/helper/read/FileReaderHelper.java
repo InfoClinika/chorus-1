@@ -33,7 +33,8 @@ import static com.infoclinika.mssharing.platform.model.read.FileReaderTemplate.F
  */
 @Scope("prototype")
 @Component
-public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE extends FileLineTemplate> extends AbstractReaderHelper<FILE, FILE_LINE, FileLineTemplate> {
+public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE extends FileLineTemplate>
+    extends AbstractReaderHelper<FILE, FILE_LINE, FileLineTemplate> {
 
     @Inject
     private FileRepositoryTemplate<FILE> fileMetaDataRepository;
@@ -44,73 +45,45 @@ public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE exten
     }
 
     public static String toFullInstrumentModel(InstrumentModel model) {
-        return Joiner.on(" ").join(new String[]{model.getVendor().getName(), model.getType().getName(), model.getName()});
+        return Joiner.on(" ").join(
+            new String[] {model.getVendor().getName(), model.getType().getName(), model.getName()}
+        );
     }
 
     @Override
     public Function<FILE, FileLineTemplate> getDefaultTransformer() {
-        return new Function<FILE, FileLineTemplate>() {
-            @Override
-            public FileLineTemplate apply(FILE input) {
-                final InstrumentTemplate instrument = input.getInstrument();
-                final LabTemplate lab = instrument.getLab();
-                final InstrumentModel model = instrument.getModel();
+        return input -> {
+            final InstrumentTemplate instrument = input.getInstrument();
+            final LabTemplate lab = instrument.getLab();
+            final InstrumentModel model = instrument.getModel();
 
-                return new FileLineTemplate(input.getId(), input.getName(),
-                        input.getContentId(),
-                        input.getUploadId(),
-                        input.getDestinationPath(),
-                        instrument.getId(),
-                        lab.getId(),
-                        instrument.getName(),
-                        model.getId(),
-                        lab.getName(),
-                        input.getOwner().getId(),
-                        lab.getHead().getId(),
-                        input.isInvalid(),
-                        model.getVendor().getName(),
-                        toFullInstrumentModel(model),
-                        fromNullable(input.getSpecie()).transform(ENTITY_TO_ID).orNull(),
-                        transformFileAccessLevel(input),
-                        !fileMetaDataRepository.findFileExperimentUsage(input.getId()).isEmpty(),
-                        input.getLabels(),
-                        input.getSizeInBytes(),
-                        input.getUploadDate());
-            }
+            final Long id = input.getId();
+            return new FileLineTemplate(id, input.getName(),
+                input.getContentId(),
+                input.getUploadId(),
+                input.getDestinationPath(),
+                instrument.getId(),
+                lab.getId(),
+                instrument.getName(),
+                model.getId(),
+                lab.getName(),
+                input.getOwner().getId(),
+                lab.getHead().getId(),
+                input.isInvalid(),
+                model.getVendor().getName(),
+                toFullInstrumentModel(model),
+                fromNullable(input.getSpecie()).transform(ENTITY_TO_ID).orNull(),
+                transformFileAccessLevel(input),
+                fileUsedInExperiments(id),
+                input.getLabels(),
+                input.getSizeInBytes(),
+                input.getUploadDate()
+            );
         };
     }
 
-    public PagedResultBuilder<FILE, FILE_LINE> filesByFilter(long user, Filter filter, Pageable pageable, String query) {
-        Page<FILE> result;
-        switch (filter) {
-            case ALL:
-                result = fileMetaDataRepository.findAllAvailable(user, query, pageable);
-                break;
-            case SHARED_WITH_ME:
-                result = fileMetaDataRepository.findShared(user, query, pageable);
-                break;
-            case MY:
-                result = fileMetaDataRepository.findMy(user, query, pageable);
-                break;
-            case PUBLIC:
-                result = fileMetaDataRepository.findPublic(query, pageable);
-                break;
-            default:
-                throw new AssertionError(filter);
-        }
-        return new PagedResultBuilder<>(result, activeTransformer);
-    }
-
-    public PagedResultBuilder<FILE, FILE_LINE> filesByInstrument(long actor, long instrument, Pageable pageable, String query) {
-        return PagedResultBuilder.builder(fileMetaDataRepository.findByInstrument(instrument,
-                actor, pageable, query), activeTransformer);
-
-    }
-
-    public PagedResultBuilder<FILE, FILE_LINE> filesByLab(long actor, long labId, Pageable pageable, String query) {
-        final Page<FILE> byLab = fileMetaDataRepository.findByLab(labId, actor, pageable, query);
-        return PagedResultBuilder.builder(byLab, activeTransformer);
-
+    private boolean fileUsedInExperiments(Long fileId) {
+        return !fileMetaDataRepository.findFileExperimentUsage(fileId).isEmpty();
     }
 
     public ResultBuilder<FILE, FILE_LINE> filesByFilter(long user, Filter filter, Predicate<FILE> predicate) {
@@ -133,6 +106,28 @@ public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE exten
         return ResultBuilder.builder(from(filesToFilter).filter(predicate), activeTransformer);
     }
 
+    public PagedResultBuilder<FILE, FILE_LINE> filesByFilter(long user, Filter filter, Pageable pageable,
+                                                             String query) {
+        Page<FILE> result;
+        switch (filter) {
+            case ALL:
+                result = fileMetaDataRepository.findAllAvailable(user, query, pageable);
+                break;
+            case SHARED_WITH_ME:
+                result = fileMetaDataRepository.findShared(user, query, pageable);
+                break;
+            case MY:
+                result = fileMetaDataRepository.findMy(user, query, pageable);
+                break;
+            case PUBLIC:
+                result = fileMetaDataRepository.findPublic(query, pageable);
+                break;
+            default:
+                throw new AssertionError(filter);
+        }
+        return new PagedResultBuilder<>(result, activeTransformer);
+    }
+
     public ResultBuilder<FILE, FILE_LINE> filesByFilter(long user, Filter filter) {
         final Iterable<FILE> filesToFilter;
         switch (filter) {
@@ -153,6 +148,31 @@ public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE exten
         return ResultBuilder.builder(filesToFilter, activeTransformer);
     }
 
+    @Deprecated
+    private List<FILE> filesByInstrument(long instrumentId) {
+        return fileMetaDataRepository.byInstrument(instrumentId);
+    }
+
+    public PagedResultBuilder<FILE, FILE_LINE> filesByInstrument(long actor, long instrument, Pageable pageable,
+                                                                 String query) {
+        return PagedResultBuilder.builder(
+            fileMetaDataRepository.findByInstrument(instrument, actor, pageable, query),
+            activeTransformer
+        );
+
+    }
+
+    private List<FILE> filesByInstrument(long actor, long instrumentId) {
+        return fileMetaDataRepository.findAvailableByInstrument(actor, instrumentId);
+    }
+
+    public PagedResultBuilder<FILE, FILE_LINE> filesByLab(long actor, long labId, Pageable pageable, String query) {
+        final Page<FILE> byLab = fileMetaDataRepository.findByLab(labId, actor, pageable, query);
+        return PagedResultBuilder.builder(byLab, activeTransformer);
+
+    }
+
+
     /**
      * @see #readFilesByInstrument(long, long)
      */
@@ -165,15 +185,6 @@ public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE exten
     public ResultBuilder<FILE, FILE_LINE> readFilesByInstrument(long actor, long instrumentId) {
         List<FILE> files = filesByInstrument(actor, instrumentId);
         return ResultBuilder.builder(files, activeTransformer);
-    }
-
-    @Deprecated
-    private List<FILE> filesByInstrument(long instrumentId) {
-        return fileMetaDataRepository.byInstrument(instrumentId);
-    }
-
-    private List<FILE> filesByInstrument(long actor, long instrumentId) {
-        return fileMetaDataRepository.findByInstrument(actor, instrumentId);
     }
 
     public ResultBuilder<FILE, FILE_LINE> readByNameForInstrument(long actor, long instrumentId, String fileName) {
@@ -208,7 +219,10 @@ public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE exten
         return ResultBuilder.builder(files, activeTransformer);
     }
 
-    public PagedResultBuilder<FILE, FILE_LINE> filesByExperiment(long actor, long experiment, Pageable request, String filter) {
+    public PagedResultBuilder<FILE, FILE_LINE> filesByExperiment(long actor,
+                                                                 long experiment,
+                                                                 Pageable request,
+                                                                 String filter) {
         Page<FILE> byExperiment = fileMetaDataRepository.findByExperiment(experiment, request, filter);
         return PagedResultBuilder.builder(byExperiment, activeTransformer);
     }
@@ -234,12 +248,7 @@ public class FileReaderHelper<FILE extends FileMetaDataTemplate, FILE_LINE exten
     private boolean includedToProjectsOfType(List<FileProjectUsage> projectsSharing, final Sharing.Type type) {
 
         return from(projectsSharing)
-                .firstMatch(new Predicate<FileProjectUsage>() {
-                    @Override
-                    public boolean apply(FileProjectUsage input) {
-                        return input.sharingType.equals(type);
-                    }
-                })
-                .isPresent();
+            .firstMatch(input -> input.sharingType.equals(type))
+            .isPresent();
     }
 }

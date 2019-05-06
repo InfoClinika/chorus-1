@@ -149,7 +149,7 @@ public class FileMetaAnnotations {
 
     @Transient
     public Map<String, Object> getColumnsMap() {
-        final HashMap<String ,Object> map = newHashMap();
+        final HashMap<String, Object> map = newHashMap();
         map.put("creationDate", creationDate);
         map.put("comment", comment);
         map.put("instrumentMethod", instrumentMethod);

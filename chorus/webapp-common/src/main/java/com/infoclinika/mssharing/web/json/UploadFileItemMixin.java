@@ -9,10 +9,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class UploadFileItemMixin {
     @JsonCreator
     public UploadFileItemMixin(
-            @JsonProperty("name") String name,
-            @JsonProperty("labels") String labels,
-            @JsonProperty("size") long size,
-            @JsonProperty("specie") long specie,
-            @JsonProperty("archive") boolean archive) {
+        @JsonProperty("name") String name,
+        @JsonProperty("labels") String labels,
+        @JsonProperty("size") long size,
+        @JsonProperty("specie") long specie,
+        @JsonProperty("archive") boolean archive) {
     }
 }

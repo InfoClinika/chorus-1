@@ -15,7 +15,11 @@ public class FailedEmailsNotificationJob {
     @Inject
     private FailedEmailsSnsNotificationHandler failedEmailsSnsNotificationHandler;
 
-    @Scheduled(fixedRate = 1000 * 60 * 5)
+    /**
+     * Scheduled task to handle failed emails notification.
+     * Default cron rate - five minutes.
+     */
+    @Scheduled(fixedRateString = "${scheduled.failed.emails.notification.rate:300000}")
     public void handle() {
         if (failedEmailsSnsNotificationHandler.handlingIsEnabled()) {
             failedEmailsSnsNotificationHandler.handleMessages();

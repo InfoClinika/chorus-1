@@ -20,23 +20,23 @@ public abstract class FunctionTransformerAbstract {
         return FluentIterable.from(iterable);
     }
 
-    public static <DTO, ToDTO> List<DTO> toListDto(Iterable<ToDTO> collection,
-                                                   Function<ToDTO, DTO> toDto) {
+    public static <DTO, TO_DTO> List<DTO> toListDto(Iterable<TO_DTO> collection,
+                                                   Function<TO_DTO, DTO> toDto) {
         return Lists.newArrayList(toCollectionDto(collection, toDto));
     }
 
-    private static <DTO, ToDTO> Collection<DTO> toCollectionDto(Iterable<ToDTO> collection,
-                                                                Function<ToDTO, DTO> toDto) {
+    private static <DTO, TO_DTO> Collection<DTO> toCollectionDto(Iterable<TO_DTO> collection,
+                                                                Function<TO_DTO, DTO> toDto) {
         return transform(collection, toDto);
     }
 
-    public static <DTO, ToDTO> Set<DTO> toSetDto(Iterable<ToDTO> collection,
-                                                 Function<ToDTO, DTO> toDto) {
+    public static <DTO, TO_DTO> Set<DTO> toSetDto(Iterable<TO_DTO> collection,
+                                                 Function<TO_DTO, DTO> toDto) {
         return Sets.newHashSet(toCollectionDto(collection, toDto));
     }
 
-    public static <DTO, Key, ToDTO> Map<Key, DTO> toMapDto(Map<Key, ToDTO> map,
-                                                           Maps.EntryTransformer<Key, ToDTO, DTO> toDto) {
+    public static <DTO, KEY, TO_DTO> Map<KEY, DTO> toMapDto(Map<KEY, TO_DTO> map,
+                                                            Maps.EntryTransformer<KEY, TO_DTO, DTO> toDto) {
         return Maps.transformEntries(map, toDto);
     }
 

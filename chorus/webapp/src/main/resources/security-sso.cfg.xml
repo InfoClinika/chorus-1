@@ -17,6 +17,7 @@
     <http pattern="/analyze/css/**" security="none" />
     <http pattern="/analyze/images/**" security="none" />
     <http pattern="/analyze/scripts/**" security="none" />
+    <http pattern="/pages/user-guide-images/**" security="none" />
     <!--<http pattern="/common-js/**" security="none" />-->
 
     <http use-expressions="true" entry-point-ref="casEntryPoint" disable-url-rewriting="false">
@@ -140,6 +141,7 @@
     </beans:bean>
 
     <context:component-scan base-package="com.infoclinika.mssharing.web.security" />
+    <context:component-scan base-package="com.infoclinika.mssharing.propertiesprovider" />
 
     <beans:bean id="casProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <beans:property name="ignoreUnresolvablePlaceholders" value="true"/>

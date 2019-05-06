@@ -5,6 +5,8 @@ package com.infoclinika.mssharing.services.billing.persistence.enity;
  */
 public interface BalanceEntry {
     long getBalance();
+
     long getScaledToPayValue();
+
     long getTimestamp();
 }

@@ -1,150 +1,200 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>chorus</artifactId>
         <groupId>com.infoclinika</groupId>
+        <artifactId>chorus</artifactId>
         <version>1.0</version>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
 
     <artifactId>model</artifactId>
     <version>1.0</version>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.infoclinika</groupId>
-            <artifactId>mssharing-fileserver</artifactId>
-            <version>1.0</version>
+            <artifactId>dm-fileserver</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.infoclinika</groupId>
             <artifactId>dm-model-template</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.infoclinika</groupId>
-            <artifactId>storage-cloud</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>analysis-sdk</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infoclinika</groupId>
+            <artifactId>properties-provider</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.infoclinika</groupId>
+            <artifactId>billing-web-services-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
 
         <!--DB related-->
         <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>1.0.0.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>${hibernate.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>cglib</groupId>
-                    <artifactId>cglib</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>${hibernate.version}</version>
-        </dependency>
-        <!-- We are using mysql for production and h2 for test  and dev mode-->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.3.168</version>
-        </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.6</version>
         </dependency>
 
         <dependency>
-            <groupId>com.mchange</groupId>
-            <artifactId>c3p0</artifactId>
-            <version>0.9.5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <version>1.0.0.GA</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-validator-annotation-processor</artifactId>
-            <version>4.2.0.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib-nodep</artifactId>
-            <version>2.2.2</version>
-        </dependency>
-
-        <!--Spring related-->
-
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
-            <version>${spring.data.version}</version>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
-            <version>${spring.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context-support</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-            <version>1.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.infoclinika</groupId>
-            <artifactId>billing-web-services-api</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>release</id>
+            <url>http://archiva.infoclinika.net/repository/release/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>internal</id>
+            <url>http://archiva.infoclinika.net/repository/internal/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
+    <profiles>
+        <profile>
+            <id>chorus</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.bazaarvoice.maven.plugins</groupId>
+                        <artifactId>s3-upload-maven-plugin</artifactId>
+                        <version>1.2</version>
+                        <configuration>
+                            <bucketName>chorus-backups</bucketName>
+                            <accessKey>AKIAI7XAOGC6U2SLQIGA</accessKey>
+                            <secretKey>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</secretKey>
+                            <source>production.backup.sql.gz</source>
+                            <destination>chorus_production/${maven.build.timestamp}.backup.sql.gz</destination>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.infoclinika</groupId>
+                        <artifactId>s3-cleanup-maven-plugin</artifactId>
+                        <version>1.0</version>
+                        <configuration>
+                            <bucketName>chorus-backups</bucketName>
+                            <accessKey>AKIAI7XAOGC6U2SLQIGA</accessKey>
+                            <secretKey>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</secretKey>
+                            <source>chorus_production</source>
+                            <leaveUntouched>1</leaveUntouched>
+                            <monthToKeep>3</monthToKeep>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>chorus_billing</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.bazaarvoice.maven.plugins</groupId>
+                        <artifactId>s3-upload-maven-plugin</artifactId>
+                        <version>1.2</version>
+                        <configuration>
+                            <bucketName>chorus-backups</bucketName>
+                            <accessKey>AKIAI7XAOGC6U2SLQIGA</accessKey>
+                            <secretKey>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</secretKey>
+                            <source>production_billing.backup.sql.gz</source>
+                            <destination>chorus_production_billing/${maven.build.timestamp}.backup.sql.gz</destination>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.infoclinika</groupId>
+                        <artifactId>s3-cleanup-maven-plugin</artifactId>
+                        <version>1.0</version>
+                        <configuration>
+                            <bucketName>chorus-backups</bucketName>
+                            <accessKey>AKIAI7XAOGC6U2SLQIGA</accessKey>
+                            <secretKey>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</secretKey>
+                            <source>chorus_production_billing</source>
+                            <leaveUntouched>1</leaveUntouched>
+                            <monthToKeep>3</monthToKeep>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>services</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.bazaarvoice.maven.plugins</groupId>
+                        <artifactId>s3-upload-maven-plugin</artifactId>
+                        <version>1.2</version>
+                        <configuration>
+                            <bucketName>chorus-backups</bucketName>
+                            <accessKey>AKIAI7XAOGC6U2SLQIGA</accessKey>
+                            <secretKey>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</secretKey>
+                            <source>services.production.backup.sql.gz</source>
+                            <destination>services_production/${maven.build.timestamp}.backup.sql.gz</destination>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.infoclinika</groupId>
+                        <artifactId>s3-cleanup-maven-plugin</artifactId>
+                        <version>1.0</version>
+                        <configuration>
+                            <bucketName>chorus-backups</bucketName>
+                            <accessKey>AKIAI7XAOGC6U2SLQIGA</accessKey>
+                            <secretKey>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</secretKey>
+                            <source>services_production</source>
+                            <leaveUntouched>1</leaveUntouched>
+                            <monthToKeep>3</monthToKeep>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

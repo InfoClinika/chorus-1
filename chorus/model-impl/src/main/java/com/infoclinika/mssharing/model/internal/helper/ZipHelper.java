@@ -1,7 +1,6 @@
 package com.infoclinika.mssharing.model.internal.helper;
 
 import com.google.common.base.Throwables;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileOutputStream;

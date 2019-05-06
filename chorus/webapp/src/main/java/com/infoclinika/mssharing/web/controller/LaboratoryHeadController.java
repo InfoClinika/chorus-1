@@ -35,7 +35,8 @@ public class LaboratoryHeadController extends ErrorHandler {
 
     @RequestMapping(value = "/{lab}/users/{userToRemove}", method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.OK)
-    public void removeUserFromLaboratory(@PathVariable long lab, @PathVariable long userToRemove, Principal principal) throws Exception {
+    public void removeUserFromLaboratory(@PathVariable long lab, @PathVariable long userToRemove, Principal principal)
+        throws Exception {
         final long labHeadId = getUserId(principal);
         labHeadManagement.removeUserFromLab(labHeadId, lab, userToRemove);
     }

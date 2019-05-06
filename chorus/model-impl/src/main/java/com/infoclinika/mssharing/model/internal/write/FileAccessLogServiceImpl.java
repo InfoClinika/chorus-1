@@ -9,7 +9,8 @@ import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMeta
 import com.infoclinika.mssharing.model.internal.entity.restorable.DeletedFileMetaData;
 import com.infoclinika.mssharing.model.internal.repository.*;
 import com.infoclinika.mssharing.model.write.FileAccessLogService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ import java.util.Date;
 @Async("fileAccessLogExecutor")
 public class FileAccessLogServiceImpl implements FileAccessLogService {
 
-    private static final Logger logger = Logger.getLogger(FileAccessLogServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileAccessLogServiceImpl.class);
 
     @Inject
     private FileAccessLogRepository fileAccessLogRepository;
@@ -44,7 +45,12 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
     private InstrumentRepository instrumentRepository;
 
 
-    private void saveFileAccessLog(AbstractFileMetaData metaData, User user, Lab lab, FileAccessLog.OperationType operationType){
+    private void saveFileAccessLog(
+        AbstractFileMetaData metaData,
+        User user,
+        Lab lab,
+        FileAccessLog.OperationType operationType
+    ) {
         final Long userId = user == null ? null : user.getId();
         final String email = user == null ? null : user.getEmail();
         final Long userLabId = lab == null ? null : lab.getId();
@@ -56,16 +62,17 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
         final String fmdName = metaData.getName();
 
         FileAccessLog log = new FileAccessLog(userId, email, userLabId, name,
-                fmdId, fmdSize, fmdContentId, fmdArchiveId,
-                fmdName, operationType, new Date());
+            fmdId, fmdSize, fmdContentId, fmdArchiveId,
+            fmdName, operationType, new Date()
+        );
         fileAccessLogRepository.save(log);
     }
 
     @Override
-    public void logFileUploadStart(long actor, long instrument, long fileId){
+    public void logFileUploadStart(long actor, long instrument, long fileId) {
         final ActiveFileMetaData metaData = fileRepository.findOne(fileId);
-        if(metaData == null) {
-            logger.warn("Try to log file upload start of not existing file with Id: " + Long.toString(fileId));
+        if (metaData == null) {
+            LOGGER.warn("Try to log file upload start of not existing file with Id: {}", Long.toString(fileId));
         } else {
             final User user = userRepository.findOne(actor);
             final Lab lab = instrumentRepository.findOne(instrument).getLab();
@@ -77,7 +84,7 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
     public void logFileUploadConfirm(long actor, long labId, long fileId) {
         final ActiveFileMetaData metaData = fileRepository.findOne(fileId);
         if (metaData == null) {
-            logger.warn("Try to log file upload confirm of not existing file with Id: " + Long.toString(fileId));
+            LOGGER.warn("Try to log file upload confirm of not existing file with Id: {}", Long.toString(fileId));
         } else {
             final User user = userRepository.findOne(actor);
             final Lab lab = labRepository.findOne(labId);
@@ -89,7 +96,7 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
     public void logFileDelete(long fileId) {
         final DeletedFileMetaData metaData = deletedFileMetaDataRepository.findOne(fileId);
         if (metaData == null) {
-            logger.warn("Try to log file delete of not existing file with Id: " + Long.toString(fileId));
+            LOGGER.warn("Try to log file delete of not existing file with Id: {}", Long.toString(fileId));
         } else {
             final Lab lab = metaData.getInstrument() == null ? null : metaData.getInstrument().getLab();
             final User user = metaData.getOwner();
@@ -101,7 +108,7 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
     public void logFileDeletePermanently(long actor, long fileId) {
         final ActiveFileMetaData metaData = fileRepository.findOne(fileId);
         if (metaData == null) {
-            logger.warn("Try to log file delete permanently of not existing file with Id: " + Long.toString(fileId));
+            LOGGER.warn("Try to log file delete permanently of not existing file with Id: {}", Long.toString(fileId));
         } else {
             final Lab lab = metaData.getInstrument() == null ? null : metaData.getInstrument().getLab();
             final User user = userRepository.findOne(actor);
@@ -113,7 +120,7 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
     public void logFileArchiveStart(long actor, long fileId) {
         final ActiveFileMetaData metaData = fileRepository.findOne(fileId);
         if (metaData == null) {
-            logger.warn("Try to log file archive start of not existing file with Id: " + Long.toString(fileId));
+            LOGGER.warn("Try to log file archive start of not existing file with Id: {}", Long.toString(fileId));
         } else {
             final User user = userRepository.findOne(actor);
             final Lab lab = metaData.getInstrument() == null ? null : metaData.getInstrument().getLab();
@@ -125,7 +132,7 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
     public void logFileArchiveConfirm(long fileId) {
         final ActiveFileMetaData metaData = fileRepository.findOne(fileId);
         if (metaData == null) {
-            logger.warn("Try to log file archive confirm of not existing file with Id: " + Long.toString(fileId));
+            LOGGER.warn("Try to log file archive confirm of not existing file with Id: {}", Long.toString(fileId));
         } else {
             final User user = metaData.getOwner();
             final Lab lab = metaData.getInstrument() == null ? null : metaData.getInstrument().getLab();
@@ -137,7 +144,7 @@ public class FileAccessLogServiceImpl implements FileAccessLogService {
     public void logFileDownload(long actor, ChorusFileData fileData) {
         final ActiveFileMetaData metaData = fileRepository.findOne(fileData.id);
         if (metaData == null) {
-            logger.warn("Try to log file download of not existing file with Id: " + Long.toString(fileData.id));
+            LOGGER.warn("Try to log file download of not existing file with Id: {}", Long.toString(fileData.id));
         } else {
             final Lab lab = labRepository.findOne(fileData.lab);
             final User user = metaData.getOwner();

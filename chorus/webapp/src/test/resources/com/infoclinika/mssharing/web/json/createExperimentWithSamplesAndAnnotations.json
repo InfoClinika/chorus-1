@@ -1,0 +1,52 @@
+{
+  "files": [
+    {
+      "id": 7,
+      "preparedSample": {
+        "name": "prepared_sample_for_file_7",
+        "samples": [
+          {
+            "name": "sample_1",
+            "type": "LIGHT",
+            "annotationValues": [
+              {
+                "name": "AT",
+                "value": "a10"
+              },
+              {
+                "name": "AN",
+                "value": "10",
+                "isNumeric": "true",
+                "units": "au"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "preparedSample": {
+        "name": "prepared_sample_for_file_8",
+        "samples": [
+          {
+            "name": "sample_2",
+            "type": "LIGHT",
+            "annotationValues": [
+              {
+                "name": "AT",
+                "value": "a20"
+              },
+              {
+                "name": "AN",
+                "value": "20",
+                "isNumeric": "true",
+                "units": "au"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

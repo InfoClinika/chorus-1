@@ -14,7 +14,8 @@ import javax.inject.Inject;
  */
 @Component
 @Scope(value = "prototype")
-public class AttachmentsReaderHelper<ENTITY extends Attachment, LINE extends AttachmentItem> extends AbstractReaderHelper<ENTITY, LINE, AttachmentItem> {
+public class AttachmentsReaderHelper<ENTITY extends Attachment, LINE extends AttachmentItem>
+    extends AbstractReaderHelper<ENTITY, LINE, AttachmentItem> {
 
     @Inject
     private AttachmentRepositoryTemplate<ENTITY> attachmentRepository;
@@ -25,18 +26,13 @@ public class AttachmentsReaderHelper<ENTITY extends Attachment, LINE extends Att
     @Override
     public Function<ENTITY, AttachmentItem> getDefaultTransformer() {
         //noinspection unchecked
-        return new Function<ENTITY, AttachmentItem>() {
-            @Override
-            public AttachmentItem apply(ENTITY input) {
-                return new AttachmentItem(
-                        input.getId(),
-                        input.getName(),
-                        input.getSizeInBytes(),
-                        input.getUploadDate(),
-                        input.getOwner().getId()
-                );
-            }
-        };
+        return input -> new AttachmentItem(
+            input.getId(),
+            input.getName(),
+            input.getSizeInBytes(),
+            input.getUploadDate(),
+            input.getOwner().getId()
+        );
     }
 
 

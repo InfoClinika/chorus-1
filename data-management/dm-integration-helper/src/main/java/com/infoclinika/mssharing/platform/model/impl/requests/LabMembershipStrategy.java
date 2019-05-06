@@ -27,16 +27,13 @@ class LabMembershipStrategy extends Strategy {
 
     @Override
     public Collection<InboxItem> getInboxItems(long actor) {
-        ImmutableSortedSet<RequestsReaderTemplate.LabMembershipRequest> labMembershipRequests = requestsReader.myLabMembershipInbox(actor);
-        return transform(labMembershipRequests, new Function<LabMembershipRequest, InboxItem>() {
-            @Override
-            public InboxItem apply(LabMembershipRequest input) {
-                return new InboxItem(buildGlobalId(input.requestId),
-                        input.requesterName,
-                        "Requested a membership in " + input.labName + " lab.",
-                        input.sent, InboxItem.Actions.APPROVE_REFUSE);
-            }
-        });
+        ImmutableSortedSet<RequestsReaderTemplate.LabMembershipRequest> labMembershipRequests =
+            requestsReader.myLabMembershipInbox(actor);
+        return transform(labMembershipRequests, input -> new InboxItem(buildGlobalId(input.requestId),
+            input.requesterName,
+            "Requested a membership in " + input.labName + " lab.",
+            input.sent, InboxItem.Actions.APPROVE_REFUSE
+        ));
     }
 
     @Override

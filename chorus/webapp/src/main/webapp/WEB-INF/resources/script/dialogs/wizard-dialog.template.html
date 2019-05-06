@@ -1,0 +1,60 @@
+<div modal-dialog style="width: 700px">
+
+    <div class="modal-holder">
+        <div class="modal-frame">
+            <form name="form">
+                <div class="modal-header">
+                    <a class="close" ng-click="cancel()">&times;</a>
+
+                    <h3>{{title}}</h3>
+                </div>
+
+                <div class="modal-body">
+                    <div class="step-headers" ng-show="steps.length > 0">
+                        <div class="steps-line"></div>
+                        <div ng-repeat="(stepNo, step) in steps"
+                             class="step-holder steps-count-{{steps.length}}" ng-class="{active: step.current}">
+                            <div class="number">{{stepNo + 1}}</div>
+                            <div class="title">{{step.title}}</div>
+                        </div>
+                    </div>
+
+                    <div class="dialog-container" ng-transclude>
+                    </div>
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button class="btn secondary-action"
+                            ng-click="cancel()">Cancel
+                    </button>
+
+                    <button class="btn secondary-action back"
+                            ng-show="hasPrev()"
+                            ng-click="goBack()">
+                        <span class="left-tail"></span>
+                        Back
+                    </button>
+
+                    <button class="btn main-action next"
+                            ng-show="hasNext()"
+                            ng-disabled="!canNext()"
+                            ng-click="goNext()">
+                        Next
+                        <span class="right-tail"></span>
+                    </button>
+
+                    <button class="btn btn-primary main-action"
+                            ng-show="!hasNext()"
+                            ng-disabled="!canNext()"
+                            ng-click="onDone()">
+                        {{button}}
+                    </button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>

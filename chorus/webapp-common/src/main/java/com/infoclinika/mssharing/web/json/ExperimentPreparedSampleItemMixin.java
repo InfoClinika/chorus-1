@@ -12,8 +12,8 @@ import java.util.Set;
 public abstract class ExperimentPreparedSampleItemMixin {
     @JsonCreator
     public ExperimentPreparedSampleItemMixin(
-            @JsonProperty("name") String name,
-            @JsonProperty("samples") Set<ExperimentSampleItem> samples
+        @JsonProperty("name") String name,
+        @JsonProperty("samples") Set<ExperimentSampleItem> samples
     ) {
     }
 }

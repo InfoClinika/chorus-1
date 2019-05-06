@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.entity.view;
 
@@ -12,18 +14,16 @@ import com.infoclinika.mssharing.model.internal.entity.Lab;
 import com.infoclinika.mssharing.model.internal.entity.User;
 import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractProject;
 import com.infoclinika.mssharing.model.write.ExperimentCategory;
+import com.infoclinika.mssharing.platform.entity.ExperimentType;
 
 import javax.persistence.*;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Oleksii Tymchenko
  *
- * View for mapping ActiveExperiment records in dashboard. Read only.
- * See classpath*: views.sql
+ *     </p>View for mapping ActiveExperiment records in dashboard. Read only.
+ *     See classpath*: views.sql
  */
 @javax.persistence.Table(name = "experiment_dashboard_record")
 @Entity
@@ -51,15 +51,30 @@ public class ExperimentDashboardRecord {
     private boolean deleted;
     private String downloadToken;
     private String labName;
+    private boolean failed;
+    @ManyToOne
+    private ExperimentType experimentType;
+
     @Transient
-    private List<Long> processedIds = new LinkedList<Long>();
+    private List<Long> processedIds = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private ExperimentCategory experimentCategory;
 
 
-    public ExperimentDashboardRecord(Long id, String name, Lab lab, AbstractProject project, User creator, Long numberOfFiles,
-                                     Date lastModification, String downloadToken, boolean deleted) {
+    public ExperimentDashboardRecord(
+        Long id,
+        String name,
+        Lab lab,
+        AbstractProject project,
+        User creator,
+        Long numberOfFiles,
+        Date lastModification,
+        String downloadToken,
+        boolean deleted,
+        boolean failed,
+        ExperimentType experimentType
+    ) {
         this.id = id;
         this.name = name;
         this.lab = lab;
@@ -69,11 +84,23 @@ public class ExperimentDashboardRecord {
         this.lastModification = lastModification;
         this.downloadToken = downloadToken;
         this.deleted = deleted;
+        this.failed = failed;
+        this.experimentType = experimentType;
     }
 
-    public ExperimentDashboardRecord(Long id, String name, Lab lab, AbstractProject project, User creator, Long numberOfFiles,
-                                     Date lastModification, String downloadToken,
-                                     ExperimentCategory experimentCategory) {
+    public ExperimentDashboardRecord(
+        Long id,
+        String name,
+        Lab lab,
+        AbstractProject project,
+        User creator,
+        Long numberOfFiles,
+        Date lastModification,
+        String downloadToken,
+        ExperimentCategory experimentCategory,
+        boolean failed,
+        ExperimentType experimentType
+    ) {
         this.id = id;
         this.name = name;
         this.lab = lab;
@@ -83,6 +110,8 @@ public class ExperimentDashboardRecord {
         this.lastModification = lastModification;
         this.downloadToken = downloadToken;
         this.experimentCategory = experimentCategory;
+        this.failed = failed;
+        this.experimentType = experimentType;
     }
 
 
@@ -152,5 +181,13 @@ public class ExperimentDashboardRecord {
 
     public void setExperimentCategory(ExperimentCategory experimentCategory) {
         this.experimentCategory = experimentCategory;
+    }
+
+    public ExperimentType getExperimentType() {
+        return experimentType;
+    }
+
+    public boolean isFailed() {
+        return failed;
     }
 }

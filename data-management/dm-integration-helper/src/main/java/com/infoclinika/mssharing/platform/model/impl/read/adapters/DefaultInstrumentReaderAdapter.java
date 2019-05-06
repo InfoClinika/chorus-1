@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
  * @author Herman Zamula
  */
 @Component
-public class DefaultInstrumentReaderAdapter extends DefaultAccessedInstrumentReader<InstrumentTemplate, InstrumentLineTemplate> {
+public class DefaultInstrumentReaderAdapter
+    extends DefaultAccessedInstrumentReader<InstrumentTemplate, InstrumentLineTemplate> {
     @Override
     public InstrumentLineTemplate transform(AccessedInstrument<InstrumentTemplate> instrument) {
         return instrumentReaderHelper.getDefaultTransformer().apply(instrument);

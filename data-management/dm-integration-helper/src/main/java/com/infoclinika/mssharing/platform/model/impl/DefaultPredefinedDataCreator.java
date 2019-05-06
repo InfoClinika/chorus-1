@@ -1,6 +1,5 @@
 package com.infoclinika.mssharing.platform.model.impl;
 
-import com.google.common.collect.Sets;
 import com.infoclinika.mssharing.platform.entity.*;
 import com.infoclinika.mssharing.platform.model.EntityFactories;
 import com.infoclinika.mssharing.platform.model.PredefinedDataCreatorTemplate;
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -53,11 +53,20 @@ public class DefaultPredefinedDataCreator implements PredefinedDataCreatorTempla
 
     @Override
     public long admin(String firstName, String lastName, String email, String password) {
+        return admin(firstName, lastName, email, password, Collections.emptySet());
+    }
+
+    public long admin(String firstName, String lastName, String email, String password, Set<Long> labIds) {
         UserTemplate user = userRepository.findByEmail(email);
         if (user != null) {
             return user.getId();
         }
-        long adminId = userManagement.createPersonAndApproveMembership(new UserManagementTemplate.PersonInfo(firstName, lastName, email), password, Sets.newHashSet(), null);
+        long adminId = userManagement.createPersonAndApproveMembership(
+            new UserManagementTemplate.PersonInfo(firstName, lastName, email),
+            password,
+            labIds,
+            null
+        );
         userManagement.verifyEmail(adminId);
         final UserTemplate entity = userRepository.findOne(adminId);
         entity.setAdmin(true);
@@ -99,7 +108,9 @@ public class DefaultPredefinedDataCreator implements PredefinedDataCreatorTempla
     }
 
     @Override
-    public long instrumentModel(final String vendor, final String type, final String studyType, String name, final boolean isFolderArchiveSupport, final boolean isMultipleFiles, final Set<FileExtensionItem> extensions) {
+    public long instrumentModel(final String vendor, final String type, final String studyType, String name,
+                                final boolean isFolderArchiveSupport, final boolean isMultipleFiles,
+                                final Set<FileExtensionItem> extensions) {
 
         final Vendor vendorEntity = fromNullable(vendorRepository.findByName(vendor)).or(() -> {
             final Vendor vendorEntity1 = entityFactories.vendor.get();
@@ -113,11 +124,12 @@ public class DefaultPredefinedDataCreator implements PredefinedDataCreatorTempla
             return entity;
         });
 
-        final InstrumentStudyType studyTypeEntity = fromNullable(instrumentStudyTypeRepository.findByName(studyType)).or(() -> {
-            final InstrumentStudyType entity = entityFactories.instrumentStudyType.get();
-            entity.setName(studyType);
-            return entity;
-        });
+        final InstrumentStudyType studyTypeEntity =
+            fromNullable(instrumentStudyTypeRepository.findByName(studyType)).or(() -> {
+                final InstrumentStudyType entity = entityFactories.instrumentStudyType.get();
+                entity.setName(studyType);
+                return entity;
+            });
 
         final InstrumentModel instrumentModel = entityFactories.instrumentModel.get();
         instrumentModel.setName(name);
@@ -136,6 +148,16 @@ public class DefaultPredefinedDataCreator implements PredefinedDataCreatorTempla
         instrumentModel.getExtensions().addAll(fileExtensions);
 
         return instrumentModelRepository.save(instrumentModel).getId();
+    }
+
+    public long createInstrumentStudyType(String name) {
+        final InstrumentStudyType studyTypeEntity =
+            fromNullable(instrumentStudyTypeRepository.findByName(name)).or(() -> {
+                final InstrumentStudyType entity = entityFactories.instrumentStudyType.get();
+                entity.setName(name);
+                return entity;
+            });
+        return instrumentStudyTypeRepository.save(studyTypeEntity).getId();
     }
 
     private Map<String, VendorExtension.Importance> getStringImportanceMap(FileExtensionItem extension) {

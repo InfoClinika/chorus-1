@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.test.study;
 
@@ -16,13 +18,11 @@ import com.google.common.collect.Iterables;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
 import com.infoclinika.mssharing.platform.model.InvalidFactorException;
 import com.infoclinika.mssharing.platform.model.ObjectNotFoundException;
-import com.infoclinika.mssharing.platform.model.common.items.FileItem;
 import com.infoclinika.mssharing.platform.model.common.items.NamedItem;
 import com.infoclinika.mssharing.platform.model.helper.ExperimentDownloadHelperTemplate;
 import com.infoclinika.mssharing.platform.model.read.AttachmentsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.ExperimentReaderTemplate;
-import com.infoclinika.mssharing.platform.model.read.FileReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.testing.helper.Data;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
@@ -30,6 +30,7 @@ import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTempla
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.Restriction;
 import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.ProjectManagementTemplate;
+import com.infoclinika.mssharing.platform.model.write.ProjectManagementTemplate.ProjectInfoTemplate;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -44,10 +45,10 @@ import static com.google.common.collect.Iterables.*;
 import static com.infoclinika.mssharing.platform.model.read.AttachmentsReaderTemplate.AttachmentType.EXPERIMENT;
 import static com.infoclinika.mssharing.platform.model.testing.helper.Data.EMPTY_ANNOTATIONS;
 import static com.infoclinika.mssharing.platform.model.testing.helper.Data.PROJECT_TITLE;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * @author Stanislav Kurilin
@@ -76,8 +77,8 @@ public class ExperimentTest extends AbstractStudyTest {
         final long project = uc.createProject(bob, uc.getLab3());
         final long experiment = createExperiment(bob, project);
         final Set<NamedItem> ownedExperiments = experimentCreationHelper.ownedExperiments(bob);
-        assertThat(ownedExperiments.size(), is(1));
-        assertThat(ownedExperiments.iterator().next().id, is(experiment));
+        assertEquals(ownedExperiments.size(), 1);
+        assertEquals(ownedExperiments.iterator().next().id, experiment);
     }
 
     @Test
@@ -103,12 +104,12 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file1 = uc.saveFile(bob);
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = experimentInfo()
-                .project(project)
-                .lab(uc.getLab3())
-                .is2Dlc(false)
-                .restriction(restriction(bob))
-                .factors(NO_FACTORS)
-                .files(noFactoredFile(file1));
+            .project(project)
+            .lab(uc.getLab3())
+            .is2Dlc(false)
+            .restriction(restriction(bob))
+            .factors(NO_FACTORS)
+            .files(noFactoredFile(file1));
 
         final long experiment = experimentManagement.createExperiment(bob, builder.build());
 
@@ -116,12 +117,14 @@ public class ExperimentTest extends AbstractStudyTest {
         final String factorName = generateString();
         final String factorValue = "2";
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file2, of(factorValue), EMPTY_ANNOTATIONS, false)), of("3"));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file2, of(factorValue), EMPTY_ANNOTATIONS, false)), of("3")
+        );
 
         final long project2 = createPublicProject(john);
         createExperiment(john, project2);
-        final SortedSet<? extends ExperimentReaderTemplate.ExperimentLineTemplate> experiments = experimentReader.readExperiments(john, Filter.MY);
+        final SortedSet<? extends ExperimentReaderTemplate.ExperimentLineTemplate> experiments =
+            experimentReader.readExperiments(john, Filter.MY);
         assertEquals(Iterables.size(experiments), 1);
     }
 
@@ -136,8 +139,10 @@ public class ExperimentTest extends AbstractStudyTest {
         createFileWithInstrument(bob, instrument, unspecifiedSpecie());
 
         assertEquals(size(experimentCreationHelper.availableFilesByInstrument(bob, specie, instrument)), 2);
-        assertEquals(size(experimentCreationHelper.availableFilesByInstrument(bob, anotherSpecie(specie), instrument)), 1);
-        assertEquals(size(experimentCreationHelper.availableFilesByInstrument(bob, unspecifiedSpecie(), instrument)), 2);
+        assertEquals(
+            size(experimentCreationHelper.availableFilesByInstrument(bob, anotherSpecie(specie), instrument)), 1);
+        assertEquals(
+            size(experimentCreationHelper.availableFilesByInstrument(bob, unspecifiedSpecie(), instrument)), 2);
     }
 
     private void creteFileWithInstrumentModel(long bob, long lab, long model, long specie) {
@@ -191,10 +196,6 @@ public class ExperimentTest extends AbstractStudyTest {
         final long bob = uc.createLab3AndBob();
         final long file = uc.saveFile(bob);
         final long project = uc.createProject(bob, uc.getLab3());
-       /* final long experiment1 = projectManagement.newExperimentWithoutFiles(bob, project, uc.getLab3(), experimentInfo(), false, restriction(bob));
-        final long experiment2 = projectManagement.newExperimentWithoutFiles(bob, project, uc.getLab3(), experimentInfo(), false, restriction(bob));
-        projectManagement.updateFiles(bob, experiment1, NO_FACTORS, noFactoredFile(file));
-        projectManagement.updateFiles(bob, experiment2, NO_FACTORS, noFactoredFile(file));*/
         createExperiment(bob, project, uc.getLab3(), noFactoredFile(file));
         createExperiment(bob, project, uc.getLab3(), noFactoredFile(file));
     }
@@ -206,9 +207,15 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file1 = uc.saveFile(bob);
         final long file2 = uc.saveFile(bob);
         final long file3 = uc.saveFile(bob);
-        final long experimentId = createInstrumentAndExperiment(bob, uc.getLab3(), projectId, NO_FACTORS, noFactoredFiles(of(file1, file2, file3)));
+        final long experimentId = createInstrumentAndExperiment(
+            bob,
+            uc.getLab3(),
+            projectId,
+            NO_FACTORS,
+            noFactoredFiles(of(file1, file2, file3))
+        );
         final SortedSet<? extends ExperimentReaderTemplate.ExperimentLineTemplate> experiments
-                = experimentReader.readExperiments(bob, Filter.ALL);
+            = experimentReader.readExperiments(bob, Filter.ALL);
 
         assertEquals(Iterables.size(experiments), 1);
         final ExperimentReaderTemplate.ExperimentLineTemplate experiment = experiments.iterator().next();
@@ -225,24 +232,28 @@ public class ExperimentTest extends AbstractStudyTest {
         final String experimentDescription = generateString();
         instrument(bob, uc.getLab3(), anyInstrumentModel());
         long experimentType = anyExperimentType();
-        final long projectId = projectManagement.createProject(bob, new ProjectManagementTemplate.ProjectInfoTemplate(uc.getLab3(), projectName, generateString(), generateString()));
+        final long projectId = projectManagement.createProject(
+            bob,
+            new ProjectInfoTemplate(uc.getLab3(), projectName, generateString(), generateString())
+        );
         long specie = unspecified();
         final ImmutableList<FileItemTemplate> files = anyFile(bob);
 
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder()
-                .name(experimentName)
-                .description(experimentDescription)
-                .experimentType(experimentType)
-                .species(specie)
-                .project(projectId)
-                .lab(uc.getLab3())
-                .is2Dlc(false).restriction(restriction(bob, files.get(0).id)).factors(NO_FACTORS)
-                .files(files);
+            .name(experimentName)
+            .description(experimentDescription)
+            .experimentType(experimentType)
+            .species(specie)
+            .project(projectId)
+            .lab(uc.getLab3())
+            .is2Dlc(false).restriction(restriction(bob, files.get(0).id)).factors(NO_FACTORS)
+            .files(files);
 
         final long experimentId = experimentManagement.createExperiment(bob, builder.build());
 
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experimentId);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experimentId);
         assertNotNull(experimentItem.files);
         assertNotNull(experimentItem.factors);
         assertNotNull(experimentItem.factorValues);
@@ -260,9 +271,8 @@ public class ExperimentTest extends AbstractStudyTest {
         final long experimentId = experiment(bob, uc.getLab3());
         final String newName = generateString();
 
-//        projectManagement.updateExperimentWithoutFiles(bob, experimentId, new StudyManagement.ExperimentInfo(newName, generateString(), anyWorkflowType(), anySpecie()));
-
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experimentId);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experimentId);
         assertEquals(experimentItem.name, newName);
     }
 
@@ -277,10 +287,12 @@ public class ExperimentTest extends AbstractStudyTest {
         final String factorName = generateString();
         final String factorValue = "2";
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue)
+        );
 
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
 
         assertEquals(experimentItem.factors.size(), 1);
         assertEquals(experimentItem.files.size(), 2);
@@ -313,8 +325,9 @@ public class ExperimentTest extends AbstractStudyTest {
         final String factorName = generateString();
         final String factorValue = "2";
         addFilesToExperiment(kate, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue)
+        );
 
         final int experimentsLengthWithNewExperiment = experimentReader.readExperiments(kate, Filter.MY).size();
         assertEquals(experimentsLengthWithNewExperiment, 1);
@@ -346,8 +359,9 @@ public class ExperimentTest extends AbstractStudyTest {
         final String factorName = generateString();
         final String factorValue = "2";
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue)
+        );
         final int experimentsLengthWithNewExperiment = experimentReader.readExperiments(bob, Filter.MY).size();
         assertEquals(experimentsLengthWithNewExperiment, 1);
         fileManagement.deleteFile(bob, file, true);
@@ -362,8 +376,9 @@ public class ExperimentTest extends AbstractStudyTest {
         final String factorName = generateString();
         final String factorValue = "2";
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue)
+        );
         final int experimentsLengthWithNewExperiment = experimentReader.readExperiments(bob, Filter.MY).size();
         assertEquals(experimentsLengthWithNewExperiment, 1);
         experimentManagement.deleteExperiment(bob, experiment);
@@ -385,12 +400,14 @@ public class ExperimentTest extends AbstractStudyTest {
         final String factorName = generateString();
         final String factorValue = "2";
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue)
+        );
 
         addFilesToExperiment(bob, experiment2,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)), of(factorValue)
+        );
 
         final int experiments = experimentReader.readExperiments(bob, Filter.MY).size();
         assertEquals(experiments, 2);
@@ -413,9 +430,10 @@ public class ExperimentTest extends AbstractStudyTest {
         final String factorName = generateString();
         final String factorValue = "2";
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
-                of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)),
-                of(factorValue));
+            of(new ExperimentManagementTemplate.MetaFactorTemplate(factorName, "kg", true, experiment)),
+            of(new FileItemTemplate(file, of(factorValue), EMPTY_ANNOTATIONS, false)),
+            of(factorValue)
+        );
 
         assertEquals(fileReader.readFiles(bob, Filter.ALL).size(), 2);
         fileManagement.deleteFile(bob, file, true);
@@ -431,26 +449,26 @@ public class ExperimentTest extends AbstractStudyTest {
         final String fractionNumber = generateString();
         final String sampleId = generateString();
         final ImmutableList<ExperimentManagementTemplate.AnnotationTemplate> annotations = ImmutableList.of(
-                new ExperimentManagementTemplate.AnnotationTemplate("fractionNumber", fractionNumber, "", false),
-                new ExperimentManagementTemplate.AnnotationTemplate("sampleId", sampleId, "", false)
+            new ExperimentManagementTemplate.AnnotationTemplate("fractionNumber", fractionNumber, "", false),
+            new ExperimentManagementTemplate.AnnotationTemplate("sampleId", sampleId, "", false)
         );
-        addFilesToExperiment(bob, experiment,
-                Collections.<ExperimentManagementTemplate.MetaFactorTemplate>emptyList(),
-                of(new FileItemTemplate(file, Collections.<String>emptyList(), annotations, false)), Collections.<String>emptyList());
+        addFilesToExperiment(bob,
+            experiment,
+            Collections.emptyList(),
+            of(new FileItemTemplate(file, Collections.emptyList(), annotations, false)),
+            Collections.emptyList()
+        );
 
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
-        final DetailsReaderTemplate.FileItemTemplate fileItemTemplate = detailsReader.readFile(bob, experimentItem.files.get(0).id);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
+        final DetailsReaderTemplate.FileItemTemplate fileItemTemplate =
+            detailsReader.readFile(bob, experimentItem.files.get(0).id);
         assertEquals(find(fileItemTemplate.annotations, annotationsByName("fractionNumber")).value, fractionNumber);
         assertEquals(find(fileItemTemplate.annotations, annotationsByName("sampleId")).value, sampleId);
     }
 
     protected Predicate<DetailsReaderTemplate.AnnotationItem> annotationsByName(final String name) {
-        return new Predicate<DetailsReaderTemplate.AnnotationItem>() {
-            @Override
-            public boolean apply(DetailsReaderTemplate.AnnotationItem input) {
-                return input.name.equals(name);
-            }
-        };
+        return input -> input.name.equals(name);
     }
 
     @Test
@@ -461,21 +479,26 @@ public class ExperimentTest extends AbstractStudyTest {
         final long experiment = experimentInNewProject(bob, uc.getLab3());
 
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate("f1", "g", true, experiment),
-                        new ExperimentManagementTemplate.MetaFactorTemplate("_f2", "", false, experiment),
-                        new ExperimentManagementTemplate.MetaFactorTemplate("f3", "", true, experiment)),
-                of(new FileItemTemplate(file1, of("1.23", "a bcd", "-1"), EMPTY_ANNOTATIONS, false),
-                        new FileItemTemplate(file2, of("23", "4", "7"), EMPTY_ANNOTATIONS, false)), of("33", "4", "8")
+            of(
+                new ExperimentManagementTemplate.MetaFactorTemplate("f1", "g", true, experiment),
+                new ExperimentManagementTemplate.MetaFactorTemplate("_f2", "", false, experiment),
+                new ExperimentManagementTemplate.MetaFactorTemplate("f3", "", true, experiment)
+            ),
+            of(
+                new FileItemTemplate(file1, of("1.23", "a bcd", "-1"), EMPTY_ANNOTATIONS, false),
+                new FileItemTemplate(file2, of("23", "4", "7"), EMPTY_ANNOTATIONS, false)
+            ), of("33", "4", "8")
         );
 
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
 
         assertEquals(experimentItem.factors.size(), 3);
         assertEquals(experimentItem.files.size(), 3);
-        assertTrue(Arrays.deepEquals(experimentItem.factorValues, new String[][]{
-                {"1.23", "a bcd", "-1"},
-                {"23", "4", "7"},
-                {"33", "4", "8"}
+        assertTrue(Arrays.deepEquals(experimentItem.factorValues, new String[][] {
+            {"1.23", "a bcd", "-1"},
+            {"23", "4", "7"},
+            {"33", "4", "8"}
         }));
     }
 
@@ -486,59 +509,67 @@ public class ExperimentTest extends AbstractStudyTest {
         final long experiment = experimentInNewProject(bob, uc.getLab3());
 
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate("f1", "", false, experiment), new ExperimentManagementTemplate.MetaFactorTemplate(generateString(), "", true, experiment)),
-                of(new FileItemTemplate(file, of("v1"), EMPTY_ANNOTATIONS, false)), of(""));
+            of(
+                new ExperimentManagementTemplate.MetaFactorTemplate("f1", "", false, experiment),
+                new ExperimentManagementTemplate.MetaFactorTemplate(generateString(), "", true, experiment)
+            ),
+            of(new FileItemTemplate(file, of("v1"), EMPTY_ANNOTATIONS, false)), of("")
+        );
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testUserCantCreateExperimentAlreadyExistedName() {
         final long bob = uc.createLab3AndBob();
-        final long project = projectManagement.createProject(bob, new ProjectManagementTemplate.ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
+        final long project = projectManagement
+            .createProject(bob, new ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
         final long file = uc.saveFile(bob);
         final long experimentType = anyExperimentType();
         final long specie = unspecified();
 
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder()
-                .name("Duplicated title")
-                .description("area")
-                .experimentType(experimentType)
-                .species(specie)
-                .project(project)
-                .lab(uc.getLab3())
-                .is2Dlc(false)
-                .restriction(restriction(bob))
-                .factors(NO_FACTORS).files(noFactoredFile(file));
+            .name("Duplicated title")
+            .description("area")
+            .experimentType(experimentType)
+            .species(specie)
+            .project(project)
+            .lab(uc.getLab3())
+            .is2Dlc(false)
+            .restriction(restriction(bob))
+            .factors(NO_FACTORS).files(noFactoredFile(file));
         experimentManagement.createExperiment(bob, builder.build());
 
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder duplicatedBuilder = new ExperimentInfoTemplateBuilder()
-                .name("Duplicated title")
-                .description("another area")
-                .experimentType(experimentType)
-                .species(specie)
-                .project(project)
-                .lab(uc.getLab3())
-                .is2Dlc(false)
-                .restriction(restriction(bob)).factors(NO_FACTORS).files(noFactoredFile(file));
+            .name("Duplicated title")
+            .description("another area")
+            .experimentType(experimentType)
+            .species(specie)
+            .project(project)
+            .lab(uc.getLab3())
+            .is2Dlc(false)
+            .restriction(restriction(bob)).factors(NO_FACTORS).files(noFactoredFile(file));
         experimentManagement.createExperiment(bob, duplicatedBuilder.build());
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testUserCantUpdateExperimentWithAlreadyExistedName() {
         final long bob = uc.createLab3AndBob();
-        final long project = projectManagement.createProject(bob, new ProjectManagementTemplate.ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
+        final long project = projectManagement
+            .createProject(bob, new ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
         final long file = uc.saveFile(bob);
         final long experimentType = anyExperimentType();
         final long specie = unspecified();
 
-        final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder().name("Duplicated title").description("area").experimentType(experimentType).species(specie);
+        final ExperimentInfoTemplateBuilder builder =
+            new ExperimentInfoTemplateBuilder().name("Duplicated title").description("area")
+                .experimentType(experimentType).species(specie);
         //noinspection unchecked
         builder.project(project).lab(uc.getLab3())
-                .is2Dlc(false)
-                .restriction(restriction(bob))
-                .factors(NO_FACTORS)
-                .files(noFactoredFile(file));
+            .is2Dlc(false)
+            .restriction(restriction(bob))
+            .factors(NO_FACTORS)
+            .files(noFactoredFile(file));
 
         experimentManagement.createExperiment(bob, builder.build());
 
@@ -555,8 +586,10 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file = uc.saveFile(bob);
         final long experiment = experimentInNewProject(bob, uc.getLab3());
         addFilesToExperiment(bob, experiment,
-                of(new ExperimentManagementTemplate.MetaFactorTemplate("width", "kg", true, experiment)),
-                of(new FileItemTemplate(file, ImmutableList.<String>of(), EMPTY_ANNOTATIONS, false)), ImmutableList.<String>of());
+            of(new ExperimentManagementTemplate.MetaFactorTemplate("width", "kg", true, experiment)),
+            of(new FileItemTemplate(file, ImmutableList.<String>of(), EMPTY_ANNOTATIONS, false)),
+            ImmutableList.<String>of()
+        );
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -565,8 +598,9 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file = uc.saveFile(bob);
         final long experiment = experimentInNewProject(bob, uc.getLab3());
         addFilesToExperiment(bob, experiment,
-                ImmutableList.<ExperimentManagementTemplate.MetaFactorTemplate>of(),
-                of(new FileItemTemplate(file, of("2"), EMPTY_ANNOTATIONS, false)), ImmutableList.<String>of());
+            ImmutableList.<ExperimentManagementTemplate.MetaFactorTemplate>of(),
+            of(new FileItemTemplate(file, of("2"), EMPTY_ANNOTATIONS, false)), ImmutableList.<String>of()
+        );
     }
 
     @Test
@@ -577,25 +611,32 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file1 = uc.saveFile(bob, instrument);
         final long file2 = uc.saveFile(bob, instrument);
         addFilesToExperiment(bob, experiment, of(factor(experiment)), of(
-                new FileItemTemplate(file1, of("1"), EMPTY_ANNOTATIONS, false),
-                new FileItemTemplate(file2, of("2"), EMPTY_ANNOTATIONS, false)), of("3"));
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
-        assertTrue(Arrays.deepEquals(experimentItem.factorValues, new String[][]{{"1"}, {"2"}, {"3"}}));
+            new FileItemTemplate(file1, of("1"), EMPTY_ANNOTATIONS, false),
+            new FileItemTemplate(file2, of("2"), EMPTY_ANNOTATIONS, false)
+        ), of("3"));
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
+        assertTrue(Arrays.deepEquals(experimentItem.factorValues, new String[][] {{"1"}, {"2"}, {"3"}}));
     }
 
     @Test
     public void testRemoveFileFromExperiment() {
         final long bob = uc.createLab3AndBob();
-        final long project = projectManagement.createProject(bob, new ProjectManagementTemplate.ProjectInfoTemplate(uc.getLab3(), PROJECT_TITLE, "DNA", "Some proj"));
+        final long project = projectManagement.createProject(bob,
+            new ProjectInfoTemplate(uc.getLab3(), PROJECT_TITLE, "DNA", "Some proj")
+        );
         final long experiment = createInstrumentAndExperimentWithOneFile(bob, uc.getLab3(), project);
         final long file1 = uc.saveFile(bob, instrumentFromExperimentFile(bob, experiment));
         final long file2 = uc.saveFile(bob, instrumentFromExperimentFile(bob, experiment));
         addFilesToExperiment(bob, experiment, of(factor(experiment)), of(
-                new FileItemTemplate(file1, of("1"), EMPTY_ANNOTATIONS, false),
-                new FileItemTemplate(file2, of("2"), EMPTY_ANNOTATIONS, false)), of("3"));
+            new FileItemTemplate(file1, of("1"), EMPTY_ANNOTATIONS, false),
+            new FileItemTemplate(file2, of("2"), EMPTY_ANNOTATIONS, false)
+        ), of("3"));
 
         //noinspection unchecked
-        final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder<>().name("").description("").experimentType(anyExperimentType()).species(anySpecies())
+        final ExperimentInfoTemplateBuilder builder =
+            new ExperimentInfoTemplateBuilder<>().name("").description("").experimentType(anyExperimentType())
+                .species(anySpecies())
                 .project(project)
                 .is2Dlc(false)
                 .restriction(restriction(bob)).factors(of(factor(experiment)))
@@ -612,13 +653,18 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file1 = uc.saveFile(bob, instrument);
         final long file2 = uc.saveFile(bob, instrument);
         addFilesToExperiment(bob, experiment, of(factor(experiment), factor(experiment)), of(
-                new FileItemTemplate(file1, of("1", "42"), EMPTY_ANNOTATIONS, false),
-                new FileItemTemplate(file2, of("2", "98"), EMPTY_ANNOTATIONS, false)), of("3", "50"));
+            new FileItemTemplate(file1, of("1", "42"), EMPTY_ANNOTATIONS, false),
+            new FileItemTemplate(file2, of("2", "98"), EMPTY_ANNOTATIONS, false)
+        ), of("3", "50"));
         addFilesToExperiment(bob, experiment, of(factor(experiment)), of(
-                new FileItemTemplate(file1, of("42"), EMPTY_ANNOTATIONS, false),
-                new FileItemTemplate(file2, of("98"), EMPTY_ANNOTATIONS, false)), of("50"));
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
-        assertTrue(Arrays.deepEquals(experimentItem.factorValues, new String[][]{{"42"}, {"98"}, {"50"}, {"50"}, {"50"}}));
+            new FileItemTemplate(file1, of("42"), EMPTY_ANNOTATIONS, false),
+            new FileItemTemplate(file2, of("98"), EMPTY_ANNOTATIONS, false)
+        ), of("50"));
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
+        assertTrue(
+            Arrays.deepEquals(experimentItem.factorValues, new String[][] {{"42"}, {"98"}, {"50"}, {"50"}, {"50"}})
+        );
     }
 
     @Test
@@ -629,15 +675,18 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file1 = uc.saveFile(bob, instrument);
         final long file2 = uc.saveFile(bob, instrument);
         addFilesToExperiment(bob, experiment, of(factor(experiment)), of(
-                new FileItemTemplate(file1, of("42"), EMPTY_ANNOTATIONS, false),
-                new FileItemTemplate(file2, of("98"), EMPTY_ANNOTATIONS, false)), of("50"));
+            new FileItemTemplate(file1, of("42"), EMPTY_ANNOTATIONS, false),
+            new FileItemTemplate(file2, of("98"), EMPTY_ANNOTATIONS, false)
+        ), of("50"));
         addFilesToExperiment(bob, experiment, of(factor(experiment), factor(experiment)), of(
-                new FileItemTemplate(file1, of("1", "42"), EMPTY_ANNOTATIONS, false),
-                new FileItemTemplate(file2, of("2", "98"), EMPTY_ANNOTATIONS, false)), of("3", "50"));
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
-        assertTrue(Arrays.deepEquals(experimentItem.factorValues, new String[][]{{"1", "42"},
-                {"2", "98"}, {"3", "50"},
-                {"3", "50"}, {"3", "50"}
+            new FileItemTemplate(file1, of("1", "42"), EMPTY_ANNOTATIONS, false),
+            new FileItemTemplate(file2, of("2", "98"), EMPTY_ANNOTATIONS, false)
+        ), of("3", "50"));
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
+        assertTrue(Arrays.deepEquals(experimentItem.factorValues, new String[][] {{"1", "42"},
+            {"2", "98"}, {"3", "50"},
+            {"3", "50"}, {"3", "50"}
         }));
     }
 
@@ -647,7 +696,7 @@ public class ExperimentTest extends AbstractStudyTest {
         final long experiment = experiment(bob, uc.getLab3());
         final long file1 = uc.saveFile(bob, instrumentFromExperimentFile(bob, experiment));
         addFilesToExperiment(bob, experiment, of(factor(experiment)), of(
-                new FileItemTemplate(file1, of(""), EMPTY_ANNOTATIONS, false)), of(""));
+            new FileItemTemplate(file1, of(""), EMPTY_ANNOTATIONS, false)), of(""));
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -657,7 +706,7 @@ public class ExperimentTest extends AbstractStudyTest {
         final long instrument = instrumentFromExperimentFile(bob, experiment);
         final long file1 = uc.saveFile(bob, instrument);
         addFilesToExperiment(bob, experiment, of(factor(experiment), factor(experiment)), of(
-                new FileItemTemplate(file1, of("a", ""), EMPTY_ANNOTATIONS, false)), of("b", ""));
+            new FileItemTemplate(file1, of("a", ""), EMPTY_ANNOTATIONS, false)), of("b", ""));
     }
 
     @Test(expectedExceptions = InvalidFactorException.class)
@@ -666,7 +715,8 @@ public class ExperimentTest extends AbstractStudyTest {
         final long experiment = experiment(bob, uc.getLab3());
         final long instrument = instrumentFromExperimentFile(bob, experiment);
         final long file1 = uc.saveFile(bob, instrument);
-        addFilesToExperiment(bob, experiment, of(new ExperimentManagementTemplate.MetaFactorTemplate("", "", false, experiment)), of(
+        addFilesToExperiment(
+            bob, experiment, of(new ExperimentManagementTemplate.MetaFactorTemplate("", "", false, experiment)), of(
                 new FileItemTemplate(file1, of("q"), EMPTY_ANNOTATIONS, false)), of("a"));
     }
 
@@ -701,8 +751,9 @@ public class ExperimentTest extends AbstractStudyTest {
         final long file1 = uc.saveFile(bob);
         final long file2 = uc.saveFile(bob);
         addFilesToExperiment(bob, experiment1, of(factor(experiment1), factor(experiment1)), of(
-                new FileItemTemplate(file1, of("1", "42"), EMPTY_ANNOTATIONS, false),
-                new FileItemTemplate(file2, of("2", "98"), EMPTY_ANNOTATIONS, false)), of("3", "50"));
+            new FileItemTemplate(file1, of("1", "42"), EMPTY_ANNOTATIONS, false),
+            new FileItemTemplate(file2, of("2", "98"), EMPTY_ANNOTATIONS, false)
+        ), of("3", "50"));
 
 
         assertEquals(userReader.readUsersByLab(poll, uc.getLab3()).size(), 2);
@@ -724,15 +775,16 @@ public class ExperimentTest extends AbstractStudyTest {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testDontAllowToCreateExperimentWithEmptyName() {
         final long bob = uc.createLab3AndBob();
-        final long project = projectManagement.createProject(bob, new ProjectManagementTemplate.ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
+        final long project = projectManagement
+            .createProject(bob, new ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder<>().name("Duplicated title")
-                .description("area").experimentType(anyExperimentType())
-                .species(anySpecies())
-                .project(project).lab(uc.getLab3())
+            .description("area").experimentType(anyExperimentType())
+            .species(anySpecies())
+            .project(project).lab(uc.getLab3())
 
-                .is2Dlc(false).restriction(restriction(bob)).factors(NO_FACTORS)
-                .files(noFactoredFile(uc.saveFile(bob)));
+            .is2Dlc(false).restriction(restriction(bob)).factors(NO_FACTORS)
+            .files(noFactoredFile(uc.saveFile(bob)));
 
         experimentManagement.createExperiment(bob, builder.build());
     }
@@ -742,25 +794,28 @@ public class ExperimentTest extends AbstractStudyTest {
     }
 
     public long experiment(long user, long lab) {
-        final long project = projectManagement.createProject(user, new ProjectManagementTemplate.ProjectInfoTemplate(lab, PROJECT_TITLE, "DNA", "Some proj"));
+        final long project = projectManagement.createProject(user,
+            new ProjectInfoTemplate(lab, PROJECT_TITLE, "DNA", "Some proj")
+        );
         return createInstrumentAndExperimentWithOneFile(user, lab, project);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testNotAllowCreateExperimentWithoutFiles() {
         final long bob = uc.createLab3AndBob();
-        final long project = projectManagement.createProject(bob, new ProjectManagementTemplate.ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
+        final long project = projectManagement
+            .createProject(bob, new ProjectInfoTemplate(uc.getLab3(), "Title", "area", ""));
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder<>()
-                .name("Duplicated title")
-                .description("area")
-                .experimentType(anyExperimentType())
-                .species(anySpecies())
-                .project(project).lab(uc.getLab3())
-                .is2Dlc(false)
-                .restriction(restriction(bob))
-                .factors(NO_FACTORS)
-                .files(Collections.<FileItemTemplate>emptyList());
+            .name("Duplicated title")
+            .description("area")
+            .experimentType(anyExperimentType())
+            .species(anySpecies())
+            .project(project).lab(uc.getLab3())
+            .is2Dlc(false)
+            .restriction(restriction(bob))
+            .factors(NO_FACTORS)
+            .files(Collections.<FileItemTemplate>emptyList());
         experimentManagement.createExperiment(bob, builder.build());
     }
 
@@ -841,14 +896,14 @@ public class ExperimentTest extends AbstractStudyTest {
 
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder<>()
-                .name(generateString())
-                .description(generateString())
-                .experimentType(anyExperimentType())
-                .species(anotherSpecies)
-                .project(details.project)
-                .files(noFactoredFile(file))
-                .lab(details.lab)
-                .restriction(new Restriction(details.instrumentModel, details.instrument)).factors(NO_FACTORS);
+            .name(generateString())
+            .description(generateString())
+            .experimentType(anyExperimentType())
+            .species(anotherSpecies)
+            .project(details.project)
+            .files(noFactoredFile(file))
+            .lab(details.lab)
+            .restriction(new Restriction(details.instrumentModel, details.instrument)).factors(NO_FACTORS);
 
         experimentManagement.updateExperiment(bob, experiment, builder.build());
     }
@@ -867,13 +922,13 @@ public class ExperimentTest extends AbstractStudyTest {
         final DetailsReaderTemplate.ExperimentItemTemplate details = detailsReader.readExperiment(bob, experiment);
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder()
-                .name(generateString())
-                .description(generateString())
-                .experimentType(anyExperimentType())
-                .species(details.specie)
-                .files(noFactoredFile(file))
-                .project(details.project)
-                .restriction(new Restriction(anotherModel, details.instrument));
+            .name(generateString())
+            .description(generateString())
+            .experimentType(anyExperimentType())
+            .species(details.specie)
+            .files(noFactoredFile(file))
+            .project(details.project)
+            .restriction(new Restriction(anotherModel, details.instrument));
 
         experimentManagement.updateExperiment(bob, experiment, builder.build());
     }
@@ -884,7 +939,8 @@ public class ExperimentTest extends AbstractStudyTest {
         final long bob = uc.createLab3AndBob();
         final long experiment = createExperiment(bob, uc.createProject(bob));
         final long pdfAttachment = attachmentForExperiment(bob, experiment);
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
         Assert.assertTrue(any(experimentItem.attachments, isGivenAttachment(pdfAttachment)));
     }
 
@@ -894,7 +950,8 @@ public class ExperimentTest extends AbstractStudyTest {
         final long experiment = createExperiment(bob, uc.createProject(bob));
         attachmentForExperiment(bob, experiment);
         attachmentManagement.updateExperimentAttachments(bob, experiment, ImmutableSet.<Long>of());
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
         Assert.assertTrue(experimentItem.attachments.size() == 0);
     }
 
@@ -905,7 +962,8 @@ public class ExperimentTest extends AbstractStudyTest {
         attachmentForExperiment(bob, experiment);
         final long otherAttachment = attachmentManagement.newAttachment(bob, "otherAttachment.img", 1024 * 1024);
         attachmentManagement.updateExperimentAttachments(bob, experiment, ImmutableSet.of(otherAttachment));
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(bob, experiment);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(bob, experiment);
         Assert.assertTrue(any(experimentItem.attachments, isGivenAttachment(otherAttachment)));
     }
 
@@ -914,8 +972,8 @@ public class ExperimentTest extends AbstractStudyTest {
         final long bob = uc.createLab3AndBob();
         final long experiment = createExperiment(bob, uc.createProject(bob));
         final long attachmentId = attachmentForExperiment(bob, experiment);
-        assertThat(attachmentsReader.readAttachment(bob, attachmentId).id, is(attachmentId));
-        assertThat(attachmentsReader.readAttachments(EXPERIMENT, bob, experiment).size(), is(1));
+        assertEquals(attachmentsReader.readAttachment(bob, attachmentId).id, attachmentId);
+        assertEquals(attachmentsReader.readAttachments(EXPERIMENT, bob, experiment).size(), 1);
     }
 
     @Test
@@ -923,7 +981,8 @@ public class ExperimentTest extends AbstractStudyTest {
 
         final long paul = uc.createPaul();
         final long experimentWithNoLab = createExperiment(paul, uc.createProject(paul, null), null);
-        final DetailsReaderTemplate.ExperimentItemTemplate experiment = detailsReader.readExperiment(paul, experimentWithNoLab);
+        final DetailsReaderTemplate.ExperimentItemTemplate experiment =
+            detailsReader.readExperiment(paul, experimentWithNoLab);
 
         Assert.assertNull(experiment.lab, "Experiment laboratory id must be null");
         Assert.assertNull(experiment.labHead, "Experiment laboratory head name must be null");
@@ -940,13 +999,14 @@ public class ExperimentTest extends AbstractStudyTest {
 
         final long file = uc.saveFile(paul);
         experimentManagement.updateExperiment(paul, experimentWithNoLab, experimentInfo()
-                .files(noFactoredFile(file))
-                .project(project)
-                .restriction(restriction(paul, file))
-                .lab(null)
-                .build());
+            .files(noFactoredFile(file))
+            .project(project)
+            .restriction(restriction(paul, file))
+            .lab(null)
+            .build());
 
-        final DetailsReaderTemplate.ExperimentItemTemplate afterUpdate = detailsReader.readExperiment(paul, experimentWithNoLab);
+        final DetailsReaderTemplate.ExperimentItemTemplate afterUpdate =
+            detailsReader.readExperiment(paul, experimentWithNoLab);
 
         Assert.assertNull(afterUpdate.lab, "Experiment laboratory id must be null");
         Assert.assertNull(afterUpdate.labHead, "Experiment laboratory head name must be null");
@@ -955,12 +1015,7 @@ public class ExperimentTest extends AbstractStudyTest {
     }
 
     private Predicate<DetailsReaderTemplate.AttachmentItem> isGivenAttachment(final long otherAttachment) {
-        return new Predicate<DetailsReaderTemplate.AttachmentItem>() {
-            @Override
-            public boolean apply(DetailsReaderTemplate.AttachmentItem input) {
-                return input.id == otherAttachment;
-            }
-        };
+        return input -> input.id == otherAttachment;
     }
 
 
@@ -970,7 +1025,9 @@ public class ExperimentTest extends AbstractStudyTest {
 
     private long createFile(long bob, long species, long model, String name) {
         //noinspection unchecked
-        final long file = fileManagement.createFile(bob, createInstrumentByModel(bob, uc.getLab3(), model), new FileManagementTemplate.FileMetaDataInfoTemplate(name, 0, "", null, species, false));
+        final long file = fileManagement.createFile(bob, createInstrumentByModel(bob, uc.getLab3(), model),
+            new FileManagementTemplate.FileMetaDataInfoTemplate(name, 0, "", null, species, false)
+        );
         uc.updateFileContent(bob, file);
         return file;
     }
@@ -978,12 +1035,12 @@ public class ExperimentTest extends AbstractStudyTest {
     private long createExperiment(long bob, long project, long instrumentModel, long file, long species) {
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = experimentInfo(species)
-                .project(project)
-                .lab(uc.getLab3())
-                .is2Dlc(false)
-                .restriction(new Restriction(instrumentModel, Optional.absent()))
-                .factors(NO_FACTORS)
-                .files(noFactoredFile(file));
+            .project(project)
+            .lab(uc.getLab3())
+            .is2Dlc(false)
+            .restriction(new Restriction(instrumentModel, Optional.absent()))
+            .factors(NO_FACTORS)
+            .files(noFactoredFile(file));
 
         return experimentManagement.createExperiment(bob, builder.build());
     }

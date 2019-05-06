@@ -21,8 +21,9 @@ import java.util.List;
  */
 @Component
 @Scope(value = "prototype")
-public class ExperimentReaderHelper<EXPERIMENT extends ExperimentTemplate, EXPERIMENT_LINE extends ExperimentReaderTemplate.ExperimentLineTemplate>
-        extends AbstractReaderHelper<EXPERIMENT, EXPERIMENT_LINE, ExperimentLineTemplate> {
+public class ExperimentReaderHelper<EXPERIMENT extends ExperimentTemplate,
+    EXPERIMENT_LINE extends ExperimentReaderTemplate.ExperimentLineTemplate>
+    extends AbstractReaderHelper<EXPERIMENT, EXPERIMENT_LINE, ExperimentLineTemplate> {
 
     @Inject
     private ExperimentRepositoryTemplate<EXPERIMENT> experimentRepository;
@@ -44,20 +45,27 @@ public class ExperimentReaderHelper<EXPERIMENT extends ExperimentTemplate, EXPER
 
     }
 
-    public PagedResultBuilder<EXPERIMENT, EXPERIMENT_LINE> pageableByFilter(long actor, Filter filter, PageRequest request, String filterQuery) {
+    public PagedResultBuilder<EXPERIMENT, EXPERIMENT_LINE> pageableByFilter(long actor,
+                                                                            Filter filter,
+                                                                            PageRequest request,
+                                                                            String filterQuery) {
 
         final Page<EXPERIMENT> experiments = getExperimentsPage(actor, filter, request, filterQuery);
         return PagedResultBuilder.builder(experiments, activeTransformer);
     }
 
-    public PagedResultBuilder<EXPERIMENT, EXPERIMENT_LINE> pageableByLab(long labId, PageRequest request, String filterQuery) {
+    public PagedResultBuilder<EXPERIMENT, EXPERIMENT_LINE> pageableByLab(long labId,
+                                                                         PageRequest request,
+                                                                         String filterQuery) {
 
         final Page<EXPERIMENT> experiments = experimentRepository.findAllByLab(labId, filterQuery, request);
         return PagedResultBuilder.builder(experiments, activeTransformer);
 
     }
 
-    public PagedResultBuilder<EXPERIMENT, EXPERIMENT_LINE> pageableByProject(long projectId, PageRequest request, String filterQuery) {
+    public PagedResultBuilder<EXPERIMENT, EXPERIMENT_LINE> pageableByProject(long projectId,
+                                                                             PageRequest request,
+                                                                             String filterQuery) {
 
         final Page<EXPERIMENT> experiments = experimentRepository.findByProject(projectId, filterQuery, request);
         return PagedResultBuilder.builder(experiments, activeTransformer);
@@ -66,21 +74,21 @@ public class ExperimentReaderHelper<EXPERIMENT extends ExperimentTemplate, EXPER
 
     @Override
     public Function<EXPERIMENT, ExperimentLineTemplate> getDefaultTransformer() {
-        return new Function<EXPERIMENT, ExperimentLineTemplate>() {
-            @Override
-            public ExperimentLineTemplate apply(ExperimentTemplate input) {
-                UserTemplate creator = input.getCreator();
-                return new ExperimentLineTemplate(input.getId(),
-                        input.getName(),
-                        input.getProject().getName(),
-                        input.getRawFiles().numberOfFiles(),
-                        input.getLastModification(),
-                        DefaultTransformers.labLineTemplateTransformer().apply(input.getLab()),
-                        input.getDownloadToken(),
-                        creator.getEmail(),
-                        DefaultTransformers.fromSharingType(input.getProject().getSharing().getType()),
-                        creator.getId());
-            }
+        return input -> {
+            UserTemplate creator = input.getCreator();
+            return new ExperimentLineTemplate(
+                input.getId(),
+                input.getName(),
+                input.getProject().getName(),
+                input.getRawFiles().numberOfFiles(),
+                input.getLastModification(),
+                DefaultTransformers.labLineTemplateTransformer().apply(input.getLab()),
+                input.getDownloadToken(),
+                creator.getEmail(),
+                DefaultTransformers.fromSharingType(input.getProject().getSharing().getType()),
+                creator.getId(),
+                input.isFailed()
+            );
         };
     }
 

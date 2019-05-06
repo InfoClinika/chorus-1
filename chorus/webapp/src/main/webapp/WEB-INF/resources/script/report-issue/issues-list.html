@@ -1,0 +1,96 @@
+<div class="relative">
+
+    <div class="dashboard-box issues-box" resizable-columns="issues-list">
+        <div class="heading clearfix">
+            <div class="cell cell-number">
+                <span>&nbsp;</span>
+            </div>
+            <div class="cell cell-id" route-sorting="id">
+                <span>ID</span>
+            </div>
+            <div class="cell cell-name" route-sorting="name" title="Name">Name</div>
+            <div class="cell cell-type" route-sorting="type" title="Issue Type">Type</div>
+            <div class="cell cell-owner" route-sorting="owner" title="Issue Owner">Owner</div>
+            <div class="cell cell-status" route-sorting="status" title="Issue Status">Status</div>
+            <div class="cell cell-priority" route-sorting="priority" title="Priority">Priority</div>
+            <div class="cell cell-date" route-sorting="reported_date" title="Reported Date">Reported Date</div>
+        </div>
+        <div class="content clearfix">
+            <div class="row clearfix"
+                 ng-repeat="issue in issues | filter:page.filter"
+                 ng-mouseenter="hovered=issue"
+                 ng-mouseleave="hovered=null"
+                 right-click-context-menu=""
+                 data-ng-class="{'active': opened == issue, 'row-with-details-button':hovered}">
+
+                <div class="row-holder relative clearfix not-select"
+                     ng-dblclick="toggleExpandMenu(issue);"
+                     switch-class-animated="opened == issue && 'opened' || ''">
+                    <div class="cell cell-number"><span ng-bind="$index+1"></span></div>
+                    <div class="cell cell-id"><span ng-bind="issue.id"></span></div>
+                    <div class="cell cell-name">
+                        <div class="dropdown context">
+                            <a button-click-context-menu=""
+                               ng-show="hovered"
+                               title="More"
+                               class="btn table-button">
+                                <span class="arrow"></span>
+                            </a>
+
+                            <div class="dropdown-menu context-menu">
+                                <span class="arrow"></span>
+                                <ul>
+                                    <li class="">
+                                        <a ng-click="showEditDialog(issue)" data-toggle="modal"
+                                           title="Show Issue Details">
+                                            <i class="icon edit"></i><span class="details-link-name">Edit</span>
+                                        </a>
+                                    </li>
+                                    <li class="delete-item">
+                                        <a ng-click="displayConfirmation(issue)" title="Delete">
+                                            <i class="icon delete"></i>
+                                            <span class="">Delete</span>
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+                        <a target="_blank" class="table-link" ng-bind="issue.name"></a>
+                    </div>
+                    <div class="cell cell-type" ng-bind="issue.issueType"></div>
+                    <div class="cell cell-owner" ng-bind="issue.owner"></div>
+                    <div class="cell cell-status" ng-bind="issue.status"></div>
+                    <div class="cell cell-priority" ng-bind="issue.priority"></div>
+                    <div class="cell cell-date" ng-bind="issue.reportedDate | date"></div>
+                </div>
+            </div>
+        </div>
+        <span ng-show="isEmptyTable" class="empty-table">There are no issues</span>
+        <route-pagination max-items="25" max-shown="7" default-page="0" items="[25, 50, 100, 200]"
+                          total-items="total"></route-pagination>
+    </div>
+</div>
+
+<div id="remove-issue-confirmation" class="modal hide" tabindex="-1" role="dialog">
+    <div class="modal-holder">
+        <div class="modal-frame">
+            <div class="modal-header">
+                <h3>Remove Issue?</h3>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove "{{confirmation.getName()}}" Issue?</p>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
+                        ng-click="confirmation.hidePopup()">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="btn btn-primary main-action" ng-click="confirmation.removeItem()">Remove
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

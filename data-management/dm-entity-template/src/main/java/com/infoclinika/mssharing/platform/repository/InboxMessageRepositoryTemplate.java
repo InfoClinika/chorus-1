@@ -10,7 +10,9 @@ import java.util.List;
 /**
  * @author Herman Zamula
  */
-public interface InboxMessageRepositoryTemplate<ENTITY extends InboxMessageTemplate> extends CrudRepository<ENTITY, Long> {
+public interface InboxMessageRepositoryTemplate<ENTITY extends InboxMessageTemplate>
+    extends CrudRepository<ENTITY, Long> {
+
     @Query("from #{#entityName} where to.id = :to")
     List<ENTITY> findByTo(@Param("to") long to);
 }

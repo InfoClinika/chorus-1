@@ -10,15 +10,15 @@ import java.util.Date;
  */
 public interface BillingManagement {
     long createChargeableItem(int price, BillingFeature feature, int chargeValue, BillingChargeType type);
+
     void makeLabAccountEnterprise(long actor, long lab);
+
     void makeLabAccountFree(long actor, long lab);
+
     MakeAccountFreeCheckResult checkCanMakeAccountFree(long actor, long lab);
 
-    void updateProcessingFeatureState(long actor, long lab, boolean processingIsActive, boolean prolongateAutomatically);
+    long availableStorageSize(long actor, long lab);
 
-    void enableProcessingForLabAccount(long actor, long lab, boolean prolongateAutomatically);
-    void disableProcessingForLabAccount(long actor, long lab);
-    UploadLimitCheckResult checkUploadLimit(long actor, long lab);
     void updateLabAccountSubscriptionDetails(long actor, SubscriptionInfo subscriptionInfo);
 
     void topUpLabBalance(long admin, long lab, long amountCents);
@@ -40,7 +40,7 @@ public interface BillingManagement {
     }
 
     enum LabPaymentAccountFeatureType {
-        ARCHIVE_STORAGE, ANALYSE_STORAGE, TRANSLATION, DOWNLOAD, ANALYSIS, PUBLIC_DOWNLOAD, PROCESSING, STORAGE_VOLUMES
+        ARCHIVE_STORAGE, ANALYSE_STORAGE, DOWNLOAD, ANALYSIS, PUBLIC_DOWNLOAD, STORAGE_VOLUMES
     }
 
     class MakeAccountFreeCheckResult {
@@ -49,7 +49,8 @@ public interface BillingManagement {
         public long storageLimitExceededSize;
         public long archiveStorageLimitExceededSize;
 
-        public MakeAccountFreeCheckResult(boolean canChange, long allowedAfterTimestamp, long storageLimitExceededSize, long archiveStorageLimitExceededSize) {
+        public MakeAccountFreeCheckResult(boolean canChange, long allowedAfterTimestamp, long storageLimitExceededSize,
+                                          long archiveStorageLimitExceededSize) {
             this.canChange = canChange;
             this.allowedAfterTimestamp = allowedAfterTimestamp;
             this.storageLimitExceededSize = storageLimitExceededSize;
@@ -64,20 +65,6 @@ public interface BillingManagement {
         }
     }
 
-    class UploadLimitCheckResult {
-
-        public boolean isExceeded;
-        public String message;
-
-        public UploadLimitCheckResult() {
-        }
-
-        public UploadLimitCheckResult(boolean isExceeded, String message) {
-            this.isExceeded = isExceeded;
-            this.message = message;
-        }
-    }
-
     class SubscriptionInfo {
 
         public final long labId;
@@ -86,7 +73,8 @@ public interface BillingManagement {
         public final boolean autoprolongateProcessing;
         public final LabPaymentAccountType accountType;
 
-        public SubscriptionInfo(long labId, int storageVolumesCount, boolean enableProcessing, boolean autoprolongateProcessing, LabPaymentAccountType accountType) {
+        public SubscriptionInfo(long labId, int storageVolumesCount, boolean enableProcessing,
+                                boolean autoprolongateProcessing, LabPaymentAccountType accountType) {
             this.labId = labId;
             this.storageVolumesCount = storageVolumesCount;
             this.enableProcessing = enableProcessing;
@@ -97,12 +85,12 @@ public interface BillingManagement {
         @Override
         public String toString() {
             return "SubscriptionInfo{" +
-                    "labId=" + labId +
-                    ", storageVolumesCount=" + storageVolumesCount +
-                    ", enableProcessing=" + enableProcessing +
-                    ", autoprolongateProcessing=" + autoprolongateProcessing +
-                    ", accountType=" + accountType +
-                    '}';
+                "labId=" + labId +
+                ", storageVolumesCount=" + storageVolumesCount +
+                ", enableProcessing=" + enableProcessing +
+                ", autoprolongateProcessing=" + autoprolongateProcessing +
+                ", accountType=" + accountType +
+                '}';
         }
     }
 }

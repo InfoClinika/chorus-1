@@ -10,8 +10,10 @@ import java.util.List;
 /**
  * @author : Alexander Serebriyan
  */
-public interface InstrumentCreationRequestRepositoryTemplate<T extends InstrumentCreationRequestTemplate> extends JpaRepository<T, Long> {
+public interface InstrumentCreationRequestRepositoryTemplate<T extends InstrumentCreationRequestTemplate>
+    extends JpaRepository<T, Long> {
 
-    @Query("select r from #{#entityName} r join r.lab l join l.labMemberships lm where lm.head=true and lm.user.id=:user")
+    @Query("select r from #{#entityName} r join r.lab l join l.labMemberships lm " +
+        "where lm.head=true and lm.user.id=:user")
     List<T> findHeadId(@Param("user") long user);
 }

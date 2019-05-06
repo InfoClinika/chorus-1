@@ -8,7 +8,8 @@ import java.util.Set;
  */
 public interface FailedMailsHelper {
 
-    Set<Long> handleFailedEmails(String bounceType, String bounceSubType, String timestamp, Set<FailedEmailItem> failedEmails, String rawJson);
+    Set<Long> handleFailedEmails(String bounceType, String bounceSubType, String timestamp,
+                                 Set<FailedEmailItem> failedEmails, String rawJson);
 
     class FailedEmailItem {
         public final String email;
@@ -22,8 +23,12 @@ public interface FailedMailsHelper {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             FailedEmailItem that = (FailedEmailItem) o;
 
@@ -39,9 +44,9 @@ public interface FailedMailsHelper {
         @Override
         public String toString() {
             return "FailedEmailItem{" +
-                    "email='" + email + '\'' +
-                    ", reason='" + reason + '\'' +
-                    '}';
+                "email='" + email + '\'' +
+                ", reason='" + reason + '\'' +
+                '}';
         }
     }
 

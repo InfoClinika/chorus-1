@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.infoclinika.mssharing.services.billing.rest.api.model.HistoryForMonthReference;
 
 import java.util.Date;
-import java.util.Optional;
 
 /**
  * @author Elena Kurilina
@@ -27,7 +26,7 @@ public interface PaymentHistoryReader {
 
     HistoryForLab readNextHistory(long userId, long lab, long previousCount, long nextCount);
 
-    Optional<HistoryForMonthReference> readMonthsReferences(long userId, long lab, Date month);
+    HistoryForMonthReference readMonthReference(long userId, long lab, Date month);
 
     class HistoryForLab {
         public final String labName;
@@ -35,7 +34,8 @@ public interface PaymentHistoryReader {
         public final ImmutableSortedSet<HistoryForMonth> months;
         public final boolean hasNext;
 
-        public HistoryForLab(String labName, long storeBalance, ImmutableSortedSet<HistoryForMonth> months, boolean hasNext) {
+        public HistoryForLab(String labName, long storeBalance, ImmutableSortedSet<HistoryForMonth> months,
+                             boolean hasNext) {
             this.labName = labName;
             this.storeBalance = storeBalance;
             this.months = months;
@@ -55,13 +55,21 @@ public interface PaymentHistoryReader {
         @Override
         @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             HistoryForMonth that = (HistoryForMonth) o;
 
-            if (lines != null ? !lines.equals(that.lines) : that.lines != null) return false;
-            if (monthYear != null ? !monthYear.equals(that.monthYear) : that.monthYear != null) return false;
+            if (lines != null ? !lines.equals(that.lines) : that.lines != null) {
+                return false;
+            }
+            if (monthYear != null ? !monthYear.equals(that.monthYear) : that.monthYear != null) {
+                return false;
+            }
 
             return true;
         }
@@ -76,9 +84,9 @@ public interface PaymentHistoryReader {
         @Override
         public String toString() {
             return "HistoryForMonth{" +
-                    "monthYear=" + monthYear +
-                    ", lines=" + lines +
-                    '}';
+                "monthYear=" + monthYear +
+                ", lines=" + lines +
+                '}';
         }
     }
 
@@ -93,7 +101,8 @@ public interface PaymentHistoryReader {
         public final String timeZoneId;
         public final boolean hasNext;
 
-        public PaymentHistoryLine(Date date, Date toDate, String serverDay, String description, Long amount, long balance, HistoryItemType type, String timeZoneId, boolean hasNext) {
+        public PaymentHistoryLine(Date date, Date toDate, String serverDay, String description, Long amount,
+                                  long balance, HistoryItemType type, String timeZoneId, boolean hasNext) {
             this.date = date;
             this.toDate = toDate;
             this.serverDay = serverDay;
@@ -108,20 +117,42 @@ public interface PaymentHistoryReader {
         @Override
         @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             PaymentHistoryLine that = (PaymentHistoryLine) o;
 
-            if (balance != that.balance) return false;
-            if (hasNext != that.hasNext) return false;
-            if (amount != null ? !amount.equals(that.amount) : that.amount != null) return false;
-            if (date != null ? !date.equals(that.date) : that.date != null) return false;
-            if (description != null ? !description.equals(that.description) : that.description != null) return false;
-            if (serverDay != null ? !serverDay.equals(that.serverDay) : that.serverDay != null) return false;
-            if (timeZoneId != null ? !timeZoneId.equals(that.timeZoneId) : that.timeZoneId != null) return false;
-            if (toDate != null ? !toDate.equals(that.toDate) : that.toDate != null) return false;
-            if (type != that.type) return false;
+            if (balance != that.balance) {
+                return false;
+            }
+            if (hasNext != that.hasNext) {
+                return false;
+            }
+            if (amount != null ? !amount.equals(that.amount) : that.amount != null) {
+                return false;
+            }
+            if (date != null ? !date.equals(that.date) : that.date != null) {
+                return false;
+            }
+            if (description != null ? !description.equals(that.description) : that.description != null) {
+                return false;
+            }
+            if (serverDay != null ? !serverDay.equals(that.serverDay) : that.serverDay != null) {
+                return false;
+            }
+            if (timeZoneId != null ? !timeZoneId.equals(that.timeZoneId) : that.timeZoneId != null) {
+                return false;
+            }
+            if (toDate != null ? !toDate.equals(that.toDate) : that.toDate != null) {
+                return false;
+            }
+            if (type != that.type) {
+                return false;
+            }
 
             return true;
         }
@@ -143,16 +174,16 @@ public interface PaymentHistoryReader {
         @Override
         public String toString() {
             return "PaymentHistoryLine{" +
-                    "date=" + date +
-                    ", toDate=" + toDate +
-                    ", serverDay='" + serverDay + '\'' +
-                    ", description='" + description + '\'' +
-                    ", amount=" + amount +
-                    ", balance=" + balance +
-                    ", type=" + type +
-                    ", timeZoneId='" + timeZoneId + '\'' +
-                    ", hasNext=" + hasNext +
-                    '}';
+                "date=" + date +
+                ", toDate=" + toDate +
+                ", serverDay='" + serverDay + '\'' +
+                ", description='" + description + '\'' +
+                ", amount=" + amount +
+                ", balance=" + balance +
+                ", type=" + type +
+                ", timeZoneId='" + timeZoneId + '\'' +
+                ", hasNext=" + hasNext +
+                '}';
         }
     }
 

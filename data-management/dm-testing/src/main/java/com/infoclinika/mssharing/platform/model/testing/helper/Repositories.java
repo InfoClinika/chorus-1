@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.testing.helper;
 
@@ -38,7 +40,8 @@ class Repositories {
     @Inject
     protected LabCreationRequestRepositoryTemplate labCreationRequestRepository;
     @Inject
-    protected UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate> userLabMembershipRequestRepository;
+    protected UserLabMembershipRequestRepositoryTemplate<UserLabMembershipRequestTemplate>
+        userLabMembershipRequestRepository;
     @Inject
     protected AttachmentRepositoryTemplate attachmentRepository;
     @Inject
@@ -72,32 +75,34 @@ class Repositories {
     @Inject
     private ProjectSharingRequestRepositoryTemplate projectSharingRequestRepository;
 
+
     public List<CrudRepository> get() {
         return ImmutableList.of(
-                instrumentCreationRequestRepository,
-                labCreationRequestRepository,
-                userProjectAccessRepository,
-                userLabMembershipRequestRepository,
-                inboxMessageRepository,
-                outboxMessageRepository,
-                experimentRepository,
-                experimentFileRepository,
-                factorRepository,
-                fileRepository,
-                projectRepository,
-                attachmentRepository,
-                groupRepository,
-                instrumentRepository,
-                userLabMembershipRepository,
-                userInvitationLinkRepository,
-                userRepository,
-                labRepository,
-                instrumentModelRepository,
-                vendorRepository,
-                instrumentTypeRepository,
-                instrumentStudyTypeRepository,
-                experimentTypeRepository,
-                speciesRepository,
-                projectSharingRequestRepository);
+            instrumentCreationRequestRepository,
+            labCreationRequestRepository,
+            userProjectAccessRepository,
+            userLabMembershipRequestRepository,
+            inboxMessageRepository,
+            outboxMessageRepository,
+            experimentRepository,
+            experimentFileRepository,
+            factorRepository,
+            fileRepository,
+            projectRepository,
+            attachmentRepository,
+            groupRepository,
+            instrumentRepository,
+            userLabMembershipRepository,
+            userInvitationLinkRepository,
+            userRepository,
+            labRepository,
+            instrumentModelRepository,
+            vendorRepository,
+            instrumentTypeRepository,
+            instrumentStudyTypeRepository,
+            experimentTypeRepository,
+            speciesRepository,
+            projectSharingRequestRepository
+        );
     }
 }

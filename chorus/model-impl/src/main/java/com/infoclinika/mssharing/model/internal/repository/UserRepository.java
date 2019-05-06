@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.repository;
 
@@ -21,13 +23,16 @@ import java.util.Set;
  */
 public interface UserRepository extends UserRepositoryTemplate<User> {
 
-    @Query("select u from  User u where u.id in :ids")
-    List<User> findAllByIds(@Param("ids")Set<Long> ids);
+    @Query("select u from  User u where u.id in :ids and u.deleted = false")
+    List<User> findAllByIds(@Param("ids") Set<Long> ids);
 
-    @Query("select u from User u where u.emailVerified=0")
+    @Query("select u from User u where u.emailVerified=0 and u.deleted = false")
     List<User> findWithEmailUnverified();
 
-    @Query("select u from User u where u.clientToken = :token")
+    @Query("select u from User u where u.clientToken = :token and u.deleted = false")
     User findByClientToken(@Param("token") String token);
+
+    @Query("select u from User u where u.accountRemovalRequestDate is not null and u.deleted = false")
+    List<User> findAllRequestedAccountRemoval();
 
 }

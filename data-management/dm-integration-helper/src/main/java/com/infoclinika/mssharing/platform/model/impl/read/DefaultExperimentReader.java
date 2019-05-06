@@ -23,9 +23,10 @@ import java.util.SortedSet;
  * @author : Alexander Serebriyan, Herman Zamula
  */
 @Transactional(readOnly = true)
-public abstract class DefaultExperimentReader<EXPERIMENT extends ExperimentTemplate, EXPERIMENT_LINE extends ExperimentLineTemplate>
-        implements DefaultTransformingTemplate<EXPERIMENT, EXPERIMENT_LINE>,
-        ExperimentReaderTemplate<EXPERIMENT_LINE> {
+public abstract class DefaultExperimentReader<EXPERIMENT extends ExperimentTemplate,
+    EXPERIMENT_LINE extends ExperimentLineTemplate>
+    implements DefaultTransformingTemplate<EXPERIMENT, EXPERIMENT_LINE>,
+    ExperimentReaderTemplate<EXPERIMENT_LINE> {
 
     @Inject
     protected ExperimentReaderHelper<EXPERIMENT, EXPERIMENT_LINE> experimentReaderHelper;
@@ -44,30 +45,16 @@ public abstract class DefaultExperimentReader<EXPERIMENT extends ExperimentTempl
     }
 
     protected Comparator<EXPERIMENT_LINE> comparator() {
-        return new Comparator<EXPERIMENT_LINE>() {
-            @Override
-            public int compare(EXPERIMENT_LINE o1, EXPERIMENT_LINE o2) {
-                return o1.name.compareTo(o2.name);
-            }
-        };
+        return Comparator.comparing(o -> o.name);
     }
 
     @Override
     public SortedSet<EXPERIMENT_LINE> readExperiments(long actor, Filter filter) {
 
         return experimentReaderHelper
-                .byFilter(actor, filter)
-                .transform()
-                .toSortedSet(comparator());
-    }
-
-    @Override
-    public SortedSet<EXPERIMENT_LINE> readExperimentsByProject(long actor, long projectId) {
-
-        return experimentReaderHelper
-                .byProject(projectId)
-                .transform()
-                .toSortedSet(comparator());
+            .byFilter(actor, filter)
+            .transform()
+            .toSortedSet(comparator());
     }
 
     @Override
@@ -77,8 +64,17 @@ public abstract class DefaultExperimentReader<EXPERIMENT extends ExperimentTempl
         final String filterQuery = toFilterQuery(pagedItemInfo);
 
         return experimentReaderHelper
-                .pageableByFilter(actor, filter, request, filterQuery)
-                .transform();
+            .pageableByFilter(actor, filter, request, filterQuery)
+            .transform();
+    }
+
+    @Override
+    public SortedSet<EXPERIMENT_LINE> readExperimentsByProject(long actor, long projectId) {
+
+        return experimentReaderHelper
+            .byProject(projectId)
+            .transform()
+            .toSortedSet(comparator());
     }
 
     @Override
@@ -88,19 +84,21 @@ public abstract class DefaultExperimentReader<EXPERIMENT extends ExperimentTempl
         final String filterQuery = toFilterQuery(pagedItemInfo);
 
         return experimentReaderHelper
-                .pageableByLab(labId, request, filterQuery)
-                .transform();
+            .pageableByLab(labId, request, filterQuery)
+            .transform();
     }
 
     @Override
-    public PagedItem<EXPERIMENT_LINE> readPagedExperimentsByProject(long actor, long projectId, PagedItemInfo pageInfo) {
+    public PagedItem<EXPERIMENT_LINE> readPagedExperimentsByProject(long actor,
+                                                                    long projectId,
+                                                                    PagedItemInfo pageInfo) {
 
         final PageRequest request = toPageRequest(pageInfo);
         final String filterQuery = toFilterQuery(pageInfo);
 
         return experimentReaderHelper
-                .pageableByProject(projectId, request, filterQuery)
-                .transform();
+            .pageableByProject(projectId, request, filterQuery)
+            .transform();
     }
 
     private PageRequest toPageRequest(PagedItemInfo pagedItemInfo) {

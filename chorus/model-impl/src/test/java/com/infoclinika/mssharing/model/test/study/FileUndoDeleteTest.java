@@ -31,7 +31,7 @@ public class FileUndoDeleteTest extends AbstractStudyTest {
     public void testNotFindRestoredFileInTrash() {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 10737418);
-        long deleted= instrumentManagement.moveFileToTrash(bob, file);
+        long deleted = instrumentManagement.moveFileToTrash(bob, file);
         instrumentManagement.restoreFile(bob, deleted);
         assertEquals(trashReader.readByOwner(bob).size(), 0);
     }
@@ -68,7 +68,10 @@ public class FileUndoDeleteTest extends AbstractStudyTest {
 
     }
 
-    @Test(dependsOnMethods = "testNotFindMovedToTrashFile")
+   @Test(dependsOnMethods = "testNotFindMovedToTrashFile",
+       enabled = false,
+       description = "test was disabled for open-chorus"
+   )
     public void testNotFindRemovedFile() {
         long bob = uc.createLab3AndBob();
         long file = uc.saveFileWithSize(bob, uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get(), 10737418);
@@ -78,10 +81,13 @@ public class FileUndoDeleteTest extends AbstractStudyTest {
 
     }
 
-    @Test(dependsOnMethods = "testNotFindMovedToTrashFile")
+    @Test(dependsOnMethods = "testNotFindMovedToTrashFile",
+        enabled = false,
+        description = "test was disabled for open-chorus"
+    )
     public void testNotFindRemovedFileByRemovingInstrument() {
         long bob = uc.createLab3AndBob();
-        long instr =  uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
+        long instr = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
         long file = uc.saveFileWithSize(bob, instr, 10737418);
         long deleted = instrumentManagement.moveFileToTrash(bob, file);
         instrumentManagement.deleteInstrument(bob, instr);
@@ -89,10 +95,11 @@ public class FileUndoDeleteTest extends AbstractStudyTest {
 
     }
 
-    @Test(expectedExceptions = AccessDenied.class, dependsOnMethods = {"testFindMovedToTrashFileInTrash", "testNotFindMovedToTrashFile"})
+    @Test(expectedExceptions = AccessDenied.class,
+        dependsOnMethods = {"testFindMovedToTrashFileInTrash", "testNotFindMovedToTrashFile"})
     public void testNotAbleToRestoreFileWithDuplicateName() {
         long bob = uc.createLab3AndBob();
-        long instr =  uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
+        long instr = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
         final String fileName = "file.raw";
         long file = uc.saveFileWithName(bob, instr, fileName);
         long deleted = instrumentManagement.moveFileToTrash(bob, file);

@@ -1,0 +1,69 @@
+<div class="filter-builder" ng-init="advanced = false">
+    <div class="set-value-holder grid-col-4-holder">
+
+        <div>
+            <label class="control-label">
+                Search
+                <span class="filter-builder-switch">
+                    (<button ng-click="advanced = true" ng-disabled="advanced" class="btn-link">Advanced filter</button>|<button
+                        ng-click="advanced = false" ng-disabled="!advanced" class="btn-link">Simple query</button>)
+                </span>
+            </label>
+            <input ng-model="filterQuery" type="text" class="filter-builder-query">
+        </div>
+
+        <div class="clearfix with-labels"
+             ng-show="advanced"
+             ng-class="{'first-row': tempComposedFilter.predicates.length==1}"
+             ng-repeat="filterPredicateRow in tempComposedFilter.predicates">
+            <div class="control-group col-4-1">
+                <label class="control-label" ng-show="$first">Filter</label>
+                <select ui-select2="{minimumResultsForSearch: 5}"
+                        class="dialog-select"
+                        ng-model="filterPredicateRow.prop">
+                    <option ng-repeat="field in fields"
+                            value="{{field.prop}}">
+                        {{field.title}}
+                    </option>
+                </select>
+            </div>
+            <div class="control-group col-4-2">
+                <label class="control-label" ng-show="$first">Match if</label>
+                <select ui-select2="{minimumResultsForSearch: 5}"
+                        class="dialog-select"
+                        ng-model="filterPredicateRow.operator" title="Operator">
+                    <option
+                            ng-repeat="operator in getOperatorsByField(filterPredicateRow.prop)"
+                            value="{{operator.prop}}">
+                        {{operator.title}}
+                    </option>
+                </select>
+            </div>
+            <div class="control-group col-4-3 short-input"
+                 ng-class="getClassForPredicateValue(filterPredicateRow.operator)">
+                <label class="control-label" ng-show="$first">Value</label>
+                <input type="text" ng-model="filterPredicateRow.value" class="filter-input" title="Value"/>
+                <textarea ng-model="filterPredicateRow.value" class="filter-input" title="Value"
+                          style="width: 88%;resize: none;"></textarea>
+            </div>
+            <!--<div class="control-group col-4-4" ng-class="{'span': $first, 'span2':!$first }">-->
+            <div class="control-group col-4-4" ng-class="{'advancedFilterFirstRowButtons':$first}">
+                <div class="control-group " ng-show="$last">
+                    <button class="btn secondary-action " ng-click="addEmptyRow()"
+                            ng-disabled="getValidationErrorMessage()">Add
+                    </button>
+                </div>
+                <div class="control-group conjunctionSelectionHolder pull-left"
+                     ng-show="tempComposedFilter.predicates.length!=1 && !$last">
+                    <select ui-select2="{minimumResultsForSearch: 5}"
+                            class="dialog-select"
+                            ng-model="tempComposedFilter.conjunction" title="And/Or">
+                        <option value="true">And</option>
+                        <option value="false">Or</option>
+                    </select>
+                </div>
+                <a class="close-row" ng-click="removeRow($index)" ng-show="tempComposedFilter.predicates.length!=1"></a>
+            </div>
+        </div>
+    </div>
+</div>

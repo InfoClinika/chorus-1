@@ -1,1 +1,102 @@
-<h3 class='align-center'>There is no Documentation yet</h3>
+
+<div>
+
+    <div ng-show="descriptionLoadFailed" style="text-align: center">
+        <h3><span >Please, sign-in to view api endpoints</span></h3>
+    </div>
+
+    <ul class="faq-list">
+        <li ng-repeat="controller in controllers | orderBy:'tag'">
+
+            <div>
+                <h3 class="tag-panel"><span ng-click="toggleOpened($event)" class="title-select" ng-bind="controller.tag"></span> :
+                    <span class="controller-description" ng-bind="controller.description"></span></h3>
+            </div>
+
+            <div class="hide">
+                <ul class="faq-list">
+                    <li ng-repeat="endpoint in controller.endpoints">
+                        <div class="panel-group">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+
+                                    <h3><span class="label label-warning" ng-bind="endpoint.http_method_name"></span> : <span ng-click="togglePanelBody($event)" class="title" ng-bind="endpoint.name"></span></h3>
+                                    <p><span ng-bind="endpoint.endpoint_param.summary"></span>
+
+                                </div>
+                            </div>
+
+                            <div class="panel-body" style="margin-top: 10px; display: none; background-color: #d5ecf857">
+                                <h3>Response Content Type : </h3>
+
+                                <select>
+                                    <option ng-repeat="content_type in endpoint.endpoint_param.produces" value="{{content_type}}">{{content_type}}</option>
+                                </select>
+
+                                <div  class="row" style="margin-left: 0px">
+
+                                    <div  class="col-md-6" ng-show="endpoint.schema_request_parameters.length != 0">
+                                        <pre class="pre-request"><h3>Request parameters</h3><br>{{ endpoint.schema_request_parameters | json}}</pre>
+                                    </div>
+
+                                    <div id="#pre_text" class="col-md-6" ng-show="endpoint.schema_response_parameters.length != 0">
+                                        <pre class="pre-response"><h3>Response parameters</h3><br>{{ endpoint.schema_response_parameters | json}}</pre>
+                                    </div>
+
+                                </div>
+
+                                <div ng-show="endpoint.endpoint_param.parameters">
+
+                                    <h3>Parameters</h3>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>Parameter</th>
+                                            <th>Value</th>
+                                            <th>Description</th>
+                                            <th>Parameter Type</th>
+                                            <th>Data Type</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="parameter in endpoint.endpoint_param.parameters">
+                                            <td>{{parameter.name}}</td>
+                                            <td>required : {{parameter.required}}</td>
+                                            <td>{{parameter.description}}</td>
+                                            <td>{{parameter.in}}</td>
+                                            <td>{{parameter.type}}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                                <h3>Response Messages</h3>
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>HTTP Status Code</th>
+                                        <th>Reason</th>
+                                        <th>Response Model</th>
+                                        <th>Headers</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="(key, value) in endpoint.endpoint_param.responses">
+                                        <td>{{key}}</td>
+                                        <td>{{value.description}}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+</div>

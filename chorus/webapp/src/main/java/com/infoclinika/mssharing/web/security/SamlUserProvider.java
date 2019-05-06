@@ -12,6 +12,8 @@ import org.springframework.security.saml.SAMLCredential;
 import org.springframework.security.saml.userdetails.SAMLUserDetailsService;
 
 import javax.inject.Inject;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author vladimir.moiseiev.
@@ -20,7 +22,7 @@ import javax.inject.Inject;
 //@Component
 public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SamlUserProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SamlUserProvider.class);
     private static final String NAME_ID_FORMAT_EMAIL = "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress";
     private static final String EMAIL_ADDRESS = "emailAddress";
     private static final String EMAIL_ADDRESS_SMALL = "emailaddress";
@@ -29,7 +31,9 @@ public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsServ
     private static final String FIRST_NAME2 = "FirstName";
     private static final String LAST_NAME = "lastName";
     private static final String LAST_NAME2 = "LastName";
-    private static final String SAML_DISPLAY_NAME = "SAML_DISPLAYNAME";
+    private static final String SAML_DISPLAY_NAME_CELGENE_CHORUS = "SAML_DISPLAYNAME";
+    private static final String SAML_DISPLAY_NAME_CELGENE_CRDM = "DispalyName";
+
     @Inject
     private UserManagement userManagement;
     @Inject
@@ -42,14 +46,14 @@ public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsServ
         final String email = getEmail(credential, nameId);
 
         final UserInfo userInfo = getUserInfo(credential);
-        LOG.info("# User info from SAML credential: " + userInfo);
+        LOGGER.info("# User info from SAML credential: " + userInfo);
 
         final String firstName = userInfo.firstName;
         final String lastName = userInfo.lastName;
 
         final SecurityHelper.UserDetails userDetails = securityHelper.getUserDetailsByEmail(email);
 
-        LOG.info("# User details: " + userDetails);
+        LOGGER.info("# User details: " + userDetails);
 
         if (userDetails == null) {
             final PersonInfo personInfo = new PersonInfo(firstName, lastName, email);
@@ -61,8 +65,8 @@ public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsServ
             return UserProviderHelper.USER_DETAILS_TRANSFORMER.apply(detailsByEmail);
         }
 
-        if (StringUtils.isNotBlank(firstName) && StringUtils.isNotBlank(lastName)&&
-                (!userDetails.firstName.equals(firstName) || !userDetails.lastName.equals(lastName))) {
+        if (StringUtils.isNotBlank(firstName) && StringUtils.isNotBlank(lastName) &&
+            (!userDetails.firstName.equals(firstName) || !userDetails.lastName.equals(lastName))) {
 
             userManagement.changeFirstName(userDetails.id, firstName);
             userManagement.changeLastName(userDetails.id, lastName);
@@ -86,21 +90,33 @@ public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsServ
         }
 
         if (firstNameAttribute == null || lastNameAttribute == null) {
-            final String displayName = credential.getAttributeAsString(SAML_DISPLAY_NAME);
+            UserInfo ui = Optional.ofNullable(getForCelgene(credential, SAML_DISPLAY_NAME_CELGENE_CHORUS))
+                .orElseGet(() -> getForCelgene(credential, SAML_DISPLAY_NAME_CELGENE_CRDM));
 
-            if (displayName != null && !displayName.isEmpty()) {
-                final int firstSpace = displayName.indexOf(' ');
-                firstNameAttribute = displayName.substring(0, firstSpace);
-                lastNameAttribute = displayName.substring(firstSpace + 1);
+            if (Objects.nonNull(ui)) {
+                return ui;
             }
         }
 
         if (firstNameAttribute == null && lastNameAttribute == null) {
             final String errorText = "No First and Last names in SAML response";
-            LOG.error(errorText);
-           throw new RuntimeException(errorText);
+            LOGGER.error(errorText);
+            throw new RuntimeException(errorText);
         }
         return new UserInfo(firstNameAttribute, lastNameAttribute);
+    }
+
+    private UserInfo getForCelgene(SAMLCredential credential, String attribute) {
+        final String displayName = credential.getAttributeAsString(attribute);
+
+        final int firstLastNameDelimiter = StringUtils.isEmpty(displayName) ? -1 : displayName.indexOf(' ');
+
+        return firstLastNameDelimiter != -1 ?
+            new UserInfo(
+                displayName.substring(0, firstLastNameDelimiter),
+                displayName.substring(firstLastNameDelimiter + 1)
+            )
+            : null;
     }
 
     private String getEmail(SAMLCredential credential, String nameId) {
@@ -122,7 +138,7 @@ public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsServ
 
             if (emailAddress == null) {
                 final String errorText = "No email in SAML response";
-                LOG.error(errorText);
+                LOGGER.error(errorText);
                 throw new RuntimeException(errorText);
             }
             email = emailAddress;
@@ -143,6 +159,7 @@ public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsServ
     private static final class UserInfo {
         public String firstName;
         public String lastName;
+
         public UserInfo(String firstName, String lastName) {
             this.firstName = firstName;
             this.lastName = lastName;
@@ -151,9 +168,9 @@ public class SamlUserProvider implements ChorusUserProvider, SAMLUserDetailsServ
         @Override
         public String toString() {
             return "UserInfo{" +
-                    "firstName='" + firstName + '\'' +
-                    ", lastName='" + lastName + '\'' +
-                    '}';
+                "firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                '}';
         }
     }
 }

@@ -1,0 +1,64 @@
+<wizard-dialog title="Upload files"
+               button="Upload" on-done="uploadFiles()">
+
+    <p ng-repeat="error in vm.errors"
+       class="text-error">
+        {{error}}
+    </p>
+
+    <wizard-step title="Select Instrument"
+                 validate="!!vm.instrument && !!vm.specie">
+        <upload-select-instrument instrument="vm.instrument" specie="vm.specie"></upload-select-instrument>
+    </wizard-step>
+
+    <wizard-step title="Transfer Method"
+                 init="initTransferInfo()"
+                 validate="validateTransferInfo(vm.methodId, vm.s3Data)">
+        <div class="row-fluid margin-bottom-20">
+            <div class="span3">
+                <label class="control-label" for="transferMethod">Transfer method</label>
+            </div>
+            <div class="span9">
+                <select class="dialog-select" id="transferMethod"
+                        ui-select2="{minimumResultsForSearch: 10}" data-placeholder="-- Select One --"
+                        ng-model="vm.methodId">
+                    <option value="{{method.id}}" ng-repeat="method in transferMethods">
+                        {{method.name}}
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!--<div ng-switch="vm.methodId">-->
+        <!--
+                    <upload-transfer-method-direct ng-switch-when="DIRECT"
+                                                   masks="vm.masks">
+                    </upload-transfer-method-direct>
+        -->
+
+        <upload-transfer-method-s3 ng-if="vm.methodId == 'S3_COPY' || vm.methodId == 'S3_LINK'"
+                                   data="vm.s3Data"
+                                   type="vm.methodId"
+                                   masks="vm.masks">
+        </upload-transfer-method-s3>
+        <!--</div>-->
+    </wizard-step>
+
+    <wizard-step title="Select Files"
+                 init="prepareFiles()"
+                 validate="vm.files.length > 0">
+        <upload-files-preview files="vm.files"
+                              files-loaded="vm.filesLoaded"
+                              files-selected="vm.filesSelected">
+        </upload-files-preview>
+    </wizard-step>
+
+    <wizard-step title="Set Labels"
+                 init="prepareLabels()"
+                 validate="true">
+        <upload-files-labels files="vm.filesSelected"
+                             specie="vm.specie">
+        </upload-files-labels>
+    </wizard-step>
+
+</wizard-dialog>

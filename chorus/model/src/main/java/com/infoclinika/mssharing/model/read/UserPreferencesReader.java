@@ -10,7 +10,7 @@ public interface UserPreferencesReader {
 
     UserPreferencesInfo readUserPreferences(long actor);
 
-    public static class UserPreferencesInfo{
+    class UserPreferencesInfo {
 
         public long userId;
         public boolean shouldShowBillingNotification;

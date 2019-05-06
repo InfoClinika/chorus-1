@@ -1,12 +1,11 @@
 package com.infoclinika.mssharing.model.internal.read;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.infoclinika.mssharing.model.internal.entity.FilesDownloadGroup;
 import com.infoclinika.mssharing.model.internal.entity.FileDownloadJob;
-import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
+import com.infoclinika.mssharing.model.internal.entity.FilesDownloadGroup;
 import com.infoclinika.mssharing.model.internal.entity.Util;
+import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveFileMetaData;
 import com.infoclinika.mssharing.model.internal.repository.FileDownloadGroupRepository;
 import com.infoclinika.mssharing.model.internal.repository.FileDownloadJobRepository;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
@@ -16,12 +15,12 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.util.Collection;
+import java.util.HashSet;
 
+import static com.google.common.collect.Collections2.transform;
 import static com.google.common.collect.Sets.newHashSet;
 
 /**
- * TODO <herman.zamula>: This service used only in tests. Do we need this really?
- *
  * @author Elena Kurilina
  */
 @Service
@@ -53,10 +52,14 @@ public class DownloadFileReaderImpl implements DownloadFileReader {
 
     @Override
     public ImmutableList<DownloadFileGroup> readGroupByJob(Long id) {
-        final Collection<FilesDownloadGroup> group = fileDownloadGroupRepository.findByJob(newHashSet(fileDownloadJobRepository.findOne(id)));
-        return ImmutableList.copyOf(Collections2.transform(group, input -> new DownloadFileGroup(input.experimentId,
-                Collections2.transform(input.getNotifiers(), EntityUtil.ENTITY_TO_ID),
-                Collections2.transform(input.getJobs(), Util.ENTITY_TO_ID)
-                )));
+        final HashSet<FileDownloadJob> job = newHashSet(fileDownloadJobRepository.findOne(id));
+        final Collection<FilesDownloadGroup> group =
+            fileDownloadGroupRepository.findByJob(job);
+
+        return ImmutableList.copyOf(transform(group, input -> new DownloadFileGroup(
+            input.experimentId,
+            transform(input.getNotifiers(), EntityUtil.ENTITY_TO_ID),
+            transform(input.getJobs(), Util.ENTITY_TO_ID)
+        )));
     }
 }

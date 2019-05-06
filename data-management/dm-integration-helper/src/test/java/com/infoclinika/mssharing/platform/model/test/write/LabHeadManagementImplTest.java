@@ -12,7 +12,7 @@ import static org.testng.Assert.assertFalse;
 
 /**
  * @author Bogdan Kovalev
- *         Created on 11/14/16.
+ *     Created on 11/14/16.
  */
 public class LabHeadManagementImplTest extends AbstractTest {
 
@@ -24,10 +24,13 @@ public class LabHeadManagementImplTest extends AbstractTest {
         uc.addKateToLab3();
 
         final long lab3InstrumentId = uc.createInstrumentAndApproveIfNeeded(lab3HeadId, lab3Id).get();
-        instrumentManagement.addOperatorDirectly(lab3HeadId, lab3InstrumentId, kateId);
 
         SortedSet<InstrumentItem> instrumentsWithKate = instrumentReader.readInstrumentsWhereUserIsOperator(kateId);
-        assertEquals(instrumentsWithKate.first().id, lab3InstrumentId, "Kate should be in lab3's instrument's operators list");
+        assertEquals(
+            instrumentsWithKate.first().id,
+            lab3InstrumentId,
+            "Kate should be in lab3's instrument's operators list"
+        );
 
         labHeadManagement.removeUserFromLab(lab3HeadId, lab3Id, kateId);
 

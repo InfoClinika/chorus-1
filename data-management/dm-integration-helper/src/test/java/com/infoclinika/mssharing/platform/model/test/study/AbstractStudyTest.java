@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.test.study;
 
@@ -16,7 +18,8 @@ import com.infoclinika.mssharing.platform.model.test.helper.AbstractTest;
 import com.infoclinika.mssharing.platform.model.testing.helper.AbstractTestTemplate;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate;
-import com.infoclinika.mssharing.platform.model.write.ProjectManagementTemplate;
+import com.infoclinika.mssharing.platform.model.write.FileManagementTemplate.FileMetaDataInfoTemplate;
+import com.infoclinika.mssharing.platform.model.write.ProjectManagementTemplate.ProjectInfoTemplate;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,14 +41,14 @@ abstract class AbstractStudyTest extends AbstractTest {
         final long file = uc.saveFile(user);
         //noinspection unchecked
         final AbstractTestTemplate.ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder()
-                .name(generateString())
-                .description("")
-                .experimentType(anyExperimentType())
-                .species(unspecified())
-                .project(project1)
-                .lab(lab)
-                .is2Dlc(false)
-                .restriction(restriction(user)).factors(NO_FACTORS).files(noFactoredFile(file));
+            .name(generateString())
+            .description("")
+            .experimentType(anyExperimentType())
+            .species(unspecified())
+            .project(project1)
+            .lab(lab)
+            .is2Dlc(false)
+            .restriction(restriction(user)).factors(NO_FACTORS).files(noFactoredFile(file));
         return experimentManagement.createExperiment(user, builder.build());
     }
 
@@ -66,23 +69,30 @@ abstract class AbstractStudyTest extends AbstractTest {
     }
 
     public long createPrivateProject(long user, Long lab) {
-        final long project = projectManagement.createProject(user, new ProjectManagementTemplate.ProjectInfoTemplate(lab, "private project", "", "area"));
+        final long project =
+            projectManagement.createProject(user, new ProjectInfoTemplate(lab, "private project", "", "area"));
         sharingManagement.makeProjectPrivate(user, project);
         return project;
     }
 
     public long createPublicProject(long user, Long lab) {
-        final long project = projectManagement.createProject(user, new ProjectManagementTemplate.ProjectInfoTemplate(lab, "public project", "", "area"));
+        final long project = projectManagement
+            .createProject(user, new ProjectInfoTemplate(lab, "public project", "", "area"));
         sharingManagement.makeProjectPublic(user, project);
         return project;
     }
 
     protected long createProjectWithName(long user, Long lab, String name) {
-        return projectManagement.createProject(user, new ProjectManagementTemplate.ProjectInfoTemplate(lab, name, "area", ""));
+        return projectManagement
+            .createProject(user, new ProjectInfoTemplate(lab, name, "area", ""));
     }
 
     protected void createFileWithInstrument(long bob, long instrument, long specie) {
-        long file = fileManagement.createFile(bob, instrument, new FileManagementTemplate.FileMetaDataInfoTemplate(UUID.randomUUID().toString(), 0, "", null, specie, false));
+        long file = fileManagement.createFile(
+            bob,
+            instrument,
+            new FileMetaDataInfoTemplate(UUID.randomUUID().toString(), 0, "", null, specie, false)
+        );
         setContent(bob, file);
     }
 

@@ -19,7 +19,7 @@ import static com.infoclinika.mssharing.platform.model.helper.read.SingleResultB
 @Component
 @Scope(value = "prototype")
 public class LabDetailsReaderHelper<LAB extends LabTemplate, LAB_ITEM extends LabItemTemplateDetailed>
-        extends AbstractReaderHelper<LAB, LAB_ITEM, LabItemTemplateDetailed> {
+    extends AbstractReaderHelper<LAB, LAB_ITEM, LabItemTemplateDetailed> {
 
     @Inject
     private LabRepositoryTemplate<LAB> labRepository;
@@ -30,21 +30,16 @@ public class LabDetailsReaderHelper<LAB extends LabTemplate, LAB_ITEM extends La
 
     @Override
     public Function<LAB, LabItemTemplateDetailed> getDefaultTransformer() {
-        return new Function<LAB, LabItemTemplateDetailed>() {
-            @Override
-            public LabItemTemplateDetailed apply(LAB lab) {
-
-                return new LabItemTemplateDetailed(lab.getId(),
-                        lab.getName(),
-                        lab.getInstitutionUrl(),
-                        lab.getHead().getFirstName(),
-                        lab.getHead().getLastName(),
-                        lab.getHead().getEmail(),
-                        lab.getContactEmail(),
-                        lab.getLastModification(),
-                        labRepository.membersCount(lab.getId())
-                );
-            }
-        };
+        return lab -> new LabItemTemplateDetailed(
+            lab.getId(),
+            lab.getName(),
+            lab.getInstitutionUrl(),
+            lab.getHead().getFirstName(),
+            lab.getHead().getLastName(),
+            lab.getHead().getEmail(),
+            lab.getContactEmail(),
+            lab.getLastModification(),
+            labRepository.membersCount(lab.getId())
+        );
     }
 }

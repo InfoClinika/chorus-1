@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html ng-app="current-year">
+<html ng-app="template-components">
 <head>
     <title>Chorus is becoming better right now!</title>
     <link rel="stylesheet" href="css/style.css">
     <script type="text/javascript" src="../lib/angularjs/angular.min.js"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
 </head>
 <body>
     <div class="page-holder">
@@ -13,7 +14,7 @@
             <div class="description">
                 <h2>Chorus is becoming better right now!</h2>
                 <p>This usually takes a few minutes. Please stay with us!</p>
-                <p>If you have any questions please do not hesitate<br />to contact us via <a href="mailto:support@chorusproject.org">support@chorusproject.org</a></p>
+                <p>If you have any questions please do not hesitate<br />to contact us via <a href="mailto:support@infoclinika.com">support@infoclinika.com</a></p>
             </div>
         </div>
     </div>
@@ -23,7 +24,7 @@
                 <p>&copy;&nbsp;<current-year></current-year>&nbsp;<a href="http://www.infoclinika.com">Infoclinika</a></p>
             </div>
             <div class="link">
-                <a href="mailto:support@chorusproject.org">Support &amp; Contact Us</a>
+                <a href="mailto:support@infoclinika.com">Support &amp; Contact Us</a>
             </div>
         </div>
     </div>

@@ -1,0 +1,102 @@
+<div class="import-ngs-experiment modal" id="import-ngs-experiment-modal-dialog" modal-dialog={{returnUrl}}
+     data-ng-class="{'experiment-expanded': expanded}">
+    <div class="modal-holder">
+        <div class="modal-frame">
+            <div class="modal-header">
+                <a data-dismiss="modal" class="close">&times;</a>
+                <a ng-model="expanded" class="wizard-expanded" ng-click="expanded=!expanded"
+                   data-ng-class="{'expanded': expanded}">full screen</a>
+
+                <h3 ng-bind="page.title">Import NGS Experiment</h3>
+            </div>
+            <div class="modal-body" ng-cloak>
+                <form name="form" novalidate class="import-ngs-experiment-form form-with-loading"
+                      ng-class="{'loading-in-progress': vm.loadingInProgress}">
+                    <div class="loading-overlay">
+                        <div class="background"></div>
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="control-group clearfix" data-ng-class="{error: vm.form.validation.name}">
+                        <label for="name">Name</label>
+                        <input id="name" class="dialog-text-input dont-hide" name="name" maxlength="255"
+                               ng-model="vm.form.name"/>
+                        <span class="error-message" ng-show="vm.form.validation.name"
+                              ng-bind="vm.form.validation.name"></span>
+                    </div>
+
+                    <div class="control-group clearfix" data-ng-class="{error: vm.form.validation.lab}">
+                        <label for="laboratory">Laboratory</label>
+                        <select id="laboratory" ui-select2 name="laboratory" ng-model="vm.form.lab"
+                                data-placeholder="-- Select One --" class="dialog-select" ui-select2-validator>
+                            <option></option>
+                            <option value="{{lab.id}}" ng-repeat="lab in vm.labs" ng-selected="vm.form.lab==lab.id"
+                                    ng-bind="lab.name">
+                            </option>
+                        </select>
+                        <span class="error-message" ng-show="vm.form.validation.lab"
+                              ng-bind="vm.form.validation.lab"></span>
+                    </div>
+
+                    <div class="control-group clearfix" data-ng-class="{error: vm.form.validation.instrument}">
+                        <label for="instrument">Instrument</label>
+                        <select id="instrument" ui-select2 name="instrument" ng-model="vm.form.instrument"
+                                data-placeholder="-- Select One --" class="dialog-select" ui-select2-validator>
+                            <option></option>
+                            <option value="{{instrument.id}}" ng-repeat="instrument in vm.instruments"
+                                    ng-selected="vm.form.instrument==instrument.id"
+                                    ng-bind="instrument.name">
+                            </option>
+                        </select>
+                        <span class="error-message" ng-show="vm.form.validation.instrument"
+                              ng-bind="vm.form.validation.instrument"></span>
+                    </div>
+
+                    <div class="control-group clearfix" data-ng-class="{error: vm.form.validation.project}">
+                        <label for="project">Project</label>
+                        <select id="project" ui-select2 name="project" ng-model="vm.form.project"
+                                data-placeholder="-- Select One --" class="dialog-select" ui-select2-validator>
+                            <option></option>
+                            <option value="{{project.id}}" ng-repeat="project in vm.projects"
+                                    ng-selected="vm.form.project==project.id"
+                                    ng-bind="project.name">
+                            </option>
+                        </select>
+                        <span class="error-message" ng-show="vm.form.validation.project"
+                              ng-bind="vm.form.validation.project"></span>
+                    </div>
+
+                    <div class="row-fluid">
+                        <div class="control-group clearfix" data-ng-class="{'error': vm.form.validation.file}">
+                            <label for="importFileChooser">Choose File to Import</label>
+                                <span class="select-file-btn btn secondary-action">
+                                        Browse&hellip;
+                                    <input type="file" accept="{{ vm.getAcceptableExtensions() }}"
+                                           id="importFileChooser">
+                                    </span>
+                            <span ng-bind="vm.form.file.name"></span>
+                            <div>
+                                <span class="error-message" ng-show="vm.form.validation.file"
+                                      ng-bind="vm.form.validation.file"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row-fluid" ng-show="!!vm.importErrorMessage">
+                        <div class="control-group clearfix error">
+                            <label for="import-errror-message">Import Error</label>
+                            <textarea class="ngs-import-error-text" readonly="readonly" id="import-errror-message"
+                                      ng-bind="vm.importErrorMessage"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn secondary-action" data-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary main-action "
+                                ng-click="modalReturnUrl='/experiments/my'; vm.importExperiment();">Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

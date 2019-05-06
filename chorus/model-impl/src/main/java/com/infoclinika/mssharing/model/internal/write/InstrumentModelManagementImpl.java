@@ -13,6 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class InstrumentModelManagementImpl
-        extends DefaultInstrumentModelManagement<InstrumentModelManagementTemplate.InstrumentModelDetails, InstrumentModel>
-        implements InstrumentModelManagement {
+    extends DefaultInstrumentModelManagement<InstrumentModelManagementTemplate.InstrumentModelDetails, InstrumentModel>
+    implements InstrumentModelManagement {
 }

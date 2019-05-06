@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.entity;
 
@@ -14,11 +16,12 @@ import com.infoclinika.mssharing.model.internal.entity.restorable.AbstractFileMe
 import com.infoclinika.mssharing.platform.entity.ExperimentFileTemplate;
 import com.infoclinika.mssharing.platform.model.impl.entities.AnnotationDefault;
 
-import javax.persistence.*;
-import java.util.Set;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Sets.newHashSet;
 
 /**
  * @author Stanislav Kurilin
@@ -32,6 +35,9 @@ public class RawFile extends ExperimentFileTemplate<AbstractFileMetaData, Abstra
     @Column
     @Basic(optional = false)
     private int fractionNumber;
+
+    @Basic(optional = true)
+    private Integer pairedEnd;
 
     @ManyToOne(optional = false)
     private ExperimentPreparedSample preparedSample;
@@ -69,5 +75,13 @@ public class RawFile extends ExperimentFileTemplate<AbstractFileMetaData, Abstra
 
     public void setFractionNumber(int fractionNumber) {
         this.fractionNumber = fractionNumber;
+    }
+
+    public Integer getPairedEnd() {
+        return pairedEnd;
+    }
+
+    public void setPairedEnd(Integer pairedEnd) {
+        this.pairedEnd = pairedEnd;
     }
 }

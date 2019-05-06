@@ -27,14 +27,13 @@ import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId
 public class ExperimentColumnsController {
 
     @Inject
-    private DashboardReader dashboardReader;
-
-    @Inject
     protected ColumnViewHelper columnViewHelper;
+    @Inject
+    private DashboardReader dashboardReader;
 
     @RequestMapping(value = "/views", method = RequestMethod.GET)
     @ResponseBody
-    public List<ColumnViewHelper.ColumnView> getColumnViews(Principal principal){
+    public List<ColumnViewHelper.ColumnView> getColumnViews(Principal principal) {
         return columnViewHelper.getViews(getUserId(principal), ColumnViewHelper.ColumnViewType.EXPERIMENT);
     }
 
@@ -47,18 +46,27 @@ public class ExperimentColumnsController {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void createOrUpdateColumnOrder(@RequestBody ColumnOrderRequest request, Principal principal) {
-        ImmutableSet<ColumnViewHelper.ColumnInfo> columnInfos = from(request.columns).transform(new Function<ColumnOrderRequest.OrderedColumnsRequest, ColumnViewHelper.ColumnInfo>() {
-            @Override
-            public ColumnViewHelper.ColumnInfo apply(ColumnOrderRequest.OrderedColumnsRequest input) {
-                return new ColumnViewHelper.ColumnInfo(input.columnId, input.order);
-            }
-        }).toSet();
+        ImmutableSet<ColumnViewHelper.ColumnInfo> columnInfos =
+            from(request.columns).transform(new Function<ColumnOrderRequest.OrderedColumnsRequest,
+                ColumnViewHelper.ColumnInfo>() {
+                @Override
+                public ColumnViewHelper.ColumnInfo apply(ColumnOrderRequest.OrderedColumnsRequest input) {
+                    return new ColumnViewHelper.ColumnInfo(input.columnId, input.order);
+                }
+            }).toSet();
 
-        Optional<ColumnViewHelper.ColumnView> primaryView = columnViewHelper.readPrimary(getUserId(principal), ColumnViewHelper.ColumnViewType.EXPERIMENT);
-        if(primaryView.isPresent()) {
+        Optional<ColumnViewHelper.ColumnView> primaryView =
+            columnViewHelper.readPrimary(getUserId(principal), ColumnViewHelper.ColumnViewType.EXPERIMENT);
+        if (primaryView.isPresent()) {
             columnViewHelper.updateView(getUserId(principal), primaryView.get(), columnInfos);
         } else {
-            columnViewHelper.createView(getUserId(principal), ColumnViewHelper.ColumnViewType.EXPERIMENT, request.name, columnInfos, request.isPrimary);
+            columnViewHelper.createView(
+                getUserId(principal),
+                ColumnViewHelper.ColumnViewType.EXPERIMENT,
+                request.name,
+                columnInfos,
+                request.isPrimary
+            );
         }
     }
 
@@ -84,7 +92,10 @@ public class ExperimentColumnsController {
     @RequestMapping(value = "/selected", method = RequestMethod.GET)
     @ResponseBody
     public ImmutableSortedSet<ColumnViewHelper.ColumnInfo> getPrimaryOrDefault(Principal principal) {
-        return columnViewHelper.getPrimaryColumnSetOrDefault(getUserId(principal), ColumnViewHelper.ColumnViewType.EXPERIMENT);
+        return columnViewHelper.getPrimaryColumnSetOrDefault(
+            getUserId(principal),
+            ColumnViewHelper.ColumnViewType.EXPERIMENT
+        );
     }
 
     @RequestMapping(value = "/default/columns", method = RequestMethod.GET)

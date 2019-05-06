@@ -2,16 +2,18 @@ package com.infoclinika.mssharing.services.billing.persistence.enity;
 
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.Table;
 
 /**
  * @author timofey 21.03.16.
  */
 @Entity
 @Table(name = "billing_storage_volume_usage", indexes = {
-        @Index(columnList = "timestamp"),
-        @Index(columnList = "user"),
-        @Index(columnList = "lab")
+    @Index(columnList = "timestamp"),
+    @Index(columnList = "user"),
+    @Index(columnList = "lab")
 })
 public class StorageVolumeUsage extends AbstractPersistable<Long> implements BalanceEntry {
 
@@ -24,7 +26,8 @@ public class StorageVolumeUsage extends AbstractPersistable<Long> implements Bal
     private long scaledToPayValue;
     private long day;
 
-    public StorageVolumeUsage(long user, long lab, long timestamp, int volumesCount, long charge, long balance, long scaledToPayValue, long day) {
+    public StorageVolumeUsage(long user, long lab, long timestamp, int volumesCount, long charge, long balance,
+                              long scaledToPayValue, long day) {
         this.user = user;
         this.lab = lab;
         this.timestamp = timestamp;
@@ -35,7 +38,8 @@ public class StorageVolumeUsage extends AbstractPersistable<Long> implements Bal
         this.day = day;
     }
 
-    public StorageVolumeUsage() {}
+    public StorageVolumeUsage() {
+    }
 
     public long getUser() {
         return user;
@@ -105,19 +109,39 @@ public class StorageVolumeUsage extends AbstractPersistable<Long> implements Bal
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         StorageVolumeUsage that = (StorageVolumeUsage) o;
 
-        if (user != that.user) return false;
-        if (lab != that.lab) return false;
-        if (timestamp != that.timestamp) return false;
-        if (volumesCount != that.volumesCount) return false;
-        if (charge != that.charge) return false;
-        if (balance != that.balance) return false;
-        if (scaledToPayValue != that.scaledToPayValue) return false;
+        if (user != that.user) {
+            return false;
+        }
+        if (lab != that.lab) {
+            return false;
+        }
+        if (timestamp != that.timestamp) {
+            return false;
+        }
+        if (volumesCount != that.volumesCount) {
+            return false;
+        }
+        if (charge != that.charge) {
+            return false;
+        }
+        if (balance != that.balance) {
+            return false;
+        }
+        if (scaledToPayValue != that.scaledToPayValue) {
+            return false;
+        }
         return day == that.day;
 
     }

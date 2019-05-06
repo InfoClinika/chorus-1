@@ -38,7 +38,15 @@ public class Advertisement extends AbstractAggregate {
     @Basic(optional = false)
     private boolean isEnabled;
 
-    public Advertisement(String title, String redirectLink, Date startRollDate, Date endRollDate, String imageName, long imageSize, boolean isEnabled) {
+    public Advertisement(
+        String title,
+        String redirectLink,
+        Date startRollDate,
+        Date endRollDate,
+        String imageName,
+        long imageSize,
+        boolean isEnabled
+    ) {
         this.title = title;
         this.redirectLink = redirectLink;
         this.startRollDate = startRollDate;

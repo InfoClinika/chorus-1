@@ -20,8 +20,9 @@ import static com.google.common.collect.FluentIterable.from;
  * @author : Alexander Serebriyan
  */
 @Transactional(readOnly = true)
-public abstract class DefaultSecurityHelper<USER extends UserTemplate, USER_DETAILS extends SecurityHelperTemplate.UserDetails>
-        implements SecurityHelperTemplate<USER_DETAILS>, DefaultTransformingTemplate<USER, USER_DETAILS> {
+public abstract class DefaultSecurityHelper<USER extends UserTemplate,
+    USER_DETAILS extends SecurityHelperTemplate.UserDetails>
+    implements SecurityHelperTemplate<USER_DETAILS>, DefaultTransformingTemplate<USER, USER_DETAILS> {
 
     @Inject
     private UserRepositoryTemplate<USER> userRepository;
@@ -41,8 +42,18 @@ public abstract class DefaultSecurityHelper<USER extends UserTemplate, USER_DETA
         String emailRequest = changeEmailRequest == null ? null : changeEmailRequest.getEmail();
         //noinspection unchecked
         final ImmutableSet<Long> labIds = from(user.getLabs()).transform(EntityUtil.ENTITY_TO_ID).toSet();
-        return new UserDetails(user.getId(), user.getPersonData().getFirstName(), user.getPersonData().getLastName(), user.getEmail(),
-                user.getPasswordHash(), user.isAdmin(), user.isEmailVerified(), user.getLastModification(), labIds, emailRequest);
+        return new UserDetails(
+            user.getId(),
+            user.getPersonData().getFirstName(),
+            user.getPersonData().getLastName(),
+            user.getEmail(),
+            user.getPasswordHash(),
+            user.isAdmin(),
+            user.isEmailVerified(),
+            user.getLastModification(),
+            labIds,
+            emailRequest
+        );
 
     }
 

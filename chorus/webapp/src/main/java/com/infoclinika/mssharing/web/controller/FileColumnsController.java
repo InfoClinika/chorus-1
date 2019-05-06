@@ -1,6 +1,5 @@
 package com.infoclinika.mssharing.web.controller;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -27,10 +26,9 @@ import static com.infoclinika.mssharing.platform.web.security.RichUser.getUserId
 public class FileColumnsController extends ErrorHandler {
 
     @Inject
-    private DashboardReader dashboardReader;
-
-    @Inject
     protected ColumnViewHelper columnViewHelper;
+    @Inject
+    private DashboardReader dashboardReader;
 
     public FileColumnsController() {
     }
@@ -50,18 +48,22 @@ public class FileColumnsController extends ErrorHandler {
     @RequestMapping(method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void createOrUpdateColumnOrder(@RequestBody ColumnOrderRequest request, Principal principal) {
-        ImmutableSet<ColumnViewHelper.ColumnInfo> columnInfos = from(request.columns).transform(new Function<ColumnOrderRequest.OrderedColumnsRequest, ColumnViewHelper.ColumnInfo>() {
-            @Override
-            public ColumnViewHelper.ColumnInfo apply(ColumnOrderRequest.OrderedColumnsRequest input) {
-                return new ColumnViewHelper.ColumnInfo(input.columnId, input.order);
-            }
-        }).toSet();
+        ImmutableSet<ColumnViewHelper.ColumnInfo> columnInfos = from(request.columns)
+            .transform(input -> new ColumnViewHelper.ColumnInfo(input.columnId, input.order))
+            .toSet();
 
-        Optional<ColumnViewHelper.ColumnView> primaryView = columnViewHelper.readPrimary(getUserId(principal), ColumnViewHelper.ColumnViewType.FILE);
+        Optional<ColumnViewHelper.ColumnView> primaryView =
+            columnViewHelper.readPrimary(getUserId(principal), ColumnViewHelper.ColumnViewType.FILE);
         if (primaryView.isPresent()) {
             columnViewHelper.updateView(getUserId(principal), primaryView.get(), columnInfos);
         } else {
-            columnViewHelper.createView(getUserId(principal), ColumnViewHelper.ColumnViewType.FILE, request.name, columnInfos, request.isPrimary);
+            columnViewHelper.createView(
+                getUserId(principal),
+                ColumnViewHelper.ColumnViewType.FILE,
+                request.name,
+                columnInfos,
+                request.isPrimary
+            );
         }
     }
 
@@ -86,7 +88,10 @@ public class FileColumnsController extends ErrorHandler {
     @RequestMapping(value = "/selected", method = RequestMethod.GET)
     @ResponseBody
     public ImmutableSortedSet<ColumnViewHelper.ColumnInfo> getPrimaryOrDefault(Principal principal) {
-        return columnViewHelper.getPrimaryColumnSetOrDefault(getUserId(principal), ColumnViewHelper.ColumnViewType.FILE);
+        return columnViewHelper.getPrimaryColumnSetOrDefault(
+            getUserId(principal),
+            ColumnViewHelper.ColumnViewType.FILE
+        );
     }
 
     @RequestMapping(value = "/default/columns", method = RequestMethod.GET)

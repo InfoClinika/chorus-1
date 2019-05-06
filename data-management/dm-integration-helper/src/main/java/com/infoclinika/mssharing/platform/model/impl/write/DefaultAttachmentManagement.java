@@ -5,6 +5,7 @@ import com.infoclinika.mssharing.platform.entity.Attachment;
 import com.infoclinika.mssharing.platform.fileserver.StoredObjectPathsTemplate;
 import com.infoclinika.mssharing.platform.fileserver.model.NodePath;
 import com.infoclinika.mssharing.platform.model.AccessDenied;
+import com.infoclinika.mssharing.platform.model.ActionsNotAllowedException;
 import com.infoclinika.mssharing.platform.model.RuleValidator;
 import com.infoclinika.mssharing.platform.model.helper.write.AttachmentsManager;
 import com.infoclinika.mssharing.platform.model.write.AttachmentManagementTemplate;
@@ -41,18 +42,14 @@ public class DefaultAttachmentManagement<ATTACHMENT extends Attachment> implemen
     @Override
     public long newAttachment(long actor, String fileName, long sizeInBytes) {
 
-        return attachmentsManager
-                .createAttachment(actor, fileName, sizeInBytes)
-                .getId();
+        return attachmentsManager.createAttachment(actor, fileName, sizeInBytes).getId();
 
     }
 
     @Override
     public long copyAttachment(long originId, long actor, boolean isProject) {
 
-        return attachmentsManager
-                .copyAttachment(originId, actor, getNodePathFn(isProject))
-                .getId();
+        return attachmentsManager.copyAttachment(originId, actor, getNodePathFn(isProject)).getId();
 
     }
 
@@ -84,42 +81,41 @@ public class DefaultAttachmentManagement<ATTACHMENT extends Attachment> implemen
     }
 
     private void beforeDiscardAttachment(long actor, long attachment) {
-
-        if (!ruleValidator.canModifyAttachment(actor, attachment)) {
-            throw new AccessDenied("User cannot discard the attachment. User ID = " + actor + ". Attachment ID = " + attachment);
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
         }
-
+        if (!ruleValidator.canModifyAttachment(actor, attachment)) {
+            throw new AccessDenied(
+                "User cannot discard the attachment. User ID = " + actor + ". Attachment ID = " + attachment
+            );
+        }
     }
 
     protected void beforeUpdateExperimentAttachments(long actor, long experiment) {
-
-        checkAccess(ruleValidator.userHasEditPermissionsOnExperiment(actor, experiment),
-                "User cannot edit the attachments for the experiment. User ID = " + actor + ". Experiment ID = " + experiment);
-
-
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
+        }
+        checkAccess(
+            ruleValidator.userHasEditPermissionsOnExperiment(actor, experiment),
+            "User cannot edit the attachments for the experiment. User ID = " + actor + ". Experiment ID = " +
+                experiment
+        );
     }
 
 
     protected void beforeUpdateProjectAttachments(long actor, long project) {
-
-        if (!ruleValidator.hasWriteAccessOnProject(actor, project)) {
-            throw new AccessDenied("User cannot edit the attachments for the project. User ID = " + actor + ". Project ID = " + project);
+        if (!ruleValidator.canUserPerformActions(actor)) {
+            throw new ActionsNotAllowedException(actor);
         }
-
+        if (!ruleValidator.hasWriteAccessOnProject(actor, project)) {
+            throw new AccessDenied(
+                "User cannot edit the attachments for the project. User ID = " + actor + ". Project ID = " + project
+            );
+        }
     }
 
     private Function<ATTACHMENT, NodePath> getNodePathFn(boolean isProject) {
-        return isProject ? new Function<ATTACHMENT, NodePath>() {
-            @Override
-            public NodePath apply(ATTACHMENT input) {
-                return projectAttachmentPath(input);
-            }
-        } : new Function<ATTACHMENT, NodePath>() {
-            @Override
-            public NodePath apply(ATTACHMENT input) {
-                return experimentAttachmentPath(input);
-            }
-        };
+        return isProject ? input -> projectAttachmentPath(input) : input -> experimentAttachmentPath(input);
     }
 
 

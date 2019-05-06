@@ -7,19 +7,22 @@ import com.infoclinika.mssharing.platform.model.read.ProjectReaderTemplate;
 import java.util.Date;
 
 /**
-* @author Herman Zamula
-*/
+ * @author Herman Zamula
+ */
 public class ProjectLine extends ProjectReaderTemplate.ProjectLineTemplate {
     public final boolean blogEnabled;
     public final DashboardReader.ProjectColumns columns;
 
-    public ProjectLine(ProjectReaderTemplate.ProjectLineTemplate other, boolean blogEnabled, DashboardReader.ProjectColumns columns) {
+    public ProjectLine(ProjectReaderTemplate.ProjectLineTemplate other, boolean blogEnabled,
+                       DashboardReader.ProjectColumns columns) {
         super(other);
         this.blogEnabled = blogEnabled;
         this.columns = columns;
     }
 
-    public ProjectLine(long id, String name, Date modified, String areaOfResearch, String creatorEmail, AccessLevel accessLevel, LabReaderTemplate.LabLineTemplate lab, String creator, boolean blogEnabled) {
+    public ProjectLine(long id, String name, Date modified, String areaOfResearch, String creatorEmail,
+                       AccessLevel accessLevel, LabReaderTemplate.LabLineTemplate lab, String creator,
+                       boolean blogEnabled) {
         super(id, name, modified, areaOfResearch, creatorEmail, accessLevel, lab, creator);
         this.blogEnabled = blogEnabled;
         this.columns = null;
@@ -27,9 +30,15 @@ public class ProjectLine extends ProjectReaderTemplate.ProjectLineTemplate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProjectLine)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ProjectLine)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         ProjectLine that = (ProjectLine) o;
 

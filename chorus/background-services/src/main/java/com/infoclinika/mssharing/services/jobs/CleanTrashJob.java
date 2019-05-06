@@ -3,7 +3,8 @@ package com.infoclinika.mssharing.services.jobs;
 import com.infoclinika.mssharing.model.internal.repository.*;
 import com.infoclinika.mssharing.model.write.InstrumentManagement;
 import com.infoclinika.mssharing.model.write.StudyManagement;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  * @author Elena Kurilina
  */
 @Service
-public class CleanTrashJob implements DisposableBean{
+public class CleanTrashJob implements DisposableBean {
 
     @Inject
     private DeletedFileMetaDataRepository deletedFileMetaDataRepository;
@@ -34,7 +35,7 @@ public class CleanTrashJob implements DisposableBean{
     @Inject
     private InstrumentManagement instrumentManagement;
 
-    private static final Logger LOGGER = Logger.getLogger(CleanTrashJob.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CleanTrashJob.class);
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
 
@@ -44,7 +45,7 @@ public class CleanTrashJob implements DisposableBean{
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         scheduler.shutdownNow();
     }
 
@@ -60,50 +61,55 @@ public class CleanTrashJob implements DisposableBean{
 
         }
 
-        private void deleteProjects(Collection<DeletedItem> items){
+        private void deleteProjects(Collection<DeletedItem> items) {
             final Date current = new Date();
-            final long hours = applicationSettingsRepository.findHoursToStoreInTrash().value;
-            for(DeletedItem item : items){
-                if(current.getTime() - item.deletionDate.getTime() >= hours * 60 * 1000){
+            final long hours = applicationSettingsRepository.findHoursToStoreInTrash().getValue();
+            for (DeletedItem item : items) {
+                if (current.getTime() - item.deletionDate.getTime() >= hoursToMillis(hours)) {
                     try {
                         studyManagement.removeProject(item.id);
-                        LOGGER.debug("Item was deleted, id: " + item.id);
+                        LOGGER.debug("Item was deleted, id: {}", item.id);
                     } catch (Exception e) {
-                        LOGGER.error("Clean trash is failed for entity: " + item.id, e);
+                        LOGGER.error("Clean trash is failed for entity: {}", item.id, e);
                     }
                 }
             }
         }
 
-        private void deleteFiles(Collection<DeletedItem> items){
+        private void deleteFiles(Collection<DeletedItem> items) {
             final Date current = new Date();
-            final long hours = applicationSettingsRepository.findHoursToStoreInTrash().value;
-            for(DeletedItem item : items){
-                if(current.getTime() - item.deletionDate.getTime() >= hours * 60 * 1000){
+            final long hours = applicationSettingsRepository.findHoursToStoreInTrash().getValue();
+            for (DeletedItem item : items) {
+                if (current.getTime() - item.deletionDate.getTime() >= hoursToMillis(hours)) {
                     try {
                         instrumentManagement.deleteFile(item.id);
-                        LOGGER.debug("Item was deleted, id: " + item.id);
+                        LOGGER.debug("Item was deleted, id: {}", item.id);
                     } catch (Exception e) {
-                        LOGGER.error("Clean trash is failed for entity: " + item.id, e);
+                        LOGGER.error("Clean trash is failed for entity: {}", item.id, e);
                     }
                 }
             }
         }
 
-        private void deleteExperiments(Collection<DeletedItem> items){
+        private void deleteExperiments(Collection<DeletedItem> items) {
             final Date current = new Date();
-            final long hours = applicationSettingsRepository.findHoursToStoreInTrash().value;
-            for(DeletedItem item : items){
-                if(current.getTime() - item.deletionDate.getTime() >= hours * 60 * 1000){
+            final long hours = applicationSettingsRepository.findHoursToStoreInTrash().getValue();
+            for (DeletedItem item : items) {
+                if (current.getTime() - item.deletionDate.getTime() >= hoursToMillis(hours)) {
                     try {
                         studyManagement.removeExperiment(item.id);
-                        LOGGER.debug("Item was deleted, id: " + item.id);
+                        LOGGER.debug("Item was deleted, id: {}", item.id);
                     } catch (Exception e) {
-                        LOGGER.error("Clean trash is failed for entity: " + item.id, e);
+                        LOGGER.error("Clean trash is failed for entity: {}", item.id, e);
                     }
                 }
             }
         }
+
+    }
+
+    private long hoursToMillis(long hours) {
+        return hours * 60 * 1000;
     }
 
 

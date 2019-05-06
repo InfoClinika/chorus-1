@@ -5,6 +5,7 @@ public class MatrixDto {
 
     private String[][] matrix;
     private String clazz;
+
     public MatrixDto(String[][] matrix, String clazz) {
         this.matrix = matrix;
         this.clazz = clazz;

@@ -5,16 +5,18 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Longs;
-import com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType;
-import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
 import com.infoclinika.mssharing.model.internal.entity.payment.ChargeableItem;
 import com.infoclinika.mssharing.model.internal.repository.ChargeableItemRepository;
 import com.infoclinika.mssharing.model.internal.repository.FeatureUsageByUser;
-import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader;
-import com.infoclinika.mssharing.services.billing.persistence.helper.PaymentCalculationsHelper;
 import com.infoclinika.mssharing.services.billing.persistence.enity.ChargeableItemUsage;
+import com.infoclinika.mssharing.services.billing.persistence.helper.PaymentCalculationsHelper;
+import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader;
+import com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader.UsageLine;
 import com.infoclinika.mssharing.services.billing.persistence.repository.FeatureUsageRepository;
-import org.apache.log4j.Logger;
+import com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType;
+import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.inject.Inject;
@@ -23,10 +25,9 @@ import java.util.*;
 import static com.google.common.base.Optional.fromNullable;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.common.collect.Sets.newHashSet;
-import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType.BYTE;
 import static com.infoclinika.mssharing.model.internal.read.Transformers.transformFeature;
 import static com.infoclinika.mssharing.services.billing.persistence.read.ChargeableItemUsageReader.UsageByUser;
-import static java.lang.String.format;
+import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingChargeType.BYTE;
 
 /**
  * @author Herman Zamula
@@ -41,9 +42,10 @@ public abstract class AbstractFeatureLogStrategy implements FeatureLogStrategy {
     private ChargeableItemRepository featureRepository;
     private final FeatureUsageRepository<?> featureUsageRepository;
 
-    protected final Logger logger = Logger.getLogger(this.getClass());
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    protected AbstractFeatureLogStrategy(ChargeableItem.Feature feature, FeatureUsageRepository<?> featureUsageRepository) {
+    protected AbstractFeatureLogStrategy(ChargeableItem.Feature feature,
+                                         FeatureUsageRepository<?> featureUsageRepository) {
         this.feature = feature;
         this.featureUsageRepository = featureUsageRepository;
     }
@@ -53,30 +55,34 @@ public abstract class AbstractFeatureLogStrategy implements FeatureLogStrategy {
         return billingFeature.equals(feature);
     }
 
-    protected final Comparator<ChargeableItemUsage> dateComparator = (o1, o2) -> Longs.compare(o1.getTimestamp(), o2.getTimestamp());
+    protected final Comparator<ChargeableItemUsage> dateComparator =
+        (o1, o2) -> Longs.compare(o1.getTimestamp(), o2.getTimestamp());
 
     protected final Ordering<ChargeableItemUsage> itemUsageOrdering = Ordering.from(dateComparator);
 
     @Override
     public ChargeableItemUsageReader.ChargeableItemBill readBill(long lab, Date dateFrom, Date dateTo) {
-        logger.debug(format("Reading bill for lab {%d}. From {%s} to {%s}", lab, dateFrom, dateTo));
+        logger.debug("Reading bill for lab {}. From {} to {}", lab, dateFrom, dateTo);
 
         final long fromInMills = dateFrom.getTime();
         final long toInMills = dateTo.getTime();
 
         final Long unscaled = featureUsageRepository.sumAllRawPricesByLabUnscaled(lab, fromInMills, toInMills);
         logger.debug("Price was read...");
-        final List<? extends ChargeableItemUsage> itemUsages = featureUsageRepository.findByLab(lab, fromInMills, toInMills);
+        final List<? extends ChargeableItemUsage> itemUsages =
+            featureUsageRepository.findByLab(lab, fromInMills, toInMills);
         logger.debug("Usages was read...");
-        final List<FeatureUsageByUser> usageByUsers = featureUsageRepository.groupUsagesByUser(lab, fromInMills, toInMills);
+        final List<FeatureUsageByUser> usageByUsers =
+            featureUsageRepository.groupUsagesByUser(lab, fromInMills, toInMills);
         logger.debug("Usages by user was read...");
         Long filesCount = featureUsageRepository.countFiles(lab, fromInMills, toInMills);
-        if(filesCount == null) {
+        if (filesCount == null) {
             filesCount = 0L;
         }
 
-        logger.debug(format("Invoice data loaded. Total price {%d}, usages size: {%d}, usages by user: {%d}, files count: {%d}",
-                unscaled, itemUsages.size(), usageByUsers.size(), filesCount));
+        logger.debug("Invoice data loaded. Total price {}, usages size: {}, usages by user: {}, files count: {}",
+            unscaled, itemUsages.size(), usageByUsers.size(), filesCount
+        );
 
         return transformToChargeableItemBill(itemUsages, BYTE, usageByUsers, filesCount, unscaled, false);
 
@@ -85,55 +91,61 @@ public abstract class AbstractFeatureLogStrategy implements FeatureLogStrategy {
     @Override
     public ChargeableItemUsageReader.ChargeableItemBill readShortBill(final long lab, Date day) {
 
-        logger.debug(format("Reading {%s} feature bill for lab {%d}. Day {%s}", this.getClass().getSimpleName(), lab, day));
+        logger.debug("Reading {} feature bill for lab {}. Day {}", this.getClass().getSimpleName(), lab, day);
 
         final int daySinceEpoch = paymentCalculations.calculationDaySinceEpoch(day);
 
         final Long unscaled = featureUsageRepository.sumAllRawPricesByLabUnscaled(lab, daySinceEpoch);
         logger.debug("Price was read...");
-        final List<? extends ChargeableItemUsage> groupedByLab = featureUsageRepository.findGroupedByLab(lab, daySinceEpoch);
+        final List<? extends ChargeableItemUsage> groupedByLab =
+            featureUsageRepository.findGroupedByLab(lab, daySinceEpoch);
         logger.debug("Usages was read...");
         final List<FeatureUsageByUser> usageByUsers = featureUsageRepository.groupUsagesByUser(lab, daySinceEpoch);
         logger.debug("Usages by user was read...");
         Long filesCount = featureUsageRepository.countFiles(lab, daySinceEpoch);
-        if(filesCount == null) {
+        if (filesCount == null) {
             filesCount = 0L;
         }
 
-        logger.debug(format("Invoice data loaded. Total price {%d}, usages size: {%d}, usages by user: {%d}, files count: {%d}",
-                unscaled, groupedByLab.size(), usageByUsers.size(), filesCount));
+        logger.debug("Invoice data loaded. Total price {}, usages size: {}, usages by user: {}, files count: {}",
+            unscaled, groupedByLab.size(), usageByUsers.size(), filesCount
+        );
 
         return transformToChargeableItemBill(groupedByLab, BYTE, usageByUsers, filesCount, unscaled, true);
     }
 
-    protected ChargeableItemUsageReader.ChargeableItemBill transformToChargeableItemBill(List<? extends ChargeableItemUsage> logs,
-                                                                                         BillingChargeType chargeType,
-                                                                                         List<FeatureUsageByUser> usageByUsers,
-                                                                                         long filesCount, long unscaledTotal,
-                                                                                         boolean withoutPerFile) {
+    protected ChargeableItemUsageReader.ChargeableItemBill transformToChargeableItemBill(
+        List<? extends ChargeableItemUsage> logs,
+        BillingChargeType chargeType,
+        List<FeatureUsageByUser> usageByUsers,
+        long filesCount, long unscaledTotal,
+        boolean withoutPerFile) {
 
         final BillingFeature billingFeature = transformFeature(feature);
         final FeatureUsageContext featureUsage = transformToUsageByUser(logs, usageByUsers, withoutPerFile);
         final ChargeableItem chargeableItem = featureRepository.findByFeature(feature);
 
         return new ChargeableItemUsageReader.ChargeableItemBill(billingFeature.getValue(),
-                paymentCalculations.unscalePrice(unscaledTotal),
-                billingFeature,
-                featureUsage.getTotalValueUsage(),
-                chargeType,
-                featureUsage.getUsageByUsers(),
-                Optional.of(filesCount),
-                featureUsage.getUsageByUsers().size(),
-                chargeableItem.getPrice(), unscaledTotal);
+            paymentCalculations.unscalePrice(unscaledTotal),
+            billingFeature,
+            featureUsage.getTotalValueUsage(),
+            chargeType,
+            featureUsage.getUsageByUsers(),
+            Optional.of(filesCount),
+            featureUsage.getUsageByUsers().size(),
+            chargeableItem.getPrice(), unscaledTotal
+        );
     }
 
-    private FeatureUsageContext transformToUsageByUser(List<? extends ChargeableItemUsage> usages, List<FeatureUsageByUser> usageByUsers, boolean withoutPerFile) {
+    private FeatureUsageContext transformToUsageByUser(List<? extends ChargeableItemUsage> usages,
+                                                       List<FeatureUsageByUser> usageByUsers, boolean withoutPerFile) {
 
         final FeatureUsageContext featureUsage = new FeatureUsageContext();
         Map<Long, Map<Long, Set<ChargeableItemUsage>>> usageMap = transformToUsage(usages);
 
         for (FeatureUsageByUser usageByUser : usageByUsers) {
-            final FeatureUsageContext byUser = processUser(usageByUser, fromNullable(usageMap.get(usageByUser.getUser())).or(of()), withoutPerFile);
+            final FeatureUsageContext byUser =
+                processUser(usageByUser, fromNullable(usageMap.get(usageByUser.getUser())).or(of()), withoutPerFile);
             featureUsage.addToTotalAmount(byUser.getTotalAmount());
             featureUsage.getUsageByUsers().addAll(byUser.getUsageByUsers());
             featureUsage.addToTotalValueUsage(byUser.getTotalValueUsage());
@@ -142,12 +154,13 @@ public abstract class AbstractFeatureLogStrategy implements FeatureLogStrategy {
         return featureUsage;
     }
 
-    private Map<Long, Map<Long, Set<ChargeableItemUsage>>> transformToUsage(List<? extends ChargeableItemUsage> usages) {
+    private Map<Long, Map<Long, Set<ChargeableItemUsage>>> transformToUsage(
+        List<? extends ChargeableItemUsage> usages) {
 
         Map<Long, Map<Long, Set<ChargeableItemUsage>>> usageMap = new HashMap<>();
 
         for (ChargeableItemUsage usage : usages) {
-            final long user = fromNullable(usage.getUser()).or(0l);
+            final long user = fromNullable(usage.getUser()).or(0L);
             if (usageMap.get(user) == null) {
                 usageMap.put(user, new HashMap<>());
             }
@@ -162,16 +175,17 @@ public abstract class AbstractFeatureLogStrategy implements FeatureLogStrategy {
     }
 
     @SuppressWarnings("all")
-    private FeatureUsageContext processUser(FeatureUsageByUser usageByUser, Map<Long, Set<ChargeableItemUsage>> usagePerUser, boolean withoutPerFile) {
+    private FeatureUsageContext processUser(FeatureUsageByUser usageByUser,
+                                            Map<Long, Set<ChargeableItemUsage>> usagePerUser, boolean withoutPerFile) {
 
         final FeatureUsageContext featureUsage = new FeatureUsageContext();
-        final Function<Set<ChargeableItemUsage>, ChargeableItemUsageReader.UsageLine> usageLineFn = usageLineFn();
-        final ImmutableSet.Builder<ChargeableItemUsageReader.UsageLine> usageLines = ImmutableSet.builder();
+        final Function<Set<ChargeableItemUsage>, UsageLine> usageLineFn = usageLineFn();
+        final ImmutableSet.Builder<UsageLine> usageLines = ImmutableSet.builder();
 
         long total = 0;
         long totalUnscaledPrice = 0;
         for (Long file : usagePerUser.keySet()) {
-            final ChargeableItemUsageReader.UsageLine usageLine = usageLineFn.apply(usagePerUser.get(file));
+            final UsageLine usageLine = usageLineFn.apply(usagePerUser.get(file));
             total += usageLine.usedFeatureValue;
             totalUnscaledPrice += usageLine.loggedPrice;
             if (!withoutPerFile) {
@@ -181,15 +195,17 @@ public abstract class AbstractFeatureLogStrategy implements FeatureLogStrategy {
 
         final long finalPriceByUser = paymentCalculations.unscalePriceNotRound(totalUnscaledPrice);
 
-        featureUsage.getUsageByUsers().add(new UsageByUser(usageByUser.getUserName(), usageByUser.getUser(), total, finalPriceByUser,
-                usageLines.build(), usageByUser.getFilesCount(), 0));
+        featureUsage.getUsageByUsers()
+            .add(new UsageByUser(usageByUser.getUserName(), usageByUser.getUser(), total, finalPriceByUser,
+                usageLines.build(), usageByUser.getFilesCount(), 0
+            ));
         featureUsage.setTotalValueUsage(total);
         featureUsage.setTotalAmount(finalPriceByUser);
 
         return featureUsage;
     }
 
-    protected abstract Function<Set<ChargeableItemUsage>, ChargeableItemUsageReader.UsageLine> usageLineFn();
+    protected abstract Function<Set<ChargeableItemUsage>, UsageLine> usageLineFn();
 
     protected class FeatureUsageContext {
         private long totalAmount = 0;

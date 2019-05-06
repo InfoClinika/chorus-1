@@ -11,7 +11,6 @@ import com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.ProjectRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.ProjectSharingRequestRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.UserRepositoryTemplate;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,14 +55,15 @@ public class DefaultProjectSharingRequestManagement implements ProjectSharingReq
         final Map<Long, SharingManagementTemplate.Access> colleagues = newHashMap();
         colleagues.put(requester, SharingManagementTemplate.Access.READ);
 
-        sharingManager.updateSharingPolicy(projectCreator.getId(), project, colleagues, new HashMap<Long, SharingManagementTemplate.Access>(), false);
+        sharingManager.updateSharingPolicy(projectCreator.getId(), project, colleagues, new HashMap<>(), false);
 
-        final ProjectSharingRequestTemplate resolvedRequest = sharingRequestRepository.findByRequesterAndProject(requester, project);
+        final ProjectSharingRequestTemplate resolvedRequest =
+            sharingRequestRepository.findByRequesterAndProject(requester, project);
 
         final String projectName = projectRepository.findOne(resolvedRequest.getProjectId()).getName();
         inboxNotifier.notify(projectCreator.getId(), requester,
-                "Your request for accessing the experiment data has been approved. " +
-                        "Now the \"" + projectName + "\" project is shared to you."
+            "Your request for accessing the experiment data has been approved. " +
+                "Now the \"" + projectName + "\" project is shared to you."
         );
 
         notifier.projectSharingApproved(requester, projectName, resolvedRequest.getDownloadExperimentLinks());
@@ -76,13 +76,16 @@ public class DefaultProjectSharingRequestManagement implements ProjectSharingReq
     public void refuseSharingProject(long actor, long project, long requester, String refuseComment) {
         final UserTemplate projectCreator = checkPresence(userRepository.findOne(actor));
 
-        final ProjectSharingRequestTemplate resolvedRequest = sharingRequestRepository.findByRequesterAndProject(requester, project);
+        final ProjectSharingRequestTemplate resolvedRequest =
+            sharingRequestRepository.findByRequesterAndProject(requester, project);
         final String projectName = projectRepository.findOne(resolvedRequest.getProjectId()).getName();
         notifier.projectSharingRejected(requester, projectName, refuseComment);
 
-        inboxNotifier.notify(projectCreator.getId(), requester,
-                "Unfortunately your request to access the experiment in the private project \"" + projectName + "\" has been rejected. " +
-                        "Rejection comment: " + refuseComment
+        inboxNotifier.notify(
+            projectCreator.getId(),
+            requester,
+            "Unfortunately your request to access the experiment in the private project \"" + projectName +
+                "\" has been rejected. Rejection comment: " + refuseComment
         );
 
         sharingRequestRepository.delete(resolvedRequest);

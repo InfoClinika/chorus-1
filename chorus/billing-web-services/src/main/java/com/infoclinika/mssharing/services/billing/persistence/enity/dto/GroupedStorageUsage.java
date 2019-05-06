@@ -14,12 +14,10 @@ public class GroupedStorageUsage<T extends ChargeableItemUsage> {
     @NotNull
     public final Long hours;
     public final long summedCharge;
-    public final long summedTranslatedCharge;
 
-    public GroupedStorageUsage(T itemUsage, Long hours, long summedCharge, long summedTranslatedCharge) {
+    public GroupedStorageUsage(T itemUsage, Long hours, long summedCharge) {
         this.itemUsage = itemUsage;
         this.hours = hours;
         this.summedCharge = summedCharge;
-        this.summedTranslatedCharge = summedTranslatedCharge;
     }
 }

@@ -9,8 +9,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 
-import javax.inject.Provider;
-import java.util.Date;
 import java.util.TimeZone;
 
 /**

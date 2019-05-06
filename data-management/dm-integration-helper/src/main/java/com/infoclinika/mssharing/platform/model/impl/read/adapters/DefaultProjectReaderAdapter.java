@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
  * @author Herman Zamula
  */
 @Component
-public class DefaultProjectReaderAdapter extends DefaultProjectReader<ProjectTemplate, ProjectReaderTemplate.ProjectLineTemplate> {
+public class DefaultProjectReaderAdapter
+    extends DefaultProjectReader<ProjectTemplate, ProjectReaderTemplate.ProjectLineTemplate> {
     @Override
     public ProjectLineTemplate transform(ProjectTemplate projectTemplate) {
         return projectReaderHelper.getDefaultTransformer().apply(projectTemplate);

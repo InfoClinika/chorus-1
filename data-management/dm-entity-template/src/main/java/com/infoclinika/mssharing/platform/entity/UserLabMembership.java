@@ -6,6 +6,7 @@ import org.hibernate.annotations.FetchMode;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import java.util.Objects;
 
 /**
  * @author Herman Zamula
@@ -61,18 +62,16 @@ public class UserLabMembership<U extends UserTemplate<?>, L extends LabTemplate<
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof UserLabMembership)) {
             return false;
         }
         if (!super.equals(o)) {
             return false;
         }
-
-        UserLabMembership that = (UserLabMembership) o;
-
-        return head == that.head && !(lab != null ? !lab.equals(that.lab) : that.lab != null)
-                && !(user != null ? !user.equals(that.user) : that.user != null);
-
+        UserLabMembership<?, ?> that = (UserLabMembership<?, ?>) o;
+        return head == that.head &&
+            Objects.equals(user, that.user) &&
+            Objects.equals(lab, that.lab);
     }
 
     @Override

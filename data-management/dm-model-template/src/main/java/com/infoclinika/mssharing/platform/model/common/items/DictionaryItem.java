@@ -12,12 +12,7 @@ public class DictionaryItem {
      * Name for special "Unspecified" dictionary items
      */
     public static final String UNSPECIFIED_NAME = "Unspecified";
-    public static final Predicate<DictionaryItem> UNSPECIFIED = new Predicate<DictionaryItem>() {
-        @Override
-        public boolean apply(@Nullable DictionaryItem input) {
-            return input != null && input.isUnspecified();
-        }
-    };
+    public static final Predicate<DictionaryItem> UNSPECIFIED = input -> input != null && input.isUnspecified();
     public final long id;
     public final String name;
 
@@ -33,8 +28,12 @@ public class DictionaryItem {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         DictionaryItem that = (DictionaryItem) o;
 

@@ -2,6 +2,7 @@
     <div class="ellipsize" ng-switch="type">
         <span set-text="value | fileSize" ng-switch-when="size"></span>
         <span set-text="value | date" ng-switch-when="date"></span>
+        <span set-text="value" ng-switch-when="boolean"></span>
         <span set-text="value" set-title="cellTitle" ng-switch-default></span>
     </div>
 </div>

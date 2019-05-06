@@ -2,7 +2,8 @@ package com.infoclinika.mssharing.platform.model.impl.helper;
 
 import com.infoclinika.mssharing.platform.model.helper.CorsRequestSignerTemplate;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -19,13 +20,14 @@ import static com.infoclinika.mssharing.platform.fileserver.StorageService.DELIM
  */
 public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSignerTemplate {
 
-    protected static final String PROTOCOL = "https://";
-    protected static final String S3_URL = PROTOCOL + "s3.amazonaws.com";
-    protected static final String MIME_TYPE = "application/octet-stream";
-    protected static final String AMAZON_UPLOAD_HEADERS = "x-amz-acl:private";
-    protected static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
-    protected static final String UTF_8 = "UTF-8";
-    private static final Logger LOG = Logger.getLogger(AmazonCorsRequestSignerTemplate.class);
+    private static final String PROTOCOL = "https://";
+    private static final String S3_URL = PROTOCOL + "s3.amazonaws.com";
+    private static final String MIME_TYPE = "application/octet-stream";
+    private static final String AMAZON_UPLOAD_HEADERS = "x-amz-acl:private";
+    private static final String AMAZON_SECURITY_TOKEN_HEADER = "x-amz-security-token";
+    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+    private static final String UTF_8 = "UTF-8";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AmazonCorsRequestSignerTemplate.class);
 
     protected static String getAmzFormattedDate() {
         final Date date = new Date();
@@ -71,6 +73,8 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
 
     protected abstract String getAmazonKey();
 
+    public abstract String getAmazonToken();
+
     @Override
     public String signSingleFileUploadRequest(long userId, String objectName) {
 
@@ -82,20 +86,21 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
 
 
         String stringToSign = "PUT\n\n"
-                + MIME_TYPE + "\n"
-                + expireTime + "\n"
-                + AMAZON_UPLOAD_HEADERS + "\n"
-                + DELIMITER + bucket + DELIMITER + objectName;
+            + MIME_TYPE + "\n"
+            + expireTime + "\n"
+            + AMAZON_UPLOAD_HEADERS + "\n"
+            + (useSessionToken() ? AMAZON_SECURITY_TOKEN_HEADER + ":" + getAmazonToken() + "\n" : "")
+            + DELIMITER + bucket + DELIMITER + objectName;
 
         String signature = urlencode(calculateRFC2104HMAC(stringToSign, getAmazonSecret()));
 
         return urlencode(S3_URL + DELIMITER + bucket + DELIMITER + objectName
-                + "?AWSAccessKeyId=" + getAmazonKey() + "&Expires=" + expireTime + "&Signature=" + signature);
+            + "?AWSAccessKeyId=" + getAmazonKey() + "&Expires=" + expireTime + "&Signature=" + signature);
     }
 
     @Override
     public SignedRequest signForSingleFileUploadRequest(long userId, String objectName) {
-        return new SignedRequest(null, signSingleFileUploadRequest(userId, objectName), null);
+        return new SignedRequest(null, signSingleFileUploadRequest(userId, objectName), null, getAmazonToken());
     }
 
     protected void beforeSignSingleFileUploadRequest(long userId, String objectName) {
@@ -113,20 +118,21 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
 
         final String queryParams = "?uploads";
         String stringToSign = "POST\n\n"
-                + "\n"
-                + "\n"
-                + AMAZON_UPLOAD_HEADERS + "\n"
-                + "x-amz-date:" + formattedDate + "\n"
-                + DELIMITER + bucket + DELIMITER + objectName + queryParams;
+            + "\n"
+            + "\n"
+            + AMAZON_UPLOAD_HEADERS + "\n"
+            + "x-amz-date:" + formattedDate + "\n"
+            + (useSessionToken() ? AMAZON_SECURITY_TOKEN_HEADER + ":" + getAmazonToken() + "\n" : "")
+            + DELIMITER + bucket + DELIMITER + objectName + queryParams;
 
-        LOG.info(" **** StringToSign: " + stringToSign);
+        LOGGER.info(" **** StringToSign: {}", stringToSign);
 
         final String signature = calculateRFC2104HMAC(stringToSign, getAmazonSecret());
 
         final String authorization = "AWS " + getAmazonKey() + ":" + signature;
         final String host = PROTOCOL + bucket + ".s3.amazonaws.com" + DELIMITER + objectName + queryParams;
 
-        return new SignedRequest(formattedDate, host, authorization);
+        return new SignedRequest(formattedDate, host, authorization, getAmazonToken());
     }
 
     protected void beforeSignInitialUploadRequest(long userId, String objectName) {
@@ -145,19 +151,20 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
 
         final String queryParams = "?partNumber=" + partNumber + "&uploadId=" + uploadId;
         String stringToSign = "PUT\n\n"
-                + MIME_TYPE + "\n"
-                + "\n"
-                + "x-amz-date:" + formattedDate + "\n"
-                + DELIMITER + objectBucket + DELIMITER + objectName + queryParams;
+            + MIME_TYPE + "\n"
+            + "\n"
+            + "x-amz-date:" + formattedDate + "\n"
+            + (useSessionToken() ? AMAZON_SECURITY_TOKEN_HEADER + ":" + getAmazonToken() + "\n" : "")
+            + DELIMITER + objectBucket + DELIMITER + objectName + queryParams;
 
-        LOG.info(" **** StringToSign: " + stringToSign);
+        LOGGER.info(" **** StringToSign: {}", stringToSign);
 
         final String signature = calculateRFC2104HMAC(stringToSign, getAmazonSecret());
 
         final String authorization = "AWS " + getAmazonKey() + ":" + signature;
         final String host = PROTOCOL + objectBucket + ".s3.amazonaws.com" + DELIMITER + objectName + queryParams;
 
-        return new SignedRequest(formattedDate, host, authorization);
+        return new SignedRequest(formattedDate, host, authorization, getAmazonToken());
     }
 
     protected void beforeSignUploadPartRequest(String uploadId, String objectName, long partNumber, String uploadId1) {
@@ -175,19 +182,20 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
 
         final String queryParams = "?uploadId=" + uploadId;
         String stringToSign = "GET\n\n"
-                + "\n"
-                + "\n"
-                + "x-amz-date:" + formattedDate + "\n"
-                + DELIMITER + objectBucket + DELIMITER + objectName + queryParams;
+            + "\n"
+            + "\n"
+            + "x-amz-date:" + formattedDate + "\n"
+            + (useSessionToken() ? AMAZON_SECURITY_TOKEN_HEADER + ":" + getAmazonToken() + "\n" : "")
+            + DELIMITER + objectBucket + DELIMITER + objectName + queryParams;
 
-        LOG.info(" **** StringToSign: " + stringToSign);
+        LOGGER.info(" **** StringToSign: {}", stringToSign);
 
         final String signature = calculateRFC2104HMAC(stringToSign, getAmazonSecret());
 
         final String authorization = "AWS " + getAmazonKey() + ":" + signature;
         final String host = PROTOCOL + objectBucket + ".s3.amazonaws.com" + DELIMITER + objectName + queryParams;
 
-        return new SignedRequest(formattedDate, host, authorization);
+        return new SignedRequest(formattedDate, host, authorization, getAmazonToken());
     }
 
     protected void beforeSignListPartsRequest(long userId, String objectName, String uploadId) {
@@ -205,19 +213,20 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
 
         final String queryParams = "?uploadId=" + uploadId;
         String stringToSign = "DELETE\n\n"
-                + "\n"
-                + "\n"
-                + "x-amz-date:" + formattedDate + "\n"
-                + DELIMITER + objectBucket + DELIMITER + objectName + queryParams;
+            + "\n"
+            + "\n"
+            + "x-amz-date:" + formattedDate + "\n"
+            + (useSessionToken() ? AMAZON_SECURITY_TOKEN_HEADER + ":" + getAmazonToken() + "\n" : "")
+            + DELIMITER + objectBucket + DELIMITER + objectName + queryParams;
 
-        LOG.info(" **** StringToSign: " + stringToSign);
+        LOGGER.info(" **** StringToSign: {}", stringToSign);
 
         final String signature = calculateRFC2104HMAC(stringToSign, getAmazonSecret());
 
         final String authorization = "AWS " + getAmazonKey() + ":" + signature;
         final String host = PROTOCOL + objectBucket + ".s3.amazonaws.com" + DELIMITER + objectName + queryParams;
 
-        return new SignedRequest(formattedDate, host, authorization);
+        return new SignedRequest(formattedDate, host, authorization, getAmazonToken());
     }
 
     protected void beforeSignAbortUploadRequest(long userId, String objectName, String uploadId) {
@@ -227,7 +236,8 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
     // --- Helper methods ----
 
     @Override
-    public SignedRequest signCompleteUploadRequest(long userId, String objectName, String uploadId, boolean addCharsetToContentType) {
+    public SignedRequest signCompleteUploadRequest(long userId, String objectName, String uploadId,
+                                                   boolean addCharsetToContentType) {
 
         beforeSignCompleteUploadRequest(userId, objectName, uploadId, addCharsetToContentType);
 
@@ -237,24 +247,27 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
 
         final String queryParams = "?uploadId=" + uploadId;
         final String textXmlContentType = "text/xml";
-        final String contentType = addCharsetToContentType ? (textXmlContentType + "; charset=UTF-8") : textXmlContentType;
+        final String contentType =
+            addCharsetToContentType ? (textXmlContentType + "; charset=UTF-8") : textXmlContentType;
         String stringToSign = "POST\n\n"
-                + contentType + "\n"
-                + "\n"
-                + "x-amz-date:" + formattedDate + "\n"
-                + DELIMITER + bucket + DELIMITER + objectName + queryParams;
+            + contentType + "\n"
+            + "\n"
+            + "x-amz-date:" + formattedDate + "\n"
+            + (useSessionToken() ? AMAZON_SECURITY_TOKEN_HEADER + ":" + getAmazonToken() + "\n" : "")
+            + DELIMITER + bucket + DELIMITER + objectName + queryParams;
 
-        LOG.info(" **** StringToSign: " + stringToSign);
+        LOGGER.info(" **** StringToSign: {}", stringToSign);
 
         final String signature = calculateRFC2104HMAC(stringToSign, getAmazonSecret());
 
         final String authorization = "AWS " + getAmazonKey() + ":" + signature;
         final String host = PROTOCOL + bucket + ".s3.amazonaws.com" + DELIMITER + objectName + queryParams;
 
-        return new SignedRequest(formattedDate, host, authorization);
+        return new SignedRequest(formattedDate, host, authorization, getAmazonToken());
     }
 
-    protected void beforeSignCompleteUploadRequest(long userId, String objectName, String uploadId, boolean addCharsetToContentType) {
+    protected void beforeSignCompleteUploadRequest(long userId, String objectName, String uploadId,
+                                                   boolean addCharsetToContentType) {
 
     }
 
@@ -262,6 +275,4 @@ public abstract class AmazonCorsRequestSignerTemplate implements CorsRequestSign
     public boolean useServerSideEncryption() {
         return false;
     }
-
-
 }

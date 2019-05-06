@@ -1,6 +1,8 @@
+"use strict";
 
-angular.module("billing-back", ["ngResource"]).
-    factory("Billing", function ($resource) {
+(function () {
+
+    angular.module("billing-back", ["ngResource"]).factory("Billing", function ($resource) {
         return $resource("../billing/:path/:id", {}, {
             "getInvoice": {method: "GET", params: {path: "invoice"}},
             "register": {method: "GET", params: {path: "register"}},
@@ -22,7 +24,10 @@ angular.module("billing-back", ["ngResource"]).
             "updatePlan": {method: "PUT", params: {path: "updatePlan"}},
             "cancelUpdatePlan": {method: "PUT", params: {path: "cancelUpdatePlan"}},
             "listLabAccountFeatures": {method: "GET", params: {path: "labAccountFeatures"}},
-            "updateLabAccountSubscriptionDetails": {method: "PUT", params: {path: "updateLabAccountSubscriptionDetails"}},
+            "updateLabAccountSubscriptionDetails": {
+                method: "PUT",
+                params: {path: "updateLabAccountSubscriptionDetails"}
+            },
             "updateProcessingFeatureState": {method: "PUT", params: {path: "updateProcessingFeatureState"}},
             "adminTopUp": {method: "POST", params: {path: "topup"}},
             "getFeaturesPrices": {method: "GET", params: {path: "featuresPrices"}},
@@ -34,3 +39,5 @@ angular.module("billing-back", ["ngResource"]).
             "checkCanMakeAccountFree": {method: "GET", params: {path: "checkCanMakeAccountFree"}}
         });
     });
+
+})();

@@ -1,0 +1,48 @@
+<table class="table uploading-files transfer-process table-striped">
+    <colgroup>
+        <col class="file-name"/>
+        <col class="upload-details"/>
+        <col/>
+    </colgroup>
+    <tbody>
+    <tr ng-repeat="item in uploadItems">
+        <td title="{{item.name}}">
+            <div class="ellipsize" ng-bind="item.name"></div>
+        </td>
+        <td>
+            <!-- State Info -->
+            <span ng-show="item.status == 'waiting'" class="current-state-info">{{item.size | fileSize}}&nbsp;&nbsp;&nbsp;Waiting</span>
+            <span ng-show="item.status == 'removing'" class="current-state-info">{{item.size | fileSize}}&nbsp;&nbsp;&nbsp;Removing</span>
+            <span ng-show="item.status == 'in-progress'" class="current-state-info">
+                {{item.uploaded | fileSize}} of {{item.size | fileSize}} ({{stats.uploadSpeed | uploadSpeed}})
+                &nbsp;&nbsp;&nbsp;
+                {{item.remainingTimeFormatted}}&nbsp;remaining</span>
+            <span ng-show="item.status == 'done'" class="current-state-info">{{item.uploaded | fileSize}} of {{item.size | fileSize}}</span>
+            <span ng-show="item.status == 'zipping-wait'" class="current-state-info">Waiting for zip</span>
+            <span ng-show="item.status == 'zipping'" class="current-state-info">Zipping...</span>
+
+            <!-- Done mark... -->
+            <span ng-show="item.status == 'done'" class="done">Done</span>
+
+            <span ng-show="item.status == 'failed'" class="done">Failed</span>
+
+            <!-- ...Or progress bar for incomplete items -->
+            <div ng-show="item.status == 'in-progress'" class="progress-bar active">
+                <div class="done-strip" ng-style="{width: item.completePercentageFormatted + '%'}"></div>
+            </div>
+            <div ng-show="item.status == 'waiting' || item.status == 'zipping' || item.status == 'zipping-wait'"
+                 class="progress-bar ">
+                <div class="done-strip" style="width:0;"></div>
+            </div>
+            <!--<span ng-show="item.status == 'done'">Upload time: {{ item.uploadTime | timeInterval }}</span>-->
+        </td>
+        <td>
+            <!-- Operations -->
+            <span ng-show="item.status == 'done'" class="icon upload-done"></span>
+            <span ng-show="item.status == 'failed'" class="icon"></span>
+            <i ng-show="item.status == 'waiting' || item.status == 'in-progress'" ng-click="removeUploadingItem(item)"
+               class="icon item-delete" title="Remove item from upload scope"></i>
+        </td>
+    </tr>
+    </tbody>
+</table>

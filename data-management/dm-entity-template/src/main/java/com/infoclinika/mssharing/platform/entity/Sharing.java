@@ -116,7 +116,9 @@ public class Sharing<U extends UserTemplate<?>, P extends ProjectTemplate<?, ?, 
         PUBLIC, SHARED, PRIVATE
     }
 
-    public enum Access {READ, WRITE}
+    public enum Access {
+        READ, WRITE
+    }
 
 
 }

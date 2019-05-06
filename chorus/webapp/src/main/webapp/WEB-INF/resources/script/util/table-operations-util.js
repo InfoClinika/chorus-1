@@ -1,5 +1,6 @@
 /*** Utility operations for the so called tabular data. E.g. multiple Excel-like cells organized into rows and columns. ***/
 
+"use strict";
 
 //todo[tymchenko]: Discuss if we need to have object-based params (e.g. {getWidth: function() {...}, ...})
 //and callback to process cell after its contents is changed (to highlight?)
@@ -14,33 +15,35 @@ var TableModel = function (getWidth, getHeight, getItemValueAtXY, setItemValueAt
 TableModel.prototype.startWatchingModifications = function ($scope) {
     var tableModel = this;
     $scope.$watch(
-        function() {
+        function () {
             var width = tableModel.getWidth();
             var height = tableModel.getHeight();
             var totalContent = "";
-            for(var x = 0; x < width; x++) {
-                for(var y = 0; y < height; y++) {
+            for (var x = 0; x < width; x++) {
+                for (var y = 0; y < height; y++) {
                     totalContent = totalContent + tableModel.getItemValueAtXY(x, y);
                 }
             }
             return totalContent;
         },
-        function() {
+        function () {
             CommonLogger.log("Table values have been modified.");
 
             //process changes out of current flow to be able to call $apply on our changes
-            setTimeout(function() {tableModel._handlePastedContent($scope);}, 0);
+            setTimeout(function () {
+                tableModel._handlePastedContent($scope);
+            }, 0);
         }
-    )
+    );
 };
 
-TableModel.prototype._handlePastedContent = function($scope) {
+TableModel.prototype._handlePastedContent = function ($scope) {
     var tableModel = this;
     var width = tableModel.getWidth();
     var height = tableModel.getHeight();
 
     //explicitly call $apply to apply the changes to the potentially focused content of the cell (probably, it's a workaround)
-    $scope.$apply(function() {
+    $scope.$apply(function () {
         var pastedContent = [];
 
         var originalPastedWidth = 0;
@@ -49,7 +52,7 @@ TableModel.prototype._handlePastedContent = function($scope) {
         var pastedAtX = 0;
         var pastedAtY = 0;
 
-        var lastColumn = width-1;
+        var lastColumn = width - 1;
 
         for (var y = 0; y < height; y++) {
             for (var x = 0; x < width; x++) {
@@ -58,33 +61,38 @@ TableModel.prototype._handlePastedContent = function($scope) {
                     if (cellValue) {
                         //detect if this is a table-based content
 
-                         function getRows(cellValue) {
+                        function getRows(cellValue) {
                             var index = 0;
                             var escapes = ["\"\n", "\"\t"];
                             var newCellValue = "";
                             var newEscapeSymbol = " ";
 
-                            while(index < cellValue.length){
-                                if(cellValue[index] == "\"") {
+                            while (index < cellValue.length) {
+                                if (cellValue[index] == "\"") {
                                     var multilineRow = "";
-                                    while(index < cellValue.length-1 && ($.inArray(multilineRow[multilineRow.length-1] + cellValue[index + 1], escapes) == -1)){
+                                    while (index < cellValue.length - 1 && $.inArray(
+                                        multilineRow[multilineRow.length - 1] + cellValue[index + 1],
+                                        escapes
+                                    ) == -1) {
                                         multilineRow += cellValue[index];
                                         index++;
-                                        if(cellValue.length < (index + 1)){
+                                        if (cellValue.length < index + 1) {
                                             break;
                                         }
                                     }
                                     multilineRow += cellValue[index];
-                                    newCellValue += multilineRow.slice(1, multilineRow.length-1).replace(/\r\n|\r|\n/g, newEscapeSymbol).replace(/""/g, "\'");
+                                    newCellValue +=
+                                        multilineRow.slice(1, multilineRow.length - 1)
+                                            .replace(/\r\n|\r|\n/g, newEscapeSymbol)
+                                            .replace(/""/g, "\'");
                                     index++;
                                 } else {
                                     newCellValue += cellValue[index];
                                     index++;
                                 }
                             }
-                           return newCellValue.split(/\r\n|\r|\n/g, height);
+                            return newCellValue.split(/\r\n|\r|\n/g, height);
                         }
-
 
 
                         var rows = getRows(cellValue);
@@ -104,15 +112,15 @@ TableModel.prototype._handlePastedContent = function($scope) {
                 }
 
                 if (pastedContent.length != 0
-                    && (x >= pastedAtX) && (y >= pastedAtY)
-                    && ((x - pastedAtX) < originalPastedWidth) && ((y - pastedAtY) < originalPastedHeight)) {
+                    && x >= pastedAtX && y >= pastedAtY
+                    && x - pastedAtX < originalPastedWidth && y - pastedAtY < originalPastedHeight) {
 
                     //pick the value from the left top corner of pasted content and remove it from the pasted content data
                     var value = pastedContent[0][0];
                     tableModel.setItemValueAtXY(x, y, value);
 
                     pastedContent[0].splice(0, 1);
-                    if (pastedContent[0].length == 0 || x==lastColumn) {
+                    if (pastedContent[0].length == 0 || x == lastColumn) {
                         pastedContent.splice(0, 1);
                     }
 
@@ -123,16 +131,15 @@ TableModel.prototype._handlePastedContent = function($scope) {
 };
 
 
-
-function parsePaste(text){
+function parsePaste(text) {
 
     var rows = [];
 
     var STATE_HANDLER = {
-        MULTICELL: function(text, symbol){
-             text.substr()
+        MULTICELL: function (text, symbol) {
+            text.substr();
         },
-        NORMAL: function(text){
+        NORMAL: function (text) {
 
         }
     };

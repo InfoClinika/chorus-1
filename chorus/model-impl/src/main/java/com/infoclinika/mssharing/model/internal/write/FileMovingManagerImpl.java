@@ -1,16 +1,18 @@
 package com.infoclinika.mssharing.model.internal.write;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
-import com.google.common.collect.*;
-import com.infoclinika.analysis.storage.cloud.CloudStorageFactory;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.infoclinika.analysis.storage.cloud.CloudStorageItemReference;
 import com.infoclinika.analysis.storage.cloud.CloudStorageService;
 import com.infoclinika.mssharing.model.GlacierDownloadListeners;
 import com.infoclinika.mssharing.model.Notifier;
 import com.infoclinika.mssharing.model.helper.BillingFeaturesHelper;
 import com.infoclinika.mssharing.model.helper.FileArchivingHelper;
+import com.infoclinika.mssharing.model.internal.cloud.CloudStorageClientsProvider;
 import com.infoclinika.mssharing.model.internal.entity.FileDownloadJob;
 import com.infoclinika.mssharing.model.internal.entity.FilesDownloadGroup;
 import com.infoclinika.mssharing.model.internal.entity.User;
@@ -25,16 +27,14 @@ import com.infoclinika.mssharing.model.write.FileAccessLogService;
 import com.infoclinika.mssharing.model.write.FileMovingManager;
 import com.infoclinika.mssharing.platform.entity.EntityUtil;
 import com.infoclinika.mssharing.platform.model.InboxNotifierTemplate;
+import com.infoclinika.mssharing.propertiesprovider.AmazonPropertiesProvider;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.*;
 
 import static com.google.common.base.Optional.fromNullable;
@@ -53,53 +53,59 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
  */
 @Service
 public class FileMovingManagerImpl implements FileMovingManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileMovingManagerImpl.class);
 
-    @Inject
-    private BillingFeaturesHelper billingFeaturesHelper;
-    @Inject
-    private FileMetaDataRepository fileMetaDataRepository;
-    @Inject
-    private FileDownloadJobRepository fileDownloadJobRepository;
-    @Inject
-    private Notifier notifier;
-    @Inject
-    private FileDownloadGroupRepository downloadGroupRepository;
-    @Inject
-    private UserRepository userRepository;
-    @Inject
-    private InboxNotifierTemplate inboxNotifier;
-    @Inject
-    private GlacierDownloadListeners<ActiveFileMetaData> listeners;
-    @Value("${amazon.active.bucket}")
-    private String rawFilesBucket;
-    @Value("${amazon.archive.bucket}")
-    private String archiveBucket;
-    private static final Logger LOGGER = Logger.getLogger(FileMovingManagerImpl.class);
-    @Inject
-    private FileArchivingHelper fileArchivingHelper;
+    private final BillingFeaturesHelper billingFeaturesHelper;
+    private final FileMetaDataRepository fileMetaDataRepository;
+    private final FileDownloadJobRepository fileDownloadJobRepository;
+    private final Notifier notifier;
+    private final FileDownloadGroupRepository downloadGroupRepository;
+    private final UserRepository userRepository;
+    private final InboxNotifierTemplate inboxNotifier;
+    private final GlacierDownloadListeners<ActiveFileMetaData> listeners;
+    private final FileArchivingHelper fileArchivingHelper;
+    private final AmazonPropertiesProvider amazonPropertiesProvider;
+    private final FileAccessLogService fileAccessLogService;
+    private final CloudStorageClientsProvider cloudStorageClientsProvider;
+
     @SuppressWarnings("all")
     private boolean testMode = false;
-    @PersistenceContext(unitName = "mssharing")
-    private EntityManager em;
-    private final TransactionTemplate transactionTemplate;
 
     @Inject
-    private FileAccessLogService fileAccessLogService;
-
-    @Inject
-    public FileMovingManagerImpl(PlatformTransactionManager platformTransactionManager) {
-        this.transactionTemplate = new TransactionTemplate(platformTransactionManager);
+    public FileMovingManagerImpl(PlatformTransactionManager platformTransactionManager,
+                                 GlacierDownloadListeners<ActiveFileMetaData> listeners,
+                                 BillingFeaturesHelper billingFeaturesHelper,
+                                 FileMetaDataRepository fileMetaDataRepository,
+                                 CloudStorageClientsProvider cloudStorageClientsProvider,
+                                 FileDownloadJobRepository fileDownloadJobRepository,
+                                 Notifier notifier,
+                                 FileDownloadGroupRepository downloadGroupRepository,
+                                 UserRepository userRepository,
+                                 InboxNotifierTemplate inboxNotifier,
+                                 FileArchivingHelper fileArchivingHelper,
+                                 AmazonPropertiesProvider amazonPropertiesProvider,
+                                 FileAccessLogService fileAccessLogService) {
+        this.listeners = listeners;
+        this.billingFeaturesHelper = billingFeaturesHelper;
+        this.fileMetaDataRepository = fileMetaDataRepository;
+        this.cloudStorageClientsProvider = cloudStorageClientsProvider;
+        this.fileDownloadJobRepository = fileDownloadJobRepository;
+        this.notifier = notifier;
+        this.downloadGroupRepository = downloadGroupRepository;
+        this.userRepository = userRepository;
+        this.inboxNotifier = inboxNotifier;
+        this.fileArchivingHelper = fileArchivingHelper;
+        this.amazonPropertiesProvider = amazonPropertiesProvider;
+        this.fileAccessLogService = fileAccessLogService;
     }
 
     @Override
     public void requestExperimentFilesUnarchiving(long experimentId, Collection<Long> actors) {
-
-        final Iterable<ActiveFileMetaData> filteredFiles = filter(fileMetaDataRepository.findByExperiment(experimentId), not(new Predicate<ActiveFileMetaData>() {
-            @Override
-            public boolean apply(ActiveFileMetaData input) {
-                return input.getStorageData().getStorageStatus().equals(UNARCHIVED);
-            }
-        }));
+        final Iterable<ActiveFileMetaData> filteredFiles =
+            filter(
+                fileMetaDataRepository.findByExperiment(experimentId),
+                not(input -> input.getStorageData().getStorageStatus().equals(UNARCHIVED))
+            );
 
         FilesDownloadGroup downloadGroup = downloadGroupRepository.findByExperiment(experimentId);
         if (downloadGroup == null) {
@@ -131,9 +137,7 @@ public class FileMovingManagerImpl implements FileMovingManager {
 
     @Override
     public void requestFileUnarchiving(long file) {
-
         processUnarchivingRequest(file);
-
     }
 
     @Override
@@ -144,15 +148,31 @@ public class FileMovingManagerImpl implements FileMovingManager {
     }
 
     private void requestUnarchiving(Long file, String listenerId) {
-        final FileDownloadJob job = fromNullable(fileDownloadJobRepository.findByFileMetaDataId(file)).or(requestNewDownloadJob(file));
+        final FileDownloadJob fileDownloadJob = fileDownloadJobRepository.findByFileMetaDataId(file);
+        final FileDownloadJob job = fromNullable(fileDownloadJob).or(requestNewDownloadJob(file));
         job.listener = listenerId;
         fileDownloadJobRepository.save(job);
     }
 
+    private void requestUnarchiving(Long file, FilesDownloadGroup downloadGroup) {
+        final FileDownloadJob fileDownloadJob = fileDownloadJobRepository.findByFileMetaDataId(file);
+        final FileDownloadJob job = fromNullable(fileDownloadJob).or(requestNewDownloadJob(file));
+        prepareToUnarchiving(job.fileMetaData);
+        fileDownloadJobRepository.save(job);
+        downloadGroup.getJobs().add(job);
+    }
+
     @Override
     public void moveToArchiveStorage(long file) {
-        LOGGER.info("*** Move file from analysable storage to archive storage: " + file);
+        LOGGER.info("*** Move file from analysable storage to archive storage: {}", file);
         moveFileToArchiveStorage(file);
+    }
+
+    @Override
+    public void moveToArchiveStorage(Collection<Long> files) {
+        for (Long file : files) {
+            moveFileToArchiveStorage(file);
+        }
     }
 
     @Override
@@ -174,10 +194,15 @@ public class FileMovingManagerImpl implements FileMovingManager {
         final ActiveFileMetaData metaData = fileMetaDataRepository.findOne(file);
 
         if (metaData.getArchiveId() == null && metaData.getContentId() != null) {
-            LOGGER.warn("*** Requesting to unarchive file that is not in archive yet. Content id: " + metaData.getContentId());
+            LOGGER.warn(
+                "*** Requesting to unarchive file that is not in archive yet. Content id: {}",
+                metaData.getContentId()
+            );
         } else {
-            checkState(fileArchivingHelper.requestUnarchive(metaData.getArchiveId(),
-                    metaData.getStorageData().isArchivedDownloadOnly()), "Unarchive request failed");
+            checkState(fileArchivingHelper.requestUnarchive(
+                metaData.getArchiveId(),
+                metaData.getStorageData().isArchivedDownloadOnly()
+            ), "Unarchive request failed");
         }
 
         prepareToUnarchiving(metaData);
@@ -188,15 +213,6 @@ public class FileMovingManagerImpl implements FileMovingManager {
         file.getStorageData().setStorageStatus(StorageData.Status.UNARCHIVING_REQUESTED);
         file.setLastAccess(new Date());
         fileMetaDataRepository.save(file);
-    }
-
-    private void requestUnarchiving(Long file, FilesDownloadGroup downloadGroup) {
-
-        final FileDownloadJob job = fromNullable(fileDownloadJobRepository.findByFileMetaDataId(file)).or(requestNewDownloadJob(file));
-        prepareToUnarchiving(job.fileMetaData);
-        fileDownloadJobRepository.save(job);
-        downloadGroup.getJobs().add(job);
-
     }
 
     @Override
@@ -239,30 +255,30 @@ public class FileMovingManagerImpl implements FileMovingManager {
 
     @Override
     public void deleteFromStorage(String key) {
-        deleteFromS3(rawFilesBucket, key);
+        deleteFromS3(amazonPropertiesProvider.getActiveBucket(), key);
     }
 
     @Override
     public void deleteFromArchiveStorage(String key) {
-        deleteFromS3(archiveBucket, key);
+        deleteFromS3(amazonPropertiesProvider.getArchiveBucket(), key);
     }
 
     private void deleteFromS3(String bucket, String contentId) {
         if (!isEmpty(contentId)) {
             final CloudStorageItemReference reference = new CloudStorageItemReference(bucket, contentId);
-            LOGGER.warn("DELETING file from S3: " + reference);
-            final CloudStorageService cloudStorageService = CloudStorageFactory.service();
+            LOGGER.warn("DELETING file from S3: {}", reference);
+            final CloudStorageService cloudStorageService = cloudStorageClientsProvider.getCloudStorageService();
             if (cloudStorageService.existsAtCloud(reference)) {
                 cloudStorageService.deleteFromCloud(reference);
             } else {
-                LOGGER.debug("File is not found on S3 by key: " + reference);
+                LOGGER.debug("File is not found on S3 by key: {}", reference);
             }
         }
     }
 
     @Override
     public void moveReadyToUnarchiveToAnalysableStorage() {
-        final CloudStorageService cloudStorageService = CloudStorageFactory.service();
+        final CloudStorageService cloudStorageService = cloudStorageClientsProvider.getCloudStorageService();
         final Iterable<FileDownloadJob> jobs = fileDownloadJobRepository.findNotCompleted();
 
         final Map<Long, Set<Long>> usersToNotify = newHashMap();
@@ -274,33 +290,29 @@ public class FileMovingManagerImpl implements FileMovingManager {
 
 
             if (archiveId == null && file.getContentId() != null) {
-
-                LOGGER.warn("*** Skipping direct checking for file restoration. File already in analysable storage" + file.getContentId());
+                LOGGER.warn(
+                    "*** Skipping direct checking for file restoration. File already in analysable storage {}",
+                    file.getContentId()
+                );
 
                 final Map<Long, Set<Long>> usersFilesToNotify = handleUnarchivedJob(job);
-
                 usersFilesToNotify.forEach((key, value) -> usersToNotify.merge(key, value, Sets::union));
-
             } else if (fileArchivingHelper.isArchiveReadyToRestore(archiveId)) {
-
-                LOGGER.info("Restore file. ID=" + file.getId() + ". path: " + archiveId);
+                LOGGER.info("Restore file. ID= {}. path: ", file.getId(), archiveId);
 
                 final Map<Long, Set<Long>> usersFilesToNotify = handleUnarchivedJob(job);
-
                 usersFilesToNotify.forEach((key, value) -> usersToNotify.merge(key, value, Sets::union));
-
-
-            } else if (cloudStorageService.existsAtCloud(new CloudStorageItemReference(rawFilesBucket, file.getArchiveId()))) {
+            } else if (cloudStorageService.existsAtCloud(new CloudStorageItemReference(
+                amazonPropertiesProvider.getActiveBucket(),
+                file.getArchiveId()
+            ))) {
                 //For test data (real file already moved to storage)
+                LOGGER.warn("*** File already present in analyzable storage. File: {}", file.getArchiveId());
 
-                LOGGER.warn("*** File already present in analyzable storage. File: " + file.getArchiveId());
-
-                final Map<Long, Set<Long>> usersFilesToNotify = processJobAndSaveMovementToStorage(job, file.getArchiveId());
-
+                final Map<Long, Set<Long>> usersFilesToNotify =
+                    processJobAndSaveMovementToStorage(job, file.getArchiveId());
                 usersFilesToNotify.forEach((key, value) -> usersToNotify.merge(key, value, Sets::union));
-
             }
-
         }
 
         usersToNotify.forEach(this::sendDownloadReadyNotifications);
@@ -309,11 +321,14 @@ public class FileMovingManagerImpl implements FileMovingManager {
     @Override
     public void moveToArchiveExpiredUnarchivedFiles() {
         final List<ActiveFileMetaData> files = fileMetaDataRepository.findUnarchivedWIthExpirationTime();
-        final Date current = new Date();
+
         for (ActiveFileMetaData file : files) {
-            final Date lastUnarchiveTimestamp = file.getStorageData().getLastUnarchiveTimestamp();
             if (file.getArchiveId() != null && fileArchivingHelper.isArchived(file.getArchiveId())) {
-                LOGGER.info("*** Save expired unarchived file movement. File id: " + file.getId() + ", archiveId: " + file.getArchiveId());
+                LOGGER.info(
+                    "*** Save expired unarchived file movement. File id: {}, archiveId: {}",
+                    file.getId(),
+                    file.getArchiveId()
+                );
                 saveMovementToArchive(file, checkNotNull(file.getArchiveId()));
             }
         }
@@ -324,7 +339,10 @@ public class FileMovingManagerImpl implements FileMovingManager {
         final Long lab = metaData.getInstrument().getLab().getId();
         if (billingFeaturesHelper.isFeatureEnabled(lab, BillingFeature.ANALYSE_STORAGE)) {
             if (metaData.getArchiveId() == null && metaData.getContentId() != null) {
-                LOGGER.warn("** Skipping move file to analyzable storage. Content id is already exists. File: " + metaData.getContentId());
+                LOGGER.warn(
+                    "** Skipping move file to analyzable storage. Content id is already exists. File: {}",
+                    metaData.getContentId()
+                );
                 if (metaData.getStorageData().isArchivedDownloadOnly()) {
                     return processUnarchivedFileInArchiveStorage(job);
                 } else {
@@ -364,40 +382,51 @@ public class FileMovingManagerImpl implements FileMovingManager {
         return usersToNotify;
     }
 
-    @Override
-    public void moveToArchiveStorage(Collection<Long> files) {
-        for (Long file : files) {
-            moveFileToArchiveStorage(file);
-        }
-    }
-
     private void moveFileToArchiveStorage(Long file) {
-        final CloudStorageService cloudStorageService = CloudStorageFactory.service();
+        final CloudStorageService cloudStorageService = cloudStorageClientsProvider.getCloudStorageService();
         final ActiveFileMetaData metaData = fileMetaDataRepository.findOne(file);
         final Optional<String> contentId = Optional.fromNullable(metaData.getContentId());
         if (!contentId.isPresent()) {
-            LOGGER.error("**** Trying move the file to archive without content id specified. File: " + file);
+            LOGGER.error("**** Trying move the file to archive without content id specified. File: {}", file);
             return;
         }
-        final Optional<String> archiveId = Optional.fromNullable(fileArchivingHelper.moveToArchiveStorage(contentId.get()));
+        if (metaData.isReadOnly()) {
+            LOGGER.warn("**** Trying move the readonly file to archive. File: {}", file);
+            return;
+        }
+
+        final Optional<String> archiveId =
+            Optional.fromNullable(fileArchivingHelper.moveToArchiveStorage(contentId.get()));
 
         if (archiveId.isPresent()) {
 
             saveMovementToArchive(metaData, archiveId.get());
 
-        } else if (cloudStorageService.existsAtCloud(new CloudStorageItemReference(archiveBucket, contentId.get()))) { //For test data
+        } else if (cloudStorageService.existsAtCloud(new CloudStorageItemReference(
+            amazonPropertiesProvider.getArchiveBucket(),
+            contentId.get()
+        ))) { //For test data
 
-            LOGGER.info("*** Skip move file to archive storage. File already present at archive content id: " + contentId.get());
+            LOGGER.info(
+                "*** Skip move file to archive storage. File already present at archive content id: {}",
+                contentId.get()
+            );
             saveMovementToArchive(metaData, contentId.get());
 
-        } else if (cloudStorageService.existsAtCloud(new CloudStorageItemReference(rawFilesBucket, contentId.get()))) { //For test data
+        } else if (cloudStorageService.existsAtCloud(new CloudStorageItemReference(
+            amazonPropertiesProvider.getActiveBucket(),
+            contentId.get()
+        ))) { //For test data
 
-            LOGGER.info("*** File already present in analysable storage content id: " + contentId.get());
+            LOGGER.info("*** File already present in analysable storage content id: {}", contentId.get());
             metaData.getStorageData().setStorageStatus(UNARCHIVED);
             fileMetaDataRepository.save(metaData);
-
         } else {
-            LOGGER.error("*** File is not present nether in archive nor analysable storage. File: " + file + ", Content Id: " + contentId.get());
+            LOGGER.error(
+                "*** File is not present nether in archive nor analysable storage. File: {}, Content Id: {}",
+                file,
+                contentId.get()
+            );
         }
     }
 
@@ -421,24 +450,21 @@ public class FileMovingManagerImpl implements FileMovingManager {
     }
 
     private Map<Long, Set<Long>> processJobForNotify(FileDownloadJob job) {
-
         final Collection<FilesDownloadGroup> groups = downloadGroupRepository.findByJob(Sets.newHashSet(job));
-
         final Map<Long, Set<Long>> userFilesMapToNotify = new HashMap<>();
 
         for (FilesDownloadGroup group : groups) {
             if (isGroupCompleted(group)) {
-
                 for (User user : group.getNotifiers()) {
-
-                    final Set<Long> files = group.getJobs().stream().map(input -> input.fileMetaData.getId()).collect(toSet());
+                    final Set<Long> files = group.getJobs()
+                        .stream()
+                        .map(input -> input.fileMetaData.getId())
+                        .collect(toSet());
                     userFilesMapToNotify.merge(user.getId(), files, Sets::union);
-
                 }
 
                 downloadGroupRepository.delete(group);
                 deleteJobsForGroup(group);
-
             }
         }
 
@@ -446,12 +472,9 @@ public class FileMovingManagerImpl implements FileMovingManager {
         fileDownloadJobRepository.flush();
 
         return userFilesMapToNotify;
-
     }
 
-
     private void deleteJobsForGroup(FilesDownloadGroup group) {
-
         final Set<FileDownloadJob> jobs = group.getJobs();
         final ImmutableList.Builder<FileDownloadJob> toDeleteBuilder = ImmutableList.builder();
 
@@ -466,7 +489,6 @@ public class FileMovingManagerImpl implements FileMovingManager {
         final ImmutableList<FileDownloadJob> toDeleteList = toDeleteBuilder.build();
         fileDownloadJobRepository.delete(toDeleteList);
         group.getJobs().removeAll(toDeleteList);
-
     }
 
 
@@ -478,10 +500,10 @@ public class FileMovingManagerImpl implements FileMovingManager {
     private boolean isGroupCompleted(FilesDownloadGroup group) {
         boolean completed = true;
         for (FileDownloadJob job : group.getJobs()) {
-            if (!job.isCompleted())
+            if (!job.isCompleted()) {
                 completed = false;
+            }
         }
         return completed;
     }
-
 }

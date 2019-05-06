@@ -33,34 +33,21 @@ import static com.infoclinika.mssharing.platform.model.DefaultTransformers.toPag
  */
 @Transactional(readOnly = true)
 public abstract class DefaultSearcherTemplate<
-        PROJECT extends ProjectTemplate,
-        EXPERIMENT extends ExperimentTemplate,
-        FILE extends FileMetaDataTemplate,
-        INSTRUMENT extends InstrumentTemplate,
-        PROJECT_LINE extends ProjectLineTemplate,
-        EXPERIMENT_LINE extends ExperimentLineTemplate,
-        FILE_LINE extends FileLineTemplate,
-        INSTRUMENT_LINE extends InstrumentLineTemplate
-        > implements SearcherTemplate<PROJECT_LINE, EXPERIMENT_LINE, FILE_LINE, INSTRUMENT_LINE> {
+    PROJECT extends ProjectTemplate,
+    EXPERIMENT extends ExperimentTemplate,
+    FILE extends FileMetaDataTemplate,
+    INSTRUMENT extends InstrumentTemplate,
+    PROJECT_LINE extends ProjectLineTemplate,
+    EXPERIMENT_LINE extends ExperimentLineTemplate,
+    FILE_LINE extends FileLineTemplate,
+    INSTRUMENT_LINE extends InstrumentLineTemplate
+    > implements SearcherTemplate<PROJECT_LINE, EXPERIMENT_LINE, FILE_LINE, INSTRUMENT_LINE> {
 
-    private final Function<PROJECT, PROJECT_LINE> projectTransformer = new Function<PROJECT, PROJECT_LINE>() {
-        @Override
-        public PROJECT_LINE apply(PROJECT input) {
-            return transformProject(input);
-        }
-    };
-    private final Function<AccessedInstrument<INSTRUMENT>, INSTRUMENT_LINE> instrumentTransformer = new Function<AccessedInstrument<INSTRUMENT>, INSTRUMENT_LINE>() {
-        @Override
-        public INSTRUMENT_LINE apply(AccessedInstrument<INSTRUMENT> input) {
-            return transformInstrument(input);
-        }
-    };
-    private final Function<EXPERIMENT, EXPERIMENT_LINE> experimentTransformer = new Function<EXPERIMENT, EXPERIMENT_LINE>() {
-        @Override
-        public EXPERIMENT_LINE apply(EXPERIMENT input) {
-            return transformExperiment(input);
-        }
-    };
+    private final Function<PROJECT, PROJECT_LINE> projectTransformer = input -> transformProject(input);
+    private final Function<AccessedInstrument<INSTRUMENT>, INSTRUMENT_LINE> instrumentTransformer =
+        input -> transformInstrument(input);
+    private final Function<EXPERIMENT, EXPERIMENT_LINE> experimentTransformer =
+        input -> transformExperiment(input);
     @Inject
     protected ProjectRepositoryTemplate<PROJECT> projectRepository;
     @Inject
@@ -71,12 +58,7 @@ public abstract class DefaultSearcherTemplate<
     protected InstrumentRepositoryTemplate<INSTRUMENT> instrumentRepository;
     @Inject
     protected PagedItemsTransformerTemplate pagedItemsTransformer;
-    private Function<FILE, FILE_LINE> fileTransformer = new Function<FILE, FILE_LINE>() {
-        @Override
-        public FILE_LINE apply(FILE input) {
-            return transformFile(input);
-        }
-    };
+    private Function<FILE, FILE_LINE> fileTransformer = input -> transformFile(input);
 
     @Override
     public ImmutableList<PROJECT_LINE> projects(long actor, String query) {
@@ -99,7 +81,8 @@ public abstract class DefaultSearcherTemplate<
     @Override
     public ImmutableList<INSTRUMENT_LINE> instruments(long actor, String query) {
 
-        final List<AccessedInstrument<INSTRUMENT>> instruments = instrumentRepository.searchInstrumentsAccessed(actor, transformQueryString(query));
+        final List<AccessedInstrument<INSTRUMENT>> instruments =
+            instrumentRepository.searchInstrumentsAccessed(actor, transformQueryString(query));
 
         return afterReadInstruments(instruments, actor, query);
 
@@ -118,9 +101,9 @@ public abstract class DefaultSearcherTemplate<
     public PagedItem<PROJECT_LINE> pagedProjects(long actor, PagedItemInfo pagedItemInfo) {
 
         final Page<PROJECT> itemsPage = projectRepository.searchPagedProjects(
-                actor,
-                transformQueryString(pagedItemInfo.filterQuery),
-                pagedItemsTransformer.toPageRequest(ProjectTemplate.class, pagedItemInfo)
+            actor,
+            transformQueryString(pagedItemInfo.filterQuery),
+            pagedItemsTransformer.toPageRequest(ProjectTemplate.class, pagedItemInfo)
         );
 
         return afterReadProjectsPage(itemsPage, actor, pagedItemInfo);
@@ -131,9 +114,9 @@ public abstract class DefaultSearcherTemplate<
     public PagedItem<PROJECT_LINE> pagedProjectsWithId(long actor, PagedItemInfo pagedItemInfo) {
 
         final Page<PROJECT> itemsPage = projectRepository.searchPagedProjectsWithId(
-                actor,
-                transformQueryString(pagedItemInfo.filterQuery),
-                pagedItemsTransformer.toPageRequest(ProjectTemplate.class, pagedItemInfo)
+            actor,
+            transformQueryString(pagedItemInfo.filterQuery),
+            pagedItemsTransformer.toPageRequest(ProjectTemplate.class, pagedItemInfo)
         );
 
         return afterReadProjectsPage(itemsPage, actor, pagedItemInfo);
@@ -144,9 +127,9 @@ public abstract class DefaultSearcherTemplate<
     public PagedItem<EXPERIMENT_LINE> pagedExperiments(long actor, PagedItemInfo pagedItemInfo) {
 
         final Page<EXPERIMENT> itemsPage = experimentRepository.searchPagedExperiments(
-                actor,
-                transformQueryString(pagedItemInfo.filterQuery),
-                pagedItemsTransformer.toPageRequest(ExperimentTemplate.class, pagedItemInfo)
+            actor,
+            transformQueryString(pagedItemInfo.filterQuery),
+            pagedItemsTransformer.toPageRequest(ExperimentTemplate.class, pagedItemInfo)
         );
 
         return afterReadExperimentsPage(itemsPage, actor, pagedItemInfo);
@@ -157,9 +140,9 @@ public abstract class DefaultSearcherTemplate<
     public PagedItem<FILE_LINE> pagedFiles(long actor, PagedItemInfo pagedItemInfo) {
 
         final Page<FILE> itemsPage = fileMetaDataRepository.searchPagedFiles(
-                actor,
-                transformQueryString(pagedItemInfo.filterQuery),
-                pagedItemsTransformer.toPageRequest(FileMetaDataTemplate.class, pagedItemInfo)
+            actor,
+            transformQueryString(pagedItemInfo.filterQuery),
+            pagedItemsTransformer.toPageRequest(FileMetaDataTemplate.class, pagedItemInfo)
         );
 
         return afterReadFilesPage(itemsPage, actor, pagedItemInfo);
@@ -170,9 +153,9 @@ public abstract class DefaultSearcherTemplate<
     public PagedItem<INSTRUMENT_LINE> pagedInstruments(long actor, PagedItemInfo pagedItemInfo) {
 
         final Page<AccessedInstrument<INSTRUMENT>> itemsPage = instrumentRepository.searchPagedInstrumentsAccessed(
-                actor,
-                transformQueryString(pagedItemInfo.filterQuery),
-                pagedItemsTransformer.toPageRequest(InstrumentTemplate.class, pagedItemInfo)
+            actor,
+            transformQueryString(pagedItemInfo.filterQuery),
+            pagedItemsTransformer.toPageRequest(InstrumentTemplate.class, pagedItemInfo)
         );
 
         return afterReadInstrumentsPage(itemsPage, actor, pagedItemInfo);
@@ -183,17 +166,19 @@ public abstract class DefaultSearcherTemplate<
     protected ImmutableList<PROJECT_LINE> afterReadProjects(List<PROJECT> projects, long actor, String query) {
 
         return from(projects)
-                .transform(projectTransformer)
-                .toList();
+            .transform(projectTransformer)
+            .toList();
 
     }
 
     @SuppressWarnings("unused")
-    protected ImmutableList<EXPERIMENT_LINE> afterReadExperiments(List<EXPERIMENT> experiments, long actor, String query) {
+    protected ImmutableList<EXPERIMENT_LINE> afterReadExperiments(List<EXPERIMENT> experiments,
+                                                                  long actor,
+                                                                  String query) {
 
         return from(experiments)
-                .transform(experimentTransformer)
-                .toList();
+            .transform(experimentTransformer)
+            .toList();
 
     }
 
@@ -201,28 +186,34 @@ public abstract class DefaultSearcherTemplate<
     protected ImmutableList<FILE_LINE> afterReadFiles(List<FILE> files, long actor, String query) {
 
         return from(files)
-                .transform(fileTransformer)
-                .toList();
+            .transform(fileTransformer)
+            .toList();
 
     }
 
     @SuppressWarnings("unused")
-    protected ImmutableList<INSTRUMENT_LINE> afterReadInstruments(List<AccessedInstrument<INSTRUMENT>> instruments, long actor, String query) {
+    protected ImmutableList<INSTRUMENT_LINE> afterReadInstruments(List<AccessedInstrument<INSTRUMENT>> instruments,
+                                                                  long actor,
+                                                                  String query) {
 
         return from(instruments)
-                .transform(instrumentTransformer)
-                .toList();
+            .transform(instrumentTransformer)
+            .toList();
     }
 
     @SuppressWarnings("unused")
-    protected PagedItem<PROJECT_LINE> afterReadProjectsPage(Page<PROJECT> itemsPage, long actor, PagedItemInfo pagedItemInfo) {
+    protected PagedItem<PROJECT_LINE> afterReadProjectsPage(Page<PROJECT> itemsPage,
+                                                            long actor,
+                                                            PagedItemInfo pagedItemInfo) {
 
         return toPagedItem(itemsPage, projectTransformer);
 
     }
 
     @SuppressWarnings("unused")
-    protected PagedItem<EXPERIMENT_LINE> afterReadExperimentsPage(Page<EXPERIMENT> itemsPage, long actor, PagedItemInfo pagedItemInfo) {
+    protected PagedItem<EXPERIMENT_LINE> afterReadExperimentsPage(Page<EXPERIMENT> itemsPage,
+                                                                  long actor,
+                                                                  PagedItemInfo pagedItemInfo) {
 
         return toPagedItem(itemsPage, experimentTransformer);
 
@@ -236,7 +227,9 @@ public abstract class DefaultSearcherTemplate<
     }
 
     @SuppressWarnings("unused")
-    protected PagedItem<INSTRUMENT_LINE> afterReadInstrumentsPage(Page<AccessedInstrument<INSTRUMENT>> itemsPage, long actor, PagedItemInfo pagedItemInfo) {
+    protected PagedItem<INSTRUMENT_LINE> afterReadInstrumentsPage(Page<AccessedInstrument<INSTRUMENT>> itemsPage,
+                                                                  long actor,
+                                                                  PagedItemInfo pagedItemInfo) {
 
         return toPagedItem(itemsPage, instrumentTransformer);
 

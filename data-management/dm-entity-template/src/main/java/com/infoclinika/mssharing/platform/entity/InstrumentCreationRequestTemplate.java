@@ -2,28 +2,31 @@ package com.infoclinika.mssharing.platform.entity;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.Set;
-
-import static com.google.common.collect.Sets.newHashSet;
 
 /**
  * @author Herman Zamula
  */
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class InstrumentCreationRequestTemplate<U extends UserTemplate<?>, L extends LabTemplate<?>> extends AbstractAggregate {
+public abstract class InstrumentCreationRequestTemplate<U extends UserTemplate<?>, L extends LabTemplate<?>>
+    extends AbstractAggregate {
+
     private String name;
+
     @ManyToOne(targetEntity = UserTemplate.class)
     private U requester;
+
     @ManyToOne(targetEntity = InstrumentModel.class)
     private InstrumentModel model;
+
     private String serialNumber;
+
     private String peripherals;
+
     @ManyToOne(targetEntity = LabTemplate.class)
     private L lab;
+
     private Date requestDate;
-    @ManyToMany(fetch = FetchType.EAGER, targetEntity = UserTemplate.class)
-    private Set<U> operators = newHashSet();
 
     public String getName() {
         return name;
@@ -63,14 +66,6 @@ public abstract class InstrumentCreationRequestTemplate<U extends UserTemplate<?
 
     public void setRequestDate(Date requestDate) {
         this.requestDate = requestDate;
-    }
-
-    public Set<U> getOperators() {
-        return operators;
-    }
-
-    public void setOperators(Set<U> operators) {
-        this.operators = operators;
     }
 
     public L getLab() {

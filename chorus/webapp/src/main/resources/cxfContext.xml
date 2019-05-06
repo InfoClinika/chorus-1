@@ -19,7 +19,4 @@
             <bean class="com.infoclinika.mssharing.web.rest.exception.RestExceptionMapper"/>
         </jaxrs:providers>
     </jaxrs:server>
-
-
-
 </beans>

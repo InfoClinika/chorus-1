@@ -11,11 +11,12 @@ import com.infoclinika.mssharing.services.billing.persistence.enity.storage.Dail
 import com.infoclinika.mssharing.services.billing.persistence.enity.storage.DailyArchiveStorageUsage;
 import com.infoclinika.mssharing.services.billing.persistence.repository.FeatureUsageRepository;
 import com.infoclinika.mssharing.services.billing.persistence.repository.MonthlySummaryRepository;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -50,10 +51,9 @@ import static org.joda.time.DateTimeZone.forTimeZone;
  */
 @Component
 public class MonthlySummaryCsvSaver {
-    public static final SimpleDateFormat MONTH_FORMAT = new SimpleDateFormat("yyyy-MM");
-    public static final String SUMMARY_CSV = "summary.csv";
 
-    private static final Logger LOG = Logger.getLogger(MonthlySummaryCsvSaver.class);
+    public static final String SUMMARY_CSV = "summary.csv";
+    private static final Logger LOG = LoggerFactory.getLogger(MonthlySummaryCsvSaver.class);
     private static final String COLUMN_DELIMETER = ",";
     private static final String ROW_DELIMETER = "\n";
     private static final String HOURS = "hours";
@@ -65,6 +65,7 @@ public class MonthlySummaryCsvSaver {
     private static final String BALANCE = "Balance";
     private static final String UTF_8 = "UTF-8";
 
+    public static final SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy-MM");
     private final TimeZone timeZone;
     @Inject
     private LabPaymentAccountRepository accountRepository;
@@ -80,49 +81,46 @@ public class MonthlySummaryCsvSaver {
     private final Map<Class<?>, Function<ChargeableItemUsage, String>> usageLineParsers;
 
     private String defaultUsageLineHeader = join(
-            COLUMN_DELIMETER,
-            "id",
-            "balance",
-            "bytes",
-            "charge",
-            "day",
-            "file",
-            "file name",
-            "instrument",
-            "lab",
-            "scaled to pay value",
-            "timestamp",
-            "user",
-            "user id"
+        COLUMN_DELIMETER,
+        "id",
+        "balance",
+        "bytes",
+        "charge",
+        "day",
+        "file",
+        "file name",
+        "instrument",
+        "lab",
+        "scaled to pay value",
+        "timestamp",
+        "user",
+        "user id"
     );
 
     private final Map<Class<?>, String> usageLineHeaders = ImmutableMap.of(
 
-            DailyAnalyzableStorageUsage.class, join(
-                    COLUMN_DELIMETER,
-                    defaultUsageLineHeader,
-                    HOURS,
-                    "total price",
-                    "translated bytes",
-                    "translated charge"),
+        DailyAnalyzableStorageUsage.class, join(
+            COLUMN_DELIMETER,
+            defaultUsageLineHeader,
+            HOURS,
+            "total price",
+            "translated bytes",
+            "translated charge"
+        ),
 
-            DailyArchiveStorageUsage.class, join(COLUMN_DELIMETER, defaultUsageLineHeader, HOURS),
+        DailyArchiveStorageUsage.class, join(COLUMN_DELIMETER, defaultUsageLineHeader, HOURS),
 
-            ProteinIDSearchUsage.class, join(COLUMN_DELIMETER, defaultUsageLineHeader, EXPERIMENT_ID, EXPERIMENT_NAME),
-
-            PublicDownloadUsage.class, join(COLUMN_DELIMETER, defaultUsageLineHeader, ARCHIVE)
+        PublicDownloadUsage.class, join(COLUMN_DELIMETER, defaultUsageLineHeader, ARCHIVE)
 
     );
 
 
     private final Map<Class<?>, String> nameMap = ImmutableMap.<Class<?>, String>builder()
-            .put(DailyAnalyzableStorageUsage.class, "analyzable_storage.csv")
-            .put(DailyArchiveStorageUsage.class, "archive_storage.csv")
-            .put(ProteinIDSearchUsage.class, "protein_id_search.csv")
-            .put(DownloadUsage.class, "download.csv")
-            .put(PublicDownloadUsage.class, "public_download.csv")
-            .put(TranslationUsage.class, "translation.csv")
-            .build();
+        .put(DailyAnalyzableStorageUsage.class, "analyzable_storage.csv")
+        .put(DailyArchiveStorageUsage.class, "archive_storage.csv")
+        .put(DownloadUsage.class, "download.csv")
+        .put(PublicDownloadUsage.class, "public_download.csv")
+        .build();
 
     @Inject
     protected MonthlySummaryCsvSaver(TimeZone timeZone,
@@ -136,61 +134,57 @@ public class MonthlySummaryCsvSaver {
         DateTimeFormatter pattern = DateTimeFormat.forPattern("yyyy-MM-dd");
 
         this.defaultUsageLineParser = (itemUsage) -> on(COLUMN_DELIMETER).join(
-                ofNullable(itemUsage.getId()).orElse(0L),
-                ofNullable(itemUsage.getBalance()).orElse(0L),
-                ofNullable(itemUsage.getBytes()).orElse(0L),
-                ofNullable(itemUsage.getCharge()).orElse(0L),
-                ofNullable(itemUsage.getDay()).orElse(0L),
-                ofNullable(itemUsage.getFile()).orElse(0L),
-                ofNullable(itemUsage.getFileName()).orElse(UNKNOWN),
-                ofNullable(itemUsage.getInstrument()).orElse(UNKNOWN),
-                ofNullable(itemUsage.getLab()).orElse(0L),
-                ofNullable(itemUsage.getScaledToPayValue()).orElse(0L),
-                ofNullable(itemUsage.getTimestampDate()).map(date -> pattern.print(new DateTime(date, dateTimeZone))).orElse(UNKNOWN),
-                ofNullable(itemUsage.getUsedBy()).orElse(UNKNOWN),
-                ofNullable(itemUsage.getUser()).orElse(0L)
+            ofNullable(itemUsage.getId()).orElse(0L),
+            ofNullable(itemUsage.getBalance()).orElse(0L),
+            ofNullable(itemUsage.getBytes()).orElse(0L),
+            ofNullable(itemUsage.getCharge()).orElse(0L),
+            ofNullable(itemUsage.getDay()).orElse(0L),
+            ofNullable(itemUsage.getFile()).orElse(0L),
+            ofNullable(itemUsage.getFileName()).orElse(UNKNOWN),
+            ofNullable(itemUsage.getInstrument()).orElse(UNKNOWN),
+            ofNullable(itemUsage.getLab()).orElse(0L),
+            ofNullable(itemUsage.getScaledToPayValue()).orElse(0L),
+            ofNullable(itemUsage.getTimestampDate()).map(date -> pattern.print(new DateTime(date, dateTimeZone)))
+                .orElse(UNKNOWN),
+            ofNullable(itemUsage.getUsedBy()).orElse(UNKNOWN),
+            ofNullable(itemUsage.getUser()).orElse(0L)
         );
 
         this.usageLineParsers = ImmutableMap.of(
 
-                DailyAnalyzableStorageUsage.class, itemUsage -> {
-                    final AnalyzableStorageUsage storageUsage = (AnalyzableStorageUsage) itemUsage;
-                    return on(COLUMN_DELIMETER).join(
-                            defaultUsageLineParser.apply(storageUsage),
-                            ofNullable(storageUsage.getHours()).orElse(0),
-                            ofNullable(storageUsage.getTotalPrice()).orElse(0L),
-                            ofNullable(storageUsage.getTranslatedBytes()).orElse(0L),
-                            ofNullable(storageUsage.getTranslatedCharge()).orElse(0L));
-                },
+            DailyAnalyzableStorageUsage.class, itemUsage -> {
+                final AnalyzableStorageUsage storageUsage = (AnalyzableStorageUsage) itemUsage;
+                return on(COLUMN_DELIMETER).join(
+                    defaultUsageLineParser.apply(storageUsage),
+                    ofNullable(storageUsage.getHours()).orElse(0),
+                    ofNullable(storageUsage.getTotalPrice()).orElse(0L)
+                );
+            },
 
-                DailyArchiveStorageUsage.class, itemUsage -> {
-                    final ArchiveStorageUsage storageUsage = (ArchiveStorageUsage) itemUsage;
-                    return on(COLUMN_DELIMETER).join(defaultUsageLineParser.apply(storageUsage), ofNullable(storageUsage.hours).orElse(0));
-                },
+            DailyArchiveStorageUsage.class, itemUsage -> {
+                final ArchiveStorageUsage storageUsage = (ArchiveStorageUsage) itemUsage;
+                return on(COLUMN_DELIMETER)
+                    .join(defaultUsageLineParser.apply(storageUsage), ofNullable(storageUsage.hours).orElse(0));
+            },
 
-                ProteinIDSearchUsage.class, itemUsage -> {
-                    final ProteinIDSearchUsage storageUsage = (ProteinIDSearchUsage) itemUsage;
-                    return on(COLUMN_DELIMETER).join(defaultUsageLineParser.apply(storageUsage),
-                            ofNullable(storageUsage.getExperiment()).orElse(0L), ofNullable(storageUsage.getExperimentName()).orElse(UNKNOWN));
-                },
-
-                PublicDownloadUsage.class, itemUsage -> {
-                    final PublicDownloadUsage storageUsage = (PublicDownloadUsage) itemUsage;
-                    return on(COLUMN_DELIMETER).join(defaultUsageLineParser.apply(storageUsage), storageUsage.isOnArchive());
-                }
+            PublicDownloadUsage.class, itemUsage -> {
+                final PublicDownloadUsage storageUsage = (PublicDownloadUsage) itemUsage;
+                return on(COLUMN_DELIMETER)
+                    .join(defaultUsageLineParser.apply(storageUsage), storageUsage.isOnArchive());
+            }
 
         );
     }
 
     public File saveUsagesToCsv(Date month) {
 
-        LOG.debug("Start saving usages as csv for the date month: " + month);
+        LOG.debug("Start saving usages as csv for the date month: {}", month);
 
         final DateTime dateTime = new DateTime(month, forTimeZone(timeZone));
         final DateTime startOfMonth = dateTime.dayOfMonth().withMinimumValue().millisOfDay().withMinimumValue();
         final DateTime endOfMonth = dateTime.dayOfMonth().withMaximumValue().minuteOfDay().withMaximumValue();
 
-        LOG.debug("Start of month: " + startOfMonth + ", end of month: " + endOfMonth);
+        LOG.debug("Start of month: {}, end of month: {}", startOfMonth, endOfMonth);
 
         final File contentDir = Files.createTempDir();
 
@@ -198,7 +192,7 @@ public class MonthlySummaryCsvSaver {
 
         saveDetailedUsages(startOfMonth, endOfMonth, contentDir);
 
-        LOG.debug("Saving usages as csv has been completed for the date month: " + month);
+        LOG.debug("Saving usages as csv has been completed for the date month: {}", month);
 
         return contentDir;
 
@@ -206,24 +200,24 @@ public class MonthlySummaryCsvSaver {
 
     private void saveDetailedUsages(DateTime startOfMonth, DateTime endOfMonth, File contentDir) {
 
-        LOG.debug("Saving detailed statistics for month: " + startOfMonth);
+        LOG.debug("Saving detailed statistics for month: {}", startOfMonth);
 
         final List<LabPaymentAccount> labs = newArrayList(accountRepository.findAll());
 
-        LOG.debug("Found " + labs.size() + " accounts");
+        LOG.debug("Found {} accounts", labs.size());
 
         iterate(startOfMonth, dateTime -> dateTime.plusDays(1))
-                .limit(endOfMonth.getDayOfMonth())
-                .forEach((day -> {
+            .limit(endOfMonth.getDayOfMonth())
+            .forEach((day -> {
 
-                    final DateTime nextDay = day.plusDays(1);
+                final DateTime nextDay = day.plusDays(1);
 
-                    labs.stream()
-                            .flatMap(account -> featureUsageRepositories.stream()
-                                    .map(repo -> repo.findByLab(account.getLab().getId(), day.getMillis(), nextDay.getMillis())))
-                            .forEach(usages -> saveUsagesAsCsv(usages, day, contentDir));
+                labs.stream()
+                    .flatMap(account -> featureUsageRepositories.stream()
+                        .map(repo -> repo.findByLab(account.getLab().getId(), day.getMillis(), nextDay.getMillis())))
+                    .forEach(usages -> saveUsagesAsCsv(usages, day, contentDir));
 
-                }));
+            }));
 
     }
 
@@ -231,21 +225,23 @@ public class MonthlySummaryCsvSaver {
 
         usages.stream().findFirst().ifPresent(itemUsage -> {
 
-            LOG.info("Saving usages for lab: " + itemUsage.getLab() + ". Day: " + currentDate);
+            LOG.info("Saving usages for lab: {}. Day: {}", itemUsage.getLab(), currentDate);
 
             final Class<? extends ChargeableItemUsage> itemUsageClass = itemUsage.getClass();
 
             final Stream<String> stringStream = usages.stream().map(usage ->
-                    usageLineParsers.getOrDefault(itemUsageClass, defaultUsageLineParser).apply(usage));
+                usageLineParsers.getOrDefault(itemUsageClass, defaultUsageLineParser).apply(usage));
 
             final String name = currentDate.getDayOfMonth() + "_" + nameMap.get(itemUsageClass);
             final File file = createFile(contentDir, itemUsage.getLab(), currentDate, name);
 
             final BufferedWriter writer = newWriter(file);
 
-            write(writer, join(ROW_DELIMETER,
-                    usageLineHeaders.getOrDefault(itemUsageClass, defaultUsageLineHeader),
-                    stringStream.collect(joining(ROW_DELIMETER)))
+            write(writer, join(
+                ROW_DELIMETER,
+                usageLineHeaders.getOrDefault(itemUsageClass, defaultUsageLineHeader),
+                stringStream.collect(joining(ROW_DELIMETER))
+                )
             );
 
             closeQuietly(writer);
@@ -256,28 +252,30 @@ public class MonthlySummaryCsvSaver {
 
     protected void saveSummary(Date startOfMonth, File contentDir) {
 
-        LOG.debug("Saving summary statistics for month: " + startOfMonth);
+        LOG.debug("Saving summary statistics for month: {}", startOfMonth);
 
         tt.execute(new TransactionCallbackWithoutResult() {
             @Override
             protected void doInTransactionWithoutResult(TransactionStatus status) {
                 final List<MonthlySummary> monthRecords = monthlySummaryRepository.findForMonth(startOfMonth);
-                final Map<File, MonthlySummary> fileToMonthSummary = asFileToMonthRecordMap(monthRecords, contentDir, startOfMonth);
+                final Map<File, MonthlySummary> fileToMonthSummary =
+                    asFileToMonthRecordMap(monthRecords, contentDir, startOfMonth);
 
                 fileToMonthSummary.entrySet()
-                        .stream()
-                        .forEach(summaryEntry -> {
-                            final BufferedWriter bufferedWriter = newWriter(summaryEntry.getKey());
-                            final String featuresContent = parseMonthlySummaryContent(summaryEntry.getValue());
-                            write(bufferedWriter, featuresContent);
-                            closeQuietly(bufferedWriter);
-                        });
+                    .stream()
+                    .forEach(summaryEntry -> {
+                        final BufferedWriter bufferedWriter = newWriter(summaryEntry.getKey());
+                        final String featuresContent = parseMonthlySummaryContent(summaryEntry.getValue());
+                        write(bufferedWriter, featuresContent);
+                        closeQuietly(bufferedWriter);
+                    });
             }
         });
 
     }
 
-    private static Map<File, MonthlySummary> asFileToMonthRecordMap(Iterable<MonthlySummary> monthRecords, File contentDir, Date startOfMonth) {
+    private static Map<File, MonthlySummary> asFileToMonthRecordMap(Iterable<MonthlySummary> monthRecords,
+                                                                    File contentDir, Date startOfMonth) {
         final Map<File, MonthlySummary> fileToMonthSummary = newHashMap();
         for (MonthlySummary monthRecord : monthRecords) {
             final File key = createFile(contentDir, monthRecord.getLabId(), new DateTime(startOfMonth), SUMMARY_CSV);
@@ -300,21 +298,21 @@ public class MonthlySummaryCsvSaver {
 
     private String parseMonthlySummaryContent(MonthlySummary value) {
 
-        return join(ROW_DELIMETER,
-                getMonthlySummaryContentByFeature(value),
-                join(COLUMN_DELIMETER, TOTAL, Long.toString(value.getMonthlyTotal())),
-                join(COLUMN_DELIMETER, BALANCE, Long.toString(value.getEndMonthBalance()))
+        return join(
+            ROW_DELIMETER,
+            getMonthlySummaryContentByFeature(value),
+            join(COLUMN_DELIMETER, TOTAL, Long.toString(value.getMonthlyTotal())),
+            join(COLUMN_DELIMETER, BALANCE, Long.toString(value.getEndMonthBalance()))
         );
     }
 
     private String getMonthlySummaryContentByFeature(MonthlySummary value) {
 
         return value.getTotalByFeature().entrySet().stream()
-                .sorted((left, right) ->
-                        left.getKey().compareTo(right.getKey()))
-                .map((entry) ->
-                        on(COLUMN_DELIMETER).join(transformFeature(entry.getKey()), entry.getValue()))
-                .collect(joining(ROW_DELIMETER));
+            .sorted(Comparator.comparing(Map.Entry::getKey))
+            .map((entry) ->
+                on(COLUMN_DELIMETER).join(transformFeature(entry.getKey()), entry.getValue()))
+            .collect(joining(ROW_DELIMETER));
 
     }
 
@@ -327,7 +325,8 @@ public class MonthlySummaryCsvSaver {
     }
 
     private static File createFile(File tempDir, long labId, DateTime month, String name) {
-        final File file = new File(tempDir, on(separator).join(Long.toString(labId), MONTH_FORMAT.format(month.toDate()), name));
+        final File file =
+            new File(tempDir, on(separator).join(Long.toString(labId), monthFormat.format(month.toDate()), name));
         try {
             Files.createParentDirs(file);
             file.createNewFile();

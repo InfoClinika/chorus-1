@@ -9,6 +9,7 @@ import com.infoclinika.mssharing.platform.entity.restorable.ProjectTemplate;
 import com.infoclinika.mssharing.platform.model.impl.read.DefaultDetailsReader;
 import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.*;
 import com.infoclinika.mssharing.platform.repository.InstrumentRepositoryTemplate;
+import com.infoclinika.mssharing.platform.repository.InstrumentRepositoryTemplate.AccessedInstrument;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,17 +17,17 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class DefaultDetailsReaderAdapter extends DefaultDetailsReader<FileMetaDataTemplate,
-        ProjectTemplate,
-        ExperimentTemplate,
-        InstrumentTemplate,
-        LabTemplate,
-        GroupTemplate,
-        FileItemTemplate,
-        ExperimentItemTemplate,
-        ProjectItemTemplate,
-        InstrumentItemTemplate,
-        LabItemTemplateDetailed,
-        GroupItemTemplate> {
+    ProjectTemplate,
+    ExperimentTemplate,
+    InstrumentTemplate,
+    LabTemplate,
+    GroupTemplate,
+    FileItemTemplate,
+    ExperimentItemTemplate,
+    ProjectItemTemplate,
+    InstrumentItemTemplate,
+    LabItemTemplateDetailed,
+    GroupItemTemplate> {
 
     @Override
     public FileItemTemplate transformFile(FileMetaDataTemplate fileMetaDataTemplate) {
@@ -44,7 +45,8 @@ public class DefaultDetailsReaderAdapter extends DefaultDetailsReader<FileMetaDa
     }
 
     @Override
-    public InstrumentItemTemplate transformInstrument(InstrumentRepositoryTemplate.AccessedInstrument<InstrumentTemplate> instrumentTemplate) {
+    public InstrumentItemTemplate transformInstrument(
+        AccessedInstrument<InstrumentTemplate> instrumentTemplate) {
         return instrumentHelper.getDefaultTransformer().apply(instrumentTemplate);
     }
 

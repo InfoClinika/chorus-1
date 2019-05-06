@@ -5,7 +5,6 @@ import com.infoclinika.mssharing.model.helper.ExperimentDownloadHelper;
 import com.infoclinika.mssharing.platform.model.helper.ExperimentDownloadHelperTemplate;
 import com.infoclinika.mssharing.web.downloader.BulkDownloadHelper;
 import com.infoclinika.mssharing.web.downloader.DownloadRequestNotFoundException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -27,17 +26,21 @@ public class AnonymousDownloadController extends ErrorHandler {
     @Inject
     private ExperimentDownloadHelper experimentDownloadHelper;
 
-    @Value("${base.url}")
-    private String baseUrl;
-
     @RequestMapping(value = "/experiment/{token}", method = RequestMethod.GET)
-    public String download(@PathVariable("token") String token, HttpServletResponse response) throws DownloadRequestNotFoundException, IOException {
+    public String download(@PathVariable("token") String token, HttpServletResponse response)
+        throws DownloadRequestNotFoundException, IOException {
         if (!experimentDownloadHelper.isDownloadTokenAvailable(token)) {
             return "redirect:/pages/404.html";
         }
-        ExperimentDownloadHelperTemplate.ExperimentItemTemplate experiment = experimentDownloadHelper.getExperimentByDownloadToken(token);
+        ExperimentDownloadHelperTemplate.ExperimentItemTemplate experiment =
+            experimentDownloadHelper.getExperimentByDownloadToken(token);
 
-        BulkDownloadHelper.Request request = new BulkDownloadHelper.ChorusRequest(experiment.creator, experiment.files, experiment.experiment, true, null);
+        BulkDownloadHelper.Request request = new BulkDownloadHelper.ChorusRequest(experiment.creator,
+            experiment.files,
+            experiment.experiment,
+            true,
+            null
+        );
         bulkDownloadHelper.download(request, response);
         return null;
     }
@@ -45,7 +48,11 @@ public class AnonymousDownloadController extends ErrorHandler {
     @RequestMapping(value = "/experiment/send", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     public void sendDownloadLink(@RequestBody EmailLinkRequest request, Principal principal) {
-        experimentDownloadHelper.sendDownloadExperimentLinkEmail(get(principal).getId(), request.experiment, request.email);
+        experimentDownloadHelper.sendDownloadExperimentLinkEmail(
+            get(principal).getId(),
+            request.experiment,
+            request.email
+        );
     }
 
     public static class EmailLinkRequest {

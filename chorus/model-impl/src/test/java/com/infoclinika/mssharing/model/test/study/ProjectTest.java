@@ -3,8 +3,10 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.test.study;
 
@@ -32,7 +34,8 @@ import com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate;
 import com.infoclinika.mssharing.platform.model.read.Filter;
 import com.infoclinika.mssharing.platform.model.read.ProjectReaderTemplate;
 import com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -49,11 +52,11 @@ import static com.infoclinika.mssharing.platform.model.read.AttachmentsReaderTem
 import static com.infoclinika.mssharing.platform.model.read.Filter.ALL;
 import static com.infoclinika.mssharing.platform.model.read.Filter.MY;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * @author Stanislav Kurilin
@@ -74,7 +77,7 @@ public class ProjectTest extends AbstractStudyTest {
     @Named("projectDashboardRecordsReaderImpl")
     private ProjectReaderTemplate<ProjectLine> projectDashboardRecordsReader;
 
-    private static final Logger LOGGER = Logger.getLogger(ProjectTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProjectTest.class);
 
 
     @Test(enabled = false)
@@ -88,17 +91,18 @@ public class ProjectTest extends AbstractStudyTest {
         final long begin = System.currentTimeMillis();
         final ImmutableSet<ProjectLine> projectLines = ImmutableSet.copyOf(defaultProjectReader.readProjects(bob, ALL));
         final long defaultReadMills = System.currentTimeMillis() - begin;
-        LOGGER.info("End read projects (default) im mills: " + defaultReadMills);
+        LOGGER.info("End read projects (default) im mills: {}", defaultReadMills);
         Assert.assertEquals(projectLines.size(), amount);
 
         LOGGER.info("Start read projects (records)");
         final long beginRecords = System.currentTimeMillis();
-        final ImmutableSet<ProjectLine> recordProjectLines = ImmutableSet.copyOf(projectDashboardRecordsReader.readProjects(bob, ALL));
+        final ImmutableSet<ProjectLine> recordProjectLines =
+            ImmutableSet.copyOf(projectDashboardRecordsReader.readProjects(bob, ALL));
         final long recordsReadMills = System.currentTimeMillis() - beginRecords;
-        LOGGER.info("End read projects (records) in mills: " + recordsReadMills);
+        LOGGER.info("End read projects (records) in mills: {}", recordsReadMills);
         Assert.assertEquals(recordProjectLines.size(), amount);
 
-        LOGGER.info("Difference (recordsReadMills - defaultReadMills): " + (recordsReadMills - defaultReadMills));
+        LOGGER.info("Difference (recordsReadMills - defaultReadMills): {}", (recordsReadMills - defaultReadMills));
 
         Assert.assertTrue(defaultReadMills < recordsReadMills);
     }
@@ -112,19 +116,26 @@ public class ProjectTest extends AbstractStudyTest {
 
         LOGGER.info("Start read projects (default)");
         final long begin = System.currentTimeMillis();
-        final ImmutableSet<ProjectLine> projectLines = ImmutableSet.copyOf(defaultProjectReader.readProjects(bob, ALL, new PagedItemInfo(100, 0, "laboratory", true, "")));
+        final ImmutableSet<ProjectLine> projectLines = ImmutableSet.copyOf(defaultProjectReader.readProjects(bob,
+            ALL,
+            new PagedItemInfo(100, 0, "laboratory", true, "")
+        ));
         final long defaultReadMills = System.currentTimeMillis() - begin;
-        LOGGER.info("End read projects (default) im mills: " + defaultReadMills);
+        LOGGER.info("End read projects (default) im mills: {}", defaultReadMills);
         Assert.assertEquals(projectLines.size(), 100);
 
         LOGGER.info("Start read projects (records)");
         final long beginRecords = System.currentTimeMillis();
-        final ImmutableSet<ProjectLine> recordProjectLines = ImmutableSet.copyOf(projectDashboardRecordsReader.readProjects(bob, ALL, new PagedItemInfo(100, 0, "laboratory", true, "")));
+        final ImmutableSet<ProjectLine> recordProjectLines =
+            ImmutableSet.copyOf(projectDashboardRecordsReader.readProjects(bob,
+                ALL,
+                new PagedItemInfo(100, 0, "laboratory", true, "")
+            ));
         final long recordsReadMills = System.currentTimeMillis() - beginRecords;
-        LOGGER.info("End read projects (records) in mills: " + recordsReadMills);
+        LOGGER.info("End read projects (records) in mills: {}", recordsReadMills);
         Assert.assertEquals(recordProjectLines.size(), 100);
 
-        LOGGER.info("Difference (recordsReadMills - defaultReadMills): " + (recordsReadMills - defaultReadMills));
+        LOGGER.info("Difference (recordsReadMills - defaultReadMills): {}", (recordsReadMills - defaultReadMills));
 
         Assert.assertTrue(defaultReadMills < recordsReadMills);
     }
@@ -177,7 +188,8 @@ public class ProjectTest extends AbstractStudyTest {
     @Test
     public void testSeveralProjectsWithSameNameAreRead() {
         final long bob = uc.createLab3AndBob();
-        final long projectId = studyManagement.createProject(bob, new ProjectInfo("Duplicated title", "area", "", uc.getLab3()));
+        final long projectId =
+            studyManagement.createProject(bob, new ProjectInfo("Duplicated title", "area", "", uc.getLab3()));
         final long paul = uc.createPaul();
         uc.sharing(bob, projectId, ImmutableSet.of(paul), Collections.<Long>emptySet());
         //create with the same name
@@ -429,12 +441,18 @@ public class ProjectTest extends AbstractStudyTest {
         final long bob = uc.createLab3AndBob();
         final long joe = uc.createJoe();
         final long originId = createPrivateProject(bob, uc.getLab3());
-        final long copyId = studyManagement.copyProject(bob, new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false));
+        final long copyId = studyManagement.copyProject(
+            bob,
+            new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false)
+        );
         ProjectItem origin = detailsReader.readProject(bob, originId);
         ProjectItem copy = detailsReader.readProject(joe, copyId);
         assertNotEquals(copy.ownerEmail, origin.ownerEmail);
         assertNotEquals(copy.projectId, origin.projectId);
-        assertEquals(dashboardReader.readExperimentsByProject(joe, copyId).size(), dashboardReader.readExperimentsByProject(bob, originId).size());
+        assertEquals(
+            dashboardReader.readExperimentsByProject(joe, copyId).size(),
+            dashboardReader.readExperimentsByProject(bob, originId).size()
+        );
         assertEquals(fileReader.readFiles(joe, ALL), fileReader.readFiles(bob, ALL));
 
     }
@@ -445,7 +463,10 @@ public class ProjectTest extends AbstractStudyTest {
         final long joe = uc.createJoe();
         final long originId = createPrivateProject(bob, uc.getLab3());
         attachmentForProject(bob, originId);
-        final long copyId = studyManagement.copyProject(bob, new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false));
+        final long copyId = studyManagement.copyProject(
+            bob,
+            new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false)
+        );
         ProjectItem origin = detailsReader.readProject(bob, originId);
         final ProjectItem copy = detailsReader.readProject(joe, copyId);
         assertThat(copy.attachments.size(), is(1));
@@ -459,22 +480,31 @@ public class ProjectTest extends AbstractStudyTest {
         final long originId = createPrivateProject(bob, uc.getLab3());
         final long originExperiment = createExperiment(bob, originId);
         final long attachmentForExperiment = attachmentForExperiment(bob, originExperiment);
-        final long copyId = studyManagement.copyProject(bob, new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false));
+        final long copyId = studyManagement.copyProject(
+            bob,
+            new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false)
+        );
 
-        final ExperimentShortInfoDetailed originExperimentInfo = (ExperimentShortInfoDetailed) detailsReader.readExperimentShortInfo(bob, originExperiment);
+        final ExperimentShortInfoDetailed originExperimentInfo =
+            (ExperimentShortInfoDetailed) detailsReader.readExperimentShortInfo(bob, originExperiment);
         final ExperimentLine experimentLine = dashboardReader.readExperiments(joe, MY).iterator().next();
         final ExperimentItem origin = detailsReader.readExperiment(bob, originExperiment);
 
         final ExperimentItem copied = detailsReader.readExperiment(joe, experimentLine.id);
-        final ExperimentShortInfoDetailed copiedExperimentInfo = (ExperimentShortInfoDetailed) detailsReader.readExperimentShortInfo(joe, experimentLine.id);
+        final ExperimentShortInfoDetailed copiedExperimentInfo =
+            (ExperimentShortInfoDetailed) detailsReader.readExperimentShortInfo(joe, experimentLine.id);
 
         assertThat(copied.attachments.size(), is(1));
 
         assertEquals(copiedExperimentInfo.category, originExperimentInfo.category);
-        Assert.assertTrue(allAttachmentsSame(origin.attachments, copied.attachments), "Copied attachments doesn't match for copied project experiments");
+        Assert.assertTrue(
+            allAttachmentsSame(origin.attachments, copied.attachments),
+            "Copied attachments doesn't match for copied project experiments"
+        );
     }
 
-    private boolean allAttachmentsSame(ImmutableList<DetailsReaderTemplate.AttachmentItem> attachmentsOrigin, final ImmutableList<DetailsReaderTemplate.AttachmentItem> attachmentsCopy) {
+    private boolean allAttachmentsSame(ImmutableList<DetailsReaderTemplate.AttachmentItem> attachmentsOrigin,
+                                       final ImmutableList<DetailsReaderTemplate.AttachmentItem> attachmentsCopy) {
         return all(attachmentsOrigin, new Predicate<DetailsReaderTemplate.AttachmentItem>() {
             @Override
             public boolean apply(final DetailsReaderTemplate.AttachmentItem origin) {
@@ -498,31 +528,36 @@ public class ProjectTest extends AbstractStudyTest {
         final long bobExperiment = createExperiment(bob, originId);
         final long kateExperiment = createExperiment(kate, originId);
 
-        final long copyId = studyManagement.copyProject(bob, new StudyManagement.CopyProjectInfo(originId, kate, bob, uc.getLab3(), false));
+        final long copyId = studyManagement.copyProject(
+            bob,
+            new StudyManagement.CopyProjectInfo(originId, kate, bob, uc.getLab3(), false)
+        );
         final ProjectItem origin = detailsReader.readProject(bob, originId);
         ProjectItem copy = detailsReader.readProject(kate, copyId);
 
-        SortedSet<FileItem> originFiles = dashboardReader.readFileItemsByExperiment(bob, bobExperiment);
-        ImmutableSortedSet<ExperimentLine> experimentLines = ImmutableSortedSet.copyOf(dashboardReader.readExperimentsByProject(kate, copy.projectId));
-        SortedSet<FileItem> copiedFiles = dashboardReader.readFileItemsByExperiment(kate, experimentLines.first().id);
-
-
-        ExperimentLine originExperiment = Iterables.find(dashboardReader.readExperimentsByProject(bob, originId), new Predicate<ExperimentLine>() {
-            @Override
-            public boolean apply(@Nullable ExperimentLine experimentLine) {
-                return experimentLine.id == bobExperiment;
-            }
-        });
-
-        ImmutableSortedSet<ExperimentLine> kateExperiments = ImmutableSortedSet.copyOf(dashboardReader.readExperimentsByProject(kate, copyId));
+        ImmutableSortedSet<ExperimentLine> kateExperiments =
+            ImmutableSortedSet.copyOf(dashboardReader.readExperimentsByProject(kate, copyId));
 
 
         assertNotEquals(copy.ownerEmail, origin.ownerEmail);
         assertNotEquals(copy.projectId, origin.projectId);
 
+        ExperimentLine originExperiment =
+            Iterables.find(dashboardReader.readExperimentsByProject(bob, originId), new Predicate<ExperimentLine>() {
+                @Override
+                public boolean apply(@Nullable ExperimentLine experimentLine) {
+                    return experimentLine.id == bobExperiment;
+                }
+            });
+
         assertEquals(kateExperiments.size(), 1); // expecting 1 since only owner's experiments will be copied
         assertEquals(originExperiment.name, kateExperiments.first().name);
 
+        ImmutableSortedSet<ExperimentLine> experimentLines =
+            ImmutableSortedSet.copyOf(dashboardReader.readExperimentsByProject(kate, copy.projectId));
+
+        SortedSet<FileItem> copiedFiles = dashboardReader.readFileItemsByExperiment(kate, experimentLines.first().id);
+        SortedSet<FileItem> originFiles = dashboardReader.readFileItemsByExperiment(bob, bobExperiment);
         assertEquals(originFiles.size(), copiedFiles.size());
 
 
@@ -551,20 +586,26 @@ public class ProjectTest extends AbstractStudyTest {
         final long bobExperiment = createExperiment(bob, originId);
         final long kateExperiment = createExperiment(kate, originId);
 
-        final long copyId = studyManagement.copyProject(bob, new StudyManagement.CopyProjectInfo(originId, kate, bob, uc.getLab3(), false));
+        final long copyId = studyManagement.copyProject(
+            bob,
+            new StudyManagement.CopyProjectInfo(originId, kate, bob, uc.getLab3(), false)
+        );
         ProjectItem copy = detailsReader.readProject(kate, copyId);
 
         SortedSet<FileItem> originFiles = dashboardReader.readFileItemsByExperiment(bob, bobExperiment);
-        ImmutableSortedSet<ExperimentLine> experimentLines = ImmutableSortedSet.copyOf(dashboardReader.readExperimentsByProject(kate, copy.projectId));
+        ImmutableSortedSet<ExperimentLine> experimentLines =
+            ImmutableSortedSet.copyOf(dashboardReader.readExperimentsByProject(kate, copy.projectId));
         SortedSet<FileItem> copiedFiles = dashboardReader.readFileItemsByExperiment(kate, experimentLines.first().id);
 
         final FileItem copiedFile = copiedFiles.first();
         final String originFileName = originFiles.first().name;
         final String fileNameWithoutExtension = originFileName.lastIndexOf(".") != -1 ?
-                originFileName.substring(0, originFileName.lastIndexOf(".")) : originFileName;
+            originFileName.substring(0, originFileName.lastIndexOf(".")) : originFileName;
 
-        Assert.assertTrue(copiedFile.name.matches("Copy_of_" + fileNameWithoutExtension + "_(.*?)"),
-                "Error. Copied file name " + copiedFile.name + " is incorrect for file " + originFileName);
+        Assert.assertTrue(
+            copiedFile.name.matches("Copy_of_" + fileNameWithoutExtension + "_(.*?)"),
+            "Error. Copied file name " + copiedFile.name + " is incorrect for file " + originFileName
+        );
     }
 
     @Test
@@ -572,7 +613,10 @@ public class ProjectTest extends AbstractStudyTest {
         final long bob = uc.createLab3AndBob();
         final long joe = uc.createJoe();
         final long originId = createPrivateProject(bob, uc.getLab3());
-        final long copyId = studyManagement.copyProject(bob, new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false));
+        final long copyId = studyManagement.copyProject(
+            bob,
+            new StudyManagement.CopyProjectInfo(originId, joe, bob, uc.getLab3(), false)
+        );
         ProjectItem origin = detailsReader.readProject(bob, originId);
         ProjectItem copy = detailsReader.readProject(joe, copyId);
         assertNotEquals(copy.ownerEmail, origin.ownerEmail);
@@ -586,12 +630,7 @@ public class ProjectTest extends AbstractStudyTest {
         final long joe = uc.createJoe();
         final long origin = createPrivateProject(bob, uc.getLab3());
         final long copyRequest = studyManagement.newProjectCopyRequest(bob, joe, origin);
-        assertTrue(from(requestsReader.myCopyProjectInbox(joe)).anyMatch(new Predicate<RequestsReader.ProjectCopyRequest>() {
-            @Override
-            public boolean apply(RequestsReader.ProjectCopyRequest input) {
-                return input.id == copyRequest;
-            }
-        }));
+        assertTrue(from(requestsReader.myCopyProjectInbox(joe)).anyMatch(input -> input.id == copyRequest));
     }
 
     // Test is added to verify issue when only one message about project copying is displayed in the Inbox, even if
@@ -600,8 +639,10 @@ public class ProjectTest extends AbstractStudyTest {
     public void testCopySeveralProjects() {
         final long bob = uc.createLab3AndBob();
         final long joe = uc.createJoe();
-        final long project1 = studyManagement.createProject(bob, new ProjectInfo("private project1", "area", "", uc.getLab3()));
-        final long project2 = studyManagement.createProject(bob, new ProjectInfo("private project2", "area", "", uc.getLab3()));
+        final long project1 =
+            studyManagement.createProject(bob, new ProjectInfo("private project1", "area", "", uc.getLab3()));
+        final long project2 =
+            studyManagement.createProject(bob, new ProjectInfo("private project2", "area", "", uc.getLab3()));
         studyManagement.newProjectCopyRequest(bob, joe, project1);
         studyManagement.newProjectCopyRequest(bob, joe, project2);
         assertEquals(requestsReader.myCopyProjectInbox(joe).size(), 2);
@@ -639,7 +680,8 @@ public class ProjectTest extends AbstractStudyTest {
 
         final long requestId = studyManagement.newProjectSharingRequest(joe, experiment, requestedExperimentLink);
 
-        final ImmutableSortedSet<RequestsReader.ProjectSharingInfo> sharingRequests = requestsReader.myProjectSharingInbox(bob);
+        final ImmutableSortedSet<RequestsReader.ProjectSharingInfo> sharingRequests =
+            requestsReader.myProjectSharingInbox(bob);
         assertEquals(sharingRequests.size(), 1);
         final RequestsReader.ProjectSharingInfo request = sharingRequests.first();
         assertEquals(request.projectSharingRequest, requestId);
@@ -659,7 +701,12 @@ public class ProjectTest extends AbstractStudyTest {
         studyManagement.newProjectSharingRequest(joe, experiment, requestedExperimentLink);
         final RequestsReader.ProjectSharingInfo request = requestsReader.myProjectSharingInbox(bob).first();
 
-        verify(notificator()).sendProjectSharingRequestNotification(eq(bob), eq(joe), eq(request.project), eq(experiment));
+        verify(notificator()).sendProjectSharingRequestNotification(
+            eq(bob),
+            eq(joe),
+            eq(request.project),
+            eq(experiment)
+        );
     }
 
     @Test(dependsOnMethods = "testProjectSharingRequestPlacedInRequests")
@@ -673,7 +720,11 @@ public class ProjectTest extends AbstractStudyTest {
         final RequestsReader.ProjectSharingInfo request = requestsReader.myProjectSharingInbox(bob).first();
         studyManagement.approveSharingProject(bob, project, joe);
 
-        verify(notificator()).projectSharingApproved(eq(joe), eq(request.projectName), sameListAs(request.experimentLinks));
+        verify(notificator()).projectSharingApproved(
+            eq(joe),
+            eq(request.projectName),
+            sameListAs(request.experimentLinks)
+        );
     }
 
     @Test(dependsOnMethods = "testProjectSharingRequestPlacedInRequests")
@@ -729,18 +780,23 @@ public class ProjectTest extends AbstractStudyTest {
     public void testProjectWithNoLabCanBeReadAndModifiedOnlyByOwner() {
         final long lab3LabHead = uc.createLab3AndBob();
         final long joe = uc.createJoe();
-        final long projectWithNoLab = studyManagement.createProject(joe, new ProjectInfo("Project with no lab", "area", "", null));
+        final long projectWithNoLab =
+            studyManagement.createProject(joe, new ProjectInfo("Project with no lab", "area", "", null));
 
         try {
             dashboardReader.readProject(lab3LabHead, projectWithNoLab);
-            fail("Access denied was expected when not project owner attempts to read project with no lab even if it is Lab head of some lab");
+            fail(
+                "Access denied was expected when not project owner attempts to read project with no lab even if it is" +
+                    " Lab head of some lab");
         } catch (AccessDenied e) {
             //goes as planned
         }
 
         try {
             studyManagement.moveProjectToTrash(lab3LabHead, projectWithNoLab);
-            fail("Access denied was expected when not project owner attempts to remove project with no lab even if it is Lab head of some lab");
+            fail(
+                "Access denied was expected when not project owner attempts to remove project with no lab even if it " +
+                    "is Lab head of some lab");
         } catch (AccessDenied e) {
             //goes as planned
         }
@@ -768,7 +824,10 @@ public class ProjectTest extends AbstractStudyTest {
     @Test
     public void testCreateProjectWithAttachments() {
         final long bob = uc.createLab3AndBob();
-        final long project = studyManagement.createProject(bob, new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3()));
+        final long project = studyManagement.createProject(
+            bob,
+            new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3())
+        );
         final long attachment = attachmentForProject(bob, project);
         final ProjectItem projectItem = detailsReader.readProject(bob, project);
         assertThat(getOnlyElement(projectItem.attachments).id, is(attachment));
@@ -777,7 +836,10 @@ public class ProjectTest extends AbstractStudyTest {
     @Test
     public void testRemoveProjectAttachments() {
         final long bob = uc.createLab3AndBob();
-        final long project = studyManagement.createProject(bob, new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3()));
+        final long project = studyManagement.createProject(
+            bob,
+            new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3())
+        );
         attachmentForProject(bob, project);
         attachmentManagement.updateProjectAttachments(bob, project, ImmutableSet.<Long>of());
         final ProjectItem projectItem = detailsReader.readProject(bob, project);
@@ -787,7 +849,10 @@ public class ProjectTest extends AbstractStudyTest {
     @Test
     public void testUpdateProjectAttachments() {
         final long bob = uc.createLab3AndBob();
-        final long project = studyManagement.createProject(bob, new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3()));
+        final long project = studyManagement.createProject(
+            bob,
+            new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3())
+        );
         attachmentForProject(bob, project);
         final long imageAttachment = attachmentManagement.newAttachment(bob, "someImageAttachment.png", 1024);
         attachmentManagement.updateProjectAttachments(bob, project, ImmutableSet.of(imageAttachment));
@@ -798,7 +863,10 @@ public class ProjectTest extends AbstractStudyTest {
     @Test
     public void testReadProjectAttachments() {
         final long bob = uc.createLab3AndBob();
-        final long project = studyManagement.createProject(bob, new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3()));
+        final long project = studyManagement.createProject(
+            bob,
+            new ProjectInfo("Bob's Project", "area", "Some description", uc.getLab3())
+        );
         final long attachmentId = attachmentForProject(bob, project);
         assertThat(attachmentsReader.readAttachment(bob, attachmentId).id, is(attachmentId));
         assertThat(attachmentsReader.readAttachments(PROJECT, bob, project).size(), is(1));

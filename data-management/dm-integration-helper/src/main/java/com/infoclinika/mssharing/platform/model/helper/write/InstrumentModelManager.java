@@ -7,6 +7,7 @@ import com.infoclinika.mssharing.platform.repository.*;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,37 +62,38 @@ public class InstrumentModelManager<MODEL extends InstrumentModel, MODEL_DETAILS
         model.setExtensions(findOrCreateVendorExtensions(details.extensions));
         model.setAdditionalFiles(details.additionalFiles);
         model.setFolderArchiveSupport(details.folderArchiveSupport);
+
         return model;
     }
 
     private Vendor findOrCreateVendor(String vendorName) {
         return Optional
-                .ofNullable(vendorRepository.findByName(vendorName))
-                .orElseGet(() -> {
-                    final Vendor vendor = entityFactories.vendor.get();
-                    vendor.setName(vendorName);
-                    return vendor;
-                });
+            .ofNullable(vendorRepository.findByName(vendorName))
+            .orElseGet(() -> {
+                final Vendor vendor = entityFactories.vendor.get();
+                vendor.setName(vendorName);
+                return vendor;
+            });
     }
 
     private InstrumentStudyType findOrCreateStudyType(String type) {
         return Optional
-                .ofNullable(instrumentStudyTypeRepository.findByName(type))
-                .orElseGet(() -> {
-                    final InstrumentStudyType studyType = entityFactories.instrumentStudyType.get();
-                    studyType.setName(type);
-                    return studyType;
-                });
+            .ofNullable(instrumentStudyTypeRepository.findByName(type))
+            .orElseGet(() -> {
+                final InstrumentStudyType studyType = entityFactories.instrumentStudyType.get();
+                studyType.setName(type);
+                return studyType;
+            });
     }
 
     private InstrumentType findOrCreateInstrumentType(String type) {
         return Optional
-                .ofNullable(instrumentTypeRepository.findByName(type))
-                .orElseGet(() -> {
-                    final InstrumentType instrumentType = entityFactories.instrumentType.get();
-                    instrumentType.setName(type);
-                    return instrumentType;
-                });
+            .ofNullable(instrumentTypeRepository.findByName(type))
+            .orElseGet(() -> {
+                final InstrumentType instrumentType = entityFactories.instrumentType.get();
+                instrumentType.setName(type);
+                return instrumentType;
+            });
     }
 
     private Set<VendorExtension> findOrCreateVendorExtensions(Set<String> extensions) {
@@ -99,13 +101,18 @@ public class InstrumentModelManager<MODEL extends InstrumentModel, MODEL_DETAILS
     }
 
     private VendorExtension findOrCreateVendorExtension(String vendorExtension) {
-        return Optional
-                .ofNullable(vendorExtensionRepository.findByExtensionWithEmptyZipExtension(vendorExtension))
-                .orElseGet(() -> {
-                    final VendorExtension extension = entityFactories.vendorExtension.get();
-                    extension.setExtension(vendorExtension);
-                    extension.setZipExtension("");
-                    return extension;
-                });
+        final List<VendorExtension> ve =
+            vendorExtensionRepository.findByExtensionWithEmptyZipExtension(vendorExtension);
+
+        if (ve.size() > 0) {
+            return ve.get(0);
+        }
+
+        final VendorExtension extension = entityFactories.vendorExtension.get();
+        extension.setExtension(vendorExtension);
+        extension.setZipExtension("");
+        vendorExtensionRepository.save(extension);
+
+        return extension;
     }
 }

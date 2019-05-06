@@ -12,8 +12,9 @@ import com.infoclinika.mssharing.model.helper.FailedMailsHelper;
 import com.infoclinika.mssharing.model.helper.FailedMailsHelper.FailedEmailItem;
 import com.infoclinika.mssharing.model.internal.FailedEmailsSnsNotificationHandler.SnsBounceObject.Bounce;
 import com.infoclinika.mssharing.model.internal.FailedEmailsSnsNotificationHandler.SnsBounceObject.Bounce.Recipients;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.propertiesprovider.AmazonPropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -31,7 +32,7 @@ import static java.util.stream.Collectors.toSet;
 @Component
 public class FailedEmailsSnsNotificationHandler {
 
-    private static final Logger LOG = Logger.getLogger(FailedEmailsSnsNotificationHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FailedEmailsSnsNotificationHandler.class);
 
     private final AmazonSQSClient sqsClient;
     private String queueUrl;
@@ -39,15 +40,18 @@ public class FailedEmailsSnsNotificationHandler {
     private FailedMailsHelper failedMailsHelper;
 
     @Inject
-    public FailedEmailsSnsNotificationHandler(@Value("${amazon.key}") String key,
-                                              @Value("${amazon.secret}") String secret,
-                                              @Value("${amazon.sqs.failed.emails.url}") String queueUrl,
-                                              FailedMailsHelper failedMailsHelper
+    public FailedEmailsSnsNotificationHandler(
+        AmazonPropertiesProvider amazonPropertiesProvider,
+        FailedMailsHelper failedMailsHelper
     ) {
-        this.queueUrl = queueUrl;
+        this.queueUrl = amazonPropertiesProvider.getSqsFailedEmailsUrl();
         this.failedMailsHelper = failedMailsHelper;
-        this.sqsClient = new AmazonSQSClient(new BasicAWSCredentials(key, secret));
-
+        this.sqsClient = new AmazonSQSClient(
+            new BasicAWSCredentials(
+                amazonPropertiesProvider.getAccessKey(),
+                amazonPropertiesProvider.getSecretKey()
+            )
+        );
     }
 
     public boolean handlingIsEnabled() {
@@ -55,26 +59,34 @@ public class FailedEmailsSnsNotificationHandler {
     }
 
     private void handleBounce(SnsBounceObject snsBounceObject) {
-
         final Bounce bounce = checkNotNull(snsBounceObject.getBounce(), "Bounce object not found");
-        final Set<FailedEmailItem> failedEmails = toFailedEmailItems(bounce.getBouncedRecipients());
-        failedMailsHelper.handleFailedEmails(bounce.getBounceType(), bounce.getBounceSubType(), bounce.getTimestamp(), failedEmails, snsBounceObject.getRawJson());
 
+        final Set<FailedEmailItem> failedEmails = toFailedEmailItems(bounce.getBouncedRecipients());
+        failedMailsHelper.handleFailedEmails(
+            bounce.getBounceType(),
+            bounce.getBounceSubType(),
+            bounce.getTimestamp(),
+            failedEmails,
+            snsBounceObject.getRawJson()
+        );
     }
 
     private Set<FailedEmailItem> toFailedEmailItems(Set<Recipients> recipients) {
         return recipients.stream()
-                .map((recipient) -> new FailedEmailItem(recipient.getEmailAddress(), recipient.getDiagnosticCode()))
-                .collect(toSet());
+                         .map((recipient) -> new FailedEmailItem(
+                             recipient.getEmailAddress(),
+                             recipient.getDiagnosticCode()
+                         ))
+                         .collect(toSet());
     }
 
     public void handleMessages() {
 
-        if( !handlingIsEnabled() ) {
-            LOG.debug("Handling of emails is disabled");
+        if (!handlingIsEnabled()) {
+            LOGGER.debug("Handling of emails is disabled");
             return;
         }
-        LOG.debug("Start handling failed emails...");
+        LOGGER.debug("Start handling failed emails...");
 
         final ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl);
         List<Message> result;
@@ -82,31 +94,33 @@ public class FailedEmailsSnsNotificationHandler {
         int totalHandledMessages = 0;
 
         do {
+            try {
+                result = sqsClient.receiveMessage(receiveMessageRequest).getMessages();
 
-            result = sqsClient.receiveMessage(receiveMessageRequest).getMessages();
+                result.stream()
+                      .map(this::parseSnsBounceObject)
+                      .forEach(this::handleBounce);
 
-            result.stream()
-                    .map(this::parseSnsBounceObject)
-                    .forEach(this::handleBounce);
+                result.stream()
+                      .forEach(message -> sqsClient.deleteMessage(queueUrl, message.getReceiptHandle()));
 
-            result.stream()
-                    .forEach(message -> sqsClient.deleteMessage(queueUrl, message.getReceiptHandle()));
-
-            totalHandledMessages += result.size();
-
+                totalHandledMessages += result.size();
+            } catch (Exception e) {
+                LOGGER.warn("Error on handling emails. {}", e.getMessage());
+                break;
+            }
         } while (!result.isEmpty());
 
         if (totalHandledMessages != 0) {
-            LOG.info("Handling failed emails completed. Total handled messages count: " + totalHandledMessages);
+            LOGGER.info("Handling failed emails completed. Total handled messages count: {}", totalHandledMessages);
         }
     }
 
     private SnsBounceObject parseSnsBounceObject(Message message) {
         try {
-
             final String rawBounce = checkNotNull(
-                    jsonMapper.readValue(message.getBody(), HashMap.class).get("Message"),
-                    "Message not found"
+                jsonMapper.readValue(message.getBody(), HashMap.class).get("Message"),
+                "Message not found"
             ).toString();
 
             final SnsBounceObject bounceObject = jsonMapper.readValue(rawBounce, SnsBounceObject.class);
@@ -114,7 +128,6 @@ public class FailedEmailsSnsNotificationHandler {
             bounceObject.setRawJson(rawBounce);
 
             return bounceObject;
-
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -232,12 +245,17 @@ public class FailedEmailsSnsNotificationHandler {
 
                 @Override
                 public boolean equals(Object o) {
-                    if (this == o) return true;
-                    if (o == null || getClass() != o.getClass()) return false;
+                    if (this == o) {
+                        return true;
+                    }
+                    if (o == null || getClass() != o.getClass()) {
+                        return false;
+                    }
 
                     Recipients that = (Recipients) o;
 
-                    return getEmailAddress() != null ? getEmailAddress().equals(that.getEmailAddress()) : that.getEmailAddress() == null;
+                    return getEmailAddress() != null ? getEmailAddress().equals(that.getEmailAddress()) :
+                        that.getEmailAddress() == null;
 
                 }
 
@@ -286,9 +304,5 @@ public class FailedEmailsSnsNotificationHandler {
             public Set<String> destination;
 
         }
-
-
     }
-
-
 }

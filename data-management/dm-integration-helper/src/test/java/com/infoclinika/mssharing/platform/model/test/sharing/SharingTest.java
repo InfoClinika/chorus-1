@@ -3,12 +3,13 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.platform.model.test.sharing;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -18,7 +19,7 @@ import com.infoclinika.mssharing.platform.model.common.items.LabItem;
 import com.infoclinika.mssharing.platform.model.read.*;
 import com.infoclinika.mssharing.platform.model.testing.helper.Data;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
-import com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate;
+import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate.FileItemTemplate;
 import org.testng.annotations.Test;
 
 import java.util.Collections;
@@ -27,10 +28,10 @@ import java.util.SortedSet;
 
 import static com.google.common.collect.ImmutableList.of;
 import static com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.GroupItemTemplate;
-import static com.infoclinika.mssharing.platform.model.read.DetailsReaderTemplate.SharedProjectItemTemplate;
 import static com.infoclinika.mssharing.platform.model.read.Filter.MY;
 import static com.infoclinika.mssharing.platform.model.read.Filter.SHARED_WITH_ME;
 import static com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate.Access.READ;
+import static com.infoclinika.mssharing.platform.model.write.SharingManagementTemplate.Access.WRITE;
 import static org.testng.Assert.*;
 
 /**
@@ -47,14 +48,9 @@ public class SharingTest extends AbstractSharingTest {
         final long paul = uc.createPaul();
         final long group = sharingManagement.createGroup(bob, "Bobs Group", ImmutableSet.of(paul));
         final long project = uc.createProject(bob, uc.getLab3());
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, WRITE), false);
         final GroupItemTemplate groupItem = detailsReader.readGroup(bob, group);
-        assertTrue(Iterables.any(groupItem.sharedProjects, new Predicate<SharedProjectItemTemplate>() {
-            @Override
-            public boolean apply(SharedProjectItemTemplate input) {
-                return input.id == project;
-            }
-        }));
+        assertTrue(Iterables.any(groupItem.sharedProjects, input -> input.id == project));
     }
 
     @Test
@@ -64,14 +60,9 @@ public class SharingTest extends AbstractSharingTest {
         final String groupName = generateString();
         final long group = sharingManagement.createGroup(bob, groupName, ImmutableSet.of(paul));
         final long project = uc.createProject(bob, uc.getLab3());
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, WRITE), false);
         final DetailsReaderTemplate.ProjectItemTemplate projectItem = detailsReader.readProject(bob, project);
-        assertTrue(Iterables.any(projectItem.sharedGroups, new Predicate<DetailsReaderTemplate.SharedGroup>() {
-            @Override
-            public boolean apply(DetailsReaderTemplate.SharedGroup input) {
-                return input.name.equals(groupName);
-            }
-        }));
+        assertTrue(Iterables.any(projectItem.sharedGroups, input -> input.name.equals(groupName)));
     }
 
     //Test sharing rules
@@ -92,7 +83,7 @@ public class SharingTest extends AbstractSharingTest {
 
         final long group = sharingManagement.createGroup(bob, "gg lab", ImmutableSet.of(kate));
 
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, WRITE), false);
 
         createInstrumentAndExperimentWithOneFile(kate, uc.getLab2(), project);
     }
@@ -111,7 +102,7 @@ public class SharingTest extends AbstractSharingTest {
         long kate = createKateInLab2();
         final long project = projectByUser(bob, uc.getLab3());
         final long group = sharingManagement.createGroup(bob, "gg lab", ImmutableSet.of(kate));
-        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, SharingManagementTemplate.Access.WRITE), false);
+        sharingManagement.updateSharingPolicy(bob, project, emptySharing, ImmutableMap.of(group, WRITE), false);
         sharingManagement.removeGroup(bob, group);
     }
 
@@ -308,8 +299,10 @@ public class SharingTest extends AbstractSharingTest {
     }
 
     private void expectProjectCopy(long bob, long paul) {
-        final ProjectReaderTemplate.ProjectLineTemplate bobProject = projectReader.readProjects(bob, Filter.MY).iterator().next();
-        final ProjectReaderTemplate.ProjectLineTemplate pollProject = projectReader.readProjects(paul, Filter.MY).iterator().next();
+        final ProjectReaderTemplate.ProjectLineTemplate bobProject =
+            projectReader.readProjects(bob, Filter.MY).iterator().next();
+        final ProjectReaderTemplate.ProjectLineTemplate pollProject =
+            projectReader.readProjects(paul, Filter.MY).iterator().next();
 
         assertEquals(bobProject.areaOfResearch, pollProject.areaOfResearch);
         assertEquals(bobProject.name, pollProject.name);
@@ -328,7 +321,8 @@ public class SharingTest extends AbstractSharingTest {
         uc.sharingWithCollaborator(bob, project, poll);
         final long experiment = createInstrumentAndExperimentWithOneFile(poll, uc.getLab3(), project);
 
-        final ExperimentReaderTemplate.ExperimentLineTemplate pollExperimentLine = experimentReader.readExperiments(poll, Filter.MY).iterator().next();
+        final ExperimentReaderTemplate.ExperimentLineTemplate pollExperimentLine =
+            experimentReader.readExperiments(poll, Filter.MY).iterator().next();
         assertEquals(pollExperimentLine.id, experiment);
     }
 
@@ -339,7 +333,8 @@ public class SharingTest extends AbstractSharingTest {
         final long project = projectByUser(bob, uc.getLab3());
         uc.sharingWithCollaborator(bob, project, kate);
         final long experiment = createInstrumentAndExperimentWithOneFile(kate, uc.getLab2(), project);
-        final ExperimentReaderTemplate.ExperimentLineTemplate shared = experimentReader.readExperiments(bob, SHARED_WITH_ME).iterator().next();
+        final ExperimentReaderTemplate.ExperimentLineTemplate shared =
+            experimentReader.readExperiments(bob, SHARED_WITH_ME).iterator().next();
         assertEquals(shared.id, experiment);
         assertEquals(experimentReader.readExperiments(bob, Filter.PUBLIC).size(), 0);
         assertEquals(experimentReader.readExperiments(bob, Filter.MY).size(), 0);
@@ -367,7 +362,8 @@ public class SharingTest extends AbstractSharingTest {
 
         createInstrumentAndExperimentWithOneFile(kate, uc.getLab2(), project);
         createInstrumentAndExperimentWithOneFile(kate, uc.getLab2(), secondProject);
-        final SortedSet<? extends ExperimentReaderTemplate.ExperimentLineTemplate> experiments = experimentReader.readExperiments(kate, Filter.MY);
+        final SortedSet<? extends ExperimentReaderTemplate.ExperimentLineTemplate> experiments =
+            experimentReader.readExperiments(kate, Filter.MY);
         assertEquals(experiments.size(), 2);
         assertEquals(experimentReader.readExperiments(kate, Filter.PUBLIC).size(), 0);
         assertEquals(experimentReader.readExperiments(kate, SHARED_WITH_ME).size(), 0);
@@ -463,15 +459,15 @@ public class SharingTest extends AbstractSharingTest {
 
         //noinspection unchecked
         final ExperimentInfoTemplateBuilder builder = new ExperimentInfoTemplateBuilder().name("Duplicated title")
-                .description("area")
-                .experimentType(anyExperimentType())
-                .species(unspecified())
-                .project(publicProject)
-                .lab(uc.getLab3())
-                .is2Dlc(false)
-                .restriction(restriction(kate))
-                .factors(Data.NO_FACTORS)
-                .files(of(new ExperimentManagementTemplate.FileItemTemplate(id, Collections.<String>emptyList(), emptyAnnotations(), false)));
+            .description("area")
+            .experimentType(anyExperimentType())
+            .species(unspecified())
+            .project(publicProject)
+            .lab(uc.getLab3())
+            .is2Dlc(false)
+            .restriction(restriction(kate))
+            .factors(Data.NO_FACTORS)
+            .files(of(new FileItemTemplate(id, Collections.emptyList(), emptyAnnotations(), false)));
 
         experimentManagement.createExperiment(kate, builder.build());
         assertTrue(fileReader.readFiles(bob, SHARED_WITH_ME).size() == 0);
@@ -494,7 +490,8 @@ public class SharingTest extends AbstractSharingTest {
         final long katesProject = projectByUser(kate, uc.getLab2());
         final Set<FileReaderTemplate.FileLineTemplate> sharedFiles = fileReader.readFiles(kate, SHARED_WITH_ME);
         final long experiment = createExperiment(kate, katesProject, sharedFiles.iterator().next().id, uc.getLab2());
-        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem = detailsReader.readExperiment(kate, experiment);
+        final DetailsReaderTemplate.ExperimentItemTemplate experimentItem =
+            detailsReader.readExperiment(kate, experiment);
 
         assertEquals(sharedFiles.iterator().next().id, experimentItem.files.iterator().next().id);
     }

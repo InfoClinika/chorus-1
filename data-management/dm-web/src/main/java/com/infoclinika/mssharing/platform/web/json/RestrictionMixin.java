@@ -11,9 +11,10 @@ public abstract class RestrictionMixin {
     @JsonCreator
     @SuppressWarnings("unused")
     public RestrictionMixin(
-            @JsonProperty("technologyType") long technologyTypeRestriction,
-            @JsonProperty("vendor") long vendorRestriction,
-            @JsonProperty("instrumentModel") long instrumentModelRestriction,
-            @JsonProperty("instrument") Optional<Long> instrumentRestriction) {
+        @JsonProperty("technologyType") long technologyTypeRestriction,
+        @JsonProperty("vendor") long vendorRestriction,
+        @JsonProperty("instrumentModel") long instrumentModelRestriction,
+        @JsonProperty("instrument") Optional<Long> instrumentRestriction
+    ) {
     }
 }

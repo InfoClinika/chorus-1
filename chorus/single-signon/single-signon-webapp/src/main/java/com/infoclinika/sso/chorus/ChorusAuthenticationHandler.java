@@ -1,8 +1,8 @@
 package com.infoclinika.sso.chorus;
 
-import com.infoclinika.sso.model.ApplicationType;
 import com.infoclinika.sso.UserCredentialInForm;
 import com.infoclinika.sso.UserCredentialsAuthenticationHandler;
+import com.infoclinika.sso.model.ApplicationType;
 import org.jasig.cas.authentication.Credential;
 import org.pac4j.http.credentials.authenticator.Authenticator;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,15 +1,14 @@
 package com.infoclinika.mssharing.platform.model.helper;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Herman Zamula
  */
 public interface ExperimentDownloadHelperTemplate<
-        EXPERIMENT_ITEM extends ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
-        EXPERIMENT_DOWNLOAD_DATA extends ExperimentDownloadHelperTemplate.ExperimentDownloadDataTemplate,
-        FILE_DATA extends ExperimentDownloadHelperTemplate.FileDataTemplate> {
+    EXPERIMENT_ITEM extends ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
+    EXPERIMENT_DOWNLOAD_DATA extends ExperimentDownloadHelperTemplate.ExperimentDownloadDataTemplate,
+    FILE_DATA extends ExperimentDownloadHelperTemplate.FileDataTemplate> {
 
     boolean isDownloadTokenAvailable(String token);
 
@@ -34,37 +33,39 @@ public interface ExperimentDownloadHelperTemplate<
     }
 
     class ExperimentDownloadDataTemplate {
-        public final long creatorId;
-        public final String name;
-        public final String description;
-        public final String projectName;
-        public final String specie;
-        public final String experimentType;
-        public final boolean allow2dLc;
-        public final String instrumentName;
+        public static final String EXPERIMENT_NAME = "Experiment";
+
+        private final LinkedHashMap<String, String> linkedHashMap;
+
         public final List<AttachmentDataTemplate> attachments;
         public final List<FileDataTemplate> files;
 
-        public ExperimentDownloadDataTemplate(long creatorId,
-                                              String name,
-                                              String description,
-                                              String projectName,
-                                              String specie,
-                                              String experimentType,
-                                              boolean allow2dLc,
-                                              String instrumentName,
-                                              List<AttachmentDataTemplate> attachments,
+        public ExperimentDownloadDataTemplate(List<AttachmentDataTemplate> attachments,
                                               List<FileDataTemplate> files) {
-            this.creatorId = creatorId;
-            this.name = name;
-            this.description = description;
-            this.projectName = projectName;
-            this.specie = specie;
-            this.experimentType = experimentType;
-            this.allow2dLc = allow2dLc;
-            this.instrumentName = instrumentName;
+            linkedHashMap = new LinkedHashMap<>();
+
             this.attachments = attachments;
             this.files = files;
+        }
+
+        public Collection<String> getFieldNames() {
+            return linkedHashMap.keySet();
+        }
+
+        public Collection<Map.Entry<String, String>> getEntries() {
+            return linkedHashMap.entrySet();
+        }
+
+        public String getFieldValue(String name) {
+            return linkedHashMap.get(name);
+        }
+
+        public void add(String name, String value) {
+            linkedHashMap.put(name, value);
+        }
+
+        public String getExperimentName() {
+            return linkedHashMap.get(EXPERIMENT_NAME);
         }
     }
 
@@ -82,19 +83,24 @@ public interface ExperimentDownloadHelperTemplate<
 
     class FileDataTemplate {
         public final long id;
+        public final String bucket;
         public final String contentId;
         public final String name;
         public final boolean invalid;
         public final List<ConditionDataTemplate> conditions;
         public final long lab;
+        public final String instrumentName;
 
-        public FileDataTemplate(long id, String contentId, String name, boolean invalid, List<ConditionDataTemplate> conditions, long lab) {
+        public FileDataTemplate(long id, String bucket, String contentId, String name, boolean invalid,
+                                List<ConditionDataTemplate> conditions, long lab, String instrumentName) {
             this.id = id;
+            this.bucket = bucket;
             this.contentId = contentId;
             this.name = name;
             this.invalid = invalid;
             this.conditions = conditions;
             this.lab = lab;
+            this.instrumentName = instrumentName;
         }
     }
 

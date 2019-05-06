@@ -1,3 +1,5 @@
+"use strict";
+
 (function () {
     angular.module("experiments-front")
         .directive("experimentWizardSampleAssignmentStep", experimentWizardSampleAssignmentStep);
@@ -42,6 +44,7 @@
                         $scope.$on($scope.configuration.api.events.setSelected, onSetSelection);
                         activate();
                     }
+
                     //reverse support
                     function activate() {
                         $scope.vm = {
@@ -72,38 +75,45 @@
                                     var e = window.event;
                                     var target = e.target || e.srcElement;
                                     var tdSelector = "td.annotation-value, td.factor-value";
-                                    if (event.keyCode == 37) {//left
+                                    if (event.keyCode === 37) {//left
                                         return; //TODO:2015-12-28:andrii.loboda: remove duplicated code
-                                    } else if (event.keyCode == 39) {//right
+                                    } else if (event.keyCode === 39) {//right
                                         return;
-                                    } else {
-                                        var td = $(target).parent();
-                                        var horizontalIndex = td.prevAll(tdSelector).length;
-                                        if (event.keyCode == 38) {//up
-                                            var upTR = td.parent().prev();
-                                            if (upTR.length != 0) {
-                                                upTR.find(tdSelector).eq(horizontalIndex).find(DOM_ELEMENT.CONTENTEDITABLE).focus();
-                                            }
-                                        } else if (event.keyCode == 40) {//down
-                                            var downTR = td.parent().next();
-                                            if (downTR.length != 0) {
-                                                downTR.find(tdSelector).eq(horizontalIndex).find(DOM_ELEMENT.CONTENTEDITABLE).focus();
-                                            }
+                                    }
+                                    var td = $(target).parent();
+                                    var horizontalIndex = td.prevAll(tdSelector).length;
+                                    if (event.keyCode === 38) {//up
+                                        var upTR = td.parent().prev();
+                                        if (upTR.length !== 0) {
+                                            upTR.find(tdSelector)
+                                                .eq(horizontalIndex)
+                                                .find(DOM_ELEMENT.CONTENTEDITABLE)
+                                                .focus();
+                                        }
+                                    } else if (event.keyCode === 40) {//down
+                                        var downTR = td.parent().next();
+                                        if (downTR.length !== 0) {
+                                            downTR.find(tdSelector)
+                                                .eq(horizontalIndex)
+                                                .find(DOM_ELEMENT.CONTENTEDITABLE)
+                                                .focus();
                                         }
                                     }
-                                }
+
+                                };
                             }
                         }
 
                         function getLabelForSampleType(sampleType, typesCount) {
-                            if(!$scope.vm.labelType) {
-                                return;
+                            if (!$scope.vm.labelType) {
+                                return "";
                             }
 
                             var weight = sampleType;
-                            if ($scope.vm.labelType === ExperimentSpecialLabelType.TMT || $scope.vm.labelType === ExperimentSpecialLabelType.iodoTMT) {
+                            if ($scope.vm.labelType === ExperimentSpecialLabelType.TMT || $scope.vm.labelType ===
+                                ExperimentSpecialLabelType.iodoTMT) {
                                 weight = samplesToWeightsMapping[sampleType].weights.tmt[typesCount];
-                            } else if ($scope.vm.labelType === ExperimentSpecialLabelType.iTRAQ){
+                            } else if ($scope.vm.labelType === ExperimentSpecialLabelType.iTRAQ) {
                                 weight = samplesToWeightsMapping[sampleType].weights.itraq[typesCount];
                             }
                             return weight;
@@ -111,7 +121,7 @@
 
                         //End of key pressed support
                         function changeSorting(sortField) {
-                            if (sortField == "name") {
+                            if (sortField === "name") {
                                 $scope.vm.preparedSamples.reverse();
                             }
                         }
@@ -119,7 +129,12 @@
                         function enableCopyPasteForCells() {
                             /*** Copy-paste Support ***/
 
-                            var experimentDesignCells = new TableModel(getColumnsCount, getRowsCount, copyValue, pasteValue);
+                            var experimentDesignCells = new TableModel(
+                                getColumnsCount,
+                                getRowsCount,
+                                copyValue,
+                                pasteValue
+                            );
                             experimentDesignCells.startWatchingModifications($scope);
 
                             function getColumnsCount() {
@@ -132,17 +147,17 @@
 
                             function copyValue(x, y) {
                                 var prepSample = $scope.vm.preparedSamples[y];
-                                if ($scope.vm.specialLabelType){
+                                if ($scope.vm.specialLabelType) {
                                     return prepSample.samples[asChannelSampleType(x)];
-                                } else {
-                                    return prepSample.samples[asSampleType(x)];
                                 }
+                                return prepSample.samples[asSampleType(x)];
+
                             }
 
                             function pasteValue(x, y, value) {
                                 //todo[tymchenko]: think if we could refactor the copy-paste
                                 var prepSample = $scope.vm.preparedSamples[y];
-                                if ($scope.vm.specialLabelType){
+                                if ($scope.vm.specialLabelType) {
                                     prepSample.samples[asChannelSampleType(x)] = value;
                                 } else {
                                     prepSample.samples[asSampleType(x)] = value;
@@ -151,18 +166,20 @@
 
                             function asSampleType(typeInNumericFormat) {
                                 if (typeInNumericFormat === 0) {
-                                    return $scope.vm.allSampleTypeNames.LIGHT
+                                    return $scope.vm.allSampleTypeNames.LIGHT;
                                 } else if (typeInNumericFormat == 1) {
                                     if ($scope.vm.selectedSampleTypes.length == 2) {
                                         return $scope.vm.allSampleTypeNames.HEAVY;
-                                    } else {
-                                        return $scope.vm.allSampleTypeNames.MEDIUM;
                                     }
+                                    return $scope.vm.allSampleTypeNames.MEDIUM;
+
                                 } else if (typeInNumericFormat == 2) {
                                     return $scope.vm.allSampleTypeNames.HEAVY;
                                 }
+
+                                return "";
                             }
-                            
+
                             function asChannelSampleType(index) {
                                 return $scope.vm.channelSampleTypes[index];
                             }
@@ -176,7 +193,7 @@
                         var samplesMap = {};
                         $($scope.vm.preparedSamples).each(function (i, preparedSample) {
 
-                            $($scope.vm.selectedSampleTypes).each(function (i, sampleType) {
+                            $($scope.vm.selectedSampleTypes).each(function (index, sampleType) {
                                 var sampleName = preparedSample.samples[sampleType];
                                 if (!samplesMap[sampleName + sampleType]) {
                                     samplesMap[sampleName + sampleType] = {
@@ -203,8 +220,9 @@
                         var allPrepSamplesValid = true;
                         $($scope.vm.preparedSamples).each(function (i, preparedSample) {
                             if (allPrepSamplesValid) {
-                                $($scope.vm.selectedSampleTypes).each(function (i, sampleType) {
-                                    if (!preparedSample.samples[sampleType] || $.trim(preparedSample.samples[sampleType]).length == 0) { // if no samples at all
+                                $($scope.vm.selectedSampleTypes).each(function (index, sampleType) {
+                                    if (!preparedSample.samples[sampleType] ||
+                                        $.trim(preparedSample.samples[sampleType]).length == 0) { // if no samples at all
                                         allPrepSamplesValid = false;
                                     }
                                 });
@@ -226,24 +244,19 @@
                             for (var i = 0; i < $scope.vm.channelsCount; i++) {
                                 selectedSampleTypes[i] = "CHANNEL_" + (i + 1);
                             }
+                        } else if (dataToSpecify.mixedSamplesCount == 0 || dataToSpecify.mixedSamplesCount == 1) {
+                            selectedSampleTypes = [$scope.vm.allSampleTypes[0]]; // light sample
+                            autofillLightSamplesIfAbsent($scope.vm.preparedSamples);
+                        } else if (dataToSpecify.mixedSamplesCount == 2) {
+                            selectedSampleTypes = [$scope.vm.allSampleTypes[0], $scope.vm.allSampleTypes[2]];
                         } else {
-                            if (dataToSpecify.mixedSamplesCount == 0 || dataToSpecify.mixedSamplesCount == 1) {
-                                selectedSampleTypes = [$scope.vm.allSampleTypes[0]]; // light sample
-                                if (dataToSpecify.mixedSamplesCount == 0) {
-                                    autoFillLightSamplesIfAbsent($scope.vm.preparedSamples);
-                                }
-
-                            } else if (dataToSpecify.mixedSamplesCount == 2) {
-                                selectedSampleTypes = [$scope.vm.allSampleTypes[0], $scope.vm.allSampleTypes[2]]
-                            } else {
-                                selectedSampleTypes = $scope.vm.allSampleTypes.slice(); // copy whole array
-                            }
+                            selectedSampleTypes = $scope.vm.allSampleTypes.slice(); // copy whole array
                         }
 
                         $scope.vm.selectedSampleTypes = selectedSampleTypes;
 
-                        function autoFillLightSamplesIfAbsent() {
-                            $($scope.vm.preparedSamples).each(function (i, prepSample) {
+                        function autofillLightSamplesIfAbsent() {
+                            $($scope.vm.preparedSamples).each(function (index, prepSample) {
                                 if ($.trim(prepSample.samples[$scope.vm.allSampleTypes[0]]).length == 0) {
                                     prepSample.samples[$scope.vm.allSampleTypes[0]] = prepSample.name; // specify light sample to be the same as prepared sample
                                 }
@@ -255,8 +268,7 @@
                 }
 
                 function getSamplesToWeightsMapping() {
-                    var mapping = {
-                    };
+                    var mapping = {};
 
                     mapping[CHANNEL_1] = {
                         name: CHANNEL_1,
@@ -387,8 +399,7 @@
                     return mapping;
                 }
             }
-        }
+        };
     }
 
-})
-();
+})();

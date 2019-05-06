@@ -3,16 +3,17 @@
  * -----------------------------------------------------------------------
  * Copyright (c) 2011-2012 InfoClinika, Inc. 5901 152nd Ave SE, Bellevue, WA 98006,
  * United States of America.  (425) 442-8058.  http://www.infoclinika.com.
- * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika, Inc. is prohibited.
- * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use, duplication or disclosure by the
+ * All Rights Reserved.  Reproduction, adaptation, or translation without prior written permission of InfoClinika,
+ * Inc. is prohibited.
+ * Unpublished--rights reserved under the copyright laws of the United States.  RESTRICTED RIGHTS LEGEND Use,
+ * duplication or disclosure by the
  */
 package com.infoclinika.mssharing.model.internal.entity;
 
 import com.infoclinika.mssharing.platform.entity.LabTemplate;
 
-import javax.persistence.*;
-
-import static com.google.common.collect.Sets.newHashSet;
+import javax.persistence.Basic;
+import javax.persistence.Entity;
 
 /**
  * @author Stanislav Kurilin
@@ -21,10 +22,6 @@ import static com.google.common.collect.Sets.newHashSet;
 public class Lab extends LabTemplate<User> {
     @Basic(optional = false)
     private boolean isFake;
-
-    @Basic(optional = false)
-    private float uploadLimitInGb = 20;
-
 
     public Lab() {
     }
@@ -46,14 +43,6 @@ public class Lab extends LabTemplate<User> {
 
     public void setFake(boolean fake) {
         isFake = fake;
-    }
-
-    public float getUploadLimitInGb() {
-        return uploadLimitInGb;
-    }
-
-    public void setUploadLimitInGb(float uploadLimitInGb) {
-        this.uploadLimitInGb = uploadLimitInGb;
     }
 
 

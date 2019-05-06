@@ -1,36 +1,41 @@
 package com.infoclinika.mssharing.web.controller;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.infoclinika.mssharing.propertiesprovider.ChorusPropertiesProvider;
 import org.springframework.security.crypto.codec.Base64;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.inject.Inject;
 import java.security.GeneralSecurityException;
 
 /**
  * @author Pavel Kaplin
  */
 @Component
-public class EmailVerificationCrypto {
-
+class EmailVerificationCrypto {
     private Mac mac;
+    private byte[] key;
 
-    private byte[] KEY;
+    @Inject
+    public EmailVerificationCrypto(ChorusPropertiesProvider chorusPropertiesProvider) {
+        setKey(chorusPropertiesProvider.getEmailVerificationCryptoKey());
+    }
 
-    @Value("${email.verification.crypto.key}")
     public void setKey(String key) {
-        String[] keyStrings = key.split(",");
-        KEY = new byte[keyStrings.length];
-        for (int i = 0; i < keyStrings.length; i++) {
-            KEY[i] = Byte.decode(keyStrings[i].trim());
+        if (key != null) {
+            String[] keyStrings = key.split(",");
+            this.key = new byte[keyStrings.length];
+            for (int i = 0; i < keyStrings.length; i++) {
+                this.key[i] = Byte.decode(keyStrings[i].trim());
+            }
         }
     }
 
     @PostConstruct
     public void initMac() {
-        SecretKeySpec keySpec = new SecretKeySpec(KEY, "HmacMD5");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "HmacMD5");
         try {
             mac = Mac.getInstance("HmacMD5");
             mac.init(keySpec);

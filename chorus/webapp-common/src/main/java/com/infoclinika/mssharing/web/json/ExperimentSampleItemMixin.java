@@ -12,9 +12,9 @@ import java.util.List;
 public abstract class ExperimentSampleItemMixin {
     @JsonCreator
     public ExperimentSampleItemMixin(
-            @JsonProperty("name") String name,
-            @JsonProperty("type") ExperimentSampleTypeItem type,
-            @JsonProperty("factorValues") List<String> factorValues
+        @JsonProperty("name") String name,
+        @JsonProperty("type") ExperimentSampleTypeItem type,
+        @JsonProperty("factorValues") List<String> factorValues
     ) {
     }
 }

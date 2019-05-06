@@ -1,0 +1,14 @@
+<div>
+    <h4>Labelled Data Files</h4>
+    <div class="files-selector">
+        <ul>
+            <li ng-repeat="file in configuration.files track by $index"
+                ng-class="{'even': $index % 2 == 1}"
+                ng-click="onFileSelect(file)">
+
+                <input ng-checked="file.selected" type="radio" />
+                <span ng-bind="file.fileName"></span>
+            </li>
+        </ul>
+    </div>
+</div>

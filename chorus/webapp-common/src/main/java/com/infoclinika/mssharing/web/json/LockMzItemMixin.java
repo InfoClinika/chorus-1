@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class LockMzItemMixin {
 
     public LockMzItemMixin(
-            @JsonProperty("lockMass") double lockMass,
-            @JsonProperty("charge") int charge) {
+        @JsonProperty("lockMass") double lockMass,
+        @JsonProperty("charge") int charge) {
     }
 }

@@ -32,9 +32,12 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
     @Inject
     private FileAccessLogReader fileAccessLogReader;
 
-    private FileLine createAndReadFile(long userId){
+    private FileLine createAndReadFile(long userId) {
         final long instrument = uc.createInstrumentAndApproveIfNeeded(userId, uc.getLab3()).get();
-        long fileId = instrumentManagement.createFile(userId, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false));
+        long fileId = instrumentManagement.createFile(userId,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false)
+        );
 
         final Set<FileLine> fileLines = fileReader.readFilesByInstrument(userId, instrument);
         return fileLines.iterator().next();
@@ -46,7 +49,11 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
         UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(bob);
         final long instrument = uc.createInstrumentAndApproveIfNeeded(bob, uc.getLab3()).get();
 
-        instrumentManagement.startUploadFile(bob, instrument, new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false));
+        instrumentManagement.startUploadFile(
+            bob,
+            instrument,
+            new FileMetaDataInfo(generateString(), 0, "", null, anySpecies(), false)
+        );
         final Set<FileLine> fileLines = fileReader.readFilesByInstrument(bob, instrument);
         final FileLine file = fileLines.iterator().next();
 
@@ -63,10 +70,9 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void test_file_upload_complete_logging() throws InterruptedException {
         final long bob = uc.createLab3AndBob();
-        setFeaturePerLab(ApplicationFeature.TRANSLATION, Lists.newArrayList(uc.getLab3()));
         UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(bob);
         final FileLine file = createAndReadFile(bob);
 
@@ -87,7 +93,7 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
         }
     }
 
-    @Test
+    @Test(enabled = false, description = "test was disabled for open-chorus")
     public void test_file_delete_logging() throws InterruptedException {
         final long bob = uc.createLab3AndBob();
         UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(bob);
@@ -100,7 +106,7 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
 
         Thread.sleep(1000);
         final Optional<FileAccessLogReader.FileAccessLogDTO> lastLog = readLastLog();
-        if(lastLog.isPresent()){
+        if (lastLog.isPresent()) {
             assertEquals(lastLog.get().operationType, FileAccessLog.OperationType.FILE_DELETED.toString());
             assertEquals(lastLog.get().fileName, fileDetails.name);
             assertEquals(lastLog.get().userEmail, personInfo.email);
@@ -112,7 +118,7 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
         }
     }
 
-    @Test
+    @Test(enabled = false, description = "test was disabled for open-chorus")
     public void test_file_delete_permanently_logging() throws InterruptedException {
         final long bob = uc.createLab3AndBob();
         UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(bob);
@@ -138,7 +144,7 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
 
     @Test
     public void test_file_archive_start_logging() throws InterruptedException {
-        setBilling(true);
+        setFeature(ApplicationFeature.GLACIER, true);
         final long bob = uc.createLab3AndBob();
         billingManagement.makeLabAccountEnterprise(uc.createPaul(), uc.getLab3());
         UserManagementTemplate.PersonInfo personInfo = userReader.readPersonInfo(bob);
@@ -186,13 +192,13 @@ public class FileAccessLogIntegrationTest extends AbstractTest {
         }
     }
 
-    private Optional<FileAccessLogReader.FileAccessLogDTO> readLastLog(){
+    private Optional<FileAccessLogReader.FileAccessLogDTO> readLastLog() {
         final PagedItem<FileAccessLogReader.FileAccessLogDTO> logs =
-                fileAccessLogReader.readLogs(admin(), new PagedItemInfo(1, 0, "id", false, ""));
+            fileAccessLogReader.readLogs(admin(), new PagedItemInfo(1, 0, "id", false, ""));
 
         final Iterator<FileAccessLogReader.FileAccessLogDTO> iterator = logs.iterator();
         FileAccessLogReader.FileAccessLogDTO lastLog = null;
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
             lastLog = iterator.next();
         }
         return Optional.fromNullable(lastLog);

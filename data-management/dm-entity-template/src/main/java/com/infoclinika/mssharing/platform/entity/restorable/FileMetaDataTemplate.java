@@ -10,7 +10,8 @@ import java.util.Date;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-public abstract class FileMetaDataTemplate<U extends UserTemplate<?>, I extends InstrumentTemplate<U, ?>> extends AbstractRestorable {
+public abstract class FileMetaDataTemplate<U extends UserTemplate<?>, I extends InstrumentTemplate<U, ?>>
+    extends AbstractRestorable {
 
     @ManyToOne
     protected Species specie;
@@ -24,7 +25,11 @@ public abstract class FileMetaDataTemplate<U extends UserTemplate<?>, I extends 
     @Basic(optional = false)
     private Date uploadDate;
     @Basic
+    private String bucket;
+    @Basic
     private String contentId;
+    @Basic
+    private boolean readOnly;
     @Basic
     private long sizeInBytes;
     private String labels;
@@ -130,6 +135,22 @@ public abstract class FileMetaDataTemplate<U extends UserTemplate<?>, I extends 
 
     public void setInvalid(boolean invalid) {
         this.invalid = invalid;
+    }
+
+    public String getBucket() {
+        return bucket;
+    }
+
+    public void setBucket(String bucket) {
+        this.bucket = bucket;
+    }
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
     }
 
     public abstract FileMetaDataTemplate copy(String copyName, UserTemplate owner);

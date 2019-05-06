@@ -6,10 +6,11 @@ import com.infoclinika.mssharing.model.internal.entity.payment.LabPaymentAccount
 import com.infoclinika.mssharing.model.internal.repository.LabPaymentAccountRepository;
 import com.infoclinika.mssharing.services.billing.persistence.enity.MonthlySummary;
 import com.infoclinika.mssharing.services.billing.persistence.repository.MonthlySummaryRepository;
-import javafx.util.Pair;
-import org.apache.log4j.Logger;
+import org.apache.commons.math3.util.Pair;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -23,7 +24,6 @@ import static com.google.common.base.Optional.presentInstances;
 import static com.google.common.collect.Iterables.size;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.infoclinika.mssharing.model.internal.read.Transformers.transformFeature;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -33,7 +33,7 @@ import static java.util.stream.Collectors.toMap;
 @Component
 public class MonthlySummaryUsageLogger {
 
-    private static final Logger LOG = Logger.getLogger(MonthlySummaryUsageLogger.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MonthlySummaryUsageLogger.class);
     public static final int MAX_ATTEMPTS = 5;
     private final TimeZone timeZone;
     @Inject
@@ -50,23 +50,26 @@ public class MonthlySummaryUsageLogger {
 
     public void logMonth(Date month) {
 
-        LOG.debug("Start logging usages for the date month: " + month);
+        LOG.debug("Start logging usages for the date month: {}", month);
 
         final List<LabPaymentAccount> labs = newArrayList(accountRepository.findAll());
 
-        LOG.debug("Found " + labs.size() + " accounts");
+        LOG.debug("Found {} accounts", labs.size());
 
         final DateTime dateTime = new DateTime(month, DateTimeZone.forTimeZone(timeZone));
         final Date startOfMonth = dateTime.dayOfMonth().withMinimumValue().millisOfDay().withMinimumValue().toDate();
         final Date endOfMonth = dateTime.dayOfMonth().withMaximumValue().minuteOfDay().withMaximumValue().toDate();
 
-        LOG.debug("Start logging. Start of month: " + startOfMonth + ", end of month: " + endOfMonth);
+        LOG.debug("Start logging. Start of month: {}, end of month: {}", startOfMonth, endOfMonth);
 
         final List<Optional<MonthlySummary>> monthlySummaries = labs.stream()
-                .map(createSummaryFn(startOfMonth, endOfMonth))
-                .collect(toList());
+            .map(createSummaryFn(startOfMonth, endOfMonth))
+            .collect(toList());
 
-        LOG.debug("End logging usages for month. Total monthly summary records saved: " + size(presentInstances(monthlySummaries)));
+        LOG.debug(
+            "End logging usages for month. Total monthly summary records saved: {}",
+            size(presentInstances(monthlySummaries))
+        );
 
     }
 
@@ -80,7 +83,7 @@ public class MonthlySummaryUsageLogger {
 
             do {
                 try {
-                    LOG.debug("Attampt #" + i + " of " + MAX_ATTEMPTS);
+                    LOG.debug("Attampt # {} of {}", i, MAX_ATTEMPTS);
                     summary = Optional.of(logAccount(startOfMonth, endOfMonth, account));
                     completed = true;
                 } catch (Exception ex) {
@@ -98,7 +101,7 @@ public class MonthlySummaryUsageLogger {
 
     private MonthlySummary logAccount(Date startOfMonth, Date endOfMonth, LabPaymentAccount account) {
         final Long labId = account.getLab().getId();
-        LOG.debug("Logging for lab: " + labId);
+        LOG.debug("Logging for lab: {}", labId);
 
         final MonthlySummary summary = new MonthlySummary();
         final Map<Feature, Long> totalByFeature = getTotalByFeature(startOfMonth, endOfMonth, labId);
@@ -106,7 +109,8 @@ public class MonthlySummaryUsageLogger {
         summary.getTotalByFeature().putAll(totalByFeature);
         summary.setMonthlyTotal(totalByFeature.entrySet().stream().mapToLong(Map.Entry::getValue).sum());
         summary.setCalculationDate(new Date());
-        summary.setEndMonthBalance(calculationsHelper.calculateStoreBalance(labId, startOfMonth, endOfMonth).or(account.getStoreBalance()));
+        summary.setEndMonthBalance(
+            calculationsHelper.calculateStoreBalance(labId, startOfMonth, endOfMonth).or(account.getStoreBalance()));
         summary.setLabId(labId);
         summary.setLoggedMonth(startOfMonth);
 
@@ -115,12 +119,13 @@ public class MonthlySummaryUsageLogger {
 
     private Map<Feature, Long> getTotalByFeature(Date startOfMonth, Date endOfMonth, long labId) {
         return newArrayList(Feature.getPerFileMembers()).stream()
-                .map(feature -> {
-                    final long featurePrice = calculationsHelper.caclulateTotalPrice(labId,
-                            transformFeature(feature), startOfMonth, endOfMonth);
-                    return new Pair<>(feature, featurePrice);
-                })
-                .collect(toMap(Pair::getKey, Pair::getValue));
+            .map(feature -> {
+                final long featurePrice = calculationsHelper.caclulateTotalPrice(labId,
+                    transformFeature(feature), startOfMonth, endOfMonth
+                );
+                return new Pair<>(feature, featurePrice);
+            })
+            .collect(toMap(Pair::getKey, Pair::getValue));
     }
 
 }

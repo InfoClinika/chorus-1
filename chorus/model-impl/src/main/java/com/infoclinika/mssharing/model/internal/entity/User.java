@@ -18,7 +18,7 @@ import static com.google.common.collect.Sets.newHashSet;
  */
 @Entity
 @Table(name = "USER",
-        uniqueConstraints = {@UniqueConstraint(columnNames = "EMAIL")})
+    uniqueConstraints = {@UniqueConstraint(columnNames = "EMAIL")})
 public class User extends UserTemplate<Lab> {
     @OneToMany(mappedBy = "user", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UploadAppConfiguration> uploadAppConfigurations = newHashSet();
@@ -37,7 +37,7 @@ public class User extends UserTemplate<Lab> {
 
     /**
      * This secret token should be used to get attributes from Chorus for SSO application instead of providing password
-     * */
+     */
     private String secretToken;
 
     @Column
@@ -55,6 +55,11 @@ public class User extends UserTemplate<Lab> {
     @Column(name = "unsuccessful_login_attempts", nullable = false)
     private int unsuccessfulLoginAttempts;
 
+    @Column(name = "consent_to_privacy_policy_date")
+    private Date consentToPrivacyPolicyDate;
+
+    @Column(name = "account_removal_request_date")
+    private Date accountRemovalRequestDate;
 
     public User(PersonData personData, String passwordHash) {
         setPersonData(personData);
@@ -147,6 +152,22 @@ public class User extends UserTemplate<Lab> {
 
     public void setClientToken(String clientToken) {
         this.clientToken = clientToken;
+    }
+
+    public Date getConsentToPrivacyPolicyDate() {
+        return consentToPrivacyPolicyDate;
+    }
+
+    public void setConsentToPrivacyPolicyDate(Date consentToPrivacyPolicyDate) {
+        this.consentToPrivacyPolicyDate = consentToPrivacyPolicyDate;
+    }
+
+    public Date getAccountRemovalRequestDate() {
+        return accountRemovalRequestDate;
+    }
+
+    public void setAccountRemovalRequestDate(Date accountRemovalRequestDate) {
+        this.accountRemovalRequestDate = accountRemovalRequestDate;
     }
 
     @Transient

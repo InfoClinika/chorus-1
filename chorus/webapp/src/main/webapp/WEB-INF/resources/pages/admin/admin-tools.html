@@ -26,34 +26,14 @@
         <button ng-click="vm.archiving.redirectToSynchronizationState()">Synchronization state monitor</button>
     </div>
     <div>
-        <h2>Processing runs</h2>
-        <button ng-click="vm.runs.restartAllCancelled()">Restart all Cancelled processing runs</button>
-    </div>
-    <div>
         <h2>Files</h2>
         <button ng-click="vm.files.checkIsFilesSizeConsistent()">Check file size with file size on S3 and fill sizeIsConsistent flag.</button>
         <button ng-click="vm.files.unarchiveInconsistentFiles()">Unarchive inconsistent files</button>
     </div>
 
     <div>
-        <h2>Post Processing Pipelines</h2>
-        <button ng-click="vm.pipelines.createPostProcessingTemplates()">Create post processing pipelines if they are absent</button>
-    </div>
-
-    <div>
         <h2>Billing Migration</h2>
         <button ng-click="vm.billing.runMigration()">Run lab accounts migration</button>
-    </div>
-    <div>
-        <h2>Files translation</h2>
-        <div style="border: solid 1px; padding: 2px 3px; width: 400px;">
-            <div>
-                <label for="metadataOnly">Meta Data only: </label>
-                <input id="metadataOnly"  type="checkbox" ng-model="vm.translation.metadataOnly">
-            </div>
-            <button ng-click="vm.translation.reTranslateAllNotTranslatedFilesOfExperiments()">Retranslate All Not Translated Files Of All Experiments</button>
-        </div>
-
     </div>
 </div>
 </body>

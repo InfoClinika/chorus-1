@@ -54,8 +54,8 @@ public class User extends AbstractPersistable<Long> {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("chorusUsername", chorusUsername)
-                .add("panoramaUsername", panoramaUsername)
-                .toString();
+            .add("chorusUsername", chorusUsername)
+            .add("panoramaUsername", panoramaUsername)
+            .toString();
     }
 }

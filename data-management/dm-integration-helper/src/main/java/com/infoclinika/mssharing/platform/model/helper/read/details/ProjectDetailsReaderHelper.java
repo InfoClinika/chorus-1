@@ -24,7 +24,7 @@ import static com.infoclinika.mssharing.platform.model.helper.read.SingleResultB
 @Component
 @Scope(value = "prototype")
 public class ProjectDetailsReaderHelper<PROJECT extends ProjectTemplate, PROJECT_ITEM extends ProjectItemTemplate>
-        extends AbstractReaderHelper<PROJECT, PROJECT_ITEM, ProjectItemTemplate> {
+    extends AbstractReaderHelper<PROJECT, PROJECT_ITEM, ProjectItemTemplate> {
 
     @Inject
     private ProjectRepositoryTemplate<PROJECT> projectRepository;
@@ -33,41 +33,37 @@ public class ProjectDetailsReaderHelper<PROJECT extends ProjectTemplate, PROJECT
 
     @Override
     public Function<PROJECT, ProjectItemTemplate> getDefaultTransformer() {
-        return new Function<PROJECT, ProjectItemTemplate>() {
-            @Override
-            @SuppressWarnings("unchecked")
-            public ProjectItemTemplate apply(PROJECT project) {
+        return project -> {
 
-                final ImmutableList<DetailsReaderTemplate.AttachmentItem> attachments = from(project.getAttachments())
-                        .transform(detailsTransformers.attachmentTransformer()).toList();
+            final ImmutableList<DetailsReaderTemplate.AttachmentItem> attachments = from(project.getAttachments())
+                .transform(detailsTransformers.attachmentTransformer()).toList();
 
-                final ImmutableSortedSet<DetailsReaderTemplate.SharedGroup> sharedGroups = from(project.getSharing()
-                        .getGroupsOfCollaborators().entrySet())
-                        .transform(detailsTransformers.groupAccessTransformer())
-                        .toSortedSet(detailsTransformers.namedItemComparator());
+            final ImmutableSortedSet<DetailsReaderTemplate.SharedGroup> sharedGroups = from(project.getSharing()
+                .getGroupsOfCollaborators().entrySet())
+                .transform(detailsTransformers.groupAccessTransformer())
+                .toSortedSet(detailsTransformers.namedItemComparator());
 
-                final ImmutableSortedSet<DetailsReaderTemplate.SharedPerson> sharedPersons = from(project.getSharing()
-                        .getCollaborators().entrySet())
-                        .transform(detailsTransformers.sharedPersonAccessTransformer())
-                        .toSortedSet(detailsTransformers.namedItemComparator());
+            final ImmutableSortedSet<DetailsReaderTemplate.SharedPerson> sharedPersons = from(project.getSharing()
+                .getCollaborators().entrySet())
+                .transform(detailsTransformers.sharedPersonAccessTransformer())
+                .toSortedSet(detailsTransformers.namedItemComparator());
 
-                return new ProjectItemTemplate(
-                        project.getId(),
-                        project.getName(),
-                        project.getDescription(),
-                        project.getLastModification(),
-                        project.getSharing().getType() == Sharing.Type.PUBLIC,
-                        sharedGroups,
-                        (project.getLab() == null) ? null : project.getLab().getHead().getId(),
-                        project.getCreator().getEmail(),
-                        project.getSharing().getType() == Sharing.Type.PRIVATE,
-                        attachments,
-                        project.getSharing().getNumberOfAllCollaborators(),
-                        project.getAreaOfResearch(),
-                        sharedPersons,
-                        (project.getLab() == null) ? null : project.getLab().getId()
-                );
-            }
+            return new ProjectItemTemplate(
+                project.getId(),
+                project.getName(),
+                project.getDescription(),
+                project.getLastModification(),
+                project.getSharing().getType() == Sharing.Type.PUBLIC,
+                sharedGroups,
+                (project.getLab() == null) ? null : project.getLab().getHead().getId(),
+                project.getCreator().getEmail(),
+                project.getSharing().getType() == Sharing.Type.PRIVATE,
+                attachments,
+                project.getSharing().getNumberOfAllCollaborators(),
+                project.getAreaOfResearch(),
+                sharedPersons,
+                (project.getLab() == null) ? null : project.getLab().getId()
+            );
         };
     }
 

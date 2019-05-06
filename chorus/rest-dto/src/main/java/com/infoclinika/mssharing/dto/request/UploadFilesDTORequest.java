@@ -13,7 +13,8 @@ public class UploadFilesDTORequest {
     private long instrument;
     private List<UploadFile> files;
 
-    public UploadFilesDTORequest(){}
+    public UploadFilesDTORequest() {
+    }
 
     public UploadFilesDTORequest(long instrument, List<UploadFile> files) {
         this.instrument = instrument;
@@ -43,7 +44,8 @@ public class UploadFilesDTORequest {
         private long specie;
         private boolean archive;
 
-        public UploadFile(){}
+        public UploadFile() {
+        }
 
         public UploadFile(String name,
                           String labels,

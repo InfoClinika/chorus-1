@@ -13,7 +13,7 @@ import static com.google.common.collect.Sets.newHashSet;
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class FactorTemplate<LEVEL extends LevelTemplate<?>,
-        EXPERIMENT extends ExperimentTemplate<?, ?, ?, ?, ?, ?>> extends AbstractPersistable {
+    EXPERIMENT extends ExperimentTemplate<?, ?, ?, ?, ?, ?>> extends AbstractPersistable {
     private static final int LONG_STRING = 4000;
 
     @Column(name = "factor_name", length = LONG_STRING)
@@ -23,13 +23,14 @@ public abstract class FactorTemplate<LEVEL extends LevelTemplate<?>,
     @Column(name = "unit_name", length = LONG_STRING)
     private String units;
     @Column(name = "default_factor")
-    private boolean bDefault;
+    private boolean isDefault;
 
     @ManyToOne
     @JoinColumn(name = "experiment_id")
     private EXPERIMENT experiment;
 
-    @OneToMany(mappedBy = "factor", orphanRemoval = true, cascade = {CascadeType.ALL}, targetEntity = LevelTemplate.class)
+    @OneToMany(mappedBy = "factor", orphanRemoval = true, cascade = {CascadeType.ALL},
+        targetEntity = LevelTemplate.class)
     private Set<LEVEL> levels = newHashSet();
 
     public FactorTemplate() {
@@ -75,12 +76,12 @@ public abstract class FactorTemplate<LEVEL extends LevelTemplate<?>,
         this.type = type;
     }
 
-    public boolean isbDefault() {
-        return bDefault;
+    public boolean isDefault() {
+        return isDefault;
     }
 
-    public void setbDefault(boolean bDefault) {
-        this.bDefault = bDefault;
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
     }
 
     public enum Type {

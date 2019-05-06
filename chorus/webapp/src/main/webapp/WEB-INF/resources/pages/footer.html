@@ -1,18 +1,26 @@
-<div ng-switch="footerType">
+<div ng-switch="footerType" ng-controller="footer-controller">
     <div ng-switch-default>
         <div id="footer">
             <div class="center-frame">
                 <p><span class="copyright">&copy;</span>&nbsp;<current-year></current-year>&nbsp;<a class="infoclinika" href="http://www.infoclinika.com">Infoclinika</a>. All rights reserved.</p>
                 <ul>
                     <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                    <li><a href="subscription-agreement.html">Subscription Agreement</a></li>
-                    <li><a href="support.html">Support</a></li>
+                    <li ng-show="!isPrivateInstall"><a href="subscription-agreement.html">Subscription Agreement</a></li>
+                    <li ng-show="!isPrivateInstall"><a href="support.html">Knowledge Center</a></li>
+                    <li ng-show="appearance.showNewsLink && !isPrivateInstall"><a href="news.html">News</a></li>
+                    <li ng-show="appearance.showBlogsLink && !isPrivateInstall"><a href="blog.html">Blogs</a></li>
+                    <forum-url ng-show="!isPrivateInstall &&">
+                        <span class="forum-url">Forum</span>
+                        <span class="icon external"></span>
+                    </forum-url>
                     <li><a href="about.html">Contact Us</a></li>
-                    <li>
-                        <a style="color: lime" desktop-uploader-url>Desktop Uploader <span hide-when-private-installation="true">(Beta)</span></a>
+                    <li ng-show="!isPrivateInstall">
+                        Desktop Uploader
+                        <a style="color: lime" desktop-uploader-url="MAC">macOS</a>
+                        <a style="color: lime" desktop-uploader-url="WIN">Windows</a>
                     </li>
-                    <li>
-                        <a style="color: lime" autoimporter-url>Autoimporter <span hide-when-private-installation="true">(Beta)</span></a>
+                    <li ng-show="!isPrivateInstall">
+                        <a style="color: lime" autoimporter-url>Autoimporter</a>
                     </li>
                 </ul>
             </div>
@@ -25,22 +33,34 @@
                 <li>
                     <a href="privacy-policy.html">Privacy Policy</a>
                 </li>
-                <li>
+                <li ng-show="!isPrivateInstall">
                     <a href="subscription-agreement.html">Subscription Agreement</a>
                 </li>
-                <li>
-                    <a href="support.html">Support</a>
+                <li ng-show="!isPrivateInstall">
+                    <a href="support.html">Knowledge Center</a>
                 </li>
+                <li ng-show="appearance.showNewsLink && !isPrivateInstall">
+                    <a href="news.html">News</a>
+                </li>
+                <li ng-show="appearance.showBlogsLink && !isPrivateInstall">
+                    <a href="blog.html">Blogs</a>
+                </li>
+                <forum-url ng-show="!isPrivateInstall &&">
+                    <span class="forum-url">Forum</span>
+                    <span class="icon external"></span>
+                </forum-url>
                 <li>
                     <a href="about.html">Contact Us</a>
                 </li>
-                <li class="desktop-client-url">
-                    <a class="desktop-client-url" desktop-uploader-url>Desktop Uploader <span hide-when-private-installation="true">(Beta)</span></a>
+                <li class="desktop-client-url" ng-show="!isPrivateInstall">
+                    Desktop Uploader
+                    <a class="desktop-client-url" desktop-uploader-url="MAC">macOS</a>
+                    <a class="desktop-client-url" desktop-uploader-url="WIN">Windows</a>
                 </li>
-                <li class="desktop-client-url">
-                    <a class="desktop-client-url" autoimporter-url>Autoimporter <span hide-when-private-installation="true">(Beta)</span></a>
+                <li class="desktop-client-url" ng-show="!isPrivateInstall">
+                    <a class="desktop-client-url" autoimporter-url>Autoimporter</a>
                 </li>
-                <li class="compatibility">
+                <li set-class-if-private-installation="private-install-compatibility" class="compatibility">
                     <a href="http://google.com/chrome/" target="_blank">This site is known to work with Chrome Browser</a>
                 </li>
             </ul>
@@ -54,20 +74,32 @@
                     <li>
                         <a href="privacy-policy.html">Privacy Policy</a>
                     </li>
-                    <li>
+                    <li ng-show="!isPrivateInstall">
                         <a href="subscription-agreement.html">Subscription Agreement</a>
                     </li>
-                    <li>
-                        <a href="support.html">Support</a>
+                    <li ng-show="!isPrivateInstall">
+                        <a href="support.html">Knowledge Center</a>
                     </li>
+                    <li ng-show="appearance.showNewsLink && !isPrivateInstall">
+                        <a href="news.html">News</a>
+                    </li>
+                    <li ng-show="appearance.showBlogsLink && !isPrivateInstall">
+                        <a href="blog.html">Blogs</a>
+                    </li>
+                    <forum-url ng-show="!isPrivateInstall &&">
+                        <span class="forum-url">Forum</span>
+                        <span class="icon external"></span>
+                    </forum-url>
                     <li>
                         <a href="about.html">Contact Us</a>
                     </li>
-                    <li class="desktop-client-url">
-                        <a desktop-uploader-url>Desktop Uploader <span hide-when-private-installation="true">(Beta)</span></a>
+                    <li class="desktop-client-url" ng-show="!isPrivateInstall">
+                        Desktop Uploader
+                        <a desktop-uploader-url="MAC">macOS</a>
+                        <a desktop-uploader-url="WIN">Windows</a>
                     </li>
-                    <li class="desktop-client-url">
-                        <a autoimporter-url>Autoimporter <span hide-when-private-installation="true">(Beta)</span></a>
+                    <li class="desktop-client-url" ng-show="!isPrivateInstall">
+                        <a autoimporter-url>Autoimporter</a>
                     </li>
                 </ul>
             </div>

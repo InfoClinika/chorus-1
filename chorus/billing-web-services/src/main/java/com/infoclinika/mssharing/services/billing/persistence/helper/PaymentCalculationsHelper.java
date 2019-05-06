@@ -3,7 +3,6 @@ package com.infoclinika.mssharing.services.billing.persistence.helper;
 import com.google.common.base.Optional;
 import com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature;
 
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -37,7 +36,6 @@ public interface PaymentCalculationsHelper {
     long calculateMaximumArchiveStorageUsage(long lab, Date from, Date to);
 
     /**
-     *
      * @param lab laboratory for calculation
      * @param day day to calculate charged amount
      * @return total charged amount of used features for day
@@ -47,16 +45,15 @@ public interface PaymentCalculationsHelper {
     long sumPrices(Iterable<? extends Number> prices);
 
     /**
-     * @param lab laboratory for calculation
+     * @param lab  laboratory for calculation
      * @param from start date
-     * @param to end date
+     * @param to   end date
      * @return Optional.absent() if no logged usages for this lab found
      */
     Optional<Long> calculateStoreBalance(long lab, Date from, Date to);
 
     /**
      * Calculates total cost of the given feature by the period in cents
-     *
      */
     long caclulateTotalPrice(long lab, BillingFeature feature, Date from, Date to);
 

@@ -22,7 +22,7 @@ public class UserPreferencesManagementImpl implements UserPreferencesManagement 
     @Override
     public void removeBillingNotification(long actor) {
         UserPreferences userPreferences = userPreferencesRepository.findByUserId(actor);
-        if(userPreferences == null){
+        if (userPreferences == null) {
             userPreferences = new UserPreferences(userRepository.findOne(actor), false);
         } else {
             userPreferences.setShowBillingNotification(false);

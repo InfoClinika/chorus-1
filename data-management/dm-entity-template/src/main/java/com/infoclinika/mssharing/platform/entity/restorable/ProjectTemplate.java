@@ -14,19 +14,23 @@ import static com.google.common.collect.Lists.newArrayList;
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class ProjectTemplate<U extends UserTemplate<?>,
-        L extends LabTemplate<?>,
-        G extends GroupTemplate<U>,
-        P extends ProjectTemplate<U, L, G, P>> extends AbstractRestorable {
+    L extends LabTemplate<?>,
+    G extends GroupTemplate<U>,
+    P extends ProjectTemplate<U, L, G, P>> extends AbstractRestorable {
 
     @OneToMany(cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE})
     protected List<Attachment<U>> attachments = newArrayList();
     private String areaOfResearch;
+
     @ManyToOne
     private U creator;
+
     @ManyToOne
     private L lab;
+
     @Index(name = "PROJECT_NAME_IDX")
     private String name;
+
     @Lob
     private String description;
     private Sharing<U, P, G> sharing = new Sharing<>();

@@ -28,10 +28,10 @@ import static com.google.common.collect.Lists.newArrayList;
  */
 @Transactional(readOnly = true)
 public abstract class DefaultExperimentDownloadHelper<
-        EXPERIMENT_ITEM extends ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
-        EXPERIMENT_DOWNLOAD_DATA extends ExperimentDownloadHelperTemplate.ExperimentDownloadDataTemplate,
-        FILE_DATA extends ExperimentDownloadHelperTemplate.FileDataTemplate>
-        implements ExperimentDownloadHelperTemplate<EXPERIMENT_ITEM, EXPERIMENT_DOWNLOAD_DATA, FILE_DATA> {
+    EXPERIMENT_ITEM extends ExperimentDownloadHelperTemplate.ExperimentItemTemplate,
+    EXPERIMENT_DOWNLOAD_DATA extends ExperimentDownloadHelperTemplate.ExperimentDownloadDataTemplate,
+    FILE_DATA extends ExperimentDownloadHelperTemplate.FileDataTemplate>
+    implements ExperimentDownloadHelperTemplate<EXPERIMENT_ITEM, EXPERIMENT_DOWNLOAD_DATA, FILE_DATA> {
 
     @Inject
     private ExperimentRepositoryTemplate<ExperimentTemplate> experimentRepository;
@@ -63,14 +63,24 @@ public abstract class DefaultExperimentDownloadHelper<
     public void sendDownloadExperimentLinkEmail(long actor, long experimentId, String email) {
         final ExperimentTemplate experiment = checkNotNull(experimentRepository.findOne(experimentId));
         if (experiment.getProject().getSharing().getType() == Sharing.Type.PUBLIC) {
-            notifier.sendExperimentPublicDownloadLink(actor, experiment.getId(), email, getPublicDownloadLink(experiment));
+            notifier.sendExperimentPublicDownloadLink(
+                actor,
+                experiment.getId(),
+                email,
+                getPublicDownloadLink(experiment)
+            );
         } else {
             UserTemplate user = userRepository.findByEmail(email);
             if (user == null) {
                 throw new RuntimeException("Can't find user with specified email: " + email);
             }
             if (ruleValidator.isUserCanReadExperiment(actor, experimentId)) {
-                notifier.sendExperimentPrivateDownloadLink(actor, experiment.getId(), email, getPrivateDownloadLink(experiment));
+                notifier.sendExperimentPrivateDownloadLink(
+                    actor,
+                    experiment.getId(),
+                    email,
+                    getPrivateDownloadLink(experiment)
+                );
             } else {
                 throw new AccessDenied("User haven't right to read experiment");
             }
@@ -105,12 +115,7 @@ public abstract class DefaultExperimentDownloadHelper<
             throw new AccessDenied("User can't read all files");
         }
 
-        return newArrayList(from(files).transform(new Function<FileMetaDataTemplate, FILE_DATA>() {
-            @Override
-            public FILE_DATA apply(FileMetaDataTemplate input) {
-                return transformFileData(input);
-            }
-        }).toList());
+        return newArrayList(from(files).transform(input -> transformFileData(input)).toList());
 
     }
 

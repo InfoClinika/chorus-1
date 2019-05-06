@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.util.Set;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static javax.persistence.CascadeType.*;
 
 /**
  * @author Herman Zamula
@@ -19,7 +20,8 @@ public abstract class LevelTemplate<FACTOR extends FactorTemplate<?, ?>> extends
     @ManyToOne
     @JoinColumn(name = "factor_id")
     private FACTOR factor;
-    @ManyToMany(mappedBy = "levels", cascade = {CascadeType.REFRESH, CascadeType.DETACH, CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
+
+    @ManyToMany(mappedBy = "levels", cascade = {REFRESH, DETACH, PERSIST, MERGE, REMOVE})
     private Set<Condition<?, ?, ?>> conditions = newHashSet();
 
     public String getName() {

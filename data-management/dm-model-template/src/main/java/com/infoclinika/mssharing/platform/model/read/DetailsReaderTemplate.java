@@ -7,17 +7,18 @@ import com.infoclinika.mssharing.platform.model.common.items.NamedItem;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Herman Zamula
  */
 public interface DetailsReaderTemplate<
-        FILE_ITEM extends DetailsReaderTemplate.FileItemTemplate,
-        EXPERIMENT_ITEM extends DetailsReaderTemplate.ExperimentItemTemplate,
-        PROJECT_ITEM extends DetailsReaderTemplate.ProjectItemTemplate,
-        INSTRUMENT_ITEM extends DetailsReaderTemplate.InstrumentItemTemplate,
-        LAB_ITEM extends DetailsReaderTemplate.LabItemTemplateDetailed,
-        GROUP_ITEM extends DetailsReaderTemplate.GroupItemTemplate> {
+    FILE_ITEM extends DetailsReaderTemplate.FileItemTemplate,
+    EXPERIMENT_ITEM extends DetailsReaderTemplate.ExperimentItemTemplate,
+    PROJECT_ITEM extends DetailsReaderTemplate.ProjectItemTemplate,
+    INSTRUMENT_ITEM extends DetailsReaderTemplate.InstrumentItemTemplate,
+    LAB_ITEM extends DetailsReaderTemplate.LabItemTemplateDetailed,
+    GROUP_ITEM extends DetailsReaderTemplate.GroupItemTemplate> {
 
     FILE_ITEM readFile(long actor, long file);
 
@@ -49,7 +50,7 @@ public interface DetailsReaderTemplate<
     ExperimentShortInfo readExperimentShortInfo(long actor, long experiment);
 
     enum InstrumentAccess {
-        NO_ACCESS, OPERATOR, PENDING
+        NO_ACCESS, OPERATOR
     }
 
     class AnnotationItem {
@@ -67,20 +68,26 @@ public interface DetailsReaderTemplate<
             this.isNumeric = isNumeric;
         }
 
+
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof AnnotationItem)) {
+                return false;
+            }
             AnnotationItem that = (AnnotationItem) o;
-
-            return id == that.id;
-
+            return id == that.id &&
+                isNumeric == that.isNumeric &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(value, that.value) &&
+                Objects.equals(units, that.units);
         }
 
         @Override
         public int hashCode() {
-            return (int) (id ^ (id >>> 32));
+            return Objects.hash(id, name, value, units, isNumeric);
         }
     }
 
@@ -89,6 +96,7 @@ public interface DetailsReaderTemplate<
         public final long sizeInBytes;
         public final Date uploadDate;
         public final String labels;
+        public final String bucket;
         public final String contentId;
         public final String instrumentName;
         public final String labName;
@@ -102,7 +110,7 @@ public interface DetailsReaderTemplate<
         public final List<AnnotationItem> annotations;
 
         public FileItemTemplate(long id, long sizeInBytes,
-                                Date uploadDate, String labels, String contentId,
+                                Date uploadDate, String labels, String bucket, String contentId,
                                 String owner, String ownerEmail, boolean copy, String name, String specieName,
                                 String instrumentName,
                                 String labName, long instrumentId,
@@ -112,6 +120,7 @@ public interface DetailsReaderTemplate<
             this.sizeInBytes = sizeInBytes;
             this.uploadDate = uploadDate;
             this.labels = labels;
+            this.bucket = bucket;
             this.contentId = contentId;
             this.owner = owner;
             this.ownerEmail = ownerEmail;
@@ -131,6 +140,7 @@ public interface DetailsReaderTemplate<
             this.sizeInBytes = other.sizeInBytes;
             this.uploadDate = other.uploadDate;
             this.labels = other.labels;
+            this.bucket = other.bucket;
             this.contentId = other.contentId;
             this.instrumentName = other.instrumentName;
             this.labName = other.labName;
@@ -144,33 +154,54 @@ public interface DetailsReaderTemplate<
             this.annotations = other.annotations;
         }
 
+
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof FileItemTemplate)) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof FileItemTemplate)) {
+                return false;
+            }
             FileItemTemplate that = (FileItemTemplate) o;
-
-            return id == that.id;
-
+            return id == that.id &&
+                sizeInBytes == that.sizeInBytes &&
+                instrumentId == that.instrumentId &&
+                copy == that.copy &&
+                Objects.equals(uploadDate, that.uploadDate) &&
+                Objects.equals(labels, that.labels) &&
+                Objects.equals(bucket, that.bucket) &&
+                Objects.equals(contentId, that.contentId) &&
+                Objects.equals(instrumentName, that.instrumentName) &&
+                Objects.equals(labName, that.labName) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(owner, that.owner) &&
+                Objects.equals(ownerEmail, that.ownerEmail) &&
+                Objects.equals(specieName, that.specieName) &&
+                Objects.equals(conditions, that.conditions) &&
+                Objects.equals(annotations, that.annotations);
         }
 
         @Override
         public int hashCode() {
-            int result = (int) (id ^ (id >>> 32));
-            result = 31 * result + (int) (sizeInBytes ^ (sizeInBytes >>> 32));
-            result = 31 * result + (uploadDate != null ? uploadDate.hashCode() : 0);
-            result = 31 * result + (labels != null ? labels.hashCode() : 0);
-            result = 31 * result + (contentId != null ? contentId.hashCode() : 0);
-            result = 31 * result + (instrumentName != null ? instrumentName.hashCode() : 0);
-            result = 31 * result + (labName != null ? labName.hashCode() : 0);
-            result = 31 * result + (int) (instrumentId ^ (instrumentId >>> 32));
-            result = 31 * result + (name != null ? name.hashCode() : 0);
-            result = 31 * result + (owner != null ? owner.hashCode() : 0);
-            result = 31 * result + (ownerEmail != null ? ownerEmail.hashCode() : 0);
-            result = 31 * result + (specieName != null ? specieName.hashCode() : 0);
-            result = 31 * result + (copy ? 1 : 0);
-            return result;
+            return Objects.hash(
+                id,
+                sizeInBytes,
+                uploadDate,
+                labels,
+                bucket,
+                contentId,
+                instrumentName,
+                labName,
+                instrumentId,
+                name,
+                owner,
+                ownerEmail,
+                specieName,
+                copy,
+                conditions,
+                annotations
+            );
         }
     }
 
@@ -297,19 +328,29 @@ public interface DetailsReaderTemplate<
         public final ImmutableSortedSet<SharedPerson> sharedPersons;
         public final ImmutableList<AttachmentItem> attachments;
 
-        public ProjectItemTemplate(long id, String name, String description, Date modified, boolean aPublic,
-                                   ImmutableSortedSet<SharedGroup> sharedGroups, Long labHead, String ownerEmail,
-                                   boolean aPrivate, ImmutableList<AttachmentItem> attachments, int totalSharedMembers,
-                                   String areaOfResearch, ImmutableSortedSet<SharedPerson> sharedPersons, Long lab) {
+        public ProjectItemTemplate(long id,
+                                   String name,
+                                   String description,
+                                   Date modified,
+                                   boolean isPublic,
+                                   ImmutableSortedSet<SharedGroup> sharedGroups,
+                                   Long labHead,
+                                   String ownerEmail,
+                                   boolean isPrivate,
+                                   ImmutableList<AttachmentItem> attachments,
+                                   int totalSharedMembers,
+                                   String areaOfResearch,
+                                   ImmutableSortedSet<SharedPerson> sharedPersons,
+                                   Long lab) {
             this.id = id;
             this.name = name;
             this.description = description;
             this.modified = modified;
-            isPublic = aPublic;
+            this.isPublic = isPublic;
             this.sharedGroups = sharedGroups;
             this.labHead = labHead;
             this.ownerEmail = ownerEmail;
-            isPrivate = aPrivate;
+            this.isPrivate = isPrivate;
             this.attachments = attachments;
             this.totalSharedMembers = totalSharedMembers;
             this.areaOfResearch = areaOfResearch;
@@ -352,10 +393,19 @@ public interface DetailsReaderTemplate<
         public final InstrumentAccess access;
         public final String studyType;
 
-        public InstrumentItemTemplate(long id, String name, String vendor, String model, long modelId, String serialNumber,
-                                      String creator, String peripherals,
+        public InstrumentItemTemplate(long id,
+                                      String name,
+                                      String vendor,
+                                      String model,
+                                      long modelId,
+                                      String serialNumber,
+                                      String creator,
+                                      String peripherals,
                                       ImmutableSortedSet<SharedPerson> operators,
-                                      LabItemTemplate lab, String type, InstrumentAccess access, String studyType) {
+                                      LabItemTemplate lab,
+                                      String type,
+                                      InstrumentAccess access,
+                                      String studyType) {
             this.id = id;
             this.name = name;
             this.vendor = vendor;
@@ -370,7 +420,6 @@ public interface DetailsReaderTemplate<
             this.access = access;
             this.studyType = studyType;
         }
-
 
         public InstrumentItemTemplate(InstrumentItemTemplate other) {
             this.id = other.id;
@@ -400,7 +449,14 @@ public interface DetailsReaderTemplate<
         public final String contactEmail;
         public final Date modified;
 
-        public LabItemTemplate(long id, String name, String institutionUrl, String headFirstName, String headLastName, String headEmail, String contactEmail, Date modified) {
+        public LabItemTemplate(long id,
+                               String name,
+                               String institutionUrl,
+                               String headFirstName,
+                               String headLastName,
+                               String headEmail,
+                               String contactEmail,
+                               Date modified) {
             this.id = id;
             this.name = name;
             this.institutionUrl = institutionUrl;
@@ -416,7 +472,15 @@ public interface DetailsReaderTemplate<
 
         public final long membersCount;
 
-        public LabItemTemplateDetailed(long id, String name, String institutionUrl, String headFirstName, String headLastName, String headEmail, String contactEmail, Date modified, long membersCount) {
+        public LabItemTemplateDetailed(long id,
+                                       String name,
+                                       String institutionUrl,
+                                       String headFirstName,
+                                       String headLastName,
+                                       String headEmail,
+                                       String contactEmail,
+                                       Date modified,
+                                       long membersCount) {
             super(id, name, institutionUrl, headFirstName, headLastName, headEmail, contactEmail, modified);
             this.membersCount = membersCount;
         }
@@ -441,30 +505,24 @@ public interface DetailsReaderTemplate<
         }
 
         @Override
-        @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof MetaFactorTemplate)) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof MetaFactorTemplate)) {
+                return false;
+            }
             MetaFactorTemplate that = (MetaFactorTemplate) o;
-
-            if (experimentId != that.experimentId) return false;
-            if (id != that.id) return false;
-            if (isNumeric != that.isNumeric) return false;
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-            if (units != null ? !units.equals(that.units) : that.units != null) return false;
-
-            return true;
+            return isNumeric == that.isNumeric &&
+                id == that.id &&
+                experimentId == that.experimentId &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(units, that.units);
         }
 
         @Override
         public int hashCode() {
-            int result = name != null ? name.hashCode() : 0;
-            result = 31 * result + (units != null ? units.hashCode() : 0);
-            result = 31 * result + (isNumeric ? 1 : 0);
-            result = 31 * result + (int) (id ^ (id >>> 32));
-            result = 31 * result + (int) (experimentId ^ (experimentId >>> 32));
-            return result;
+            return Objects.hash(name, units, isNumeric, id, experimentId);
         }
     }
 
@@ -475,7 +533,11 @@ public interface DetailsReaderTemplate<
         public final ImmutableSortedSet<MemberItemTemplate> members;
         public final ImmutableSortedSet<SharedProjectItemTemplate> sharedProjects;
 
-        public GroupItemTemplate(long id, String name, Date lastModified, ImmutableSortedSet<MemberItemTemplate> members, ImmutableSortedSet<SharedProjectItemTemplate> sharedProjects) {
+        public GroupItemTemplate(long id,
+                                 String name,
+                                 Date lastModified,
+                                 ImmutableSortedSet<MemberItemTemplate> members,
+                                 ImmutableSortedSet<SharedProjectItemTemplate> sharedProjects) {
             this.id = id;
             this.name = name;
             this.lastModified = lastModified;
@@ -517,26 +579,23 @@ public interface DetailsReaderTemplate<
             this.sampleId = sampleId;
         }
 
+
         @Override
-        @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Annotations)) return false;
-
-            Annotations that = (Annotations) o;
-
-            if (fractionNumber != null ? !fractionNumber.equals(that.fractionNumber) : that.fractionNumber != null)
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Annotations)) {
                 return false;
-            if (sampleId != null ? !sampleId.equals(that.sampleId) : that.sampleId != null) return false;
-
-            return true;
+            }
+            Annotations that = (Annotations) o;
+            return Objects.equals(fractionNumber, that.fractionNumber) &&
+                Objects.equals(sampleId, that.sampleId);
         }
 
         @Override
         public int hashCode() {
-            int result = fractionNumber != null ? fractionNumber.hashCode() : 0;
-            result = 31 * result + (sampleId != null ? sampleId.hashCode() : 0);
-            return result;
+            return Objects.hash(fractionNumber, sampleId);
         }
     }
 
@@ -552,29 +611,27 @@ public interface DetailsReaderTemplate<
             this.ownerId = ownerId;
         }
 
+
         @Override
-        @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof AttachmentItem)) return false;
-            if (!super.equals(o)) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof AttachmentItem)) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
             AttachmentItem that = (AttachmentItem) o;
-
-            if (ownerId != that.ownerId) return false;
-            if (sizeInBytes != that.sizeInBytes) return false;
-            if (uploadDate != null ? !uploadDate.equals(that.uploadDate) : that.uploadDate != null) return false;
-
-            return true;
+            return sizeInBytes == that.sizeInBytes &&
+                ownerId == that.ownerId &&
+                Objects.equals(uploadDate, that.uploadDate);
         }
 
         @Override
         public int hashCode() {
-            int result = super.hashCode();
-            result = 31 * result + (int) (sizeInBytes ^ (sizeInBytes >>> 32));
-            result = 31 * result + (uploadDate != null ? uploadDate.hashCode() : 0);
-            result = 31 * result + (int) (ownerId ^ (ownerId >>> 32));
-            return result;
+            return Objects.hash(super.hashCode(), sizeInBytes, uploadDate, ownerId);
         }
     }
 
@@ -590,64 +647,57 @@ public interface DetailsReaderTemplate<
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof SharedGroup)) return false;
-            if (!super.equals(o)) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof SharedGroup)) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
             SharedGroup that = (SharedGroup) o;
-
-            return allowWrite == that.allowWrite && numberOfMembers == that.numberOfMembers;
-
+            return numberOfMembers == that.numberOfMembers &&
+                allowWrite == that.allowWrite;
         }
 
         @Override
         public int hashCode() {
-            int result = super.hashCode();
-            result = 31 * result + numberOfMembers;
-            result = 31 * result + (allowWrite ? 1 : 0);
-            return result;
+            return Objects.hash(super.hashCode(), numberOfMembers, allowWrite);
         }
     }
 
     final class SharedPerson extends NamedItem {
-        public final long id;
-        public final String name;
         public final String email;
         public final boolean allowWrite;
 
         public SharedPerson(long id, String name, String email, boolean allowWrite) {
             super(id, name);
-            this.id = id;
-            this.name = name;
             this.email = email;
             this.allowWrite = allowWrite;
         }
 
         @Override
-        @SuppressWarnings("all")
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof SharedPerson)) return false;
-            if (!super.equals(o)) return false;
-
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof SharedPerson)) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
             SharedPerson that = (SharedPerson) o;
-
-            if (allowWrite != that.allowWrite) return false;
-            if (id != that.id) return false;
-            if (email != null ? !email.equals(that.email) : that.email != null) return false;
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-
-            return true;
+            return id == that.id &&
+                allowWrite == that.allowWrite &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(email, that.email);
         }
 
         @Override
         public int hashCode() {
-            int result = super.hashCode();
-            result = 31 * result + (int) (id ^ (id >>> 32));
-            result = 31 * result + (name != null ? name.hashCode() : 0);
-            result = 31 * result + (email != null ? email.hashCode() : 0);
-            result = 31 * result + (allowWrite ? 1 : 0);
-            return result;
+            return Objects.hash(super.hashCode(), id, name, email, allowWrite);
         }
     }
 
@@ -662,14 +712,24 @@ public interface DetailsReaderTemplate<
             this.experimentName = experimentName;
         }
 
+
         @Override
-        public int hashCode() {
-            return (int) (32 + id * 32);
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ConditionItem)) {
+                return false;
+            }
+            ConditionItem that = (ConditionItem) o;
+            return id == that.id &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(experimentName, that.experimentName);
         }
 
         @Override
-        public boolean equals(Object obj) {
-            return obj != null && obj instanceof ConditionItem && (this.id == (((ConditionItem) obj).id));
+        public int hashCode() {
+            return Objects.hash(id, name, experimentName);
         }
     }
 
@@ -684,7 +744,17 @@ public interface DetailsReaderTemplate<
         public final List<AttachmentItem> attachments;
         public final String ownerEmail;
 
-        public ExperimentShortInfo(long id, String labName, String name, String description, String projectName, String specie, List<? extends ShortExperimentFileItem> files, List<AttachmentItem> attachments, String ownerEmail) {
+        public ExperimentShortInfo(
+            long id,
+            String labName,
+            String name,
+            String description,
+            String projectName,
+            String specie,
+            List<? extends ShortExperimentFileItem> files,
+            List<AttachmentItem> attachments,
+            String ownerEmail
+        ) {
             this.id = id;
             this.labName = labName;
             this.name = name;
@@ -703,7 +773,10 @@ public interface DetailsReaderTemplate<
         public final ImmutableList<ConditionItem> conditions;
         public final ImmutableList<AnnotationItem> annotations;
 
-        public ShortExperimentFileItem(long id, String name, ImmutableList<ConditionItem> conditions, ImmutableList<AnnotationItem> annotations) {
+        public ShortExperimentFileItem(long id,
+                                       String name,
+                                       ImmutableList<ConditionItem> conditions,
+                                       ImmutableList<AnnotationItem> annotations) {
             this.id = id;
             this.name = name;
             this.conditions = conditions;

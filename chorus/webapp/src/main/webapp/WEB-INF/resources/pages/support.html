@@ -22,20 +22,26 @@
     <script type="text/javascript" src="../script/error-catcher.js"></script>
     <script type="text/javascript" src="../lib/jquery/jquery.cookie.js"></script>
     <script type="text/javascript" src="../lib/detect-js/detect.js"></script>
-    <script type="text/javascript" src="../script/support.js"></script>
+    <script type="text/javascript" src="../script/support.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/user-guide.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/algorithm.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/security-back.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/service/features-back.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/feature.service.js?_version=${static.resources.version}"></script>
+    <script type="text/javascript" src="../script/service/user-details.service.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/controller/security-front.js?_version=${static.resources.version}"></script>
-    <script type="text/javascript" src="../script/service/issues-back.js"></script>
 
     <script src="../lib/jquery/jquery.highlight-4.js"></script>
 
     <script type="text/javascript" src="../script/modals.js"></script>
-    <script type="text/javascript" src="../script/components/current-year.directive.js"></script>
+    <script type="text/javascript"
+            src="../script/components/template-components.js?_version=${static.resources.version}"></script>
     <script type="text/javascript" src="../script/appearance/appearance.js"></script>
     <script type="text/javascript" src="../script/appearance/appearance.service.js"></script>
     <script type="text/javascript" src="../script/header/header.js"></script>
     <script type="text/javascript" src="../script/header/header.controller.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.js"></script>
+    <script type="text/javascript" src="../script/footer/footer.controller.js"></script>
 
     <!-- Custom Fonts -->
     <link rel="stylesheet" href="../fonts/fonts.css">
@@ -48,29 +54,27 @@
         }
       </style>
     <![endif]-->
+    <link rel="stylesheet" href="../lib/jquery-ui/jquery-ui.css"/>
     <link rel="stylesheet" href="../css/dialogs.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/user-guide.css">
+    <link rel="stylesheet" href="../css/api-documentation.css">
 
-    <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-        ga('create', 'UA-41329240-1', 'chorusproject.org');
-        ga('send', 'pageview');
+    <link rel="stylesheet" href="../css/consent-to-cookies-usage.css?_version=${static.resources.version}">
+    <script type="text/javascript"
+            src="../script/consent-to-cookies-usage.js?_version=${static.resources.version}"></script>
 
-    </script>
 </head>
 <body class="static-page" ng-controller="support-controller">
     <div class="fixed-area">
-        <div ng-init="activePage = 'support'" class="ng-include: 'header.html'"></div>
+        <div ng-init="activePage = 'support'; showConsent = true;" class="ng-include: 'header.html'"></div>
     </div>
     <div class="main-content">
         <div class="content-box clearfix">
             <div class="center-frame">
                 <div class="search-area clearfix">
-                    <h2>Support</h2>
+                    <h2 style="margin-left: -150px;">Knowledge Center</h2>
                     <div class="input-append">
                         <span class="icon search-icon" ng-click="search()"></span>
                         <input ng-model="searchQuery" on-enter="search()"
@@ -86,8 +90,16 @@
                                     <p><span class="icon email"></span><strong><a href={{forumProperties.url}}">Post to our on-line forum questions</a></strong></p>
                                 </div>
                                 <ul class="nav nav-tabs">
-                                    <li ng-class="{active: getActiveTab() == 'questions'}"><a href="#/questions" ng-click="tabClick('questions')">FAQ</a></li>
-                                    <li ng-class="{active: getActiveTab() == 'videos'}"><a href="#/videos" ng-click="tabClick('videos')">Videos</a></li>
+                                    <li ng-class="{active: getActiveTab() == 'questions'}"><a href="#/questions">FAQ</a>
+                                    </li>
+                                    <li ng-class="{active: getActiveTab() == 'videos'}"><a href="#/videos">Videos</a>
+                                    </li>
+                                    <li ng-class="{active: getActiveTab() == 'user-guide'}"><a href="#/user-guide">User Guide</a></li>
+                                    <li ng-class="{active: getActiveTab() == 'algorithm'}"><a href="#/algorithm">Algorithms</a></li>
+                                    <li ng-class="{active: getActiveTab() == 'releases'}"><a
+                                            href="#/releases">Releases</a></li>
+                                    <li ng-class="{active: getActiveTab() == 'documentation'}"><a
+                                            href="#/documentation">API Reference</a></li>
                                     <!--<li ng-class="{active: getActiveTab() == 'documentation'}"><a href="#/documentation" ng-click="tabClick('documentation')">Documentation</a></li>
                                     <li ng-class="{active: getActiveTab() == 'message'}"><a href="#/message" ng-click="tabClick('message')">Leave Us a Message</a></li>-->
                                 </ul>
@@ -108,7 +120,7 @@
                                         <li ng-class="{active: isLinkActive('questions', 'instruments')}"><a href="#/questions/instruments"><i class="bullet"></i>Instruments</a></li>
                                         <li ng-class="{active: isLinkActive('questions', 'groups')}"><a href="#/questions/groups"><i class="bullet"></i>Sharing Groups</a></li>
                                         <li ng-class="{active: isLinkActive('questions', 'messaging')}"><a href="#/questions/messaging"><i class="bullet"></i>Messaging</a></li>
-                                        <li hide-when-private-installation="true" ng-class="{active: isLinkActive('questions', 'billing')}"><a href="#/questions/billing"><i class="bullet"></i>Billing</a></li>
+                                        <li hide-if-private-installation ng-class="{active: isLinkActive('questions', 'billing')}"><a href="#/questions/billing"><i class="bullet"></i>Billing</a></li>
                                     </ul>
                                 </div>
 
@@ -125,9 +137,34 @@
                                     </ul>
                                 </div>
 
+                                <div ng-switch-when="releases" class="sidebar sidebar-menu">
+                                    <h3>Release Notes</h3>
+                                    <ul class="nav">
+                                        <li ng-repeat="version in releaseVersions"
+                                            ng-class="{active: isLinkActive('releases', version)}">
+                                            <a href="#/releases/{{ version }}">
+                                                <i class="bullet"></i>Release {{ version }}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div ng-switch-when="user-guide" class="sidebar sidebar-menu user-guide">
+                                    <h3>Topics</h3>
+                                    <ul class="nav">
+                                        <li ng-repeat="topic in userGuideTopics" ng-class="{active: isLinkActive('user-guide', topic.key)}"><a href="#/user-guide/{{ topic.key }}"><i class="bullet"></i>{{topic.title}}</a></li>
+                                    </ul>
+                                </div>
+                                <div ng-switch-when="algorithm" class="sidebar sidebar-menu">
+                                    <h3>Algorithm version</h3>
+                                    <ul class="nav">
+                                        <li ng-class="{active: isLinkActive('algorithm', 'v1.0.0')}"><a href="#/algorithm/v1.0.0"><i class="bullet"></i>Version 1.0.0</a></li>
+                                    </ul>
+                                </div>
+
                             </div>
 
-                            <div class="content" ng-view></div>
+                            <div class="content" ng-class="{'user-guide': getActiveTab() == 'user-guide'}" ng-view></div>
 
                         </div>
                     </div>

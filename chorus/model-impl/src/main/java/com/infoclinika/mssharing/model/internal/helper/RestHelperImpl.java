@@ -5,7 +5,6 @@ import com.infoclinika.mssharing.model.helper.RestHelper;
 import com.infoclinika.mssharing.model.internal.entity.Instrument;
 import com.infoclinika.mssharing.model.internal.entity.RestToken;
 import com.infoclinika.mssharing.model.internal.entity.User;
-import com.infoclinika.mssharing.model.internal.repository.FeaturesRepository;
 import com.infoclinika.mssharing.model.internal.repository.InstrumentRepository;
 import com.infoclinika.mssharing.model.internal.repository.RestTokenRepository;
 import com.infoclinika.mssharing.model.internal.repository.UserRepository;
@@ -17,28 +16,20 @@ import java.util.Date;
 import java.util.function.Function;
 
 import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature.ANALYSE_STORAGE;
-import static com.infoclinika.mssharing.services.billing.rest.api.model.BillingFeature.ARCHIVE_STORAGE;
 
 @Service
 public class RestHelperImpl implements RestHelper {
 
     @Inject
     private UserRepository userRepository;
-
     @Inject
     private RestTokenRepository restTokenRepository;
-
     @Inject
     private PasswordEncoder passwordEncoder;
-
     @Inject
     private InstrumentRepository instrumentRepository;
-
     @Inject
-    private BillingFeaturesHelper featuresHelper;
-
-    @Inject
-    private FeaturesRepository featuresRepository;
+    private BillingFeaturesHelper billingFeaturesHelper;
 
     private static Function<User, UserDetails> userDetailsTransformer = user -> {
         if (user == null) {
@@ -46,17 +37,19 @@ public class RestHelperImpl implements RestHelper {
         }
 
         RestToken restToken = user.getRestToken();
-        final Token token = restToken != null ? new Token(restToken.getId(),
-                restToken.getToken(),
-                restToken.getExpirationDate()) : null;
+        final Token token = restToken != null ? new Token(
+            restToken.getId(),
+            restToken.getToken(),
+            restToken.getExpirationDate()
+        ) : null;
         final boolean hasLaboratories = user.getLabs().size() > 0;
         return new UserDetails(
-                user.getId(),
-                user.getEmail(),
-                user.getPasswordHash(),
-                token,
-                user.isEmailVerified(),
-                hasLaboratories
+            user.getId(),
+            user.getEmail(),
+            user.getPasswordHash(),
+            token,
+            user.isEmailVerified(),
+            hasLaboratories
         );
     };
 
@@ -78,8 +71,7 @@ public class RestHelperImpl implements RestHelper {
     public boolean canUploadForInstrument(long instrumentId) {
         final Instrument instrument = instrumentRepository.findOne(instrumentId);
         final long labId = instrument.getLab().getId();
-        return featuresHelper.isFeatureEnabled(labId, ARCHIVE_STORAGE) ||
-                featuresHelper.isFeatureEnabled(labId, ANALYSE_STORAGE);
+        return billingFeaturesHelper.isFeatureEnabled(labId, ANALYSE_STORAGE);
     }
 
     @Override
@@ -97,7 +89,9 @@ public class RestHelperImpl implements RestHelper {
     @Override
     public Token findAndProlongToken(String email) {
         final User user = userRepository.findByEmail(email);
-        if (user == null) return null;
+        if (user == null) {
+            return null;
+        }
         final RestToken restToken = restTokenRepository.findOne(user.getId());
         if (restToken == null) {
             return null;
@@ -125,7 +119,7 @@ public class RestHelperImpl implements RestHelper {
         String token = passwordEncoder.encode(rawString);
         Date expirationDate = new Date(new Date().getTime() + RestHelper.TOKEN_EXPIRATION_TIME);
         RestToken restToken =
-                new RestToken(userDetails.id, token, expirationDate);
+            new RestToken(userDetails.id, token, expirationDate);
         restTokenRepository.save(restToken);
         return new Token(restToken.getId(), restToken.getToken(), restToken.getExpirationDate());
     }

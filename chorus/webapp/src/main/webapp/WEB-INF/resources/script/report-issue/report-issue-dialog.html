@@ -1,0 +1,97 @@
+<div class="report-issue-dialog modal hide" modal-dialog={{returnUrl}}>
+    <div class="modal-holder">
+        <div class="modal-frame">
+            <form name="form" class="report-issue-form" ng-class="{'loading-in-progress': vm.loadingInProgress}"
+                  novalidate>
+                <div class="loading-overlay">
+                    <div class="background"></div>
+                    <div class="spinner"></div>
+                </div>
+
+                <div class="modal-header">
+                    <a data-dismiss="modal" class="close" ng-click="onDismiss()">&times;</a>
+
+                    <h3>
+                        <span>Report Issue</span>
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-body-container">
+                    <div class="control-group clearfix" data-ng-class="{error: vm.form.validation.title}">
+                        <label for="title">Title</label>
+                        <input id="title" class="dialog-text-input dont-hide" name="title" maxlength="255"
+                               ng-model="vm.form.title"/>
+                        <span class="error-message" ng-show="vm.form.validation.title"
+                              ng-bind="vm.form.validation.title"></span>
+                    </div>
+
+                    <div class="control-group" data-ng-class="{error: vm.form.validation.absoluteRt}">
+                        <label>Issue Type</label>
+                        <div class="half-size">
+                            <label for="issue-type-bug" class="radio-label">
+                                <input id="issue-type-bug" value="{{ vm.issueTypes.BUG }}" name="issue-type"
+                                       type="radio" ng-model="vm.form.issueType" ng-checked="vm.isBug()"/>
+                                Bug
+                            </label>
+                        </div>
+                        <div class="half-size">
+                            <label for="issue-type-improvement" class="radio-label">
+                                <input id="issue-type-improvement" value="{{ vm.issueTypes.IMPROVEMENT }}"
+                                       name="issue-type" type="radio" ng-model="vm.form.issueType"
+                                       ng-checked="vm.isImprovement()"/>
+                                Improvement
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="control-group clearfix" data-ng-class="{error: vm.form.validation.priority}">
+                        <label for="priority">Priority</label>
+                        <select id="priority" ui-select2 name="priority" ng-model="vm.form.priority"
+                                data-placeholder="-- Select One --" class="dialog-select" ui-select2-validator>
+                            <option></option>
+                            <option value="{{priority.alias}}" ng-repeat="priority in vm.priorities"
+                                    ng-selected="vm.form.priority==priority.id" ng-bind="priority.name">
+                            </option>
+                        </select>
+                        <span class="error-message"
+                              ng-show="vm.form.validation.priority"
+                              ng-bind="vm.form.validation.priority"></span>
+                    </div>
+
+                    <div class="control-group clearfix" data-ng-class="{error: vm.form.validation.description}">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="5" class="issue-text"
+                                  ng-model="vm.form.description"></textarea>
+                        <span class="error-message" ng-show="vm.form.validation.description"
+                              ng-bind="vm.form.validation.description"></span>
+                    </div>
+
+                    <div ng-show="vm.isBug()" class="control-group clearfix"
+                         data-ng-class="{error: vm.form.validation.stepsToReproduce}">
+                        <label for="stepsToReproduce">Steps to reproduce</label>
+                        <textarea id="stepsToReproduce" name="stepsToReproduce" rows="5" class="issue-text"
+                                  ng-model="vm.form.stepsToReproduce"></textarea>
+                        <span class="error-message" ng-show="vm.form.validation.stepsToReproduce"
+                              ng-bind="vm.form.validation.stepsToReproduce"></span>
+                    </div>
+
+                    <div class="control-group clearfix">
+                        <label for="stepsToReproduce">Attachments</label>
+                        <attachment-drag-and-drop attachments="vm.form.attachments"></attachment-drag-and-drop>
+                    </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn secondary-action"
+                            data-dismiss="modal"
+                            ng-click="onDismiss()">Cancel</button>
+                    <button class="btn btn-primary main-action"
+                            ng-click="vm.submitIssue()">
+                        Submit
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

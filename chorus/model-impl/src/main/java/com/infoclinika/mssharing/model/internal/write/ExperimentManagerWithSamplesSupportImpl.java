@@ -5,15 +5,18 @@ import com.google.common.collect.*;
 import com.infoclinika.mssharing.model.helper.ExperimentSampleItem;
 import com.infoclinika.mssharing.model.internal.entity.*;
 import com.infoclinika.mssharing.model.internal.entity.restorable.ActiveExperiment;
-import com.infoclinika.mssharing.model.internal.entity.PrepToExperimentSample;
+import com.infoclinika.mssharing.model.internal.entity.workflow.PrepToExperimentSample;
 import com.infoclinika.mssharing.model.internal.read.Transformers;
 import com.infoclinika.mssharing.model.internal.repository.ExperimentPreparedSampleRepository;
 import com.infoclinika.mssharing.model.internal.repository.ExperimentSampleRepository;
 import com.infoclinika.mssharing.model.internal.repository.FileMetaDataRepository;
 import com.infoclinika.mssharing.model.internal.repository.PrepToExperimentSampleRepository;
+import com.infoclinika.mssharing.model.write.AnnotationItem;
 import com.infoclinika.mssharing.model.write.ExperimentInfo;
 import com.infoclinika.mssharing.model.write.FileItem;
+import com.infoclinika.mssharing.platform.entity.AnnotationTemplate;
 import com.infoclinika.mssharing.platform.entity.FactorTemplate;
+import com.infoclinika.mssharing.platform.model.impl.entities.AnnotationDefault;
 import com.infoclinika.mssharing.platform.model.write.ExperimentManagementTemplate;
 import com.infoclinika.mssharing.platform.repository.ExperimentFileRepositoryTemplate;
 import com.infoclinika.mssharing.platform.repository.FactorRepositoryTemplate;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.ImmutableList.copyOf;
@@ -33,7 +37,8 @@ import static com.google.common.collect.Sets.newHashSet;
  * @author andrii.loboda
  */
 @Service
-public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManagerWithSamplesSupport<ExperimentInfo, ActiveExperiment> {
+public class ExperimentManagerWithSamplesSupportImpl
+    implements ExperimentManagerWithSamplesSupport<ExperimentInfo, ActiveExperiment> {
     @Inject
     private FactorRepositoryTemplate<Factor> factorRepository;
     @Inject
@@ -49,16 +54,18 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
 
     @Override
     public void updateExperimentFilesWithFactorsAndSamples(ExperimentInfo info, ActiveExperiment experiment) {
-
         //preparing samples to be persisted
-        final HashMultimap<String, String> preparedSampleNameToPrepToExSampleKey = HashMultimap.create(); // prepared sample have multiple prepToExSample and each of them have experimentSample
+        final HashMultimap<String, String> preparedSampleNameToPrepToExSampleKey =
+            HashMultimap.create(); // prepared sample have multiple prepToExSample and each of them have
+        // experimentSample
         final Map<Long, String> fileIdToPreparedSamples = newHashMap();
         final Map<String, ExperimentSampleItem> sampleNameToSample = newHashMap();
-        final ArrayListMultimap<String, String> sampleNameWithTypeToPreparedSampleName = ArrayListMultimap.<String, String>create();
+        final ArrayListMultimap<String, String> sampleNameWithTypeToPreparedSampleName = ArrayListMultimap.create();
         for (FileItem file : info.files) {
             fileIdToPreparedSamples.put(file.id, file.preparedSample.name);
             for (ExperimentSampleItem sample : file.preparedSample.samples) {
-                final String prepToExSampleKey = constructPrepToExSampleKey(sample.name, Transformers.AS_SAMPLE_TYPE.apply(sample.type));
+                final String prepToExSampleKey =
+                    constructPrepToExSampleKey(sample.name, Transformers.AS_SAMPLE_TYPE.apply(sample.type));
                 sampleNameToSample.put(prepToExSampleKey, sample);
                 preparedSampleNameToPrepToExSampleKey.put(file.preparedSample.name, prepToExSampleKey);
                 sampleNameWithTypeToPreparedSampleName.put(prepToExSampleKey, file.preparedSample.name);
@@ -75,24 +82,40 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
             }
         });
 
-        final ImmutableList<Factor> factors = persistFactors(transform(info.factors, transformFactors(experiment, getLevelsOfFactors(copyOf(allSamplesSortedByName)))));
+        final ImmutableList<Factor> factors = persistFactors(transform(
+            info.factors,
+            transformFactors(experiment, getLevelsOfFactors(copyOf(allSamplesSortedByName)))
+        ));
 
         //saving bio-samples
-        final ImmutableList<ExperimentSample> savedSamples = persistExperimentSamples(constructSamples(allSamplesSortedByName));
+        final ImmutableList<ExperimentSample> savedSamples =
+            persistExperimentSamples(constructSamples(allSamplesSortedByName));
 
         //saving prepared-sample
-        final ImmutableList<ExperimentPreparedSample> savedPreparedSamples = persistExperimentPreparedSamples(constructPreparedSamples(preparedSampleNameToPrepToExSampleKey.asMap()));
-        final Map<String, Collection<ExperimentPreparedSample>> sampleNameWithTypeToPreparedSamples = constructSampleNameToSavedPreparedSampleMap(sampleNameWithTypeToPreparedSampleName.asMap(), savedPreparedSamples);
+        final ImmutableList<ExperimentPreparedSample> savedPreparedSamples =
+            persistExperimentPreparedSamples(constructPreparedSamples(preparedSampleNameToPrepToExSampleKey.asMap()));
+        final Map<String, Collection<ExperimentPreparedSample>> sampleNameWithTypeToPreparedSamples =
+            constructSampleNameToSavedPreparedSampleMap(
+                sampleNameWithTypeToPreparedSampleName.asMap(),
+                savedPreparedSamples
+            );
         //saving prep-sample-to-bio-sample
         //one sample can be used in several prepared samples in the same type and different types either
-        final ImmutableList<PrepToExperimentSample> savedPrepToExperimentSamples = persistPrepToExperimentSamples(constructPrepToExSamples(allSamplesSortedByName, savedSamples, sampleNameWithTypeToPreparedSamples));
+        final ImmutableList<PrepToExperimentSample> savedPrepToExperimentSamples =
+            persistPrepToExperimentSamples(constructPrepToExSamples(
+                allSamplesSortedByName,
+                savedSamples,
+                sampleNameWithTypeToPreparedSamples
+            ));
 
 
-        final Map<Long, ExperimentPreparedSample> fileIdToSavedPreparedSample = composeFileIdToPersistedPreparedSamples(fileIdToPreparedSamples, savedPreparedSamples);
+        final Map<Long, ExperimentPreparedSample> fileIdToSavedPreparedSample =
+            composeFileIdToPersistedPreparedSamples(fileIdToPreparedSamples, savedPreparedSamples);
 
 
         //save rawfiles, factors, levels, conditions
-        final ImmutableList<RawFile> rawFilesData = persistExperimentFiles(constructRawFiles(info.files, fileIdToSavedPreparedSample));
+        final ImmutableList<RawFile> rawFilesData =
+            persistExperimentFiles(constructRawFiles(info.files, fileIdToSavedPreparedSample));
 
         experiment.rawFiles.getData().clear();
         experiment.rawFiles.getFactors().clear();
@@ -102,15 +125,17 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
         addConditionsToLevelsAndRawFiles(experiment, savedSamples);
     }
 
-    private Map<String, Collection<ExperimentPreparedSample>> constructSampleNameToSavedPreparedSampleMap(Map<String, Collection<String>> sampleNameWithTypeToPreparedSampleName, ImmutableList<ExperimentPreparedSample> savedPreparedSamples) {
-        final ImmutableMap<String, ExperimentPreparedSample> prepNameToSavedPreparedSample = Maps.uniqueIndex(savedPreparedSamples, new Function<ExperimentPreparedSample, String>() {
-            @Override
-            public String apply(ExperimentPreparedSample preparedSample) {
-                return preparedSample.getName();
-            }
-        });
-        final ArrayListMultimap<String, ExperimentPreparedSample> sampleNameWithTypeToPreparedSamples = ArrayListMultimap.<String, ExperimentPreparedSample>create();
-        for (Map.Entry<String, Collection<String>> sampleNameWithTypeToPreparedSampleNameEntry : sampleNameWithTypeToPreparedSampleName.entrySet()) {
+    private Map<String, Collection<ExperimentPreparedSample>> constructSampleNameToSavedPreparedSampleMap(
+        Map<String, Collection<String>> sampleNameWithTypeToPreparedSampleName,
+        ImmutableList<ExperimentPreparedSample> savedPreparedSamples
+    ) {
+        final ImmutableMap<String, ExperimentPreparedSample> prepNameToSavedPreparedSample =
+            Maps.uniqueIndex(savedPreparedSamples, preparedSample -> preparedSample.getName());
+        final ArrayListMultimap<String, ExperimentPreparedSample> sampleNameWithTypeToPreparedSamples =
+            ArrayListMultimap.<String, ExperimentPreparedSample>create();
+        for (Map.Entry<String, Collection<String>> sampleNameWithTypeToPreparedSampleNameEntry :
+            sampleNameWithTypeToPreparedSampleName
+                .entrySet()) {
             final String sampleNameWithType = sampleNameWithTypeToPreparedSampleNameEntry.getKey();
             final Collection<String> preparedSamplesList = sampleNameWithTypeToPreparedSampleNameEntry.getValue();
             for (String preparedSampleName : preparedSamplesList) {
@@ -118,13 +143,18 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
                 sampleNameWithTypeToPreparedSamples.put(sampleNameWithType, preparedSample);
             }
         }
+
         return sampleNameWithTypeToPreparedSamples.asMap();
     }
 
-    private Iterable<PrepToExperimentSample> constructPrepToExSamples(List<ExperimentSampleItem> allSamplesSortedByName, ImmutableList<ExperimentSample> savedSamples,
-                                                                      Map<String, Collection<ExperimentPreparedSample>> sampleNameWithTypeToPreparedSamples) {
+    private Iterable<PrepToExperimentSample> constructPrepToExSamples(
+        List<ExperimentSampleItem> allSamplesSortedByName,
+        ImmutableList<ExperimentSample> savedSamples,
+        Map<String, Collection<ExperimentPreparedSample>> sampleNameWithTypeToPreparedSamples
+    ) {
         final Map<String, ExperimentSample> sampleNameToSavedSample = newHashMap();
-        final ArrayListMultimap<String, ExperimentSampleItem> sampleNameToItem = ArrayListMultimap.<String, ExperimentSampleItem>create();
+        final ArrayListMultimap<String, ExperimentSampleItem> sampleNameToItem =
+            ArrayListMultimap.<String, ExperimentSampleItem>create();
         for (ExperimentSample sample : savedSamples) {
             sampleNameToSavedSample.put(sample.getName(), sample);
         }
@@ -133,7 +163,8 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
         }
         final List<PrepToExperimentSample> prepToExperimentSamples = newArrayList();
         // for each sample item, find saved sample
-        for (Map.Entry<String, Collection<ExperimentSampleItem>> sampleNameToItemEntry : sampleNameToItem.asMap().entrySet()) {
+        for (Map.Entry<String, Collection<ExperimentSampleItem>> sampleNameToItemEntry : sampleNameToItem.asMap()
+            .entrySet()) {
 
             final ExperimentSample savedSample = sampleNameToSavedSample.get(sampleNameToItemEntry.getKey());
             final Collection<ExperimentSampleItem> diffTypesOfOneSample = sampleNameToItemEntry.getValue();
@@ -141,28 +172,51 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
 
                 // find prepared sample which have this sample with sample type
                 final ExperimentSampleType experimentSampleType = Transformers.AS_SAMPLE_TYPE.apply(sampleItem.type);
-                final Set<ExperimentPreparedSample> prepSamplesWhichContainsSampleWithType = findPreparedSampleWithSample(sampleItem.name, experimentSampleType, sampleNameWithTypeToPreparedSamples);
+                final Set<ExperimentPreparedSample> prepSamplesWhichContainsSampleWithType =
+                    findPreparedSampleWithSample(
+                        sampleItem.name,
+                        experimentSampleType,
+                        sampleNameWithTypeToPreparedSamples
+                    );
                 // add prep to experiment samples for specific sample for specific type(LIGHT, HEAVY)
                 for (ExperimentPreparedSample preparedSample : prepSamplesWhichContainsSampleWithType) {
-                    prepToExperimentSamples.add(new PrepToExperimentSample(preparedSample, savedSample, experimentSampleType));
+                    prepToExperimentSamples.add(new PrepToExperimentSample(
+                        preparedSample,
+                        savedSample,
+                        experimentSampleType
+                    ));
                 }
             }
 
         }
+
         return prepToExperimentSamples;
     }
 
-    private Set<ExperimentPreparedSample> findPreparedSampleWithSample(String name, ExperimentSampleType experimentSampleType, Map<String, Collection<ExperimentPreparedSample>> sampleNameWithTypeToPreparedSamples) {
-        return newHashSet(sampleNameWithTypeToPreparedSamples.get(constructPrepToExSampleKey(name, experimentSampleType)));
+    private Set<ExperimentPreparedSample> findPreparedSampleWithSample(
+        String name,
+        ExperimentSampleType experimentSampleType,
+        Map<String, Collection<ExperimentPreparedSample>> sampleNameWithTypeToPreparedSamples
+    ) {
+
+
+        return newHashSet(sampleNameWithTypeToPreparedSamples.get(constructPrepToExSampleKey(
+            name,
+            experimentSampleType
+        )));
     }
 
-    private Iterable<ExperimentPreparedSample> constructPreparedSamples(Map<String, Collection<String>> preparedSampleNameToSamples) {
+    private Iterable<ExperimentPreparedSample> constructPreparedSamples(
+        Map<String, Collection<String>> preparedSampleNameToSamples
+    ) {
         Set<ExperimentPreparedSample> preparedSamplesToPersist = newHashSet();
 
-        for (Map.Entry<String, Collection<String>> prepSampleToSamples : preparedSampleNameToSamples.entrySet()) { // for each prepared sample name create an entity
+        for (Map.Entry<String, Collection<String>> prepSampleToSamples : preparedSampleNameToSamples.entrySet()) {
+            // for each prepared sample name create an entity
             final String prepSampleName = prepSampleToSamples.getKey();
             preparedSamplesToPersist.add(new ExperimentPreparedSample(prepSampleName, newHashSet()));
         }
+
         return preparedSamplesToPersist;
     }
 
@@ -171,17 +225,20 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
     }
 
 
-    private Map<Long, ExperimentPreparedSample> composeFileIdToPersistedPreparedSamples(Map<Long, String> fileIdToPreparedSamples, ImmutableList<ExperimentPreparedSample> savedPreparedSamples) {
+    private Map<Long, ExperimentPreparedSample> composeFileIdToPersistedPreparedSamples(
+        Map<Long, String> fileIdToPreparedSamples,
+        ImmutableList<ExperimentPreparedSample> savedPreparedSamples
+    ) {
         Map<Long, ExperimentPreparedSample> fileIdToPreparedSample = newHashMap();
-        final ImmutableMap<String, ExperimentPreparedSample> prepSampleNameToPrepSample = Maps.uniqueIndex(savedPreparedSamples, new Function<ExperimentPreparedSample, String>() {
-            @Override
-            public String apply(ExperimentPreparedSample preparedSample) {
-                return preparedSample.getName();
-            }
-        });
+        final ImmutableMap<String, ExperimentPreparedSample> prepSampleNameToPrepSample =
+            Maps.uniqueIndex(savedPreparedSamples, preparedSample -> preparedSample.getName());
         for (Map.Entry<Long, String> fileIdToPrepSampleEntry : fileIdToPreparedSamples.entrySet()) {
-            fileIdToPreparedSample.put(fileIdToPrepSampleEntry.getKey(), prepSampleNameToPrepSample.get(fileIdToPrepSampleEntry.getValue()));
+            fileIdToPreparedSample.put(
+                fileIdToPrepSampleEntry.getKey(),
+                prepSampleNameToPrepSample.get(fileIdToPrepSampleEntry.getValue())
+            );
         }
+
         return fileIdToPreparedSample;
     }
 
@@ -198,43 +255,77 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
         return copyOf(experimentSampleRepository.save(samples));
     }
 
-    private ImmutableList<ExperimentPreparedSample> persistExperimentPreparedSamples(Iterable<ExperimentPreparedSample> preparedSamples) {
+    private ImmutableList<ExperimentPreparedSample> persistExperimentPreparedSamples(
+        Iterable<ExperimentPreparedSample> preparedSamples
+    ) {
         return copyOf(experimentPreparedSampleRepository.save(preparedSamples));
     }
 
-    private ImmutableList<PrepToExperimentSample> persistPrepToExperimentSamples(Iterable<PrepToExperimentSample> preparedSamples) {
+    private ImmutableList<PrepToExperimentSample> persistPrepToExperimentSamples(
+        Iterable<PrepToExperimentSample> preparedSamples
+    ) {
         return copyOf(prepToExperimentSampleRepository.save(preparedSamples));
     }
 
-    private ImmutableCollection<RawFile> constructRawFiles(final Collection<FileItem> files, Map<Long, ExperimentPreparedSample> fileIdToPreparedSample) {
-
-        return copyOf(Collections2.transform(files, new Function<FileItem, RawFile>() {
-            @Override
-            public RawFile apply(FileItem input) {
-
-                final RawFile fileTemplate = new RawFile();
-                fileTemplate.setFileMetaData(fileMetaDataRepository.findOne(input.id));
-                fileTemplate.setCopy(input.copy);
-                fileTemplate.setPreparedSample(fileIdToPreparedSample.get(input.id));
-                fileTemplate.setFractionNumber(input.fractionNumber);
-                return fileTemplate;
-            }
-        }));
-    }
-
-    private static ImmutableCollection<ExperimentSample> constructSamples(final Collection<ExperimentSampleItem> samples) {
+    private static ImmutableCollection<ExperimentSample> constructSamples(
+        final Collection<ExperimentSampleItem> samples
+    ) {
         final Map<String, ExperimentSampleItem> samplesWithoutDuplicates = newHashMap();
         for (ExperimentSampleItem sample : samples) {
             samplesWithoutDuplicates.put(sample.name, sample);
         }
-        return copyOf(Collections2.transform(samplesWithoutDuplicates.values(), new Function<ExperimentSampleItem, ExperimentSample>() {
-            @Override
-            public ExperimentSample apply(ExperimentSampleItem sampleItem) {
+
+        return copyOf(Collections2.transform(
+            samplesWithoutDuplicates.values(),
+
+            sampleItem -> {
                 final ExperimentSample sample = new ExperimentSample();
                 sample.getFactorValues().addAll(sampleItem.factorValues);
+                sample.setAnnotationValues(constructAnnotations(sampleItem.annotationValues));
                 sample.setName(sampleItem.name);
                 return sample;
             }
+        ));
+    }
+
+    private static Set<AnnotationTemplate> constructAnnotations(List<AnnotationItem> annotationValues) {
+        return annotationValues
+            .stream()
+            .map(ExperimentManagerWithSamplesSupportImpl::makeAnnotationTemplate)
+            .collect(Collectors.toSet());
+    }
+
+    private static AnnotationDefault makeAnnotationTemplate(AnnotationItem src) {
+        final AnnotationDefault annotation = new AnnotationDefault();
+        annotation.setName(src.name);
+        annotation.setType(makeType(src.isNumeric));
+        annotation.setUnits(src.units);
+        annotation.setValue(src.value);
+
+        return annotation;
+    }
+
+    private static AnnotationTemplate.Type makeType(boolean isNumeric) {
+        return isNumeric
+            ? AnnotationTemplate.Type.INTEGER
+            : AnnotationTemplate.Type.STRING;
+    }
+
+    private ImmutableCollection<RawFile> constructRawFiles(
+        final Collection<FileItem> files,
+        Map<Long, ExperimentPreparedSample> fileIdToPreparedSample
+    ) {
+        return copyOf(Collections2.transform(files, input -> {
+
+            final RawFile fileTemplate = new RawFile();
+            fileTemplate.setFileMetaData(fileMetaDataRepository.findOne(input.id));
+            fileTemplate.setCopy(input.copy);
+            fileTemplate.setPreparedSample(fileIdToPreparedSample.get(input.id));
+            fileTemplate.setFractionNumber(input.fractionNumber);
+            fileTemplate.setPairedEnd(input.pairedEnd);
+
+            return fileTemplate;
+
         }));
     }
 
@@ -252,32 +343,32 @@ public class ExperimentManagerWithSamplesSupportImpl implements ExperimentManage
                 valuesSet.add(sampleItem.factorValues.get(i));
             }
         }
+
         return factorValuesList;
     }
 
-    private static Function<ExperimentManagementTemplate.MetaFactorTemplate, Factor> transformFactors(final ActiveExperiment experiment, List<Set<String>> levelsOfFactors) {
+    private static Function<ExperimentManagementTemplate.MetaFactorTemplate, Factor> transformFactors(
+        final ActiveExperiment experiment,
+        List<Set<String>> levelsOfFactors
+    ) {
         final Iterator<Set<String>> iterator = levelsOfFactors.iterator();
-        return new Function<ExperimentManagementTemplate.MetaFactorTemplate, Factor>() {
-            @Override
-            public Factor apply(ExperimentManagementTemplate.MetaFactorTemplate input) {
+        return input -> {
 
-                final Set<String> levelValues = iterator.next();
-                final Factor factor = new Factor();
-                factor.setName(input.name);
-                factor.setExperiment(experiment);
-                factor.getLevels().addAll(from(levelValues).transform(new Function<String, Level>() {
-                    @Override
-                    public Level apply(String input) {
-                        final Level level = new Level();
-                        level.setName(input);
-                        level.setFactor(factor);
-                        return level;
-                    }
-                }).toList());
-                factor.setType(input.isNumeric ? FactorTemplate.Type.INTEGER : FactorTemplate.Type.STRING);
-                factor.setUnits(input.units);
-                return factor;
-            }
+            final Set<String> levelValues = iterator.next();
+            final Factor factor = new Factor();
+            factor.setName(input.name);
+            factor.setExperiment(experiment);
+            factor.getLevels().addAll(from(levelValues).transform(input1 -> {
+                final Level level = new Level();
+                level.setName(input1);
+                level.setFactor(factor);
+                return level;
+            }).toList());
+            factor.setType(input.isNumeric ? FactorTemplate.Type.INTEGER : FactorTemplate.Type.STRING);
+            factor.setUnits(input.units);
+
+            return factor;
+
         };
     }
 

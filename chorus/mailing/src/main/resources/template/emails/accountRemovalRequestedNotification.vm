@@ -1,0 +1,12 @@
+Chorus: Account Removal Requested
+
+Hello!
+
+The following account removal has been requested on ${date}:
+
+User ID: ${userId}
+User Email: ${userEmail}
+
+The account will be automatically removed in 24-hours unless the user revokes the request.
+
+Thanks!

@@ -1,6 +1,6 @@
 package com.infoclinika.mssharing.model.internal.repository;
 
-import com.infoclinika.mssharing.model.internal.entity.PrepToExperimentSample;
+import com.infoclinika.mssharing.model.internal.entity.workflow.PrepToExperimentSample;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
