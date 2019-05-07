@@ -452,7 +452,7 @@ var defaultPage = "/pages/dashboard.html";
             },
             controller: function ($scope) {
 
-                const WITH_USAGES_FEATURE_TYPES = ["Translation", "Protein ID Search", "Public data download", "Download", "Daily archive storage", "Daily active storage"];
+                const WITH_USAGES_FEATURE_TYPES = ["Protein ID Search", "Public data download", "Download", "Daily archive storage", "Daily active storage"];
                 const MONTHLY_CHARGED_FEATURE_TYPES = ["Processing", "Storage", "Archive storage"];
                 const PROCESSING_FEATURE = "Processing";
                 const FILES_SIZE_FILTER = $filter("fileSize");
@@ -462,9 +462,6 @@ var defaultPage = "/pages/dashboard.html";
                 $scope.translationBillSelected = false;
                 $scope.selectStorage = function () {
                     $scope.storageBillSelected = !$scope.storageBillSelected;
-                };
-                $scope.selectTranslation = function () {
-                    $scope.translationBillSelected = !$scope.translationBillSelected;
                 };
                 $scope.getBalance = function (featureItem) {
                     if (featureItem.balance !== 0 && !featureItem.balance) {
