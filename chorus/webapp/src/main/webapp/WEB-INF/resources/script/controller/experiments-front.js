@@ -2588,15 +2588,8 @@ var ExperimentViewer = function (containerSelector,
 
     var _this = this;
 
-    this.isRetranslateAvailable = function () {
-        return _this.status == "FAILURE" && _this.selectedLab;
-    };
-    this.isTranslateAvailable = function () {
-        return _this.status == "NOT_STARTED" && _this.selectedLab;
-    };
-
     this.viewAvailable = _this.status == "SUCCESS";
-    this.deleteAvailable = (isOwner || isLabHead) && _this.status == "SUCCESS" && countOfOwnedFilesTranslationData != 0;
+    this.deleteAvailable = (isOwner || isLabHead) && _this.status == "SUCCESS";
 };
 
 ExperimentViewer.prototype.hidePopup = function () {
