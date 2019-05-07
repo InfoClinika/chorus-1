@@ -205,7 +205,6 @@ angular.module("front-end", ["error-catcher"])
             "instruments",
             "groups",
             "laboratories",
-            "translation",
             "file-access-log",
             "scripts",
             "instrument-models",

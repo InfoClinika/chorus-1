@@ -58,57 +58,6 @@
                             <a ng-show="$scope.showDetailsButton" title="More" button-click-context-menu=""
                                class="btn table-button"><span class="arrow"></span></a>
 
-                        <div class="dropdown-menu context-menu hide">
-                            <span class="arrow"></span>
-                            <ul>
-                                <li class="delete-item" ng-show="validators.canDownload(file)">
-                                    <a set-if="file.storageStatus == 'UNARCHIVED'" class=""
-                                       ng-click="$event.stopPropagation(); download(file)"
-                                       title="{{getDownloadTitle(file.storageStatus)}}"><i
-                                            class="icon download"></i>Download</a>
-                                    <a set-if="file.storageStatus != 'UNARCHIVED'" class=""
-                                       ng-click="$event.stopPropagation(); requestDownload(file)"
-                                       title="{{getDownloadTitle(file.storageStatus)}}"><i
-                                            class="icon download"></i>Download</a>
-                                </li>
-                                <li ng-show="validators.isAvailableForArchive(file)"
-                                    ng-click="popups.showArchiveFilePopup(file)"
-                                    ng-class="{'disabled': isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)}">
-                                    <a  title="Archive file"
-                                        non-clickable="isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)">
-                                        <i class="icon archive"></i>
-                                        Archive
-                                        <i ng-show="isUserLab(file.labId) && !validators.archiveFeatureIsAvailable(file)"
-                                           title="Lab that the file belongs to is not Enterprise. Should be changed in subscription settings."
-                                           class="icon blocked"></i>
-                                    </a>
-                                </li>
-                                <li ng-show="validators.isAvailableForUnarchive(file)">
-                                    <a title="Unarchive file"
-                                       ng-click="popups.showUnarchiveFilePopup(file)"><i
-                                            class="icon unarchive"></i>Unarchive</a>
-                                </li>
-                                <li set-if="validators.canEdit(file)">
-                                    <a title="Edit file"
-                                       ng-click="popups.showEditPopup(file)">
-                                        <i class="icon edit"></i>Edit
-                                    </a>
-                                </li>
-                                <li class="delete-item"
-                                    set-if="file.accessLevel == 'PRIVATE' && !file.usedInExperiments">
-                                    <a title="Delete File" class="" ng-click="displayConfirmation(file, $event)"><i
-                                            class="icon delete"></i>Delete</a>
-                                </li>
-                                <li class="delete-item"
-                                    ng-show="validators.haveCompounds(file)">
-                                    <a title="Compounds" class="" ng-click="downloadCompounds(file)"><i
-                                            class="icon download"></i>Compounds</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="name ellipsize"
-                         ng-class="{'no-context': !(file.accessLevel == 'PRIVATE')}">
                             <div class="dropdown-menu context-menu hide">
                                 <span class="arrow"></span>
                                 <ul>
@@ -143,30 +92,6 @@
                                         <a title="Edit file"
                                            ng-click="popups.showEditPopup(file)">
                                             <i class="icon edit"></i>Edit
-                                        </a>
-                                    </li>
-                                    <li ng-hide="haveNGStudyType([file]) || file.corrupted"
-                                        ng-class="{'disabled': !isBillingFeatureAvailable(BillingFeatures.TRANSLATION)}"
-                                        ng-click="popups.showFileTranslationPopup(file)">
-                                        <a title="Translation"
-                                           non-clickable="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)">
-                                            <i class="icon status"></i>
-                                            Translation
-                                            <i ng-show="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)"
-                                               title="Processing feature is not enalbed for the lab."
-                                               class="icon blocked"></i>
-                                        </a>
-                                    </li>
-                                    <li ng-hide="haveNGStudyType([file]) || file.corrupted"
-                                        ng-class="{'disabled': !isBillingFeatureAvailable(BillingFeatures.TRANSLATION)}"
-                                        ng-click="popups.showFileHeatmapDetailsPopup(file)">
-                                        <a title="Heatmap"
-                                           non-clickable="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)">
-                                            <i class="icon status"></i>
-                                            Heatmap
-                                            <i ng-show="!isBillingFeatureAvailable(BillingFeatures.TRANSLATION)"
-                                               title="Processing feature is not enalbed for the lab."
-                                               class="icon blocked"></i>
                                         </a>
                                     </li>
                                     <li class="delete-item"
@@ -308,68 +233,6 @@
             </div>
         </div>
         <span ng-show="isTableEmpty()" class="empty-table">{{getEmptyTableMessage()}}</span>
-    </div>
-
-    <div id="retranslate-selected-confirmation" class="modal hide" tabindex="-1" role="dialog">
-        <div class="modal-holder">
-            <div class="modal-frame">
-                <div class="modal-header">
-                    <h3>Retranslate Selected Files?</h3>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure? You want to retranslate selected files?</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                            ng-click="retranslateSelectedPopup.cancel()">Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary main-action" ng-click="retranslateSelectedPopup.ok()">
-                        Retranslate
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="translate-file-popup" class="modal hide" tabindex="-1" role="dialog">
-        <div class="modal-holder">
-            <div class="modal-frame">
-                <div class="modal-header">
-                    <h3>Translate the Selected File?</h3>
-                </div>
-                <div class="modal-body">
-                    <p ng-switch="translateFilePopup.item.file.storageStatus">
-                        <span ng-switch-when="UNARCHIVED"> Are you sure you want to translate selected file?</span>
-                        <span ng-switch-default="">Are you sure you want to translate the selected archived file?
-                        Translation of archived file takes up to 6 hours.</span>
-                    </p>
-                    <p>
-                        <label for="labSelector">Translation content will be available and charged for Lab:</label>
-                    <div ng-show="translateFilePopup.item.availableLabs.length>1">
-                        <select ui-select2 ng-model="translateFilePopup.item.selectedLab"
-                                ng-disabled="translateFilePopup.item.availableLabs.length==1"
-                                id="labSelector" class="dialog-select">
-                            <option value="{{lab.id}}" ng-repeat="lab in translateFilePopup.item.availableLabs">
-                                {{lab.name}}
-                            </option>
-                        </select>
-                    </div>
-                    <div ng-show="translateFilePopup.item.availableLabs.length==1" class="static-value"
-                         style="clear:both; padding: 0"
-                         ng-bind="translateFilePopup.item.availableLabs[0].name"></div>
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true"
-                            ng-click="translateFilePopup.cancel()">Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary main-action" ng-click="translateFilePopup.ok()"
-                            ng-bind="translateFilePopup.item.file.status == 'NOT_STARTED' && 'Translate' || 'Re-Translate' ">
-                        Translate
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div id="archive-file-confirmation" class="modal hide" tabindex="-1" role="dialog">
@@ -542,85 +405,6 @@
         </div>
     </div>
 
-    <div id="delete-translation-data-confirmation" class="modal hide" tabindex="-1" role="dialog">
-        <div class="modal-holder">
-            <div class="modal-frame">
-                <div class="modal-header">
-                    <h3>Delete Translation Data of File <span
-                            ng-bind="popups.removeTranslationDataPopup.item.name"></span>?</h3>
-                </div>
-                <div class="modal-body">
-                    <div class="dialog-container">
-                        <p>The translation data of the selected file will be deleted permanently.
-                            After this operation You won't be able to create searches and view charts of the selected
-                            file.</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary main-action"
-                            ng-click="popups.removeTranslationDataPopup.ok()">
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="file-translation-status" class="modal hide" tabindex="-1" role="dialog">
-        <div class="modal-holder">
-            <div class="modal-frame">
-                <div class="modal-header">
-                    <h3>Translation Status of the File <span ng-bind="popups.translationStatusPopup.item.name"></span>
-                    </h3>
-                </div>
-                <div class="modal-body">
-                    <div class="dialog-container">
-                        <div class="table">
-                            <div class="control-group clearfix">
-                                <label>Status</label>
-                                <div class="item width370">
-                                    <span class="static-value">{{popups.translationStatusPopup.item.statusObject.title}}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <p ng-show="popups.translationStatusPopup.item.statusObject.errorMessage"><b>ERROR:&nbsp;</b>
-                        {{popups.translationStatusPopup.item.statusObject.errorMessage}}
-                    </p>
-                    <p ng-show="popups.translationStatusPopup.canDelete"><b>NOTE:&nbsp;</b>
-                        The Delete Translation Data operation is available for the selected file.
-                        After performing this operation you won't be able to create searches and view charts of them.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn  secondary-action" data-dismiss="modal" aria-hidden="true">Close</button>
-                    <button type="submit" class="btn secondary-action"
-                            data-dismiss="modal"
-                            ng-show="popups.translationStatusPopup.canDelete"
-                            ng-click="popups.translationStatusPopup.remove()">
-                        Delete
-                    </button>
-                    <button type="submit"
-                            ng-show="popups.translationStatusPopup.canTranslate"
-                            ng-bind="popups.translationStatusPopup.status == 'NOT_STARTED' && 'Translate' || 'Re-Translate'"
-                            data-dismiss="modal"
-                            class="btn btn-primary main-action"
-                            ng-click="popups.translationStatusPopup.translate()">
-                        Translate
-                    </button>
-                    <a class="btn btn-primary main-action" target="_blank"
-                       ng-show="popups.translationStatusPopup.canView"
-                       data-dismiss="modal"
-                       ng-click="openChartWindow(popups.translationStatusPopup.item.msChartsUrl)">
-                        View
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="file-qc-result-modal" class="modal hide" tabindex="-1" role="dialog">
         <div class="modal-holder">
             <div class="modal-frame">
@@ -669,8 +453,4 @@
             </div>
         </div>
     </div>
-
-    <div id="fileTranslationIsInProgressConfirm" title="" class="hidden"></div>
-    <div id="fileTranslationFinishedWithErrorsConfirm" title="" class="hidden"></div>
-    <div id="fileTranslationResultsIsNotAvailableConfirm" title="" class="hidden"></div>
 </div>
