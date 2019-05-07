@@ -72,22 +72,13 @@
                 return getLoggedUserLabs().length > 0;
             }
 
-            function getLabsWithTranslationEnabled() {
-                return $.grep($rootScope.laboratories, function (lab) {
-                    const labId = lab.id;
-                    return FeatureProvider.isFeatureAvailable(LabFeatures.TRANSLATION, labId)
-                        && FeatureProvider.isBillingFeatureAvailable(BillingFeatures.TRANSLATION, labId);
-                });
-            }
-
             function getLoggedUserLabs() {
                 return $rootScope.loggedInUser && $rootScope.loggedInUser.labs || [];
             }
 
             return {
                 isUserLab: isUserLab,
-                isLabMember: isLabMember,
-                getLabsWithTranslationEnabled: getLabsWithTranslationEnabled
+                isLabMember: isLabMember
             };
         });
 })();
